@@ -1,0 +1,267 @@
+/**
+ * Custom Toast Styles
+ * Modern Expandable Toast - Matches Reference Design Exactly
+ */
+
+/* ========================================
+   TOAST CONTAINER - Top Right Position
+   ======================================== */
+
+#custom-toast-container {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 999999 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    pointer-events: none !important;
+    width: 400px !important;
+    max-width: calc(100vw - 40px) !important;
+}
+
+/* ========================================
+   TOAST CARD - Main Container
+   ======================================== */
+
+.custom-toast {
+    pointer-events: auto !important;
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    box-shadow: 
+        0 10px 40px -10px rgba(0, 0, 0, 0.2),
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden !important;
+    animation: toastSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    transform-origin: top right !important;
+    font-family: var(--font-inter), var(--font-noto-thai), -apple-system, sans-serif !important;
+}
+
+.custom-toast.exiting {
+    animation: toastSlideOut 0.25s ease-in forwards !important;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes toastSlideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%) scale(0.9);
+    }
+}
+
+/* ========================================
+   TOAST HEADER - Icon, Title, Buttons
+   Layout: [Icon] [Title] [X]
+   ======================================== */
+
+.custom-toast .toast-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 16px 16px 12px 16px !important;
+    background: transparent !important;
+}
+
+/* Icon - Left side */
+.custom-toast .toast-icon {
+    flex-shrink: 0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.custom-toast .toast-icon svg {
+    width: 32px !important;
+    height: 32px !important;
+    display: block !important;
+}
+
+/* Title - Takes remaining space */
+.custom-toast .toast-title {
+    flex: 1 !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Action buttons container */
+.custom-toast .toast-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Button base style */
+.custom-toast .toast-btn {
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    color: #9ca3af !important;
+    transition: all 0.15s ease !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.custom-toast .toast-btn:hover {
+    background: rgba(0, 0, 0, 0.08) !important;
+    color: #374151 !important;
+}
+
+.custom-toast .toast-close-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* ========================================
+   TOAST CONTENT - Message & Details
+   ======================================== */
+
+.custom-toast .toast-content {
+    padding: 0 16px !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    transition: max-height 0.3s ease, padding 0.3s ease !important;
+}
+
+.custom-toast .toast-content.expanded {
+    max-height: 300px !important;
+    padding: 0 16px 12px 16px !important;
+}
+
+.custom-toast .toast-message {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 14px !important;
+    color: #6b7280 !important;
+    line-height: 1.5 !important;
+}
+
+/* ========================================
+   TOAST FOOTER - Timer Text
+   "จะปิดใน X วินาที คลิกเพื่อหยุด"
+   ======================================== */
+
+.custom-toast .toast-footer {
+    padding: 12px 16px !important;
+    border-top: 1px solid #f3f4f6 !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+    background: #fafafa !important;
+    user-select: none !important;
+}
+
+.custom-toast .toast-footer:hover {
+    background: #f5f5f5 !important;
+}
+
+.custom-toast .toast-timer-text {
+    font-size: 13px !important;
+    color: #6b7280 !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.custom-toast .toast-timer-text strong {
+    font-weight: 700 !important;
+    color: #374151 !important;
+}
+
+/* Timer action text - clickable */
+.custom-toast .toast-timer-text .timer-action {
+    text-decoration: underline !important;
+    text-decoration-style: dotted !important;
+    text-underline-offset: 2px !important;
+    color: #3b82f6 !important;
+}
+
+/* Paused state */
+.custom-toast .toast-footer.paused {
+    background: #fef3c7 !important;
+}
+
+.custom-toast .toast-footer.paused .toast-timer-text {
+    color: #92400e !important;
+}
+
+.custom-toast .toast-footer.paused .timer-action {
+    font-weight: 600 !important;
+    color: #d97706 !important;
+}
+
+/* ========================================
+   TOAST PROGRESS BAR - Bottom
+   ======================================== */
+
+.custom-toast .toast-progress-container {
+    height: 5px !important;
+    background: #e5e7eb !important;
+    overflow: hidden !important;
+}
+
+.custom-toast .toast-progress-bar {
+    height: 100% !important;
+    background: var(--toast-color, #10b981) !important;
+    transition: width 0.1s linear !important;
+}
+
+/* ========================================
+   RESPONSIVE - Mobile
+   ======================================== */
+
+@media (max-width: 480px) {
+    #custom-toast-container {
+        top: 12px !important;
+        right: 12px !important;
+        left: 12px !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+
+    .custom-toast {
+        border-radius: 12px !important;
+    }
+
+    .custom-toast .toast-header {
+        padding: 14px 14px 10px 14px !important;
+    }
+
+    .custom-toast .toast-title {
+        font-size: 15px !important;
+    }
+
+    .custom-toast .toast-footer {
+        padding: 10px 14px !important;
+    }
+
+    .custom-toast .toast-timer-text {
+        font-size: 12px !important;
+    }
+}

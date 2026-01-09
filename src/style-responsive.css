@@ -1,0 +1,249 @@
+/* ====================================
+   RESPONSIVE DESIGN SYSTEM
+   ==================================== */
+
+/* --- Mobile (Small Phones) < 480px --- */
+@media (max-width: 479.98px) {
+    :root {
+        --sidebar-width: 0px;
+        --header-height: 60px;
+        --space-container: 1rem;
+        --font-size-base: 14px;
+    }
+
+    /* Layout */
+    .dashboard-container {
+        padding-top: var(--header-height);
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100%;
+        padding: 1rem !important;
+    }
+
+    /* Sidebar - Mobile Drawer */
+    .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+        height: 100vh;
+        z-index: 1000;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        display: block !important;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+    }
+
+    .sidebar-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Header */
+    .content-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .header-menu-btn {
+        display: flex !important;
+    }
+
+    .header-left h1 {
+        font-size: 1.25rem;
+    }
+
+    .header-actions span {
+        /* Hide date on small mobile */
+        display: none;
+    }
+
+    /* Cards & Stats */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+
+    /* Tables */
+    .table-container {
+        margin: 0 -1rem;
+        /* Full width */
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem;
+        white-space: nowrap;
+        /* Prevent wrapping */
+    }
+
+    /* Forms & Modals */
+    .modal {
+        width: 95%;
+        margin: 1rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+        grid-template-columns: 1fr !important;
+        /* Stack form fields */
+    }
+
+    /* Chart */
+    .chart-card canvas {
+        max-height: 250px;
+    }
+
+    .pagination-container {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+/* --- Tablets & Large Phones (480px - 768px) --- */
+@media (min-width: 480px) and (max-width: 767.98px) {
+    :root {
+        --sidebar-width: 0px;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100%;
+        padding: 1.5rem;
+    }
+
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        display: block !important;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .sidebar-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .header-menu-btn {
+        display: flex !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .modal {
+        width: 90%;
+    }
+}
+
+/* --- Tablets Landscape & Small Laptops (768px - 1024px) --- */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+    :root {
+        --sidebar-width: 260px;
+        /* Reduced width */
+    }
+
+    .sidebar {
+        width: var(--sidebar-width);
+        transform: none;
+        /* Always show */
+    }
+
+    .main-content {
+        margin-left: var(--sidebar-width);
+    }
+
+    .header-menu-btn {
+        display: none !important;
+        /* Hide toggle on tablet landscape if we show sidebar */
+        /* OR: We can choose to hide sidebar here too if we want more space */
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        /* Stack charts/lists */
+    }
+}
+
+/* --- Desktop (> 1024px) --- */
+@media (min-width: 1024px) {
+
+    /* Ensure defaults are correct */
+    .header-menu-btn {
+        display: none !important;
+    }
+
+    .sidebar {
+        transform: translateX(0) !important;
+        opacity: 1 !important;
+    }
+
+    .sidebar-overlay {
+        display: none !important;
+    }
+}
+
+/* --- Print Styles --- */
+@media print {
+
+    .sidebar,
+    .content-header,
+    .pagination-container,
+    .no-print {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+}

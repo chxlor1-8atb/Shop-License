@@ -1,0 +1,14 @@
+/* 
+ * Global CSS - Base Styles
+ * NOTE: Font variables (--font-inter, --font-noto-thai) are automatically 
+ * created by next/font/google in layout.js. Do NOT override them here!
+ */
+
+body {
+  margin: 0;
+  padding: 0;
+  /* Use the CSS variables from next/font */
+  font-family: var(--font-noto-thai), var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+

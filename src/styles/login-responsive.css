@@ -1,0 +1,948 @@
+/**
+ * Login Page - Responsive Media Queries
+ * All device-specific styles and breakpoints
+ * 
+ * ============================================
+ * RESPONSIVE WEB DESIGN (RWD) IMPLEMENTATION
+ * ============================================
+ * Based on RWD best practices from:
+ * https://medium.com/lotuss-it/responsive-web-design-rwd-3213be476d97
+ * 
+ * KEY RWD TECHNIQUES USED:
+ * ------------------------
+ * 1. MEDIA QUERIES (@media rules)
+ *    - Desktop-first approach with min-width for large screens
+ *    - Mobile adaptations for smaller viewports
+ * 
+ * 2. FLEXBOX LAYOUT
+ *    - .login-card uses display: flex
+ *    - flex-direction changes based on viewport
+ *    - justify-content and align-items for centering
+ * 
+ * 3. FLUID TYPOGRAPHY (in login-base.css)
+ *    - Using clamp() for automatic font scaling
+ *    - Pattern: font-size: calc(16px + 0.5vw)
+ * 
+ * 4. RESPONSIVE IMAGES (in login-base.css)
+ *    - img { max-width: 100%; height: auto; }
+ * 
+ * 5. FLUID SPACING
+ *    - CSS custom properties with clamp()
+ *    - Padding and margins scale with viewport
+ * 
+ * BREAKPOINT STRATEGY:
+ * -------------------
+ * - Desktop: min-width: 992px (large screens first)
+ * - Tablet: 768px - 991px
+ * - Mobile: max-width: 767px (article standard)
+ * 
+ * DEVICE COVERAGE:
+ * ================
+ * 
+ * PC / DESKTOP:
+ *   - 4K Monitors (3840px+)
+ *   - 2K / QHD (2560px - 3839px)
+ *   - Full HD (1920px - 2559px)
+ *   - Desktop HD (1680px - 1919px)
+ *   - Desktop (1440px - 1679px)
+ *   - Laptop HD (1366px - 1439px)
+ *   - Laptop (1280px - 1365px)
+ *   - Small Laptop (1024px - 1279px)
+ * 
+ * iPAD / TABLETS:
+ *   - iPad Pro 12.9" (1024 x 1366)
+ *   - iPad Pro 11" (834 x 1194)
+ *   - iPad Air (820 x 1180)
+ *   - iPad 10th Gen (820 x 1180)
+ *   - iPad Standard (768 x 1024)
+ *   - iPad Mini (744 x 1133)
+ * 
+ * ANDROID TABLETS:
+ *   - Samsung Galaxy Tab S8 Ultra
+ *   - Samsung Galaxy Tab S8+ / S8 / S7
+ *   - Google Pixel Tablet
+ * 
+ * iPHONE:
+ *   - iPhone 15 Pro Max / 14 Pro Max (430 x 932)
+ *   - iPhone 15 Plus / 14 Plus (428 x 926)
+ *   - iPhone 15 Pro / 14 Pro (393 x 852)
+ *   - iPhone 15 / 14 / 13 / 12 (390 x 844)
+ *   - iPhone 13 Mini / 12 Mini (375 x 812)
+ *   - iPhone SE 3rd / 8 / 7 / 6s (375 x 667)
+ *   - iPhone SE 1st / 5 (320 x 568)
+ * 
+ * ANDROID PHONES:
+ *   - Samsung Galaxy S24 Ultra (480 x 915)
+ *   - Samsung Galaxy S24+ / S23+ (412 x 915)
+ *   - Samsung Galaxy S24 / S23 / S22 (360 x 780)
+ *   - Google Pixel 8 Pro (448 x 998)
+ *   - Google Pixel 8 / 7 / 6 (412 x 915)
+ *   - Google Pixel 7a / 6a (412 x 892)
+ *   - OnePlus 12 (412 x 919)
+ *   - Xiaomi 14 Pro (428 x 952)
+ * 
+ * SPECIAL:
+ *   - Landscape modes
+ *   - High DPI / Retina displays
+ *   - Reduced motion preference
+ *   - Print styles
+ *   - Touch device optimizations
+ */
+
+/* ====================================
+   0. RWD GLOBAL RULES - STACKED LAYOUT ADJUSTMENTS
+   ==================================== */
+
+/* Hide wave divider when card switches to stacked (column) layout
+ * This applies to all viewports < 900px where flex-direction becomes column
+ * Follows RWD best practice: content should adapt to viewport */
+@media (max-width: 899px) {
+    .wave-divider {
+        display: none !important;
+    }
+}
+
+/* ====================================
+   1. RESPONSIVE - PC / DESKTOP
+   ==================================== */
+
+/* 4K Monitors (3840px) */
+@media (min-width: 3840px) {
+    html {
+        font-size: 24px;
+    }
+
+    .login-card {
+        max-width: 1400px;
+        border-radius: 36px;
+    }
+
+    .card-left {
+        padding: 5rem;
+    }
+
+    .card-right {
+        flex: 0 0 560px;
+        padding: 5rem 4.5rem;
+    }
+
+    .wave-divider {
+        right: 560px;
+    }
+}
+
+/* 2K / QHD Monitors (2560px) */
+@media (min-width: 2560px) and (max-width: 3839px) {
+    html {
+        font-size: 20px;
+    }
+
+    .login-card {
+        max-width: 1250px;
+        border-radius: 32px;
+    }
+
+    .card-left {
+        padding: 4rem;
+    }
+
+    .card-right {
+        flex: 0 0 500px;
+        padding: 4rem 3.5rem;
+    }
+
+    .wave-divider {
+        right: 500px;
+    }
+
+    .shape--1 {
+        width: 850px;
+        height: 850px;
+    }
+
+    .shape--2 {
+        width: 750px;
+        height: 750px;
+    }
+}
+
+/* Full HD (1920px) */
+@media (min-width: 1920px) and (max-width: 2559px) {
+    html {
+        font-size: 18px;
+    }
+
+    .login-card {
+        max-width: 1150px;
+    }
+
+    .card-left {
+        padding: 3.75rem;
+    }
+
+    .card-right {
+        flex: 0 0 460px;
+        padding: 3.75rem 3.25rem;
+    }
+
+    .wave-divider {
+        right: 460px;
+    }
+}
+
+/* Desktop HD (1680px) */
+@media (min-width: 1680px) and (max-width: 1919px) {
+    .login-card {
+        max-width: 1100px;
+    }
+
+    .card-right {
+        flex: 0 0 440px;
+    }
+
+    .wave-divider {
+        right: 440px;
+    }
+}
+
+/* Desktop (1440px) */
+@media (min-width: 1440px) and (max-width: 1679px) {
+    .login-card {
+        max-width: 1050px;
+    }
+
+    .card-right {
+        flex: 0 0 420px;
+    }
+}
+
+/* Laptop HD (1366px) */
+@media (min-width: 1366px) and (max-width: 1439px) {
+    .login-card {
+        max-width: 980px;
+    }
+
+    .card-left {
+        padding: 3rem;
+    }
+
+    .card-right {
+        flex: 0 0 400px;
+        padding: 3rem 2.5rem;
+    }
+
+    .wave-divider {
+        right: 400px;
+    }
+
+    .hero__title {
+        font-size: 3rem;
+    }
+}
+
+/* Laptop (1280px) */
+@media (min-width: 1280px) and (max-width: 1365px) {
+    .login-card {
+        max-width: 940px;
+    }
+
+    .card-left {
+        padding: 2.75rem;
+    }
+
+    .card-right {
+        flex: 0 0 380px;
+        padding: 2.75rem 2.25rem;
+    }
+
+    .wave-divider {
+        right: 380px;
+    }
+
+    .hero__title {
+        font-size: 2.875rem;
+    }
+}
+
+/* Small Laptop (1024px - 1279px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .login-container {
+        padding: 2rem;
+    }
+
+    .login-card {
+        max-width: 900px;
+    }
+
+    .card-left {
+        padding: 2.5rem;
+    }
+
+    .card-right {
+        flex: 0 0 360px;
+        padding: 2.5rem 2rem;
+    }
+
+    .wave-divider {
+        right: 360px;
+    }
+
+    .hero__title {
+        font-size: 2.75rem;
+    }
+
+    .hero__description {
+        font-size: 1rem;
+    }
+
+    .form-header__title {
+        font-size: 1.375rem;
+    }
+}
+
+/* ====================================
+   16. RESPONSIVE - iPAD / TABLETS
+   ==================================== */
+
+/* iPad Pro 12.9" (1024 x 1366) - Landscape */
+@media (min-width: 1024px) and (max-width: 1366px) and (min-height: 1024px) and (max-height: 1366px) {
+    .login-card {
+        max-width: 920px;
+    }
+
+    .card-left {
+        padding: 3rem;
+    }
+
+    .card-right {
+        flex: 0 0 380px;
+        padding: 3rem 2.5rem;
+    }
+
+    .wave-divider {
+        right: 380px;
+    }
+
+    .hero__title {
+        font-size: 3rem;
+    }
+}
+
+/* iPad Pro 12.9" - Portrait */
+@media (min-width: 1024px) and (max-width: 1024px) and (min-height: 1300px) {
+    .login-card {
+        flex-direction: column;
+        max-width: 680px;
+    }
+
+    .card-left {
+        padding: 3rem 2.5rem 2.5rem;
+    }
+
+    .card-right {
+        flex: none;
+        padding: 2.5rem;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .hero__title {
+        font-size: 3.5rem;
+    }
+}
+
+/* iPad Pro 11" (834 x 1194) - Landscape */
+@media (min-width: 1194px) and (max-width: 1194px) and (min-height: 834px) {
+    .login-card {
+        max-width: 980px;
+    }
+
+    .card-right {
+        flex: 0 0 400px;
+    }
+
+    .wave-divider {
+        right: 400px;
+    }
+}
+
+/* iPad Pro 11" - Portrait */
+@media (min-width: 834px) and (max-width: 834px) and (min-height: 1100px) {
+    .login-card {
+        flex-direction: column;
+        max-width: 600px;
+    }
+
+    .card-left {
+        padding: 2.75rem 2.25rem 2rem;
+    }
+
+    .card-right {
+        flex: none;
+        padding: 2rem 2.25rem 2.75rem;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+}
+
+/* iPad Air (820 x 1180) - Landscape */
+@media (min-width: 1180px) and (max-width: 1180px) and (min-height: 820px) {
+    .login-card {
+        max-width: 960px;
+    }
+}
+
+/* iPad Air - Portrait */
+@media (min-width: 820px) and (max-width: 820px) and (min-height: 1080px) {
+    .login-card {
+        flex-direction: column;
+        max-width: 580px;
+    }
+
+    .card-right {
+        flex: none;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+}
+
+/* iPad 10th Gen (820 x 1180) */
+@media (min-width: 820px) and (max-width: 1180px) and (min-height: 820px) and (max-height: 1180px) {
+    .login-card {
+        max-width: 920px;
+    }
+
+    .card-left {
+        padding: 2.5rem;
+    }
+
+    .card-right {
+        flex: 0 0 360px;
+        padding: 2.5rem 2rem;
+    }
+
+    .wave-divider {
+        right: 360px;
+    }
+
+    .hero__title {
+        font-size: 2.75rem;
+    }
+}
+
+/* iPad 9th Gen / Standard (768 x 1024) - Landscape */
+@media (min-width: 1024px) and (max-width: 1024px) and (min-height: 768px) and (max-height: 768px) {
+    .login-card {
+        max-width: 880px;
+    }
+
+    .card-left {
+        padding: 2.25rem;
+    }
+
+    .card-right {
+        flex: 0 0 340px;
+        padding: 2.25rem 1.75rem;
+    }
+
+    .wave-divider {
+        right: 340px;
+    }
+
+    .hero__title {
+        font-size: 2.5rem;
+    }
+}
+
+/* iPad Standard - Portrait */
+@media (min-width: 768px) and (max-width: 768px) and (min-height: 1000px) {
+    .login-card {
+        flex-direction: column;
+        max-width: 560px;
+    }
+
+    .card-left {
+        padding: 2.5rem 2rem 2rem;
+    }
+
+    .card-right {
+        flex: none;
+        padding: 2rem 2rem 2.5rem;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .hero__title {
+        font-size: 2.75rem;
+    }
+}
+
+/* iPad Mini (744 x 1133) - Landscape */
+@media (min-width: 1133px) and (max-width: 1133px) and (min-height: 744px) {
+    .login-card {
+        max-width: 920px;
+    }
+
+    .card-right {
+        flex: 0 0 360px;
+    }
+
+    .wave-divider {
+        right: 360px;
+    }
+}
+
+/* iPad Mini - Portrait */
+@media (min-width: 744px) and (max-width: 744px) and (min-height: 1000px) {
+    .login-card {
+        flex-direction: column;
+        max-width: 540px;
+    }
+
+    .card-right {
+        flex: none;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+}
+
+/* Generic Tablet Portrait (768px - 899px) */
+@media (min-width: 768px) and (max-width: 899px) {
+    .login-container {
+        padding: 1.5rem;
+    }
+
+    .login-card {
+        flex-direction: column;
+        max-width: 580px;
+    }
+
+    /* RWD: Hide wave divider when layout is stacked */
+    .wave-divider {
+        display: none;
+    }
+
+    .card-left {
+        padding: 2.5rem 2.25rem 2rem;
+    }
+
+    .card-right {
+        flex: none;
+        padding: 2rem 2.25rem 2.5rem;
+        border-left: none;
+        border-top: none;
+    }
+
+    .hero__title {
+        font-size: 2.75rem;
+    }
+
+    .hero__description {
+        max-width: 100%;
+        font-size: 1rem;
+    }
+
+    .form-header__title {
+        font-size: 1.375rem;
+    }
+}
+
+/* Generic Tablet Landscape (900px - 1023px) */
+@media (min-width: 900px) and (max-width: 1023px) {
+    .login-container {
+        padding: 1.75rem;
+    }
+
+    .login-card {
+        max-width: 860px;
+    }
+
+    .card-left {
+        padding: 2.25rem;
+    }
+
+    .card-right {
+        flex: 0 0 350px;
+        padding: 2.25rem 1.75rem;
+    }
+
+    .wave-divider {
+        right: 350px;
+    }
+
+    .brand__logo {
+        width: 50px;
+        height: 50px;
+    }
+
+    .brand__name {
+        font-size: 1.5rem;
+    }
+
+    .hero__title {
+        font-size: 2.5rem;
+    }
+
+    .hero__description {
+        font-size: 0.9375rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .feature-tag {
+        font-size: 0.8125rem;
+        padding: 0.5rem 0.875rem;
+    }
+
+    .form-header__title {
+        font-size: 1.25rem;
+    }
+
+    .input-field {
+        padding: 1rem 1rem 1rem 2.75rem;
+        font-size: 0.9375rem;
+    }
+}
+
+/* ====================================
+   17. RESPONSIVE - MOBILE & OPTIMIZED LAYOUTS
+   ==================================== */
+
+/* 
+ * CONSOLIDATED MOBILE STRATEGY
+ * Instead of targeting specific devices, we use fluid breakpoints
+ * to ensure ALL mobile devices look perfect.
+ */
+
+/* Standard Mobile Range (Max-width: 767px) */
+@media (max-width: 767px) {
+
+    /* Container & Body */
+    .login-container {
+        padding: 1rem;
+        min-height: 100dvh;
+        align-items: flex-start;
+        /* Begins at top */
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    .login-body {
+        align-items: flex-start;
+        padding-top: 1rem;
+        height: auto;
+        min-height: 100dvh;
+    }
+
+    .login-card {
+        flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        border-radius: 24px;
+        /* Ensure seamless stacked look */
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Left Card (Brand/Info) adjustments */
+    .card-left {
+        padding: 2rem 1.5rem 1.5rem;
+        text-align: center;
+        align-items: center;
+        /* Ensure bottom radius is 0 when stacked */
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .card-left__content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .brand {
+        margin-bottom: 1.5rem;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .brand__logo {
+        width: 60px;
+        height: 60px;
+        box-shadow: 0 8px 20px rgba(217, 119, 6, 0.2);
+    }
+
+    .brand__name {
+        font-size: 1.75rem;
+    }
+
+    .hero__title {
+        font-size: clamp(1.75rem, 6vw, 2.5rem);
+        margin-bottom: 1rem;
+        line-height: 1.1;
+        text-align: center;
+    }
+
+    .hero__description {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 0 1rem;
+        opacity: 0.9;
+        text-align: center;
+    }
+
+    .features {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .features__list {
+        justify-content: center;
+    }
+
+    .feature-tag {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.875rem;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(4px);
+    }
+
+    /* Right Card (Form) adjustments */
+    .card-right {
+        padding: 2rem 1.5rem 3rem;
+        /* Reset border radius for stacked */
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        /* Seamless connection */
+        margin-top: -1px;
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .form-header__title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .form-header__subtitle {
+        font-size: 0.95rem;
+    }
+
+    .input-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .input-field {
+        height: 54px;
+        /* Larger touch target */
+        font-size: 1rem;
+        padding: 1rem 1rem 1rem 3rem;
+        /* Space for icon */
+        border-radius: 14px;
+        background: #FFFFFF;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        border: 1px solid var(--border-light);
+    }
+
+    .input-icon {
+        left: 1rem;
+    }
+
+    .input-label {
+        left: 3rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .input-field:focus~.input-label,
+    .input-field:not(:placeholder-shown)~.input-label {
+        top: 0;
+        left: 0.75rem;
+        background: transparent;
+        transform: translateY(-50%) scale(0.85);
+    }
+
+    /* Slider Button optimized for touch */
+    .slide-container {
+        height: 56px;
+        border-radius: 50px;
+    }
+
+    .slider-btn {
+        width: 48px;
+        height: 48px;
+    }
+
+    /* Ensure no wave divider */
+    .wave-divider {
+        display: none !important;
+    }
+}
+
+/* Small Mobile (Max-width: 480px) */
+@media (max-width: 480px) {
+    .login-container {
+        padding: 0.75rem;
+    }
+
+    .card-left {
+        padding: 2rem 1.25rem 1.5rem;
+    }
+
+    .card-right {
+        padding: 2rem 1.25rem 2.5rem;
+    }
+
+    .brand__logo {
+        width: 50px;
+        height: 50px;
+    }
+
+    .hero__title {
+        font-size: 1.75rem;
+    }
+
+    .hero__description {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Simplify features on small screens */
+    .features__label {
+        display: none;
+    }
+
+    .feature-tag {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.65rem;
+    }
+}
+
+/* Extra Small (Max-width: 380px) */
+@media (max-width: 380px) {
+    .hero__description {
+        display: none;
+        /* Hide description to save space */
+    }
+
+    .features {
+        display: none;
+        /* Hide features to focus on login */
+    }
+
+    .card-left {
+        padding-bottom: 1rem;
+    }
+
+    .card-right {
+        padding-top: 1.5rem;
+    }
+
+    .brand {
+        margin-bottom: 1rem;
+    }
+
+    .captcha-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+        transform-origin: center;
+        width: 100%;
+        overflow: hidden;
+    }
+}
+
+/* Captcha Scaling for tiny screens */
+@media (max-width: 350px) {
+    .captcha-container {
+        transform: scale(0.85);
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* ====================================
+   18. PERFORMANCE OPTIMIZATIONS (MOBILE)
+   ==================================== */
+/* Fix for "laggy" feel on mobile - reduces GPU load and main thread blocking */
+@media (max-width: 899px) {
+
+    /* 1. Disable heavy background animations */
+    .login-body::after,
+    .login-body .bg-shapes::before,
+    .login-body .bg-shapes::after,
+    .particle {
+        animation: none !important;
+        /* Use static positions instead of moving orbs */
+        transform: none !important;
+        opacity: 0.6;
+        /* Slight dim to compensate for lack of movement */
+        filter: blur(40px) !important;
+        /* Static blur is cheaper */
+        transition: none !important;
+    }
+    
+    /* Ensure background shapes stay in a nice position when effective animation is removed */
+    .login-body::after { top: 0; right: 0; opacity: 0.4; }
+    .login-body .bg-shapes::before { bottom: 0; left: 0; opacity: 0.4; }
+    .login-body .bg-shapes::after { top: 50%; left: 50%; transform: translate(-50%, -50%) !important; opacity: 0.3; }
+
+    /* 2. Hide particles on mobile (too many DOM elements moving) */
+    .particles {
+        display: none !important;
+    }
+
+    /* 3. Remove expensive backdrop-filter (huge performance killer on mobile) */
+    .login-card,
+    .card-left,
+    .card-right,
+    .feature-tag {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    /* 4. Use solid/opaque backgrounds instead of glassmorphism */
+    .login-card {
+        background: transparent !important;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05) !important;
+    }
+
+    .card-left {
+        /* Pre-calculated color of the gradient on white background */
+        background: linear-gradient(135deg,
+                #FEF3C7 0%,
+                #FDE68A 50%,
+                #FCD34D 100%) !important;
+    }
+
+    .card-right {
+        background: linear-gradient(180deg,
+                #FDF0C8 0%,
+                #FFFDF5 30%,
+                #FFFFFF 100%) !important;
+    }
+
+    .feature-tag {
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    /* 5. Optimize shadows */
+    .brand__logo {
+        box-shadow: 0 4px 10px rgba(217, 119, 6, 0.15) !important;
+    }
+
+    .btn-submit {
+        box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3) !important;
+    }
+
+    /* 6. Hardware acceleration for critical transforming elements */
+    .btn-submit,
+    .input-field,
+    .brand__logo {
+        will-change: transform;
+    }
+}

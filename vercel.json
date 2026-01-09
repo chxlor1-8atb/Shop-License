@@ -1,0 +1,42 @@
+{
+    "framework": "nextjs",
+    "buildCommand": "next build",
+    "installCommand": "npm install",
+    "outputDirectory": ".next",
+    
+    "functions": {
+        "src/app/api/**/*.js": {
+            "maxDuration": 10
+        }
+    },
+    
+    "headers": [
+        {
+            "source": "/api/license-types",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "s-maxage=3600, stale-while-revalidate=86400"
+                }
+            ]
+        },
+        {
+            "source": "/api/dashboard",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "s-maxage=60, stale-while-revalidate=300"
+                }
+            ]
+        },
+        {
+            "source": "/api/shops",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "s-maxage=120, stale-while-revalidate=600"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,522 @@
+/**
+ * SweetAlert2 Custom Theme
+ * Modern Minimal Design - Clean White Toast with Timer Bar
+ * Version 3.0 - Redesigned based on reference
+ */
+
+/* ========================================
+   GLOBAL RESET & CONTAINER
+   ======================================== */
+
+/* Backdrop - subtle blur */
+div:where(.swal2-container) {
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 10000;
+}
+
+/* ========================================
+   TOAST NOTIFICATIONS (Top-End Position)
+   Modern Minimal Style - White Background
+   ======================================== */
+
+/* Toast container - no backdrop */
+div:where(.swal2-container).swal2-top-end {
+    background: transparent !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* Toast popup base - Clean White Design */
+div:where(.swal2-popup).swal2-toast {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: auto !important;
+    min-width: 360px;
+    max-width: 450px;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    box-shadow: 
+        0 10px 40px -10px rgba(0, 0, 0, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+    border: none !important;
+    overflow: hidden !important;
+}
+
+/* Toast main content wrapper */
+div:where(.swal2-popup).swal2-toast .swal2-icon-content {
+    display: flex !important;
+    align-items: center !important;
+    padding: 16px 16px 12px 16px !important;
+    gap: 12px !important;
+}
+
+/* Toast icon - larger, outlined style */
+div:where(.swal2-popup).swal2-toast .swal2-icon {
+    margin: 0 !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-width: 2.5px !important;
+    background: transparent !important;
+    flex-shrink: 0;
+    order: -1;
+}
+
+/* Success icon in toast */
+div:where(.swal2-popup).swal2-toast .swal2-icon.swal2-success {
+    border-color: #10b981 !important;
+    color: #10b981 !important;
+}
+
+div:where(.swal2-popup).swal2-toast .swal2-icon.swal2-success [class^="swal2-success-line"] {
+    background-color: #10b981 !important;
+}
+
+div:where(.swal2-popup).swal2-toast .swal2-icon.swal2-success .swal2-success-ring {
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Error icon in toast */
+div:where(.swal2-popup).swal2-toast .swal2-icon.swal2-error {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+div:where(.swal2-popup).swal2-toast .swal2-icon.swal2-error [class^="swal2-x-mark-line"] {
+    background-color: #ef4444 !important;
+}
+
+/* Warning icon in toast */
+div:where(.swal2-popup).swal2-toast .swal2-icon.swal2-warning {
+    border-color: #f59e0b !important;
+    color: #f59e0b !important;
+}
+
+/* Info icon in toast */
+div:where(.swal2-popup).swal2-toast .swal2-icon.swal2-info {
+    border-color: #3b82f6 !important;
+    color: #3b82f6 !important;
+}
+
+/* Question icon in toast */
+div:where(.swal2-popup).swal2-toast .swal2-icon.swal2-question {
+    border-color: #8b5cf6 !important;
+    color: #8b5cf6 !important;
+}
+
+/* Toast title - Bold, left-aligned */
+div:where(.swal2-popup).swal2-toast .swal2-title {
+    display: block !important;
+    margin: 0 !important;
+    padding: 16px 48px 0 16px !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+    flex: 1;
+}
+
+/* Toast text content (subtitle) */
+div:where(.swal2-popup).swal2-toast .swal2-html-container {
+    display: block !important;
+    margin: 0 !important;
+    padding: 4px 16px 16px 16px !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: #6b7280 !important;
+    text-align: left !important;
+    overflow: visible !important;
+    line-height: 1.5 !important;
+}
+
+/* Toast close button - Right side */
+div:where(.swal2-popup).swal2-toast .swal2-close {
+    position: absolute !important;
+    top: 14px !important;
+    right: 14px !important;
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 20px !important;
+    font-weight: 400 !important;
+    color: #9ca3af !important;
+    background: none !important;
+    border: none !important;
+    border-radius: 6px !important;
+    transition: all 0.15s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+}
+
+div:where(.swal2-popup).swal2-toast .swal2-close:hover {
+    color: #374151 !important;
+    background: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ========================================
+   TOAST TIMER PROGRESS BAR
+   Thick green bar at bottom
+   ======================================== */
+
+div:where(.swal2-popup).swal2-toast .swal2-timer-progress-bar-container {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 5px !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: #e5e7eb !important;
+}
+
+div:where(.swal2-popup).swal2-toast .swal2-timer-progress-bar {
+    height: 100% !important;
+    background: #10b981 !important;
+    transition: width 0.1s linear !important;
+}
+
+/* Timer bar color variants */
+div:where(.swal2-popup).swal2-toast.swal2-icon-success .swal2-timer-progress-bar,
+div:where(.swal2-popup).swal2-toast:has(.swal2-icon.swal2-success) .swal2-timer-progress-bar {
+    background: #10b981 !important;
+}
+
+div:where(.swal2-popup).swal2-toast.swal2-icon-error .swal2-timer-progress-bar,
+div:where(.swal2-popup).swal2-toast:has(.swal2-icon.swal2-error) .swal2-timer-progress-bar {
+    background: #ef4444 !important;
+}
+
+div:where(.swal2-popup).swal2-toast.swal2-icon-warning .swal2-timer-progress-bar,
+div:where(.swal2-popup).swal2-toast:has(.swal2-icon.swal2-warning) .swal2-timer-progress-bar {
+    background: #f59e0b !important;
+}
+
+div:where(.swal2-popup).swal2-toast.swal2-icon-info .swal2-timer-progress-bar,
+div:where(.swal2-popup).swal2-toast:has(.swal2-icon.swal2-info) .swal2-timer-progress-bar {
+    background: #3b82f6 !important;
+}
+
+/* ========================================
+   TOAST - No more colored backgrounds
+   All toasts now use white background
+   ======================================== */
+
+/* All Toast Types - White Background */
+div:where(.swal2-popup).swal2-toast.swal2-icon-success,
+div:where(.swal2-popup).swal2-toast:has(.swal2-icon.swal2-success),
+div:where(.swal2-popup).swal2-toast.swal2-icon-error,
+div:where(.swal2-popup).swal2-toast:has(.swal2-icon.swal2-error),
+div:where(.swal2-popup).swal2-toast.swal2-icon-warning,
+div:where(.swal2-popup).swal2-toast:has(.swal2-icon.swal2-warning),
+div:where(.swal2-popup).swal2-toast.swal2-icon-info,
+div:where(.swal2-popup).swal2-toast:has(.swal2-icon.swal2-info) {
+    background: #ffffff !important;
+}
+
+/* ========================================
+   CONFIRMATION DIALOGS (Modal Style)
+   ======================================== */
+
+/* Modal popup - Center positioned */
+div:where(.swal2-popup):not(.swal2-toast) {
+    display: none;
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 420px;
+    padding: 28px !important;
+    margin: 0 auto !important;
+    border: none !important;
+    border-radius: 20px !important;
+    background: #ffffff !important;
+    box-shadow: 
+        0 25px 60px -15px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    flex-direction: column;
+}
+
+/* Modal icon */
+div:where(.swal2-popup):not(.swal2-toast) .swal2-icon {
+    margin: 0 auto 20px auto !important;
+    width: 72px !important;
+    height: 72px !important;
+    border-width: 3px !important;
+}
+
+/* Success icon */
+div:where(.swal2-popup):not(.swal2-toast) .swal2-icon.swal2-success {
+    border-color: #10b981 !important;
+    color: #10b981 !important;
+}
+
+div:where(.swal2-popup):not(.swal2-toast) .swal2-icon.swal2-success .swal2-success-ring {
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+div:where(.swal2-popup):not(.swal2-toast) .swal2-icon.swal2-success [class^="swal2-success-line"] {
+    background-color: #10b981 !important;
+}
+
+/* Warning icon */
+div:where(.swal2-popup):not(.swal2-toast) .swal2-icon.swal2-warning {
+    border-color: #f59e0b !important;
+    color: #f59e0b !important;
+}
+
+/* Error icon */
+div:where(.swal2-popup):not(.swal2-toast) .swal2-icon.swal2-error {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+div:where(.swal2-popup):not(.swal2-toast) .swal2-icon.swal2-error [class^="swal2-x-mark-line"] {
+    background-color: #ef4444 !important;
+}
+
+/* Question icon */
+div:where(.swal2-popup):not(.swal2-toast) .swal2-icon.swal2-question {
+    border-color: #8b5cf6 !important;
+    color: #8b5cf6 !important;
+}
+
+/* Modal title */
+div:where(.swal2-popup):not(.swal2-toast) .swal2-title {
+    display: block !important;
+    margin: 0 0 12px 0 !important;
+    padding: 0 !important;
+    font-size: 22px !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    text-align: center !important;
+    line-height: 1.3 !important;
+}
+
+/* Modal text content */
+div:where(.swal2-popup):not(.swal2-toast) .swal2-html-container {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
+    color: #6b7280 !important;
+    text-align: center !important;
+    line-height: 1.6 !important;
+}
+
+/* Modal close button */
+div:where(.swal2-popup):not(.swal2-toast) .swal2-close {
+    position: absolute !important;
+    top: 16px !important;
+    right: 16px !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 28px !important;
+    font-weight: 300 !important;
+    color: #9ca3af !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 8px !important;
+    transition: all 0.15s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 1 !important;
+    cursor: pointer !important;
+}
+
+div:where(.swal2-popup):not(.swal2-toast) .swal2-close:hover {
+    color: #374151 !important;
+    background: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ========================================
+   ACTION BUTTONS
+   ======================================== */
+
+div:where(.swal2-popup):not(.swal2-toast) .swal2-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin: 24px 0 0 0 !important;
+    padding: 0 !important;
+    gap: 12px !important;
+}
+
+/* Confirm button - Primary style */
+div:where(.swal2-popup) button:where(.swal2-styled).swal2-confirm {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 110px !important;
+    padding: 12px 24px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    border: none !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+}
+
+div:where(.swal2-popup) button:where(.swal2-styled).swal2-confirm:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Delete confirm - Red */
+div:where(.swal2-popup).swal2-icon-warning button:where(.swal2-styled).swal2-confirm,
+div:where(.swal2-popup):has(.swal2-icon.swal2-warning) button:where(.swal2-styled).swal2-confirm {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+div:where(.swal2-popup).swal2-icon-warning button:where(.swal2-styled).swal2-confirm:hover,
+div:where(.swal2-popup):has(.swal2-icon.swal2-warning) button:where(.swal2-styled).swal2-confirm:hover {
+    background: #dc2626 !important;
+    transform: translateY(-1px);
+}
+
+/* Normal confirm - Dark */
+div:where(.swal2-popup) button:where(.swal2-styled).swal2-confirm:not([style*="background"]) {
+    background: #111827 !important;
+    color: #ffffff !important;
+}
+
+div:where(.swal2-popup) button:where(.swal2-styled).swal2-confirm:not([style*="background"]):hover {
+    background: #1f2937 !important;
+    transform: translateY(-1px);
+}
+
+/* Cancel button - Light style */
+div:where(.swal2-popup) button:where(.swal2-styled).swal2-cancel {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 110px !important;
+    padding: 12px 24px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    color: #374151 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+}
+
+div:where(.swal2-popup) button:where(.swal2-styled).swal2-cancel:hover {
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+    transform: translateY(-1px);
+}
+
+div:where(.swal2-popup) button:where(.swal2-styled).swal2-cancel:focus {
+    box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.3) !important;
+}
+
+/* ========================================
+   LOADING STATE
+   ======================================== */
+
+div:where(.swal2-popup) .swal2-loader {
+    border-color: #111827 transparent #111827 transparent !important;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes swal2-show {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes swal2-hide {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+}
+
+@keyframes swal2-toast-show {
+    0% {
+        transform: translateX(100%) scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes swal2-toast-hide {
+    0% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(100%) scale(0.9);
+        opacity: 0;
+    }
+}
+
+div:where(.swal2-popup) {
+    animation: swal2-show 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+div:where(.swal2-popup).swal2-hide {
+    animation: swal2-hide 0.15s ease-in forwards !important;
+}
+
+div:where(.swal2-popup).swal2-toast {
+    animation: swal2-toast-show 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+div:where(.swal2-popup).swal2-toast.swal2-hide {
+    animation: swal2-toast-hide 0.2s ease-in forwards !important;
+}
+
+/* ========================================
+   RESPONSIVE - Mobile
+   ======================================== */
+
+@media (max-width: 480px) {
+    div:where(.swal2-popup).swal2-toast {
+        min-width: 300px !important;
+        max-width: calc(100vw - 24px) !important;
+    }
+    
+    div:where(.swal2-popup):not(.swal2-toast) {
+        max-width: calc(100vw - 24px) !important;
+        margin: 12px !important;
+        padding: 24px !important;
+    }
+    
+    div:where(.swal2-popup):not(.swal2-toast) .swal2-actions {
+        flex-direction: column !important;
+    }
+    
+    div:where(.swal2-popup) button:where(.swal2-styled) {
+        width: 100% !important;
+    }
+}

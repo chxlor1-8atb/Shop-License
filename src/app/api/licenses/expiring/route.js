@@ -1,0 +1,46 @@
+
+import { fetchAll } from '@/lib/db';
+import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/api-helpers';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+    // Check authentication
+    const authError = await requireAuth();
+    if (authError) return authError;
+
+    try {
+        // Query to get expired licenses OR licenses expiring soon (e.g., next 60 days)
+        // Adjust the interval as needed. The legacy system seemed to load them all via dashboard stats? 
+        // Let's get "Active" ones expiring soon AND "Expired" ones.
+
+        const query = `
+            SELECT 
+                l.id, l.license_number, l.expiry_date, l.status,
+                s.shop_name,
+                lt.name as type_name,
+                (l.expiry_date - CURRENT_DATE) as days_until_expiry
+            FROM licenses l
+            LEFT JOIN shops s ON l.shop_id = s.id
+            LEFT JOIN license_types lt ON l.license_type_id = lt.id
+            WHERE 
+                (l.status = 'active' AND l.expiry_date <= CURRENT_DATE + INTERVAL '60 day')
+                OR 
+                (l.status = 'expired')
+                OR
+                (l.expiry_date < CURRENT_DATE)
+            ORDER BY days_until_expiry ASC
+        `;
+
+        const licenses = await fetchAll(query);
+
+        return NextResponse.json({
+            success: true,
+            licenses
+        });
+
+    } catch (err) {
+        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+    }
+}
