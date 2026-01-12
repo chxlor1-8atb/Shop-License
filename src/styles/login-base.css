@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Login Page - Base Styles
  * Claude-style Light Theme - Modern & Clean
  * For responsive styles, see: login-responsive.css
@@ -49,31 +49,31 @@
      * Reference: calc(16px + 0.5vw) pattern from RWD article
      */
     --fs-hero-title: clamp(1.75rem, 5vw + 0.5rem, 2.75rem);
-    /* 28px → 44px */
+    /* 28px โ’ 44px */
     --fs-hero-desc: clamp(0.875rem, 1vw + 0.5rem, 1rem);
-    /* 14px → 16px */
+    /* 14px โ’ 16px */
     --fs-form-title: clamp(1.125rem, 1.5vw + 0.5rem, 1.5rem);
-    /* 18px → 24px */
+    /* 18px โ’ 24px */
     --fs-form-subtitle: clamp(0.8125rem, 0.8vw + 0.5rem, 0.9375rem);
-    /* 13px → 15px */
+    /* 13px โ’ 15px */
     --fs-input: clamp(0.875rem, 0.8vw + 0.5rem, 1rem);
-    /* 14px → 16px */
+    /* 14px โ’ 16px */
     --fs-button: clamp(0.9375rem, 0.8vw + 0.5rem, 1.05rem);
-    /* 15px → ~17px */
+    /* 15px โ’ ~17px */
     --fs-brand: clamp(1.25rem, 1.5vw + 0.5rem, 1.5rem);
-    /* 20px → 24px */
+    /* 20px โ’ 24px */
     --fs-tag: clamp(0.75rem, 0.6vw + 0.5rem, 0.875rem);
-    /* 12px → 14px */
+    /* 12px โ’ 14px */
 
     /* === FLUID SPACING (RWD Best Practice) ===
      * Responsive spacing that scales with viewport
      */
     --space-container: clamp(0.75rem, 2vw, 2rem);
-    /* 12px → 32px */
+    /* 12px โ’ 32px */
     --space-card: clamp(1.5rem, 3vw + 0.5rem, 3.5rem);
-    /* 24px → 56px */
+    /* 24px โ’ 56px */
     --space-section: clamp(1rem, 2vw, 2rem);
-    /* 16px → 32px */
+    /* 16px โ’ 32px */
 
     /* === RESPONSIVE BORDER RADIUS === */
     --radius-card: clamp(18px, 3vw, 28px);
@@ -116,7 +116,7 @@ html {
 .login-body {
     /* Fluid base font size for RWD - scoped to login page only */
     font-size: clamp(87.5%, 0.5vw + 87.5%, 112.5%);
-    /* 14px → 18px */
+    /* 14px โ’ 18px */
     font-family: var(--font-inter), var(--font-noto-thai), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     min-height: 100vh;
     min-height: 100dvh;
@@ -141,6 +141,11 @@ html {
    ==================================== */
 
 /* Clean dark gradient background */
+/* ====================================
+   3. BACKGROUND - Animated Flowing Lights
+   ==================================== */
+
+/* Clean dark gradient background */
 .login-body::before {
     content: '';
     position: fixed;
@@ -159,8 +164,8 @@ html {
 .login-body::after {
     content: '';
     position: fixed;
-    top: -10%;
-    right: -10%;
+    top: 0;
+    right: 0;
     width: 600px;
     height: 600px;
     background: radial-gradient(circle,
@@ -171,45 +176,36 @@ html {
             transparent 70%);
     pointer-events: none;
     z-index: 0;
+    /* Optimize animation: use transform instead of top/right */
+    transform: translate(10%, -10%);
     animation: bounceOrb1 20s ease-in-out infinite;
     filter: blur(30px);
+    will-change: transform;
 }
 
 @keyframes bounceOrb1 {
     0% {
-        top: -10%;
-        right: -10%;
-        transform: scale(1);
+        transform: translate(10%, -10%) scale(1);
     }
 
     20% {
-        top: 60%;
-        right: 70%;
-        transform: scale(1.2);
+        transform: translate(-30%, 60%) scale(1.2);
     }
 
     40% {
-        top: 20%;
-        right: 30%;
-        transform: scale(0.8);
+        transform: translate(-70%, 20%) scale(0.8);
     }
 
     60% {
-        top: 70%;
-        right: 10%;
-        transform: scale(1.1);
+        transform: translate(-10%, 70%) scale(1.1);
     }
 
     80% {
-        top: 10%;
-        right: 50%;
-        transform: scale(0.9);
+        transform: translate(-50%, 10%) scale(0.9);
     }
 
     100% {
-        top: -10%;
-        right: -10%;
-        transform: scale(1);
+        transform: translate(10%, -10%) scale(1);
     }
 }
 
@@ -225,8 +221,8 @@ html {
 .login-body .bg-shapes::before {
     content: '';
     position: absolute;
-    bottom: -10%;
-    left: -10%;
+    bottom: 0;
+    left: 0;
     width: 550px;
     height: 550px;
     background: radial-gradient(circle,
@@ -236,39 +232,32 @@ html {
             rgba(79, 70, 229, 0.06) 55%,
             transparent 70%);
     pointer-events: none;
+    /* Optimize animation: use transform */
+    transform: translate(-10%, 10%);
     animation: bounceOrb2 25s ease-in-out infinite;
     filter: blur(25px);
+    will-change: transform;
 }
 
 @keyframes bounceOrb2 {
     0% {
-        bottom: -10%;
-        left: -10%;
-        transform: scale(1);
+        transform: translate(-10%, 10%) scale(1);
     }
 
     25% {
-        bottom: 50%;
-        left: 60%;
-        transform: scale(1.15);
+        transform: translate(50%, -40%) scale(1.15);
     }
 
     50% {
-        bottom: 10%;
-        left: 40%;
-        transform: scale(0.85);
+        transform: translate(30%, -10%) scale(0.85);
     }
 
     75% {
-        bottom: 60%;
-        left: 10%;
-        transform: scale(1.1);
+        transform: translate(0%, -50%) scale(1.1);
     }
 
     100% {
-        bottom: -10%;
-        left: -10%;
-        transform: scale(1);
+        transform: translate(-10%, 10%) scale(1);
     }
 }
 
@@ -287,50 +276,39 @@ html {
             rgba(6, 95, 70, 0.05) 55%,
             transparent 70%);
     pointer-events: none;
+    /* Optimize animation */
+    transform: translate(-50%, -50%);
     animation: bounceOrb3 18s ease-in-out infinite;
     filter: blur(35px);
+    will-change: transform;
 }
 
 @keyframes bounceOrb3 {
     0% {
-        top: 50%;
-        left: 50%;
         transform: translate(-50%, -50%) scale(1);
     }
 
     16% {
-        top: 10%;
-        left: 80%;
-        transform: translate(-50%, -50%) scale(1.2);
+        transform: translate(80%, -90%) scale(1.2);
     }
 
     33% {
-        top: 70%;
-        left: 20%;
-        transform: translate(-50%, -50%) scale(0.9);
+        transform: translate(-80%, 20%) scale(0.9);
     }
 
     50% {
-        top: 20%;
-        left: 10%;
-        transform: translate(-50%, -50%) scale(1.15);
+        transform: translate(-90%, -80%) scale(1.15);
     }
 
     66% {
-        top: 80%;
-        left: 70%;
-        transform: translate(-50%, -50%) scale(0.85);
+        transform: translate(20%, 30%) scale(0.85);
     }
 
     83% {
-        top: 30%;
-        left: 60%;
-        transform: translate(-50%, -50%) scale(1.1);
+        transform: translate(10%, -20%) scale(1.1);
     }
 
     100% {
-        top: 50%;
-        left: 50%;
         transform: translate(-50%, -50%) scale(1);
     }
 }
@@ -360,6 +338,8 @@ html {
 
 .particle {
     position: absolute;
+    /* Use bottom -10% as start position but don't animate it */
+    bottom: -20px; 
     width: 6px;
     height: 6px;
     background: radial-gradient(circle,
@@ -367,9 +347,19 @@ html {
             rgba(255, 255, 255, 0.4) 50%,
             transparent 70%);
     border-radius: 50%;
+    /* Use transform for movement */
     animation: floatUp 15s ease-in-out infinite;
     opacity: 0;
+    will-change: transform, opacity;
 }
+
+/* ... existing particle delays can stay, we just need to ensure they work with new keyframes ... */
+/* Wait, we need to make sure we don't break the nth-child selectors which we aren't replacing here unless we include them in the block.
+   The block I'm replacing covers lines 144 to 529. 
+   So I need to include the nth-child selectors! 
+   The User's file has them from 375 to 493. 
+   I must include them in the replacement content.
+*/
 
 /* Different positions, sizes, and timing for each particle */
 .particle:nth-child(1) {
@@ -494,37 +484,35 @@ html {
 
 @keyframes floatUp {
     0% {
-        bottom: -10%;
         opacity: 0;
-        transform: translateX(0) scale(0.5);
+        transform: translateY(0) translateX(0) scale(0.5);
     }
 
     10% {
         opacity: 1;
-        transform: translateX(10px) scale(1);
+        transform: translateY(-10vh) translateX(10px) scale(1);
     }
 
     30% {
-        transform: translateX(-15px) scale(1.1);
+        transform: translateY(-30vh) translateX(-15px) scale(1.1);
     }
 
     50% {
-        transform: translateX(20px) scale(0.9);
+        transform: translateY(-50vh) translateX(20px) scale(0.9);
     }
 
     70% {
-        transform: translateX(-10px) scale(1);
+        transform: translateY(-70vh) translateX(-10px) scale(1);
     }
 
     90% {
         opacity: 1;
-        transform: translateX(5px) scale(1);
+        transform: translateY(-90vh) translateX(5px) scale(1);
     }
 
     100% {
-        bottom: 110%;
         opacity: 0;
-        transform: translateX(0) scale(0.5);
+        transform: translateY(-120vh) translateX(0) scale(0.5);
     }
 }
 
