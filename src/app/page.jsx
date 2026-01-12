@@ -79,7 +79,7 @@ const BrandHeader = () => (
 );
 
 const HeroSection = () => (
-  <React.Fragment>
+  <div className="hero-section text-content">
     <h1 className="hero__title">
       ระบบจัดการ
       <br />
@@ -90,7 +90,7 @@ const HeroSection = () => (
       ความเรียบง่าย ปลอดภัย และรวดเร็ว
       ให้การจัดการใบอนุญาตเป็นเรื่องง่ายในทุกวัน
     </p>
-  </React.Fragment>
+  </div>
 );
 
 const FeaturesList = () => (

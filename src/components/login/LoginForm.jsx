@@ -54,7 +54,7 @@ export const LoginForm = () => {
   };
 
   return (
-    <React.Fragment>
+    <div className="login-form-content">
       <WaveDivider />
       <header className="form-header">
         <h2 className="form-header__title">ยินดีต้อนรับกลับมา</h2>
@@ -110,6 +110,6 @@ export const LoginForm = () => {
           error={error}
         />
       </form>
-    </React.Fragment>
+    </div>
   );
 };

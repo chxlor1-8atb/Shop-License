@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { usePagination } from "@/hooks";
 import { formatThaiDateTime, getInitial } from "@/utils/formatters";
 import Pagination from "@/components/ui/Pagination";
+import { exportActivityLogsToPDF } from "@/lib/pdfExport";
 import CustomSelect from "@/components/ui/CustomSelect";
 import DatePicker from "@/components/ui/DatePicker";
 import TableSkeleton from "@/components/ui/TableSkeleton";
@@ -203,6 +204,10 @@ export default function ActivityLogsPage() {
     setShowDetailModal(true);
   }, []);
 
+  const handleExportPDF = () => {
+    exportActivityLogsToPDF(activities, filters);
+  };
+
   const skeletonColumns = [
     { width: "12%" },
     { width: "15%" },
@@ -268,6 +273,7 @@ export default function ActivityLogsPage() {
           onSearch={handleSearch}
           onClearFilters={clearFilters}
           onViewDetails={viewDetails}
+          onExport={handleExportPDF}
           pagination={pagination}
           skeletonColumns={skeletonColumns}
         />
@@ -322,6 +328,7 @@ function ActivityLogsTab({
   onSearch,
   onClearFilters,
   onViewDetails,
+  onExport,
   pagination,
   skeletonColumns,
 }) {
@@ -391,6 +398,9 @@ function ActivityLogsTab({
           </button>
           <button className="btn btn-secondary btn-sm" onClick={onClearFilters}>
             <i className="fas fa-times"></i> ล้างตัวกรอง
+          </button>
+          <button className="btn btn-success btn-sm" onClick={onExport}>
+            <i className="fas fa-file-pdf"></i> Export PDF
           </button>
         </div>
       </div>

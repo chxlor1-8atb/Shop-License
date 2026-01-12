@@ -1,9 +1,15 @@
-export function TableToolbar({ onExport, onClear, onReset }) {
+export function TableToolbar({
+  onExport,
+  onClear,
+  onReset,
+  exportLabel = "Export JSON",
+  exportIcon = "fa-file-code",
+}) {
   return (
     <div className="table-toolbar">
       <div className="toolbar-group">
         <button className="btn btn-ghost" onClick={onExport}>
-          <i className="fas fa-file-code"></i> Export JSON
+          <i className={`fas ${exportIcon}`}></i> {exportLabel}
         </button>
         <button className="btn btn-ghost" onClick={onClear}>
           <i className="fas fa-eraser"></i> ล้างข้อมูล

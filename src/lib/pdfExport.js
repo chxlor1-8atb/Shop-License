@@ -1,6 +1,6 @@
 /**
  * Professional PDF Export Utility
- * ใช้ pdfmake สำหรับสร้าง PDF ที่สวยงาม
+ * Uses pdfmake for beautiful PDF generation
  */
 
 // Color palette for professional look
@@ -27,6 +27,41 @@ const STATUS_CONFIG = {
     revoked: { color: COLORS.danger, label: 'Revoked' }
 };
 
+// Activity Action Labels
+const ACTION_LABELS = {
+    LOGIN: 'เข้าสู่ระบบ',
+    LOGOUT: 'ออกจากระบบ',
+    CREATE: 'สร้าง',
+    UPDATE: 'แก้ไข',
+    DELETE: 'ลบ',
+    EXPORT: 'ส่งออก',
+    VIEW: 'ดู'
+};
+
+/**
+ * Helper to load font file as base64
+ */
+async function loadFont(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch font: ${url}`);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                // remove "data:application/octet-stream;base64," header
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        console.error('Error loading font:', e);
+        return null;
+    }
+}
+
 /**
  * Initialize pdfMake with fonts
  */
@@ -35,50 +70,44 @@ async function getPdfMake() {
         // Dynamic import pdfmake
         const pdfMakeModule = await import('pdfmake/build/pdfmake');
         const pdfMake = pdfMakeModule.default || pdfMakeModule;
-        
+
         if (!pdfMake) {
-            console.error('Failed to load pdfMake module');
             throw new Error('Failed to load pdfMake module');
         }
 
-        // Fix for vfs_fonts: It expects a global pdfMake object to exist
         if (typeof window !== 'undefined' && !window.pdfMake) {
             window.pdfMake = pdfMake;
         }
 
-        // Dynamic import vfs_fonts (Required for default fonts)
-        let pdfFonts;
-        try {
-            const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
-            pdfFonts = pdfFontsModule.default || pdfFontsModule;
-        } catch (e) {
-            console.warn('Failed to load vfs_fonts:', e);
-        }
-
-        // Initialize vfs
-        const vfs = (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) || (pdfFonts && pdfFonts.vfs);
-        if (vfs) {
-            pdfMake.vfs = vfs;
-        } else if (pdfFonts && !pdfFonts.pdfMake && !pdfFonts.vfs) {
-            // Edge case: pdfFonts might be the vfs object itself (rare but possible in some builds)
-            // But usually vfs is a map of filenames.
-            // Let's rely on standard structures first.
-            pdfMake.vfs = pdfFonts;
-        } 
-        
+        // Initialize vfs if not exists
         if (!pdfMake.vfs) {
             pdfMake.vfs = {};
         }
 
-        // Assign standard fonts map
-        // Note: Roboto does not support Thai characters. 
-        // To support Thai, you need to add a Thai font (e.g. THSarabunNew) to vfs or fetch it.
+        // Check if Thai fonts are loaded
+        if (!pdfMake.vfs['THSarabunNew.ttf']) {
+            const [regular, bold] = await Promise.all([
+                loadFont('/fonts/THSarabunNew.ttf'),
+                loadFont('/fonts/THSarabunNew-Bold.ttf')
+            ]);
+
+            if (regular) pdfMake.vfs['THSarabunNew.ttf'] = regular;
+            if (bold) pdfMake.vfs['THSarabunNew-Bold.ttf'] = bold;
+        }
+
+        // Configure Fonts
         pdfMake.fonts = {
             Roboto: {
                 normal: 'Roboto-Regular.ttf',
                 bold: 'Roboto-Medium.ttf',
                 italics: 'Roboto-Italic.ttf',
                 bolditalics: 'Roboto-MediumItalic.ttf'
+            },
+            THSarabunNew: {
+                normal: 'THSarabunNew.ttf',
+                bold: 'THSarabunNew-Bold.ttf',
+                italics: 'THSarabunNew.ttf', // Fallback
+                bolditalics: 'THSarabunNew-Bold.ttf' // Fallback
             }
         };
 
@@ -106,18 +135,90 @@ function formatThaiDate(dateStr) {
 }
 
 /**
+ * Format datetime to Thai format
+ */
+function formatThaiDateTime(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        const date = new Date(dateStr);
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear() + 543;
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch {
+        return dateStr;
+    }
+}
+
+/**
  * Get current Thai date for document
  */
 function getCurrentThaiDate() {
     const date = new Date();
     const thaiMonths = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+        'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
     ];
     const day = date.getDate();
     const month = thaiMonths[date.getMonth()];
     const year = date.getFullYear() + 543;
     return `${day} ${month} ${year}`;
+}
+
+/**
+ * Get common document styles
+ */
+function getStyles() {
+    return {
+        headerTitle: {
+            fontSize: 22, // Increased for Thai
+            bold: true,
+            color: COLORS.white
+        },
+        headerSubtitle: {
+            fontSize: 16,
+            color: COLORS.white
+        },
+        headerDate: {
+            fontSize: 12,
+            color: 'rgba(255,255,255,0.8)'
+        },
+        statValue: {
+            fontSize: 24,
+            bold: true,
+            color: COLORS.primary
+        },
+        statLabel: {
+            fontSize: 14,
+            color: COLORS.secondary
+        },
+        tableHeader: {
+            fontSize: 14,
+            bold: true
+        },
+        tableCell: {
+            fontSize: 14
+        },
+        filterTitle: {
+            fontSize: 12,
+            bold: true,
+            color: COLORS.warning
+        },
+        filterText: {
+            fontSize: 12,
+            color: COLORS.secondary
+        },
+        pageNumber: {
+            fontSize: 10,
+            color: COLORS.muted
+        },
+        footer: {
+            fontSize: 10,
+            color: COLORS.muted
+        }
+    };
 }
 
 /**
@@ -142,7 +243,7 @@ function createHeader(title, subtitle) {
                             margin: [0, 5, 0, 0]
                         },
                         {
-                            text: subtitle || `Document Date: ${getCurrentThaiDate()}`,
+                            text: subtitle || `วันที่พิมพ์: ${getCurrentThaiDate()}`,
                             style: 'headerDate',
                             alignment: 'center',
                             margin: [0, 5, 0, 0]
@@ -280,77 +381,23 @@ function createFilterInfo(filters) {
 }
 
 /**
- * Get common document styles
- */
-function getStyles() {
-    return {
-        headerTitle: {
-            fontSize: 18,
-            bold: true,
-            color: COLORS.white
-        },
-        headerSubtitle: {
-            fontSize: 14,
-            color: COLORS.white
-        },
-        headerDate: {
-            fontSize: 10,
-            color: 'rgba(255,255,255,0.8)'
-        },
-        statValue: {
-            fontSize: 20,
-            bold: true,
-            color: COLORS.primary
-        },
-        statLabel: {
-            fontSize: 9,
-            color: COLORS.secondary
-        },
-        tableHeader: {
-            fontSize: 10,
-            bold: true
-        },
-        tableCell: {
-            fontSize: 9
-        },
-        filterTitle: {
-            fontSize: 9,
-            bold: true,
-            color: COLORS.warning
-        },
-        filterText: {
-            fontSize: 8,
-            color: COLORS.secondary
-        },
-        pageNumber: {
-            fontSize: 8,
-            color: COLORS.muted
-        },
-        footer: {
-            fontSize: 8,
-            color: COLORS.muted
-        }
-    };
-}
-
-/**
  * Export Licenses to PDF
  */
 export async function exportLicensesToPDF(licenses, filters = {}) {
     const pdfMake = await getPdfMake();
-    
-    const title = 'License Report';
-    
+
+    const title = 'รายงานใบอนุญาต'; // Translated title
+
     // Calculate statistics
     const stats = {
-        'Total': licenses.length,
-        'Active': licenses.filter(l => l.status === 'active').length,
-        'Expired': licenses.filter(l => l.status === 'expired').length,
-        'Other': licenses.filter(l => !['active', 'expired'].includes(l.status)).length
+        'ทั้งหมด': licenses.length,
+        'ใช้งานปกติ': licenses.filter(l => l.status === 'active').length,
+        'หมดอายุ': licenses.filter(l => l.status === 'expired').length,
+        'อื่นๆ': licenses.filter(l => !['active', 'expired'].includes(l.status)).length
     };
 
     // Prepare table data
-    const headers = ['License No.', 'Shop Name', 'Type', 'Issue Date', 'Expiry Date', 'Status'];
+    const headers = ['เลขที่ใบอนุญาต', 'ชื่อร้านค้า', 'ประเภท', 'วันที่ออก', 'วันหมดอายุ', 'สถานะ'];
     const data = licenses.map(l => [
         l.license_number || '-',
         l.shop_name || '-',
@@ -365,9 +412,10 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
-        
+        defaultStyle: { font: 'THSarabunNew' }, // Apply Thai font
+
         header: (currentPage, pageCount) => ({
-            text: `Page ${currentPage} of ${pageCount}`,
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
             alignment: 'right',
             margin: [0, 15, 40, 0],
             style: 'pageNumber'
@@ -375,8 +423,8 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
 
         footer: () => ({
             columns: [
-                { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: 'ระบบจัดการใบอนุญาต', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
@@ -403,14 +451,14 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
  */
 export async function exportShopsToPDF(shops) {
     const pdfMake = await getPdfMake();
-    
-    const title = 'Shop Report';
-    
+
+    const title = 'รายงานร้านค้า';
+
     const stats = {
-        'Total Shops': shops.length
+        'ร้านค้าทั้งหมด': shops.length
     };
 
-    const headers = ['Shop Name', 'Owner', 'Phone', 'Email', 'Address', 'Created'];
+    const headers = ['ชื่อร้านค้า', 'เจ้าของ', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่', 'วันที่สร้าง'];
     const data = shops.map(s => [
         s.shop_name || '-',
         s.owner_name || '-',
@@ -424,9 +472,10 @@ export async function exportShopsToPDF(shops) {
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
-        
+        defaultStyle: { font: 'THSarabunNew' }, // Apply Thai font
+
         header: (currentPage, pageCount) => ({
-            text: `Page ${currentPage} of ${pageCount}`,
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
             alignment: 'right',
             margin: [0, 15, 40, 0],
             style: 'pageNumber'
@@ -434,8 +483,8 @@ export async function exportShopsToPDF(shops) {
 
         footer: () => ({
             columns: [
-                { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: 'ระบบจัดการใบอนุญาต', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
@@ -459,21 +508,25 @@ export async function exportShopsToPDF(shops) {
  */
 export async function exportUsersToPDF(users) {
     const pdfMake = await getPdfMake();
-    
-    const title = 'User Report';
-    
-    const stats = {
-        'Total Users': users.length,
-        'Admin': users.filter(u => u.role === 'admin').length,
-        'User': users.filter(u => u.role === 'user').length
+
+    const defaultStyle = {
+        font: 'THSarabunNew'
     };
 
-    const headers = ['No.', 'Username', 'Full Name', 'Role', 'Created'];
+    const title = 'รายงานข้อมูลผู้ใช้งาน';
+
+    const stats = {
+        'ผู้ใช้งานทั้งหมด': users.length,
+        'แอดมิน': users.filter(u => u.role === 'admin').length,
+        'ผู้ใช้ทั่วไป': users.filter(u => u.role === 'user').length
+    };
+
+    const headers = ['ลำดับ', 'ชื่อผู้ใช้งาน', 'ชื่อ-นามสกุล', 'สิทธิ์การใช้งาน', 'วันที่สร้าง'];
     const data = users.map((u, index) => [
         (index + 1).toString(),
         u.username || '-',
         u.full_name || '-',
-        u.role || '-',
+        u.role === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป', // Translate role
         formatThaiDate(u.created_at)
     ]);
 
@@ -481,9 +534,10 @@ export async function exportUsersToPDF(users) {
         pageSize: 'A4',
         pageOrientation: 'portrait',
         pageMargins: [40, 40, 40, 60],
-        
+        defaultStyle, // Apply Thai font globally
+
         header: (currentPage, pageCount) => ({
-            text: `Page ${currentPage} of ${pageCount}`,
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
             alignment: 'right',
             margin: [0, 15, 40, 0],
             style: 'pageNumber'
@@ -491,17 +545,17 @@ export async function exportUsersToPDF(users) {
 
         footer: () => ({
             columns: [
-                { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: 'ระบบจัดการใบอนุญาต', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
 
         content: [
-            createHeader(title),
+            createHeader('รายชื่อผู้ใช้งาน', `วันที่พิมพ์: ${getCurrentThaiDate()}`),
             createSummaryBox(stats),
             createDataTable(headers, data, {
-                columnWidths: [40, '*', '*', 60, 80]
+                columnWidths: [40, '*', '*', 80, 100]
             })
         ],
 
@@ -512,18 +566,17 @@ export async function exportUsersToPDF(users) {
 }
 
 /**
- * Export Single User Credentials to PDF (For handing to new user)
+ * Export Single User Credentials to PDF
  */
 export async function exportUserCredentialsPDF(userData) {
     const pdfMake = await getPdfMake();
-    
-    const title = 'User Credentials';
-    
+
     const docDefinition = {
-        pageSize: 'A5', // Smaller paper for credentials
+        pageSize: 'A5',
         pageOrientation: 'landscape',
         pageMargins: [30, 30, 30, 30],
-        
+        defaultStyle: { font: 'THSarabunNew' },
+
         content: [
             {
                 text: 'User Credentials',
@@ -533,10 +586,10 @@ export async function exportUserCredentialsPDF(userData) {
                 margin: [0, 0, 0, 20]
             },
             {
-                text: 'Please keep this information secure.',
+                text: 'ข้อมูลเข้าใช้งานระบบ - กรุณาเก็บรักษาเป็นความลับ',
                 alignment: 'center',
                 color: COLORS.danger,
-                fontSize: 10,
+                fontSize: 12,
                 bold: true,
                 margin: [0, 0, 0, 20]
             },
@@ -545,23 +598,23 @@ export async function exportUserCredentialsPDF(userData) {
                     widths: ['30%', '70%'],
                     body: [
                         [
-                            { text: 'Full Name', style: 'labelCell' },
+                            { text: 'ชื่อ-นามสกุล', style: 'labelCell' },
                             { text: userData.full_name || '-', style: 'valueCell' }
                         ],
                         [
-                            { text: 'Role', style: 'labelCell' },
-                            { text: userData.role || 'user', style: 'valueCell' }
+                            { text: 'สิทธิ์การใช้งาน', style: 'labelCell' },
+                            { text: userData.role === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป', style: 'valueCell' }
                         ],
                         [
-                            { text: 'Username', style: 'labelCell' },
+                            { text: 'ชื่อผู้ใช้', style: 'labelCell' },
                             { text: userData.username, style: 'valueCellBold' }
                         ],
                         [
-                            { text: 'Password', style: 'labelCell' },
+                            { text: 'รหัสผ่าน', style: 'labelCell' },
                             { text: userData.password, style: 'valueCellBold', color: COLORS.primary }
                         ],
                         [
-                            { text: 'Created Date', style: 'labelCell' },
+                            { text: 'วันที่สร้าง', style: 'labelCell' },
                             { text: getCurrentThaiDate(), style: 'valueCell' }
                         ]
                     ]
@@ -578,9 +631,9 @@ export async function exportUserCredentialsPDF(userData) {
                 }
             },
             {
-                text: 'System Administrator',
+                text: 'ผู้ดูแลระบบ',
                 alignment: 'right',
-                fontSize: 10,
+                fontSize: 12,
                 color: COLORS.muted,
                 margin: [0, 30, 0, 0]
             }
@@ -592,16 +645,16 @@ export async function exportUserCredentialsPDF(userData) {
                 bold: true
             },
             labelCell: {
-                fontSize: 12,
+                fontSize: 14,
                 color: COLORS.secondary,
                 bold: true
             },
             valueCell: {
-                fontSize: 12,
+                fontSize: 14,
                 color: COLORS.dark
             },
             valueCellBold: {
-                fontSize: 14,
+                fontSize: 16,
                 bold: true,
                 color: COLORS.dark
             }
@@ -611,8 +664,70 @@ export async function exportUserCredentialsPDF(userData) {
     pdfMake.createPdf(docDefinition).download(`credential_${userData.username}.pdf`);
 }
 
+/**
+ * Export Activity Logs to PDF
+ */
+export async function exportActivityLogsToPDF(logs, filters = {}) {
+    const pdfMake = await getPdfMake();
+
+    const title = 'รายงานประวัติกิจกรรม';
+
+    const stats = {
+        'จำนวนรายการ': logs.length,
+        'เข้าสู่ระบบ': logs.filter(l => l.action === 'LOGIN').length,
+        'ดูข้อมูล': logs.filter(l => l.action === 'VIEW').length
+    };
+
+    const headers = ['เวลา', 'ผู้ใช้งาน', 'กิจกรรม', 'หมวดหมู่', 'รายละเอียด', 'IP'];
+    const data = logs.map(l => [
+        formatThaiDateTime(l.created_at),
+        l.user_name || l.username || '-',
+        ACTION_LABELS[l.action] || l.action || '-',
+        l.entity_type || '-',
+        l.details || '-',
+        l.ip_address || '-'
+    ]);
+
+    const docDefinition = {
+        pageSize: 'A4',
+        pageOrientation: 'landscape',
+        pageMargins: [40, 40, 40, 60],
+        defaultStyle: { font: 'THSarabunNew' },
+
+        header: (currentPage, pageCount) => ({
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
+            alignment: 'right',
+            margin: [0, 15, 40, 0],
+            style: 'pageNumber'
+        }),
+
+        footer: () => ({
+            columns: [
+                { text: 'ระบบจัดการใบอนุญาต', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+            ],
+            margin: [0, 20, 0, 0]
+        }),
+
+        content: [
+            createHeader(title),
+            createSummaryBox(stats),
+            filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
+            createDataTable(headers, data, {
+                columnWidths: ['auto', 'auto', 'auto', 'auto', '*', 'auto']
+            })
+        ],
+
+        styles: getStyles()
+    };
+
+    pdfMake.createPdf(docDefinition).download(`activity_logs_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
 export default {
     exportLicensesToPDF,
     exportShopsToPDF,
-    exportUsersToPDF
+    exportUsersToPDF,
+    exportUserCredentialsPDF,
+    exportActivityLogsToPDF
 };

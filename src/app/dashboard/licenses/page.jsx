@@ -8,6 +8,7 @@ import ExcelTable from "@/components/ExcelTable";
 import Pagination from "@/components/ui/Pagination";
 import FilterRow, { SearchInput } from "@/components/ui/FilterRow";
 import CustomSelect from "@/components/ui/CustomSelect"; // Re-use for filters
+import { exportLicensesToPDF } from "@/lib/pdfExport";
 
 // Helper to format options for ExcelTable select columns
 const formatOptions = (items, labelKey = "name", valueKey = "id") =>
@@ -345,45 +346,61 @@ export default function LicensesPage() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      await exportLicensesToPDF(licenses, {
+        search,
+        type: typeOptions.find((t) => t.value == filterType)?.label,
+        status: STATUS_OPTIONS.find((s) => s.value == filterStatus)?.label,
+      });
+    } catch (err) {
+      console.error(err);
+      showError("Export PDF ล้มเหลว");
+    }
+  };
+
   return (
-    <div className="card">
-      <div className="card-header">
-        <h3 className="card-title">
-          <i className="fas fa-file-alt"></i> ใบอนุญาต
-        </h3>
-      </div>
-      <div className="card-body">
-        {/* Filters */}
-        <FilterRow>
-          <SearchInput
-            value={search}
-            onChange={(val) => {
-              setSearch(val);
-              pagination.resetPage();
-            }}
-            placeholder="ค้นหา..."
-          />
-          <CustomSelect
-            value={filterType}
-            onChange={(e) => {
-              setFilterType(e.target.value);
-              pagination.resetPage();
-            }}
-            options={[{ value: "", label: "ทุกประเภท" }, ...typeOptions]}
-            placeholder="ประเภทใบอนุญาต"
-            style={{ minWidth: "200px", width: "auto" }}
-          />
-          <CustomSelect
-            value={filterStatus}
-            onChange={(e) => {
-              setFilterStatus(e.target.value);
-              pagination.resetPage();
-            }}
-            options={STATUS_OPTIONS}
-            placeholder="สถานะ"
-            style={{ minWidth: "180px", width: "auto" }}
-          />
-        </FilterRow>
+    <div className="card h-100">
+      <div className="card-body p-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h3 className="m-0 text-primary">
+            <i className="fas fa-file-alt me-2"></i> ใบอนุญาต
+          </h3>
+        </div>
+
+        <div className="mb-4">
+          {/* Filters */}
+          <FilterRow>
+            <SearchInput
+              value={search}
+              onChange={(val) => {
+                setSearch(val);
+                pagination.resetPage();
+              }}
+              placeholder="ค้นหา..."
+            />
+            <CustomSelect
+              value={filterType}
+              onChange={(e) => {
+                setFilterType(e.target.value);
+                pagination.resetPage();
+              }}
+              options={[{ value: "", label: "ทุกประเภท" }, ...typeOptions]}
+              placeholder="ประเภทใบอนุญาต"
+              style={{ minWidth: "200px", width: "auto" }}
+            />
+            <CustomSelect
+              value={filterStatus}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                pagination.resetPage();
+              }}
+              options={STATUS_OPTIONS}
+              placeholder="สถานะ"
+              style={{ minWidth: "180px", width: "auto" }}
+            />
+          </FilterRow>
+        </div>
 
         {!loading ? (
           <ExcelTable
@@ -395,6 +412,9 @@ export default function LicensesPage() {
             onColumnAdd={handleColumnAdd}
             onColumnUpdate={handleColumnUpdate}
             onColumnDelete={handleColumnDelete}
+            onExport={handleExport}
+            exportLabel="Export PDF"
+            exportIcon="fa-file-pdf"
           />
         ) : (
           <div className="text-center p-5">Loading...</div>

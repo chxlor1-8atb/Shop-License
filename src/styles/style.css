@@ -937,8 +937,10 @@ select option:checked {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden; /* Prevent page-level horizontal scroll */
-    max-width: calc(100vw - var(--sidebar-width)); /* Explicitly constrain width */
+    overflow-x: hidden;
+    /* Prevent page-level horizontal scroll */
+    max-width: calc(100vw - var(--sidebar-width));
+    /* Explicitly constrain width */
 }
 
 /* Header - Enhanced Premium Glass */
@@ -1034,11 +1036,14 @@ select option:checked {
 }
 
 /* Page Transition Animations - Enhanced for smooth realtime feel */
+/* Page Transition Animations - Enhanced for smooth realtime feel */
 .content-body {
     flex: 1;
     padding: 2rem;
     position: relative;
     z-index: 1;
+    /* Transparent Background to avoid nested cards */
+    background: transparent;
     opacity: 1;
     transform: none;
     transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
@@ -1046,7 +1051,8 @@ select option:checked {
     will-change: opacity, transform;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    min-width: 0; /* Crucial for preventing flex item from overflowing parent */
+    min-width: 0;
+    /* Crucial for preventing flex item from overflowing parent */
     width: 100%;
     max-width: 100%;
 }
@@ -2808,7 +2814,8 @@ body:has(.sidebar.show) .mobile-toggle i {
     max-height: 200px;
     min-width: 100px;
     left: auto;
-    right: 0; /* Align to right edge to prevent overflow on right side */
+    right: 0;
+    /* Align to right edge to prevent overflow on right side */
     transform: translateY(8px);
     transform-origin: bottom right;
 }
@@ -2862,8 +2869,10 @@ body:has(.sidebar.show) .mobile-toggle i {
     justify-content: space-between;
     gap: 0.5rem;
     background-color: #FFFFFF;
-    border: 1.5px solid #D97757; /* Primary Orange */
-    border-radius: 20px; /* More rounded */
+    border: 1.5px solid #D97757;
+    /* Primary Orange */
+    border-radius: 20px;
+    /* More rounded */
     color: var(--text-primary);
     font-weight: 500;
     font-size: 0.9375rem;
@@ -2886,25 +2895,28 @@ body:has(.sidebar.show) .mobile-toggle i {
 }
 
 .custom-select-trigger:hover {
-    background-color: #FFF5F0; /* Light orange tint on hover */
+    background-color: #FFF5F0;
+    /* Light orange tint on hover */
     box-shadow: 0 4px 12px rgba(217, 119, 87, 0.15);
 }
 
 .custom-select-wrapper.open .custom-select-trigger {
-    border-color: #C4623F; /* Darker orange when open */
+    border-color: #C4623F;
+    /* Darker orange when open */
     background-color: #FFF;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     /* Optional: if you want it to look connected, but the image shows disconnected. 
        Image shows trigger is separate. Let's keep it rounded. */
-    border-radius: 20px; 
+    border-radius: 20px;
 }
 
 .custom-select-trigger .arrow {
     width: 14px;
     height: 14px;
     transition: transform 0.25s ease;
-    color: #D97757; /* Primary Orange */
+    color: #D97757;
+    /* Primary Orange */
     flex-shrink: 0;
     font-size: 1rem;
 }
@@ -2926,7 +2938,8 @@ body:has(.sidebar.show) .mobile-toggle i {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     /* Responsive max-height based on viewport */
     max-height: min(350px, 50vh);
-    overflow: hidden; /* Hide overflow for header rounding */
+    overflow: hidden;
+    /* Hide overflow for header rounding */
     opacity: 0;
     visibility: hidden;
     transform: translateY(-8px);
@@ -2982,7 +2995,8 @@ body:has(.sidebar.show) .mobile-toggle i {
 }
 
 .custom-select-option.selected::after {
-    content: '\f00c'; /* FontAwesome check */
+    content: '\f00c';
+    /* FontAwesome check */
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
     position: absolute;
@@ -4043,21 +4057,26 @@ body:has(.sidebar.show) .mobile-toggle i {
     gap: 0.75rem;
     padding: 0.625rem 1rem;
     background: #FFFFFF;
-    border: 1.5px solid #D97757; /* Primary Orange */
-    border-radius: 20px; /* More rounded */
+    border: 1.5px solid #D97757;
+    /* Primary Orange */
+    border-radius: 20px;
+    /* More rounded */
     cursor: pointer;
     transition: all 0.2s ease;
     width: 100%;
-    height: 42px; /* Match height */
+    height: 42px;
+    /* Match height */
 }
 
 .datepicker-trigger:hover {
-    background-color: #FFF5F0; /* Light orange tint on hover */
+    background-color: #FFF5F0;
+    /* Light orange tint on hover */
     box-shadow: 0 4px 12px rgba(217, 119, 87, 0.15);
 }
 
 .datepicker-trigger.open {
-    border-color: #C4623F; /* Darker orange when open */
+    border-color: #C4623F;
+    /* Darker orange when open */
     background-color: #FFF;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
@@ -4065,7 +4084,8 @@ body:has(.sidebar.show) .mobile-toggle i {
 }
 
 .datepicker-trigger i:first-child {
-    color: #D97757; /* Primary Orange */
+    color: #D97757;
+    /* Primary Orange */
     font-size: 1rem;
 }
 
@@ -4082,7 +4102,8 @@ body:has(.sidebar.show) .mobile-toggle i {
 
 .datepicker-trigger .arrow {
     font-size: 0.75rem;
-    color: #D97757; /* Primary Orange */
+    color: #D97757;
+    /* Primary Orange */
     transition: transform 0.25s ease;
 }
 
@@ -4095,9 +4116,11 @@ body:has(.sidebar.show) .mobile-toggle i {
     position: absolute;
     top: calc(100% + 8px);
     left: auto;
-    right: 0; /* Align to right to prevent overflow */
+    right: 0;
+    /* Align to right to prevent overflow */
     min-width: 320px;
-    max-width: calc(100vw - 2rem); /* Ensure it doesn't overflow viewport */
+    max-width: calc(100vw - 2rem);
+    /* Ensure it doesn't overflow viewport */
     background: #FFFFFF !important;
     border: 1px solid var(--border-color);
     border-radius: 20px;
@@ -4115,6 +4138,7 @@ body:has(.sidebar.show) .mobile-toggle i {
         opacity: 0;
         transform: translateY(-8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -4230,7 +4254,8 @@ body:has(.sidebar.show) .mobile-toggle i {
 }
 
 .datepicker-day:hover:not(.empty):not(.selected) {
-    background-color: #FFF5F0; /* Light Orange */
+    background-color: #FFF5F0;
+    /* Light Orange */
     color: #D97757;
 }
 
@@ -4908,16 +4933,17 @@ body:has(.sidebar.show) .mobile-toggle i {
     }
 
     .pagination-jump {
-        display: none; /* Hide jump on mobile to save space */
+        display: none;
+        /* Hide jump on mobile to save space */
     }
 
     .pagination-btn-nav,
     .pagination-btn-page {
         min-width: 36px;
         height: 36px;
-        padding: 0; 
+        padding: 0;
     }
-    
+
     .pagination-per-page {
         width: 100%;
         justify-content: center;
@@ -5158,7 +5184,8 @@ tr:has(.editable-cell.editing),
 tr:focus-within:has(.editable-cell) {
     position: relative;
     z-index: 10003 !important;
-    animation: none !important; /* Disable animation to clear stacking context issues */
+    animation: none !important;
+    /* Disable animation to clear stacking context issues */
     transform: none !important;
     will-change: auto !important;
 }
@@ -5389,11 +5416,13 @@ tr:focus-within:has(.editable-cell) {
         -webkit-overflow-scrolling: touch;
         margin: 0 -1rem;
         padding: 0 1rem;
-        width: calc(100% + 2rem); /* Ensure full width relative to container */
+        width: calc(100% + 2rem);
+        /* Ensure full width relative to container */
     }
 
     .data-table {
-        min-width: auto; /* Let content define width, don't force stretch */
+        min-width: auto;
+        /* Let content define width, don't force stretch */
         width: 100%;
     }
 
@@ -6330,13 +6359,17 @@ img {
 .modal {
     display: flex;
     flex-direction: column;
-    max-height: 85vh; /* Prevent modal from exceeding viewport height */
+    max-height: 85vh;
+    /* Prevent modal from exceeding viewport height */
 }
 
 .modal-body {
-    overflow-y: auto; /* Enable scrolling for body content */
-    flex: 1; /* Allow body to take available space */
-    padding-right: 5px; /* Prevent scrollbar from overlapping content slightly */
+    overflow-y: auto;
+    /* Enable scrolling for body content */
+    flex: 1;
+    /* Allow body to take available space */
+    padding-right: 5px;
+    /* Prevent scrollbar from overlapping content slightly */
 }
 
 /* Custom scrollbar for modal body */
@@ -6371,7 +6404,8 @@ img {
     .modal {
         width: 95% !important;
         max-width: 100% !important;
-        max-height: 90vh; /* More height on mobile */
+        max-height: 90vh;
+        /* More height on mobile */
         margin: 0.5rem auto;
     }
 
@@ -6382,7 +6416,7 @@ img {
     .modal-header {
         padding: 1rem;
     }
-    
+
     .modal-header .modal-title {
         font-size: 1.1rem;
     }
@@ -6403,14 +6437,15 @@ img {
         flex-wrap: nowrap;
         overflow-x: auto;
         padding-bottom: 0.25rem;
-        padding-right: 1rem; /* Allow scrolling past last item */
+        padding-right: 1rem;
+        /* Allow scrolling past last item */
         -webkit-overflow-scrolling: touch;
         /* Hide scrollbar */
         scrollbar-width: none;
         -ms-overflow-style: none;
         align-items: center;
     }
-    
+
     .activity-filter-actions::-webkit-scrollbar {
         display: none;
     }
@@ -6426,23 +6461,52 @@ img {
    Excel Table Styles (Glassmorphism & Modern UI)
    ======================================== */
 
+/* Global Card Styling - Glassmorphism (Matches .table-card) */
+.card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
+    /* overflow: hidden;  <-- REMOVED to allow dropdowns to overflow */
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+/* Ensure dropdowns appear on top */
+.custom-select-options {
+    z-index: 9999 !important;
+}
+
 /* การ์ดตาราง */
 .table-card {
     background: rgba(255, 255, 255, 0.65);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.04), 
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.04),
         inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    border-radius: 24px; /* More rounded to match system */
-    overflow: hidden;
+    border-radius: 24px;
+    /* overflow: hidden; <-- Also removing from table-card just in case */
     transition: all 0.3s ease;
 }
 
+/* Flatten table-card when nested inside another card */
+.card .table-card {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+}
+
 .table-card:hover {
-    box-shadow: 
-        0 12px 40px rgba(0, 0, 0, 0.06), 
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.06),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
     background: rgba(255, 255, 255, 0.75);
 }
@@ -6467,7 +6531,8 @@ img {
 /* คอนเทนเนอร์ของตาราง */
 .table-container {
     overflow-x: auto;
-    overflow-y: auto; /* Restore vertical scroll */
+    overflow-y: auto;
+    /* Restore vertical scroll */
     max-height: 70vh;
     padding-bottom: 0.5rem;
     width: 100%;
@@ -6491,7 +6556,8 @@ img {
 }
 
 .table-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(217, 119, 87, 0.4); /* Primary tint */
+    background: rgba(217, 119, 87, 0.4);
+    /* Primary tint */
 }
 
 /* ตาราง Excel */
@@ -6510,7 +6576,7 @@ img {
     .table-card {
         border-radius: 16px;
     }
-    
+
     .table-toolbar {
         padding: 0.75rem 1rem;
         flex-direction: column;
@@ -6527,7 +6593,7 @@ img {
 .excel-table {
     width: max-content;
     min-width: 100%;
-    border-collapse: separate; 
+    border-collapse: separate;
     border-spacing: 0;
 }
 
@@ -6550,7 +6616,8 @@ img {
     position: relative;
     vertical-align: middle;
     border-bottom: 1px solid rgba(216, 211, 200, 0.4);
-    border-right: 1px solid rgba(216, 211, 200, 0.2); /* Very subtle vertical dividers */
+    border-right: 1px solid rgba(216, 211, 200, 0.2);
+    /* Very subtle vertical dividers */
 }
 
 .excel-table th:last-child,
@@ -6562,7 +6629,8 @@ img {
 .row-number {
     width: 50px;
     min-width: 50px;
-    background: rgba(245, 243, 239, 0.6); /* --bg-tertiary tint */
+    background: rgba(245, 243, 239, 0.6);
+    /* --bg-tertiary tint */
     color: var(--text-muted);
     font-size: 0.75rem;
     font-weight: 500;
@@ -6585,7 +6653,8 @@ img {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     height: 48px;
-    border-bottom: 2px solid rgba(217, 119, 87, 0.15); /* Primary tint underline */
+    border-bottom: 2px solid rgba(217, 119, 87, 0.15);
+    /* Primary tint underline */
     transition: background 0.2s ease;
 }
 
@@ -6597,7 +6666,8 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 2rem; /* More space */
+    padding: 0 2rem;
+    /* More space */
     height: 100%;
     position: relative;
     width: 100%;
@@ -6695,9 +6765,11 @@ img {
 
 /* เซลล์ข้อมูล */
 .data-cell {
-    background: var(--bg-cell, transparent); /* Default transparent to show row hover */
+    background: var(--bg-cell, transparent);
+    /* Default transparent to show row hover */
     transition: background 0.1s ease;
-    height: 48px; /* Taller rows for modern feel */
+    height: 48px;
+    /* Taller rows for modern feel */
     font-size: 0.9375rem;
 }
 
@@ -6825,9 +6897,10 @@ img {
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: 16px;
-    box-shadow: 
+    box-shadow:
         0 10px 40px rgba(0, 0, 0, 0.1),
-        0 4px 12px rgba(0, 0, 0, 0.05); /* Softer, deeper shadow */
+        0 4px 12px rgba(0, 0, 0, 0.05);
+    /* Softer, deeper shadow */
     min-width: 220px;
     z-index: 9999;
     overflow: hidden;
@@ -6841,6 +6914,7 @@ img {
         opacity: 0;
         transform: scale(0.95) translateY(-4px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -6892,7 +6966,8 @@ img {
 
 /* ไฮไลท์การเลือก */
 .selected-row td {
-    background: rgba(217, 119, 87, 0.08) !important; /* Primary fade */
+    background: rgba(217, 119, 87, 0.08) !important;
+    /* Primary fade */
 }
 
 /* ปุ่ม Ghost สำหรับ Toolbar - ปรับให้เข้ากับธีม */

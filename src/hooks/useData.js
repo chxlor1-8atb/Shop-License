@@ -5,6 +5,7 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import useSWR from 'swr';
 import useSWRMutation from 'swr/mutation';
 import { fetcher, swrConfigVariants as CONFIG } from '@/lib/swr-config';
@@ -39,7 +40,7 @@ export function useDashboardStats() {
         fetcher,
         CONFIG.dashboard
     );
-    
+
     return {
         stats: data?.stats,
         isLoading,
@@ -57,7 +58,7 @@ export function useExpiringCount() {
         fetcher,
         CONFIG.realtime
     );
-    
+
     return {
         count: data?.count || 0,
         isLoading,
@@ -74,7 +75,7 @@ export function useLicenseBreakdown() {
         fetcher,
         CONFIG.dashboard
     );
-    
+
     return {
         breakdown: data?.breakdown || [],
         isLoading,
@@ -93,7 +94,7 @@ export function useLicenseTypes() {
         fetcher,
         CONFIG.static
     );
-    
+
     return {
         licenseTypes: data?.types || data?.licenseTypes || [],
         isLoading,
@@ -113,27 +114,27 @@ export function useDropdownData() {
         fetcher,
         CONFIG.static
     );
-    
+
     const { data: typesData, isLoading: typesLoading } = useSWR(
         '/api/license-types',
         fetcher,
         CONFIG.static
     );
-    
+
     const shops = shopsData?.shops || [];
     const licenseTypes = typesData?.types || typesData?.licenseTypes || [];
-    
+
     // Pre-formatted options for CustomSelect
-    const shopOptions = shops.map(s => ({
+    const shopOptions = useMemo(() => shops.map(s => ({
         value: s.id,
         label: s.shop_name || s.name
-    }));
-    
-    const typeOptions = licenseTypes.map(t => ({
+    })), [shops]);
+
+    const typeOptions = useMemo(() => licenseTypes.map(t => ({
         value: t.id,
         label: t.name
-    }));
-    
+    })), [licenseTypes]);
+
     return {
         shops,
         licenseTypes,
@@ -153,15 +154,15 @@ export function useShops(params = {}) {
     if (params.search) searchParams.set('search', params.search);
     if (params.page) searchParams.set('page', params.page);
     if (params.limit) searchParams.set('limit', params.limit);
-    
+
     const url = `/api/shops${searchParams.toString() ? `?${searchParams}` : ''}`;
-    
+
     const { data, error, isLoading, mutate } = useSWR(
         url,
         fetcher,
         CONFIG.list
     );
-    
+
     return {
         shops: data?.shops || [],
         pagination: data?.pagination,
@@ -183,15 +184,15 @@ export function useLicenses(params = {}) {
     if (params.status) searchParams.set('status', params.status);
     if (params.page) searchParams.set('page', params.page);
     if (params.limit) searchParams.set('limit', params.limit);
-    
+
     const url = `/api/licenses${searchParams.toString() ? `?${searchParams}` : ''}`;
-    
+
     const { data, error, isLoading, mutate } = useSWR(
         url,
         fetcher,
         CONFIG.list
     );
-    
+
     return {
         licenses: data?.licenses || [],
         pagination: data?.pagination,
@@ -210,7 +211,7 @@ export function useLicense(id) {
         fetcher,
         CONFIG.static
     );
-    
+
     return {
         license: data?.license,
         isLoading,
@@ -228,7 +229,7 @@ export function useExpiringLicenses() {
         fetcher,
         CONFIG.dashboard
     );
-    
+
     return {
         licenses: data?.licenses || [],
         isLoading,
@@ -247,15 +248,15 @@ export function useActivityLogs(params = {}) {
     if (params.page) searchParams.set('page', params.page);
     if (params.limit) searchParams.set('limit', params.limit);
     if (params.user_id) searchParams.set('user_id', params.user_id);
-    
+
     const url = `/api/activity-logs${searchParams.toString() ? `?${searchParams}` : ''}`;
-    
+
     const { data, error, isLoading, mutate } = useSWR(
         url,
         fetcher,
         CONFIG.list
     );
-    
+
     return {
         logs: data?.logs || [],
         pagination: data?.pagination,
@@ -278,7 +279,7 @@ export function useMutation(url) {
         url,
         mutationFetcher
     );
-    
+
     return {
         trigger,
         isMutating,

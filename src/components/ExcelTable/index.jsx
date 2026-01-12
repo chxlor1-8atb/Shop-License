@@ -23,6 +23,9 @@ export default function ExcelTable({
   onColumnAdd,
   onColumnDelete,
   onColumnUpdate,
+  onExport,
+  exportLabel,
+  exportIcon,
 }) {
   // Logic & State management extracted to custom hook
   const {
@@ -132,30 +135,36 @@ export default function ExcelTable({
   return (
     <div className="table-card">
       <TableToolbar
-        onExport={() => {
-          const data = {
-            columns: columns.map((c) => ({
-              id: c.id,
-              name: c.name,
-              width: c.width,
-            })),
-            rows: rows.map((r) => {
-              const row = {};
-              columns.forEach((c) => {
-                row[c.name] = r[c.id];
-              });
-              return row;
-            }),
-          };
-          const json = JSON.stringify(data, null, 2);
-          const blob = new Blob([json], { type: "application/json" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "table-data.json";
-          a.click();
-          URL.revokeObjectURL(url);
-        }}
+        onExport={
+          onExport
+            ? () => onExport(rows)
+            : () => {
+                const data = {
+                  columns: columns.map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                    width: c.width,
+                  })),
+                  rows: rows.map((r) => {
+                    const row = {};
+                    columns.forEach((c) => {
+                      row[c.name] = r[c.id];
+                    });
+                    return row;
+                  }),
+                };
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "table-data.json";
+                a.click();
+                URL.revokeObjectURL(url);
+              }
+        }
+        exportLabel={exportLabel}
+        exportIcon={exportIcon}
         onClear={clearAll}
         onReset={resetTable}
       />

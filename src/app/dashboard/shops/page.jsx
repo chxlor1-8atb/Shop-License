@@ -11,6 +11,7 @@ import { showSuccess, showError } from "@/utils/alerts";
 import ExcelTable from "@/components/ExcelTable";
 import Pagination from "@/components/ui/Pagination";
 import FilterRow, { SearchInput } from "@/components/ui/FilterRow";
+import { exportShopsToPDF } from "@/lib/pdfExport";
 
 // Default column definition
 const STANDARD_COLUMNS = [
@@ -324,24 +325,37 @@ export default function ShopsPage() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      await exportShopsToPDF(shops);
+    } catch (err) {
+      console.error(err);
+      showError("Export PDF ล้มเหลว");
+    }
+  };
+
   return (
-    <div className="card">
-      <div className="card-header">
-        <h3 className="card-title">
-          <i className="fas fa-store"></i> ร้านค้า
-        </h3>
-      </div>
-      <div className="card-body">
-        <FilterRow>
-          <SearchInput
-            value={search}
-            onChange={(val) => {
-              setSearch(val);
-              pagination.resetPage();
-            }}
-            placeholder="ค้นหาร้านค้า..."
-          />
-        </FilterRow>
+    <div className="card h-100">
+      <div className="card-body p-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h3 className="m-0 text-primary">
+            <i className="fas fa-store me-2"></i> รายการร้านค้า
+          </h3>
+          {/* Optional: Add header actions if needed */}
+        </div>
+
+        <div className="mb-4">
+          <FilterRow>
+            <SearchInput
+              value={search}
+              onChange={(val) => {
+                setSearch(val);
+                pagination.resetPage();
+              }}
+              placeholder="ค้นหาร้านค้า..."
+            />
+          </FilterRow>
+        </div>
 
         {!loading ? (
           <ExcelTable
@@ -353,6 +367,9 @@ export default function ShopsPage() {
             onColumnAdd={handleColumnAdd}
             onColumnUpdate={handleColumnUpdate}
             onColumnDelete={handleColumnDelete}
+            onExport={handleExport}
+            exportLabel="Export PDF"
+            exportIcon="fa-file-pdf"
           />
         ) : (
           <div className="text-center p-5">Loading...</div>
