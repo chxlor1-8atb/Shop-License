@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import ExcelTable from "@/components/ExcelTable";
+import Loading from "@/components/Loading";
 
 // Constants
 const STANDARD_COLUMNS = [
@@ -388,7 +389,11 @@ export default function LicenseTypesPage() {
           onColumnDelete={handleColumnDelete}
         />
       ) : (
-        <LoadingState />
+        <div className="card">
+          <div className="card-body">
+            <Loading message="กำลังโหลดข้อมูล..." />
+          </div>
+        </div>
       )}
     </>
   );
@@ -431,19 +436,4 @@ function StatsSection({ stats }) {
   );
 }
 
-function LoadingState() {
-  return (
-    <div className="card">
-      <div
-        className="card-body"
-        style={{ padding: "2rem", textAlign: "center" }}
-      >
-        <i
-          className="fas fa-spinner fa-spin"
-          style={{ marginRight: "10px" }}
-        ></i>
-        Loading data...
-      </div>
-    </div>
-  );
-}
+

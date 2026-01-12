@@ -9,6 +9,7 @@ import { logout, checkAuth as checkAuthUtil } from "@/utils/auth";
 import "../../styles/style.css";
 import "../../styles/sweetalert-custom.css";
 import "../../styles/toast.css";
+import Loading from "@/components/Loading";
 
 // Lazy load heavy components to reduce initial bundle
 const PatchNotesModal = dynamic(
@@ -85,13 +86,7 @@ export default function DashboardLayout({ children }) {
   const handleLogout = () => logout();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="loading">
-          <i className="fas fa-spinner fa-spin"></i> กำลังโหลด...
-        </div>
-      </div>
-    );
+    return <Loading fullPage={true} message="กำลังโหลด..." />;
   }
 
   if (!user) return null;

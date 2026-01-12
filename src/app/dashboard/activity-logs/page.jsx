@@ -222,13 +222,11 @@ export default function ActivityLogsPage() {
   // Show loading while checking authorization
   if (authLoading) {
     return (
-    return (
       <div className="card">
         <div className="card-body">
           <Loading message="กำลังตรวจสอบสิทธิ์..." />
         </div>
       </div>
-    );
     );
   }
 
@@ -581,13 +579,11 @@ function UserAvatar({ name, role }) {
 function StatsTab({ stats, loading }) {
   if (loading || !stats) {
     return (
-    return (
       <div className="card">
         <div className="card-body">
           <Loading message="กำลังโหลดข้อมูล..." />
         </div>
       </div>
-    );
     );
   }
 
@@ -779,13 +775,11 @@ function StatsTab({ stats, loading }) {
 function UserStatsTab({ users, loading }) {
   if (loading) {
     return (
-    return (
       <div className="card">
         <div className="card-body">
           <Loading message="กำลังโหลดข้อมูล..." />
         </div>
       </div>
-    );
     );
   }
 
