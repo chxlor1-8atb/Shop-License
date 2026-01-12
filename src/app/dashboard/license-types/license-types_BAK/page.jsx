@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { API_ENDPOINTS } from "@/constants";
-import { showSuccess, showError } from "@/utils/alerts";
-import ExcelTable from "@/components/ExcelTable";
+import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
+// import EditableCell from '@/components/ui/EditableCell'; // REMOVED
+import Modal from "@/components/ui/Modal";
+// import TableSkeleton from '@/components/ui/TableSkeleton'; // Optional: keep or replace
+import ExcelTable from "@/components/ExcelTable"; // New Component
 
 // Constants
 const INITIAL_FORM_DATA = {
@@ -38,6 +41,8 @@ const TABLE_COLUMNS = [
 export default function LicenseTypesPage() {
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
 
   useEffect(() => {
     fetchTypes();
@@ -51,6 +56,10 @@ export default function LicenseTypesPage() {
       );
       const data = await response.json();
       if (data.success) {
+        // Map API data to match column IDs if necessary
+        // API keys: id, name, description, validity_days, license_count
+        // Table Columns: name, description, validity_days, license_count
+        // It matches perfectly.
         setTypes(data.types || []);
       }
     } catch (error) {
@@ -64,7 +73,7 @@ export default function LicenseTypesPage() {
   const stats = useMemo(
     () => ({
       totalTypes: types.length,
-      activeTypes: types.filter((t) => parseInt(t.license_count || 0) > 0).length,
+      activeTypes: types.filter((t) => parseInt(t.license_count) > 0).length,
       totalLicenses: types.reduce(
         (acc, curr) => acc + parseInt(curr.license_count || 0),
         0
@@ -75,9 +84,23 @@ export default function LicenseTypesPage() {
 
   // Handle updates from ExcelTable
   const handleRowUpdate = async (updatedRow) => {
+    // Optimistic update locally?
+    // ExcelTable already updated the UI. We just need to sync backend.
+    // We probably should check what changed.
+
+    // Find original row to see if anything actually changed?
+    // updatedRow comes from ExcelTable state.
+
+    // We only support updating existing rows here.
+    // Newly added rows via ExcelTable (if support inline add) might have temp IDs like "id_..."
+    // If it starts with "id_", it's a new row.
+
+    // TODO: Handle inline ADD.
+    // For now, let's assume update existing.
+
     if (updatedRow.id.toString().startsWith("id_")) {
       // Create new type
-      if (!updatedRow.name) return;
+      if (!updatedRow.name) return; // Name is required
 
       const createData = {
         name: updatedRow.name,
@@ -95,9 +118,10 @@ export default function LicenseTypesPage() {
 
         if (data.success) {
           showSuccess("สร้างประเภทใบอนุญาตเรียบร้อย");
+          // Fetch to get the real ID and sync custom hook
           fetchTypes();
         } else {
-          showError(data.message || "เกิดข้อผิดพลาด");
+          showError(data.message);
         }
       } catch (error) {
         showError(error.message);
@@ -123,26 +147,43 @@ export default function LicenseTypesPage() {
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.message || "เกิดข้อผิดพลาด");
+        throw new Error(data.message);
       }
+      // Success - maybe update local state to ensure consistency?
       setTypes((prev) =>
         prev.map((t) => (t.id === typeId ? { ...t, ...updateData } : t))
       );
     } catch (error) {
       showError(error.message);
+      // Revert changes? fetchTypes() to reset.
       fetchTypes();
     }
   };
 
   const handleRowDelete = (rowId) => {
+    // Check constraints
     const type = types.find((t) => t.id === rowId);
-    if (!type) return;
+    if (!type) return; // Might be temp row
 
-    if (parseInt(type.license_count || 0) > 0) {
+    if (parseInt(type.license_count) > 0) {
       showError("ไม่สามารถลบได้เนื่องจากมีใบอนุญาตผูกอยู่");
-      fetchTypes();
+      // Revert local state requires re-fetch or manual revert in ExcelTable
+      // Since ExcelTable already deleted it from UI, we need to force reset it?
+      // Or better: ExcelTable calls onDeleteRow, we perform check, if fail, we add it back.
+      fetchTypes(); // Safest way to restore
       return;
     }
+
+    // Perform Delete
+    // pendingDelete is a SweetAlert confirmation.
+    // But ExcelTable implementation allows immediate delete with undo?
+    // Or just delete. The ExcelTable implementation in ExcelWeb didn't show confirmation in the component (TableRow just calls onDeleteRow).
+    // We can use the pendingDelete here.
+
+    // NOTE: ExcelTable Component ALREADY removed it from its internal state when we clicked trash.
+    // So "pendingDelete" confirm dialog is awkward because the row is gone.
+    // Better to modify ExcelTable to ask for confirmation OR optimistic delete.
+    // Let's go with Optimistic Delete + Error recovery.
 
     deleteType(rowId);
   };
@@ -154,20 +195,27 @@ export default function LicenseTypesPage() {
       });
       const data = await response.json();
       if (!data.success) {
-        throw new Error(data.message || "เกิดข้อผิดพลาด");
+        throw new Error(data.message);
       }
+      // Success
+      // Update stats
       setTypes((prev) => prev.filter((t) => t.id !== id));
-      showSuccess("ลบประเภทใบอนุญาตเรียบร้อย");
     } catch (error) {
       showError(error.message);
-      fetchTypes();
+      fetchTypes(); // Restore
     }
   };
 
   const handleRowAdd = (newRow) => {
-    // Called when user adds a new row via ExcelTable
-    // The row will be saved when user edits it (via handleRowUpdate)
+    // This is called when user clicks "add row" in ExcelTable or Context Menu.
+    // It creates a temp row in ExcelTable.
+    // We don't save to backend yet until they enter data.
+    // So we just track it.
   };
+
+  // Modal Form (Legacy) - keeping for "Add Type" button in header if needed?
+  // User wants "Card" to use Excel system.
+  // The Excel system HAS "Add Row" functionality.
 
   return (
     <>
@@ -189,6 +237,22 @@ export default function LicenseTypesPage() {
           </div>
         </div>
       )}
+
+      {/* Modal - keeping it available code-wise but maybe unused if fully Excel-like */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="เพิ่มประเภทใหม่"
+      >
+        <TypeForm
+          formData={formData}
+          onChange={setFormData}
+          onSubmit={(e) => {
+            /* Reuse existing submit logic */
+          }}
+          onCancel={() => setShowModal(false)}
+        />
+      </Modal>
     </>
   );
 }
@@ -228,4 +292,12 @@ function StatsSection({ stats }) {
       </div>
     </div>
   );
+}
+
+/**
+ * TypeForm Component (Legacy/Fallback)
+ */
+function TypeForm({ formData, onChange, onSubmit, onCancel }) {
+  // ... kept for reference or backup
+  return null;
 }

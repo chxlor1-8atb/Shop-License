@@ -6410,3 +6410,362 @@ img {
         white-space: nowrap;
     }
 }
+
+/* ========================================
+   Excel Table Styles (from Tablexcelweb)
+   ======================================== */
+
+/* การ์ดตาราง */
+.table-card {
+    background: var(--bg-card);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.table-toolbar {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.toolbar-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border-color);
+    margin: 0 0.25rem;
+}
+
+/* คอนเทนเนอร์ของตาราง */
+.table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 70vh;
+}
+
+/* ตาราง Excel */
+.excel-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.excel-table th,
+.excel-table td {
+    border: 1px solid var(--border-color);
+    padding: 0;
+    position: relative;
+    vertical-align: middle;
+}
+
+/* คอลัมน์ลำดับแถว */
+.row-number {
+    width: 48px;
+    min-width: 48px;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    user-select: none;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.row-number-header {
+    background: var(--bg-tertiary);
+    font-weight: 500;
+}
+
+/* เซลล์หัวตาราง */
+.header-cell {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 2rem;
+    height: 100%;
+    position: relative;
+}
+
+.header-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    width: 100%;
+}
+
+.header-input {
+    width: 100%;
+    background: white;
+    border: 1px solid var(--primary);
+    border-radius: var(--border-radius);
+    padding: 0.25rem 0.5rem;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    outline: none;
+    box-shadow: var(--shadow-glow);
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-tertiary);
+    padding-left: 0.5rem;
+}
+
+.header-cell:hover .header-actions {
+    opacity: 1;
+}
+
+.header-btn {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    transition: all var(--transition-fast);
+}
+
+.header-btn:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+}
+
+.header-btn.danger:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+/* ที่จับสำหรับปรับขนาดคอลัมน์ */
+.resize-handle {
+    position: absolute;
+    right: -1px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    cursor: col-resize;
+    background: transparent;
+    transition: background var(--transition-fast);
+    z-index: 10;
+}
+
+.resize-handle:hover,
+.resize-handle.active {
+    background: var(--primary);
+}
+
+/* เซลล์ข้อมูล */
+.data-cell {
+    background: var(--bg-cell, var(--bg-secondary));
+    transition: background 0.05s ease;
+    height: 40px;
+}
+
+.data-cell:hover {
+    background: var(--bg-cell-hover, var(--bg-tertiary));
+}
+
+.data-cell.editing {
+    background: var(--bg-cell-edit, var(--bg-secondary));
+    z-index: 5;
+}
+
+.cell-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.875rem;
+    min-height: 40px;
+    cursor: text;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+}
+
+.cell-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cell-input {
+    width: 100%;
+    height: 100%;
+    min-height: 40px;
+    background: white;
+    border: 2px solid var(--primary);
+    padding: 0 0.75rem;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    outline: none;
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    z-index: 10;
+}
+
+/* การจัดการแถว */
+.row-actions {
+    width: 40px;
+    min-width: 40px;
+    background: white;
+    text-align: center;
+    border-left: 1px solid var(--border-color);
+}
+
+.row-actions-header {
+    background: var(--bg-tertiary);
+}
+
+.row-action-btn {
+    background: transparent;
+    border: none;
+    color: var(--border-color);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all var(--transition-fast);
+}
+
+tr:hover .row-action-btn {
+    color: var(--text-muted);
+}
+
+.row-action-btn:hover {
+    color: var(--danger) !important;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* เซลล์เพิ่มคอลัมน์ */
+.add-column-cell {
+    width: 40px;
+    min-width: 40px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+}
+
+.add-column-btn {
+    width: 100%;
+    height: 100%;
+    min-height: 40px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.125rem;
+    transition: all var(--transition-fast);
+}
+
+.add-column-btn:hover {
+    color: var(--primary);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* เมนูบริบท (Context Menu) */
+.context-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    min-width: 200px;
+    z-index: 1000;
+    overflow: hidden;
+    padding: 0.25rem;
+    animation: fadeIn 0.1s ease-out;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background var(--transition-fast);
+    font-size: 0.875rem;
+}
+
+.context-menu-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.context-menu-item.danger {
+    color: var(--danger);
+}
+
+.context-menu-item.danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.context-menu-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0.25rem 0;
+}
+
+/* ไฮไลท์การเลือก */
+.selected-row td {
+    background: var(--bg-tertiary) !important;
+}
+
+/* ปุ่ม Ghost สำหรับ Toolbar */
+.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+    background: rgba(217, 119, 87, 0.1);
+    box-shadow: 0 2px 4px rgba(217, 119, 87, 0.15);
+}
