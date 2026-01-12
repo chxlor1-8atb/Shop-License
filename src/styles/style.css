@@ -6467,7 +6467,7 @@ img {
 /* คอนเทนเนอร์ของตาราง */
 .table-container {
     overflow-x: auto;
-    overflow-y: hidden; /* Prevent vertical if not needed, or auto */
+    overflow-y: auto; /* Restore vertical scroll */
     max-height: 70vh;
     padding-bottom: 0.5rem;
     width: 100%;
