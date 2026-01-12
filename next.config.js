@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+// Force restart: resolve hydration mismatch
 const nextConfig = {
     // Enable React strict mode for better development
     reactStrictMode: true,
@@ -21,8 +22,8 @@ const nextConfig = {
     experimental: {
         // Optimize package imports - tree shake unused exports
         optimizePackageImports: [
-            'chart.js', 
-            'react-chartjs-2', 
+            'chart.js',
+            'react-chartjs-2',
             'sweetalert2',
             'bcryptjs',
             '@neondatabase/serverless',
