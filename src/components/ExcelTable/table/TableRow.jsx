@@ -33,16 +33,37 @@ export function TableRow({
             onClick={() => onCellClick(row.id, col.id)}
           >
             {isEditing && !col.readOnly ? (
-              <input
-                ref={inputRef}
-                type={col.type || "text"}
-                className="cell-input"
-                value={row[col.id] || ""}
-                onChange={(e) => onCellChange(row.id, col.id, e.target.value)}
-                onBlur={() => onCellBlur(row.id, col.id)} /* Pass identifiers */
-                onKeyDown={(e) => onCellKeyDown(e, row.id, col.id)}
-                style={{ textAlign: col.align || "left" }}
-              />
+              col.type === "select" ? (
+                <select
+                  ref={inputRef}
+                  className="cell-input"
+                  value={row[col.id] || ""}
+                  onChange={(e) => onCellChange(row.id, col.id, e.target.value)}
+                  onBlur={() => onCellBlur(row.id, col.id)}
+                  onKeyDown={(e) => onCellKeyDown(e, row.id, col.id)}
+                  style={{ textAlign: col.align || "left" }}
+                >
+                  <option value="">-- เลือก --</option>
+                  {col.options?.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  ref={inputRef}
+                  type={col.type || "text"}
+                  className="cell-input"
+                  value={row[col.id] || ""}
+                  onChange={(e) => onCellChange(row.id, col.id, e.target.value)}
+                  onBlur={() =>
+                    onCellBlur(row.id, col.id)
+                  } /* Pass identifiers */
+                  onKeyDown={(e) => onCellKeyDown(e, row.id, col.id)}
+                  style={{ textAlign: col.align || "left" }}
+                />
+              )
             ) : (
               <div
                 className="cell-content"
@@ -63,6 +84,10 @@ export function TableRow({
                         month: "short",
                         day: "numeric",
                       })
+                    : col.type === "select" && col.options
+                    ? col.options.find((o) => o.value == row[col.id])?.label ||
+                      row[col.id] ||
+                      ""
                     : row[col.id] || ""}
                 </span>
               </div>

@@ -930,12 +930,15 @@ select option:checked {
 }
 
 /* Main Content */
+/* Main Content */
 .main-content {
     flex: 1;
     margin-left: var(--sidebar-width);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden; /* Prevent page-level horizontal scroll */
+    max-width: calc(100vw - var(--sidebar-width)); /* Explicitly constrain width */
 }
 
 /* Header - Enhanced Premium Glass */
@@ -1037,17 +1040,24 @@ select option:checked {
     position: relative;
     z-index: 1;
     opacity: 1;
-    opacity: 1;
     transform: none;
-    /* Changed from translate3d to allow fixed children (modals) to escape */
-    /* Smoother transition with slide + fade */
     transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
         transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    /* GPU acceleration hint */
     will-change: opacity, transform;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    min-width: 0; /* Crucial for preventing flex item from overflowing parent */
+    width: 100%;
+    max-width: 100%;
 }
+
+/* ... existing animation code ... */
+
+/* Tables - Glass (Removed duplicate simple table-container definition to avoid conflicts) */
+/* .table-container {
+    overflow-x: auto;
+    border-radius: var(--border-radius);
+} */
 
 .content-body.page-transitioning {
     opacity: 0;
@@ -1708,10 +1718,10 @@ select option:checked {
 }
 
 /* Tables - Glass */
-.table-container {
+/* .table-container {
     overflow-x: auto;
     border-radius: var(--border-radius);
-}
+} */
 
 .data-table {
     width: 100%;
@@ -6454,11 +6464,15 @@ img {
 }
 
 /* คอนเทนเนอร์ของตาราง */
+/* คอนเทนเนอร์ของตาราง */
 .table-container {
     overflow-x: auto;
-    overflow-y: auto;
+    overflow-y: hidden; /* Prevent vertical if not needed, or auto */
     max-height: 70vh;
-    padding-bottom: 1rem; /* Space for shadow */
+    padding-bottom: 0.5rem;
+    width: 100%;
+    max-width: 100%;
+    /* Ensure it handles the scroll */
 }
 
 /* Custom Scrollbar for table */
@@ -6481,10 +6495,53 @@ img {
 }
 
 /* ตาราง Excel */
+/* .excel-table definition moved down */
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .content-body {
+        padding: 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .table-card {
+        border-radius: 16px;
+    }
+    
+    .table-toolbar {
+        padding: 0.75rem 1rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toolbar-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+/* Ensure table scrolls if columns are wide */
 .excel-table {
-    width: 100%;
-    border-collapse: separate; /* Allows for cleaner look */
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate; 
     border-spacing: 0;
+}
+
+/* Constrain container width to force scroll */
+.table-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.table-card {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .excel-table th,
