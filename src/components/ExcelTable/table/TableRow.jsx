@@ -1,5 +1,3 @@
-import { Trash2 } from "lucide-react";
-
 export function TableRow({
   row,
   rowIndex,
@@ -75,7 +73,7 @@ export function TableRow({
           onClick={() => onDeleteRow(row.id)}
           title="ลบแถว"
         >
-          <Trash2 size={16} />
+          <i className="fas fa-trash"></i>
         </button>
       </td>
     </tr>

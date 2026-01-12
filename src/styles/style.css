@@ -6412,39 +6412,45 @@ img {
 }
 
 /* ========================================
-   Excel Table Styles (from Tablexcelweb)
+/* ========================================
+   Excel Table Styles (Glassmorphism & Modern UI)
    ======================================== */
 
 /* การ์ดตาราง */
 .table-card {
-    background: var(--bg-card);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.04), 
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border-radius: 24px; /* More rounded to match system */
     overflow: hidden;
-    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.table-card:hover {
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.06), 
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.75);
 }
 
 .table-toolbar {
     display: flex;
     gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    background: rgba(255, 255, 255, 0.3);
+    border-bottom: 1px solid rgba(216, 211, 200, 0.4);
     flex-wrap: wrap;
     align-items: center;
 }
 
 .toolbar-group {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     align-items: center;
-}
-
-.toolbar-divider {
-    width: 1px;
-    height: 20px;
-    background: var(--border-color);
-    margin: 0 0.25rem;
 }
 
 /* คอนเทนเนอร์ของตาราง */
@@ -6452,58 +6458,92 @@ img {
     overflow-x: auto;
     overflow-y: auto;
     max-height: 70vh;
+    padding-bottom: 1rem; /* Space for shadow */
+}
+
+/* Custom Scrollbar for table */
+.table-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(217, 119, 87, 0.4); /* Primary tint */
 }
 
 /* ตาราง Excel */
 .excel-table {
     width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
+    border-collapse: separate; /* Allows for cleaner look */
+    border-spacing: 0;
 }
 
 .excel-table th,
 .excel-table td {
-    border: 1px solid var(--border-color);
     padding: 0;
     position: relative;
     vertical-align: middle;
+    border-bottom: 1px solid rgba(216, 211, 200, 0.4);
+    border-right: 1px solid rgba(216, 211, 200, 0.2); /* Very subtle vertical dividers */
+}
+
+.excel-table th:last-child,
+.excel-table td:last-child {
+    border-right: none;
 }
 
 /* คอลัมน์ลำดับแถว */
 .row-number {
-    width: 48px;
-    min-width: 48px;
-    background: var(--bg-tertiary);
+    width: 50px;
+    min-width: 50px;
+    background: rgba(245, 243, 239, 0.6); /* --bg-tertiary tint */
     color: var(--text-muted);
     font-size: 0.75rem;
-    font-variant-numeric: tabular-nums;
+    font-weight: 500;
     text-align: center;
     user-select: none;
-    border-bottom: 1px solid var(--border-color);
+    font-variant-numeric: tabular-nums;
 }
 
 .row-number-header {
-    background: var(--bg-tertiary);
-    font-weight: 500;
+    background: rgba(245, 243, 239, 0.8);
+    border-bottom: 2px solid rgba(216, 211, 200, 0.5);
 }
 
 /* เซลล์หัวตาราง */
 .header-cell {
-    background: var(--bg-tertiary);
+    background: rgba(255, 255, 255, 0.8);
     color: var(--text-secondary);
-    font-weight: 500;
-    font-size: 0.875rem;
+    font-weight: 600;
+    font-size: 0.825rem;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
+    height: 48px;
+    border-bottom: 2px solid rgba(217, 119, 87, 0.15); /* Primary tint underline */
+    transition: background 0.2s ease;
+}
+
+.header-cell:hover {
+    background: white;
 }
 
 .header-content {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.625rem 2rem;
+    padding: 0 2rem; /* More space */
     height: 100%;
     position: relative;
+    width: 100%;
 }
 
 .header-text {
@@ -6512,75 +6552,83 @@ img {
     white-space: nowrap;
     text-align: center;
     width: 100%;
+    color: var(--gray-700);
 }
 
 .header-input {
     width: 100%;
     background: white;
-    border: 1px solid var(--primary);
-    border-radius: var(--border-radius);
+    border: 1.5px solid var(--primary);
+    border-radius: 6px;
     padding: 0.25rem 0.5rem;
-    color: var(--text-primary);
+    color: var(--primary-dark);
     font-family: inherit;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
     outline: none;
-    box-shadow: var(--shadow-glow);
+    box-shadow: 0 2px 8px rgba(217, 119, 87, 0.2);
+    text-align: center;
 }
 
 .header-actions {
     display: flex;
     gap: 0.25rem;
     opacity: 0;
-    transition: opacity var(--transition-fast);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: absolute;
     right: 0.5rem;
     top: 50%;
-    transform: translateY(-50%);
-    background: var(--bg-tertiary);
-    padding-left: 0.5rem;
+    transform: translateY(-50%) translateX(10px);
+    padding: 0.25rem;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .header-cell:hover .header-actions {
     opacity: 1;
+    transform: translateY(-50%) translateX(0);
 }
 
 .header-btn {
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    width: 20px;
-    height: 20px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font-size: 0.75rem;
-    transition: all var(--transition-fast);
+    transition: all 0.2s ease;
 }
 
 .header-btn:hover {
-    border-color: var(--text-secondary);
-    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    color: var(--primary);
+    transform: scale(1.1);
 }
 
 .header-btn.danger:hover {
-    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
     color: var(--danger);
 }
 
 /* ที่จับสำหรับปรับขนาดคอลัมน์ */
 .resize-handle {
     position: absolute;
-    right: -1px;
-    top: 0;
-    bottom: 0;
+    right: -2px;
+    top: 20%;
+    bottom: 20%;
     width: 4px;
     cursor: col-resize;
     background: transparent;
-    transition: background var(--transition-fast);
+    transition: background 0.2s ease;
     z-index: 10;
+    border-radius: 2px;
 }
 
 .resize-handle:hover,
@@ -6590,17 +6638,15 @@ img {
 
 /* เซลล์ข้อมูล */
 .data-cell {
-    background: var(--bg-cell, var(--bg-secondary));
-    transition: background 0.05s ease;
-    height: 40px;
-}
-
-.data-cell:hover {
-    background: var(--bg-cell-hover, var(--bg-tertiary));
+    background: var(--bg-cell, transparent); /* Default transparent to show row hover */
+    transition: background 0.1s ease;
+    height: 48px; /* Taller rows for modern feel */
+    font-size: 0.9375rem;
 }
 
 .data-cell.editing {
-    background: var(--bg-cell-edit, var(--bg-secondary));
+    background: white;
+    box-shadow: inset 0 0 0 2px var(--primary);
     z-index: 5;
 }
 
@@ -6608,10 +6654,10 @@ img {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 0.875rem;
-    min-height: 40px;
+    padding: 0 1rem;
+    height: 100%;
+    min-height: 48px;
     cursor: text;
-    font-size: 0.9375rem;
     color: var(--text-primary);
 }
 
@@ -6625,107 +6671,152 @@ img {
 .cell-input {
     width: 100%;
     height: 100%;
-    min-height: 40px;
     background: white;
-    border: 2px solid var(--primary);
-    padding: 0 0.75rem;
+    border: none;
+    padding: 0 1rem;
     color: var(--text-primary);
     font-family: inherit;
     font-size: 0.9375rem;
     outline: none;
     position: absolute;
-    top: -1px;
-    left: -1px;
-    right: -1px;
-    bottom: -1px;
-    z-index: 10;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+/* Row Hover Effects */
+.excel-table tbody tr {
+    transition: background 0.1s ease;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.excel-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+    z-index: 1;
+    position: relative;
 }
 
 /* การจัดการแถว */
 .row-actions {
-    width: 40px;
-    min-width: 40px;
-    background: white;
+    width: 48px;
+    min-width: 48px;
+    background: rgba(255, 255, 255, 0.2);
     text-align: center;
-    border-left: 1px solid var(--border-color);
+    border-left: 1px solid rgba(216, 211, 200, 0.3);
 }
 
 .row-actions-header {
-    background: var(--bg-tertiary);
+    background: rgba(255, 255, 255, 0.8);
+    border-bottom: 2px solid rgba(217, 119, 87, 0.15);
 }
 
 .row-action-btn {
     background: transparent;
     border: none;
-    color: var(--border-color);
+    color: var(--text-muted);
     cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 4px;
-    transition: all var(--transition-fast);
+    padding: 0.4rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    opacity: 0.6;
 }
 
-tr:hover .row-action-btn {
-    color: var(--text-muted);
+.excel-table tr:hover .row-action-btn {
+    opacity: 1;
 }
 
 .row-action-btn:hover {
     color: var(--danger) !important;
     background: rgba(239, 68, 68, 0.1);
+    transform: scale(1.1);
 }
 
 /* เซลล์เพิ่มคอลัมน์ */
 .add-column-cell {
-    width: 40px;
-    min-width: 40px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
+    width: 48px;
+    min-width: 48px;
+    background: rgba(250, 249, 247, 0.5);
+    border-bottom: 2px solid rgba(216, 211, 200, 0.5);
 }
 
 .add-column-btn {
     width: 100%;
     height: 100%;
-    min-height: 40px;
     background: transparent;
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 1.125rem;
-    transition: all var(--transition-fast);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .add-column-btn:hover {
     color: var(--primary);
-    background: rgba(0, 0, 0, 0.02);
+    background: rgba(217, 119, 87, 0.1);
 }
 
-/* เมนูบริบท (Context Menu) */
+/* เมนูบริบท (Context Menu) - Updated */
 .context-menu {
     position: fixed;
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
-    min-width: 200px;
-    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.1),
+        0 4px 12px rgba(0, 0, 0, 0.05); /* Softer, deeper shadow */
+    min-width: 220px;
+    z-index: 9999;
     overflow: hidden;
-    padding: 0.25rem;
-    animation: fadeIn 0.1s ease-out;
+    padding: 0.5rem;
+    animation: menuScale 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top left;
+}
+
+@keyframes menuScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .context-menu-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
+    padding: 0.65rem 1rem;
     color: var(--text-primary);
     cursor: pointer;
-    border-radius: 4px;
-    transition: background var(--transition-fast);
+    border-radius: 10px;
+    transition: all 0.15s ease;
     font-size: 0.875rem;
+    font-weight: 500;
 }
 
 .context-menu-item:hover {
-    background: var(--bg-tertiary);
+    background: linear-gradient(90deg, #F8F6F2 0%, #FFFFFF 100%);
+    color: var(--primary-dark);
+    transform: translateX(2px);
+}
+
+.context-menu-item svg {
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.context-menu-item:hover svg {
+    opacity: 1;
+    color: var(--primary);
 }
 
 .context-menu-item.danger {
@@ -6733,39 +6824,45 @@ tr:hover .row-action-btn {
 }
 
 .context-menu-item.danger:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 0.08);
 }
 
 .context-menu-divider {
     height: 1px;
-    background: var(--border-color);
-    margin: 0.25rem 0;
+    background: rgba(0, 0, 0, 0.04);
+    margin: 0.25rem 0.5rem;
 }
 
 /* ไฮไลท์การเลือก */
 .selected-row td {
-    background: var(--bg-tertiary) !important;
+    background: rgba(217, 119, 87, 0.08) !important; /* Primary fade */
 }
 
-/* ปุ่ม Ghost สำหรับ Toolbar */
+/* ปุ่ม Ghost สำหรับ Toolbar - ปรับให้เข้ากับธีม */
 .btn-ghost {
     background: transparent;
     color: var(--text-secondary);
     border: 1px solid transparent;
+    border-radius: 10px;
 }
 
 .btn-ghost:hover:not(:disabled) {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--primary-dark);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .btn-outline-primary {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.4);
     color: var(--primary);
     border: 1px solid var(--primary);
+    backdrop-filter: blur(4px);
+    border-radius: 12px;
 }
 
 .btn-outline-primary:hover:not(:disabled) {
-    background: rgba(217, 119, 87, 0.1);
-    box-shadow: 0 2px 4px rgba(217, 119, 87, 0.15);
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(217, 119, 87, 0.3);
+    border-color: var(--primary);
 }

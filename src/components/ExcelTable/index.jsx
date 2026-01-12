@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { Plus } from "lucide-react";
 
 import { useExcelTable } from "./table/TableHooks";
 import { TableToolbar } from "./table/TableToolbar";

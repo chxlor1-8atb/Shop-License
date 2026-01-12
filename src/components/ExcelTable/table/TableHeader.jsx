@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { Plus, X } from "lucide-react";
 
 export function TableHeader({
   columns,
@@ -39,7 +38,7 @@ export function TableHeader({
   return (
     <thead>
       <tr>
-        <th className="row-number row-number-header">#</th>
+        <th className="row-number row-number-header">ลำดับ</th>
         {columns.map((col) => (
           <th
             key={col.id}
@@ -114,7 +113,7 @@ export function TableHeader({
             onClick={() => onAddColumn()}
             title="เพิ่มคอลัมน์"
           >
-            <Plus size={20} />
+            <i className="fas fa-plus"></i>
           </button>
         </th>
         <th className="row-actions row-actions-header"></th>

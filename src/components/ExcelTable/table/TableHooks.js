@@ -193,6 +193,26 @@ export function useExcelTable({
     }
   }, [initialColumns, initialRows]);
 
+  // Wrapper for setContextMenu to handle multiple arguments from TableRow/TableHeader
+  const handleContextMenu = useCallback((e, type, rowId, colId) => {
+    // If called with null (to close menu), pass through directly
+    if (e === null) {
+      setContextMenu(null);
+      return;
+    }
+    // If called with event object and additional args (from TableRow/TableHeader)
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+      setContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+        type,
+        rowId: rowId || null,
+        colId: colId || null,
+      });
+    }
+  }, []);
+
   return {
     columns,
     rows,
@@ -202,7 +222,7 @@ export function useExcelTable({
     selectedRow,
     setEditingCell,
     setEditingHeader,
-    setContextMenu,
+    setContextMenu: handleContextMenu,
     setSelectedRow,
     // Actions
     handleCellClick,

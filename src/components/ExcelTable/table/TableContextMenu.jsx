@@ -1,4 +1,4 @@
-import { Plus, Copy, Trash2, Pencil } from "lucide-react";
+import { createPortal } from "react-dom";
 
 export function TableContextMenu({
   contextMenu,
@@ -12,7 +12,8 @@ export function TableContextMenu({
 }) {
   if (!contextMenu) return null;
 
-  return (
+  // Use Portal to render menu at root level to prevent clipping/z-index issues
+  return createPortal(
     <div
       className="context-menu"
       style={{ left: contextMenu.x, top: contextMenu.y }}
@@ -27,7 +28,7 @@ export function TableContextMenu({
               onClose();
             }}
           >
-            <Plus size={16} /> เพิ่มแถวด้านล่าง
+            <i className="fas fa-plus"></i> เพิ่มแถวด้านล่าง
           </div>
           <div
             className="context-menu-item"
@@ -36,7 +37,7 @@ export function TableContextMenu({
               onClose();
             }}
           >
-            <Copy size={16} /> ทำซ้ำแถว
+            <i className="fas fa-copy"></i> ทำซ้ำแถว
           </div>
           <div className="context-menu-divider" />
           <div
@@ -46,7 +47,7 @@ export function TableContextMenu({
               onClose();
             }}
           >
-            <Trash2 size={16} /> ลบแถว
+            <i className="fas fa-trash"></i> ลบแถว
           </div>
         </>
       )}
@@ -92,6 +93,7 @@ export function TableContextMenu({
           </div>
         </>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }

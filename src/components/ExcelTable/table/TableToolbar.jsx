@@ -1,17 +1,15 @@
-import { FileJson, Eraser, RotateCcw, Lightbulb } from "lucide-react";
-
 export function TableToolbar({ onExport, onClear, onReset }) {
   return (
     <div className="table-toolbar">
       <div className="toolbar-group">
         <button className="btn btn-ghost" onClick={onExport}>
-          <FileJson size={16} /> Export JSON
+          <i className="fas fa-file-code"></i> Export JSON
         </button>
         <button className="btn btn-ghost" onClick={onClear}>
-          <Eraser size={16} /> ล้างข้อมูล
+          <i className="fas fa-eraser"></i> ล้างข้อมูล
         </button>
         <button className="btn btn-ghost" onClick={onReset}>
-          <RotateCcw size={16} /> รีเซ็ต
+          <i className="fas fa-redo"></i> รีเซ็ต
         </button>
       </div>
 
@@ -23,7 +21,7 @@ export function TableToolbar({ onExport, onClear, onReset }) {
           marginLeft: "auto",
         }}
       >
-        <Lightbulb size={16} /> คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข |
+        <i className="fas fa-lightbulb"></i> คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข |
         คลิกขวาเพื่อเปิดเมนู
       </div>
     </div>
