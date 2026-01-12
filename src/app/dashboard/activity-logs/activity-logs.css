@@ -140,11 +140,25 @@
   color: white;
 }
 
-.stat-icon.primary { background: var(--primary); }
-.stat-icon.info { background: var(--info); }
-.stat-icon.success { background: var(--success); }
-.stat-icon.warning { background: var(--warning); }
-.stat-icon.danger { background: var(--danger); }
+.stat-icon.primary {
+  background: var(--primary);
+}
+
+.stat-icon.info {
+  background: var(--info);
+}
+
+.stat-icon.success {
+  background: var(--success);
+}
+
+.stat-icon.warning {
+  background: var(--warning);
+}
+
+.stat-icon.danger {
+  background: var(--danger);
+}
 
 .stat-content {
   flex: 1;
@@ -220,4 +234,34 @@
   background: var(--bg-secondary);
   border-radius: 8px;
   margin-top: 1rem;
+}
+
+/* Security Styles */
+.secure-content {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  /* iOS Safari */
+}
+
+/* Prevent selection on all children unless they are inputs */
+.secure-content * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* Restore selection for inputs/textareas for usability */
+.secure-content input,
+.secure-content textarea,
+.secure-content select {
+  -webkit-user-select: auto !important;
+  -moz-user-select: auto !important;
+  -ms-user-select: auto !important;
+  user-select: auto !important;
+  -webkit-touch-callout: default !important;
 }

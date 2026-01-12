@@ -105,6 +105,11 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="dashboard-container">
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        crossOrigin="anonymous"
+      />
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "show" : ""}`} id="sidebar">
         <div className="sidebar-header">

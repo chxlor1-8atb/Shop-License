@@ -11,7 +11,7 @@
 :root {
     /* === COLOR SYSTEM - SCOPED TO LOGIN === */
     /* Note: These are login-specific variables, dashboard uses style.css values */
-    
+
     /* LOGIN-SPECIFIC: Using --login- prefix to avoid conflicts */
     --login-primary: #D97706;
     --login-primary-dark: #B45309;
@@ -339,7 +339,7 @@ html {
 .particle {
     position: absolute;
     /* Use bottom -10% as start position but don't animate it */
-    bottom: -20px; 
+    bottom: -20px;
     width: 6px;
     height: 6px;
     background: radial-gradient(circle,
@@ -795,7 +795,7 @@ html {
         0 0 0 2px rgba(217, 119, 6, 0.15);
 }
 
-.feature-tag:hover i {
+.feature-tag:hover svg {
     animation: iconBounce 0.5s ease;
 }
 
@@ -811,7 +811,7 @@ html {
     }
 }
 
-.feature-tag i {
+.feature-tag svg {
     font-size: 0.75rem;
 }
 
@@ -820,7 +820,7 @@ html {
     border-color: rgba(139, 92, 246, 0.3);
 }
 
-.feature-tag--purple i {
+.feature-tag--purple svg {
     color: var(--purple);
 }
 
@@ -828,7 +828,7 @@ html {
     border-color: rgba(59, 130, 246, 0.3);
 }
 
-.feature-tag--blue i {
+.feature-tag--blue svg {
     color: var(--blue);
 }
 
@@ -836,7 +836,7 @@ html {
     border-color: rgba(16, 185, 129, 0.3);
 }
 
-.feature-tag--green i {
+.feature-tag--green svg {
     color: var(--green);
 }
 
@@ -844,7 +844,7 @@ html {
     border-color: rgba(217, 119, 6, 0.3);
 }
 
-.feature-tag--orange i {
+.feature-tag--orange svg {
     color: var(--orange);
 }
 
@@ -1035,7 +1035,7 @@ html {
     transform: translateY(-50%) scale(1.05);
 }
 
-.password-toggle:hover i {
+.password-toggle:hover svg {
     animation: eyePeek 0.4s ease;
 }
 
@@ -1059,7 +1059,7 @@ html {
 }
 
 /* Icon transition for show/hide state */
-.password-toggle i {
+.password-toggle svg {
     transition: transform 0.25s ease, opacity 0.2s ease;
 }
 

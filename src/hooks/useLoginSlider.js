@@ -16,7 +16,7 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
 
     const handleStartDrag = useCallback((e) => {
         if (unlocked || loading) return;
-        
+
         setIsDragging(true);
         // Supports both mouse and touch events
         const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
@@ -25,7 +25,7 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
 
     const handleDrag = useCallback((e) => {
         if (!isDragging) return;
-        
+
         const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
         const moveX = clientX - startXRef.current;
 
@@ -33,9 +33,10 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
             const containerWidth = slideContainerRef.current.offsetWidth;
             const btnWidth = sliderBtnRef.current.offsetWidth;
             const maxMove = containerWidth - btnWidth - 6; // 6px padding adjustment
-            
+
             // Constrain movement
-            let newLeft = Math.max(4, Math.min(moveX, maxMove));
+            // Add 4px (initial left) to moveX so it starts moving immediately
+            let newLeft = Math.max(4, Math.min(4 + moveX, maxMove));
             setSlideProgress(newLeft);
         }
     }, [isDragging]);
@@ -69,7 +70,7 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
                 ['touchmove', handleDrag],
                 ['touchend', handleEndDrag]
             ];
-            
+
             events.forEach(([event, handler]) => document.addEventListener(event, handler));
             return () => events.forEach(([event, handler]) => document.removeEventListener(event, handler));
         }

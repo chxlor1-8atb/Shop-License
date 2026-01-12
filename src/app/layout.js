@@ -47,12 +47,8 @@ export default function RootLayout({ children }) {
 
                 {/* Google Fonts - Inter and Noto Sans Thai are handled by next/font/google above */}
 
-                {/* Font Awesome - load directly */}
-                <link
-                    rel="stylesheet"
-                    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-                    crossOrigin="anonymous"
-                />
+                {/* Google Fonts - Inter and Noto Sans Thai are handled by next/font/google above */}
+
             </head>
             <body>
                 {children}

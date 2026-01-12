@@ -79,23 +79,43 @@ async function getPdfMake() {
             window.pdfMake = pdfMake;
         }
 
-        // Initialize vfs if not exists
+        // Helper to ensure VFS exists
         if (!pdfMake.vfs) {
             pdfMake.vfs = {};
         }
 
-        // Check if Thai fonts are loaded
-        if (!pdfMake.vfs['THSarabunNew.ttf']) {
-            const [regular, bold] = await Promise.all([
-                loadFont('/fonts/THSarabunNew.ttf'),
-                loadFont('/fonts/THSarabunNew-Bold.ttf')
-            ]);
+        // Check and load Thai fonts if missing
+        const fontTasks = [];
 
-            if (regular) pdfMake.vfs['THSarabunNew.ttf'] = regular;
-            if (bold) pdfMake.vfs['THSarabunNew-Bold.ttf'] = bold;
+        if (!pdfMake.vfs['THSarabunNew.ttf']) {
+            fontTasks.push(
+                loadFont('/fonts/THSarabunNew.ttf').then(data => {
+                    if (data) pdfMake.vfs['THSarabunNew.ttf'] = data;
+                })
+            );
         }
 
-        // Configure Fonts
+        if (!pdfMake.vfs['THSarabunNew-Bold.ttf']) {
+            fontTasks.push(
+                loadFont('/fonts/THSarabunNew-Bold.ttf').then(data => {
+                    if (data) pdfMake.vfs['THSarabunNew-Bold.ttf'] = data;
+                })
+            );
+        }
+
+        if (fontTasks.length > 0) {
+            await Promise.all(fontTasks);
+        }
+
+        // Verify fonts loaded successfully
+        if (!pdfMake.vfs['THSarabunNew.ttf'] || !pdfMake.vfs['THSarabunNew-Bold.ttf']) {
+            console.warn('PDF Export: Failed to load Thai fonts. PDF may not render correctly.');
+        }
+
+        // Configure Fonts with fallbacks to prevent crashes
+        const thaiFontNormal = pdfMake.vfs['THSarabunNew.ttf'] ? 'THSarabunNew.ttf' : 'Roboto-Regular.ttf';
+        const thaiFontBold = pdfMake.vfs['THSarabunNew-Bold.ttf'] ? 'THSarabunNew-Bold.ttf' : thaiFontNormal;
+
         pdfMake.fonts = {
             Roboto: {
                 normal: 'Roboto-Regular.ttf',
@@ -104,10 +124,10 @@ async function getPdfMake() {
                 bolditalics: 'Roboto-MediumItalic.ttf'
             },
             THSarabunNew: {
-                normal: 'THSarabunNew.ttf',
-                bold: 'THSarabunNew-Bold.ttf',
-                italics: 'THSarabunNew.ttf', // Fallback
-                bolditalics: 'THSarabunNew-Bold.ttf' // Fallback
+                normal: thaiFontNormal,
+                bold: thaiFontBold,
+                italics: thaiFontNormal,
+                bolditalics: thaiFontBold
             }
         };
 

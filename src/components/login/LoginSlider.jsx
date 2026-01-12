@@ -1,6 +1,12 @@
 import React from "react";
+import { FaArrowRight, FaCheck, FaSpinner, FaTimes } from "react-icons/fa";
 
 export const LoginSlider = ({ slider, loading, unlocked, error }) => {
+  let icon = <FaArrowRight />;
+  if (loading) icon = <FaSpinner />;
+  else if (unlocked) icon = <FaCheck />;
+  else if (error) icon = <FaTimes />;
+
   return (
     <div className="btn-wrapper">
       <div
@@ -25,14 +31,17 @@ export const LoginSlider = ({ slider, loading, unlocked, error }) => {
           id="sliderBtn"
           ref={slider.sliderBtnRef}
           style={{
-            left:
-              slider.slideProgress > 0 ? `${slider.slideProgress}px` : "4px",
-            transition: slider.isDragging ? "none" : "left 0.3s ease",
+            translate: `${
+              slider.slideProgress > 4 ? slider.slideProgress - 4 : 0
+            }px 0`,
+            transition: slider.isDragging
+              ? "none"
+              : "translate 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.15s ease, background 0.3s ease",
           }}
           onMouseDown={slider.handleStartDrag}
           onTouchStart={slider.handleStartDrag}
         >
-          <i className="fas fa-arrow-right"></i>
+          {icon}
         </div>
       </div>
     </div>

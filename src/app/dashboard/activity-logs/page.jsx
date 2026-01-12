@@ -238,7 +238,20 @@ export default function ActivityLogsPage() {
   }
 
   return (
-    <>
+    <div
+      className="secure-content"
+      onContextMenu={(e) => e.preventDefault()}
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      onKeyDown={(e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A" || e.key === "c" || e.key === "C")) {
+          e.preventDefault();
+        }
+      }}
+      tabIndex={-1} // Make div focusable so it can catch key events if clicked
+      style={{ outline: "none" }} // Remove focus outline
+    >
       {/* Tabs */}
       <div className="card activity-logs-card">
         <div className="tabs-container">
@@ -294,7 +307,7 @@ export default function ActivityLogsPage() {
       >
         {selectedActivity && <ActivityDetailView activity={selectedActivity} />}
       </Modal>
-    </>
+    </div>
   );
 }
 

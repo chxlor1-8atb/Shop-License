@@ -1,4 +1,10 @@
 import React from "react";
+import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa6";
+
+const iconMap = {
+  user: <FaUser />,
+  lock: <FaLock />,
+};
 
 export const InputGroup = ({
   id,
@@ -27,16 +33,14 @@ export const InputGroup = ({
     <label htmlFor={id} className="input-label">
       {label}
     </label>
-    <i className={`fas fa-${icon} input-icon`}></i>
+    <span className="input-icon">{iconMap[icon]}</span>
     {togglePassword && (
       <button
         type="button"
         className="password-toggle"
         onClick={togglePassword}
       >
-        <i
-          className={`fas ${isPasswordVisible ? "fa-eye-slash" : "fa-eye"}`}
-        ></i>
+        {isPasswordVisible ? <FaEyeSlash /> : <FaEye />}
       </button>
     )}
   </div>
