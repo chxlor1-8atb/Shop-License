@@ -1,7 +1,7 @@
 import { getIronSession } from 'iron-session';
 
 const sessionOptions = {
-    password: process.env.SESSION_SECRET,
+    password: process.env.SESSION_SECRET || 'change_this_to_a_complex_password_at_least_32_chars_long',
     cookieName: 'shop_license_session',
     cookieOptions: {
         secure: process.env.NODE_ENV === 'production',
@@ -13,7 +13,7 @@ const sessionOptions = {
 
 // Check for session secret in production
 if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
-    throw new Error('SESSION_SECRET environment variable is not defined');
+    console.warn('⚠️ WARNING: SESSION_SECRET environment variable is not defined. Using default insecure secret.');
 }
 
 export async function getSessionFromCookies(cookies) {

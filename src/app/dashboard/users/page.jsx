@@ -5,6 +5,8 @@ import { usePagination } from "@/hooks";
 import { API_ENDPOINTS, ROLE_OPTIONS } from "@/constants";
 import { formatThaiDateTime } from "@/utils/formatters";
 import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
+import { exportUsersToPDF, exportUserCredentialsPDF } from "@/lib/pdfExport";
+import Swal from "sweetalert2";
 
 // UI Components
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -151,6 +153,8 @@ export default function UsersPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const submittedData = { ...formData }; // Capture data before clear
+
     try {
       const response = await fetch(API_ENDPOINTS.USERS, {
         method: "POST",
@@ -163,12 +167,36 @@ export default function UsersPage() {
         setShowModal(false);
         showSuccess(data.message);
         fetchUsers();
+
+        // Prompt for Credentials PDF
+        Swal.fire({
+          title: "สร้างผู้ใช้สำเร็จ",
+          text: "ต้องการดาวน์โหลดเอกสารแจ้งรหัสผ่าน (PDF) หรือไม่?",
+          icon: "success",
+          showCancelButton: true,
+          confirmButtonText: "ดาวน์โหลด PDF",
+          cancelButtonText: "ปิด",
+          reverseButtons: true,
+          confirmButtonColor: "#3b82f6",
+          cancelButtonColor: "#64748b",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            exportUserCredentialsPDF({
+              ...submittedData,
+              role: submittedData.role || "user",
+            });
+          }
+        });
       } else {
         showError(data.message);
       }
     } catch (error) {
       showError(error.message);
     }
+  };
+
+  const handleExportList = () => {
+    exportUsersToPDF(users);
   };
 
   const openModal = () => {
@@ -186,79 +214,61 @@ export default function UsersPage() {
 
   return (
     <>
-      <div className="table-card">
-        <div
-          className="table-toolbar"
-          style={{ justifyContent: "space-between" }}
-        >
-          <h3
-            className="card-title"
-            style={{
-              margin: 0,
-              fontSize: "1.25rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-            }}
-          >
-            <i className="fas fa-users" style={{ color: "var(--primary)" }}></i>{" "}
-            รายการผู้ใช้งาน
+      <div className="card">
+        <div className="card-header">
+          <h3 className="card-title">
+            <i className="fas fa-users"></i> รายการผู้ใช้งาน
           </h3>
-          <button className="btn btn-primary btn-sm" onClick={openModal}>
-            <i className="fas fa-plus"></i> เพิ่มผู้ใช้
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={handleExportList}
+            >
+              <i className="fas fa-file-pdf"></i> Export PDF
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={openModal}>
+              <i className="fas fa-plus"></i> เพิ่มผู้ใช้
+            </button>
+          </div>
         </div>
 
-        <div className="table-container">
-          <table className="excel-table">
-            <thead>
-              <tr>
-                <th className="header-cell" style={{ width: "20%" }}>
-                  <div className="header-content">ชื่อผู้ใช้</div>
-                </th>
-                <th className="header-cell" style={{ width: "25%" }}>
-                  <div className="header-content">ชื่อ-นามสกุล</div>
-                </th>
-                <th className="header-cell" style={{ width: "15%" }}>
-                  <div className="header-content">บทบาท</div>
-                </th>
-                <th className="header-cell" style={{ width: "20%" }}>
-                  <div className="header-content">วันที่สร้าง</div>
-                </th>
-                <th className="header-cell" style={{ width: "10%" }}>
-                  <div className="header-content">ลบ</div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <TableSkeleton rows={5} columns={skeletonColumns} />
-              ) : users.length === 0 ? (
+        <div className="card-body">
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
                 <tr>
-                  <td colSpan="5" className="data-cell">
-                    <div
-                      className="cell-content"
-                      style={{ justifyContent: "center" }}
-                    >
-                      ไม่พบข้อมูล
-                    </div>
-                  </td>
+                  <th>ชื่อผู้ใช้</th>
+                  <th>ชื่อ-นามสกุล</th>
+                  <th>บทบาท</th>
+                  <th>วันที่สร้าง</th>
+                  <th className="text-center" style={{ width: "80px" }}>
+                    ลบ
+                  </th>
                 </tr>
-              ) : (
-                users.map((user) => (
-                  <UserRow
-                    key={user.id}
-                    user={user}
-                    onUpdate={handleInlineUpdate}
-                    onDelete={handleDelete}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <TableSkeleton rows={5} columns={skeletonColumns} />
+                ) : users.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-center">
+                      ไม่พบข้อมูล
+                    </td>
+                  </tr>
+                ) : (
+                  users.map((user) => (
+                    <UserRow
+                      key={user.id}
+                      user={user}
+                      onUpdate={handleInlineUpdate}
+                      onDelete={handleDelete}
+                    />
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-        <div style={{ padding: "1rem" }}>
           <Pagination
             currentPage={pagination.page}
             totalPages={pagination.totalPages}
@@ -318,53 +328,36 @@ function RoleBadge({ role }) {
 function UserRow({ user, onUpdate, onDelete }) {
   return (
     <tr>
-      <td className="data-cell">
-        <div className="cell-content">
-          <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>
-            {user.username}
-          </span>
-        </div>
+      <td>
+        <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>
+          {user.username}
+        </span>
       </td>
-      <td className="data-cell">
-        <div className="cell-content">
-          <div style={{ width: "100%" }}>
-            <EditableCell
-              value={user.full_name || ""}
-              displayValue={user.full_name || "-"}
-              type="text"
-              onSave={(value) => onUpdate(user.id, "full_name", value)}
-            />
-          </div>
-        </div>
+      <td>
+        <EditableCell
+          value={user.full_name || ""}
+          displayValue={user.full_name || "-"}
+          type="text"
+          onSave={(value) => onUpdate(user.id, "full_name", value)}
+        />
       </td>
-      <td className="data-cell">
-        <div className="cell-content">
-          <div style={{ width: "100%" }}>
-            <EditableCell
-              value={user.role}
-              displayValue={<RoleBadge role={user.role} />}
-              type="select"
-              options={ROLE_OPTIONS}
-              onSave={(value) => onUpdate(user.id, "role", value)}
-            />
-          </div>
-        </div>
+      <td>
+        <EditableCell
+          value={user.role}
+          displayValue={<RoleBadge role={user.role} />}
+          type="select"
+          options={ROLE_OPTIONS}
+          onSave={(value) => onUpdate(user.id, "role", value)}
+        />
       </td>
-      <td className="data-cell">
-        <div className="cell-content">
-          {formatThaiDateTime(user.created_at)}
-        </div>
-      </td>
-      <td className="data-cell">
-        <div className="cell-content" style={{ justifyContent: "center" }}>
-          <button
-            className="btn btn-danger btn-icon"
-            onClick={() => onDelete(user.id)}
-            style={{ width: "32px", height: "32px", padding: 0 }}
-          >
-            <i className="fas fa-trash"></i>
-          </button>
-        </div>
+      <td>{formatThaiDateTime(user.created_at)}</td>
+      <td className="text-center">
+        <button
+          className="btn btn-danger btn-icon"
+          onClick={() => onDelete(user.id)}
+        >
+          <i className="fas fa-trash"></i>
+        </button>
       </td>
     </tr>
   );

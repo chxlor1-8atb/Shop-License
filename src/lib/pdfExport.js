@@ -463,13 +463,17 @@ export async function exportUsersToPDF(users) {
     const title = 'User Report';
     
     const stats = {
-        'Total Users': users.length
+        'Total Users': users.length,
+        'Admin': users.filter(u => u.role === 'admin').length,
+        'User': users.filter(u => u.role === 'user').length
     };
 
-    const headers = ['No.', 'Username', 'Created'];
+    const headers = ['No.', 'Username', 'Full Name', 'Role', 'Created'];
     const data = users.map((u, index) => [
         (index + 1).toString(),
         u.username || '-',
+        u.full_name || '-',
+        u.role || '-',
         formatThaiDate(u.created_at)
     ]);
 
@@ -497,7 +501,7 @@ export async function exportUsersToPDF(users) {
             createHeader(title),
             createSummaryBox(stats),
             createDataTable(headers, data, {
-                columnWidths: [50, '*', 100]
+                columnWidths: [40, '*', '*', 60, 80]
             })
         ],
 
@@ -505,6 +509,106 @@ export async function exportUsersToPDF(users) {
     };
 
     pdfMake.createPdf(docDefinition).download(`users_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+/**
+ * Export Single User Credentials to PDF (For handing to new user)
+ */
+export async function exportUserCredentialsPDF(userData) {
+    const pdfMake = await getPdfMake();
+    
+    const title = 'User Credentials';
+    
+    const docDefinition = {
+        pageSize: 'A5', // Smaller paper for credentials
+        pageOrientation: 'landscape',
+        pageMargins: [30, 30, 30, 30],
+        
+        content: [
+            {
+                text: 'User Credentials',
+                style: 'headerTitle',
+                alignment: 'center',
+                color: COLORS.primaryDark,
+                margin: [0, 0, 0, 20]
+            },
+            {
+                text: 'Please keep this information secure.',
+                alignment: 'center',
+                color: COLORS.danger,
+                fontSize: 10,
+                bold: true,
+                margin: [0, 0, 0, 20]
+            },
+            {
+                table: {
+                    widths: ['30%', '70%'],
+                    body: [
+                        [
+                            { text: 'Full Name', style: 'labelCell' },
+                            { text: userData.full_name || '-', style: 'valueCell' }
+                        ],
+                        [
+                            { text: 'Role', style: 'labelCell' },
+                            { text: userData.role || 'user', style: 'valueCell' }
+                        ],
+                        [
+                            { text: 'Username', style: 'labelCell' },
+                            { text: userData.username, style: 'valueCellBold' }
+                        ],
+                        [
+                            { text: 'Password', style: 'labelCell' },
+                            { text: userData.password, style: 'valueCellBold', color: COLORS.primary }
+                        ],
+                        [
+                            { text: 'Created Date', style: 'labelCell' },
+                            { text: getCurrentThaiDate(), style: 'valueCell' }
+                        ]
+                    ]
+                },
+                layout: {
+                    hLineWidth: () => 1,
+                    vLineWidth: () => 1,
+                    hLineColor: () => COLORS.border,
+                    vLineColor: () => COLORS.border,
+                    paddingTop: () => 10,
+                    paddingBottom: () => 10,
+                    paddingLeft: () => 10,
+                    paddingRight: () => 10
+                }
+            },
+            {
+                text: 'System Administrator',
+                alignment: 'right',
+                fontSize: 10,
+                color: COLORS.muted,
+                margin: [0, 30, 0, 0]
+            }
+        ],
+
+        styles: {
+            headerTitle: {
+                fontSize: 22,
+                bold: true
+            },
+            labelCell: {
+                fontSize: 12,
+                color: COLORS.secondary,
+                bold: true
+            },
+            valueCell: {
+                fontSize: 12,
+                color: COLORS.dark
+            },
+            valueCellBold: {
+                fontSize: 14,
+                bold: true,
+                color: COLORS.dark
+            }
+        }
+    };
+
+    pdfMake.createPdf(docDefinition).download(`credential_${userData.username}.pdf`);
 }
 
 export default {
