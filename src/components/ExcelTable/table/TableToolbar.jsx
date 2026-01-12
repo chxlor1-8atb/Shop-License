@@ -8,9 +8,7 @@ export function TableToolbar({
   return (
     <div className="table-toolbar">
       <div className="toolbar-group">
-        <button className="btn btn-ghost" onClick={onExport}>
-          <i className={`fas ${exportIcon}`}></i> {exportLabel}
-        </button>
+
         <button className="btn btn-ghost" onClick={onClear}>
           <i className="fas fa-eraser"></i> ล้างข้อมูล
         </button>

@@ -10,6 +10,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import DatePicker from "@/components/ui/DatePicker";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import Modal from "@/components/ui/Modal";
+import Loading from "@/components/Loading";
 import "./activity-logs.css";
 
 // Constants
@@ -221,14 +222,13 @@ export default function ActivityLogsPage() {
   // Show loading while checking authorization
   if (authLoading) {
     return (
+    return (
       <div className="card">
-        <div className="card-body loading-container">
-          <div className="loading-spinner">
-            <div className="spinner-ring"></div>
-          </div>
-          <p className="loading-text">กำลังตรวจสอบสิทธิ์...</p>
+        <div className="card-body">
+          <Loading message="กำลังตรวจสอบสิทธิ์..." />
         </div>
       </div>
+    );
     );
   }
 
@@ -412,9 +412,7 @@ function ActivityLogsTab({
           <button className="btn btn-secondary btn-sm" onClick={onClearFilters}>
             <i className="fas fa-times"></i> ล้างตัวกรอง
           </button>
-          <button className="btn btn-success btn-sm" onClick={onExport}>
-            <i className="fas fa-file-pdf"></i> Export PDF
-          </button>
+
         </div>
       </div>
 
@@ -583,13 +581,13 @@ function UserAvatar({ name, role }) {
 function StatsTab({ stats, loading }) {
   if (loading || !stats) {
     return (
+    return (
       <div className="card">
-        <div className="card-body loading-container">
-          <div className="loading-spinner">
-            <div className="spinner-ring"></div>
-          </div>
+        <div className="card-body">
+          <Loading message="กำลังโหลดข้อมูล..." />
         </div>
       </div>
+    );
     );
   }
 
@@ -781,13 +779,13 @@ function StatsTab({ stats, loading }) {
 function UserStatsTab({ users, loading }) {
   if (loading) {
     return (
+    return (
       <div className="card">
-        <div className="card-body loading-container">
-          <div className="loading-spinner">
-            <div className="spinner-ring"></div>
-          </div>
+        <div className="card-body">
+          <Loading message="กำลังโหลดข้อมูล..." />
         </div>
       </div>
+    );
     );
   }
 

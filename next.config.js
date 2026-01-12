@@ -76,25 +76,6 @@ const nextConfig = {
                     },
                 ],
             },
-            // Cache headers for static assets
-            {
-                source: '/:all*(svg|jpg|jpeg|png|webp|avif|gif|ico|woff|woff2)',
-                headers: [
-                    {
-                        key: 'Cache-Control',
-                        value: 'public, max-age=31536000, immutable',
-                    },
-                ],
-            },
-            {
-                source: '/_next/static/:path*',
-                headers: [
-                    {
-                        key: 'Cache-Control',
-                        value: 'public, max-age=31536000, immutable',
-                    },
-                ],
-            },
         ];
     },
     async redirects() {
