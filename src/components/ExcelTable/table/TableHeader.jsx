@@ -4,6 +4,7 @@ export function TableHeader({
   columns,
   editingHeader,
   onUpdateHeader,
+  onHeaderCommit,
   onEditHeader,
   onEditingBoxBlur,
   onAddColumn,
@@ -62,9 +63,15 @@ export function TableHeader({
                   className="header-input"
                   value={col.name}
                   onChange={(e) => onUpdateHeader(col.id, e.target.value)}
-                  onBlur={onEditingBoxBlur}
+                  onBlur={() => {
+                    if (onHeaderCommit) onHeaderCommit(col.id, col.name);
+                    onEditingBoxBlur();
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === "Escape") {
+                    if (e.key === "Enter") {
+                      if (onHeaderCommit) onHeaderCommit(col.id, col.name);
+                      onEditingBoxBlur();
+                    } else if (e.key === "Escape") {
                       onEditingBoxBlur();
                     }
                   }}
@@ -76,6 +83,36 @@ export function TableHeader({
                   style={{ textAlign: col.align || "center" }}
                   onDoubleClick={() => onEditHeader(col.id)}
                 >
+                  {col.type === "date" && (
+                    <i
+                      className="fas fa-calendar"
+                      style={{
+                        marginRight: "6px",
+                        fontSize: "12px",
+                        color: "#999",
+                      }}
+                    ></i>
+                  )}
+                  {col.type === "number" && (
+                    <i
+                      className="fas fa-hashtag"
+                      style={{
+                        marginRight: "6px",
+                        fontSize: "12px",
+                        color: "#999",
+                      }}
+                    ></i>
+                  )}
+                  {(col.type === "text" || !col.type) && (
+                    <i
+                      className="fas fa-font"
+                      style={{
+                        marginRight: "6px",
+                        fontSize: "12px",
+                        color: "#999",
+                      }}
+                    ></i>
+                  )}
                   {col.name}
                 </span>
               )}
@@ -86,7 +123,7 @@ export function TableHeader({
                   onClick={() => onAddColumn(col.id)}
                   title="เพิ่มคอลัมน์"
                 >
-                  <i className="fas fa-plus" style={{ fontSize: '12px' }}></i>
+                  <i className="fas fa-plus" style={{ fontSize: "12px" }}></i>
                 </button>
                 <button
                   className="header-btn danger"
@@ -96,7 +133,7 @@ export function TableHeader({
                   }}
                   title="ลบคอลัมน์"
                 >
-                  <i className="fas fa-trash" style={{ fontSize: '12px' }}></i>
+                  <i className="fas fa-trash" style={{ fontSize: "12px" }}></i>
                 </button>
               </div>
             </div>

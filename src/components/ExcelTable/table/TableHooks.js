@@ -37,8 +37,16 @@ export function useExcelTable({
   const [selectedRow, setSelectedRow] = useState(null);
 
   // Update effect if props change (optional, depends on if we want full sync)
+  // Use JSON.stringify to compare arrays to prevent unnecessary updates
   useEffect(() => {
-    setColumns(initialColumns);
+    setColumns((prev) => {
+      const prevStr = JSON.stringify(prev);
+      const newStr = JSON.stringify(initialColumns);
+      if (prevStr !== newStr) {
+        return initialColumns;
+      }
+      return prev;
+    });
   }, [initialColumns]);
 
   useEffect(() => {
@@ -91,6 +99,12 @@ export function useExcelTable({
   const updateHeader = useCallback((colId, value) => {
     setColumns((prev) =>
       prev.map((col) => (col.id === colId ? { ...col, name: value } : col))
+    );
+  }, []);
+
+  const updateColumnType = useCallback((colId, newType) => {
+    setColumns((prev) =>
+      prev.map((col) => (col.id === colId ? { ...col, type: newType } : col))
     );
   }, []);
 
@@ -226,8 +240,10 @@ export function useExcelTable({
     setSelectedRow,
     // Actions
     handleCellClick,
+    handleCellKeyDown, // Exporting this function
     updateCell,
     updateHeader,
+    updateColumnType,
     updateColumnWidth,
     addRow,
     deleteRow,

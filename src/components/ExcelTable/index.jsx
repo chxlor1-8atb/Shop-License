@@ -20,6 +20,9 @@ export default function ExcelTable({
   onRowDelete,
   onRowAdd,
   onRowDuplicate,
+  onColumnAdd,
+  onColumnDelete,
+  onColumnUpdate,
 }) {
   // Logic & State management extracted to custom hook
   const {
@@ -36,6 +39,7 @@ export default function ExcelTable({
     handleCellClick,
     updateCell,
     updateHeader,
+    updateColumnType,
     updateColumnWidth,
     addRow,
     deleteRow,
@@ -100,6 +104,31 @@ export default function ExcelTable({
     // For now, let's just support basic add/update/delete
   };
 
+  // Column wrappers
+  const handleAddColumn = (targetColId, position) => {
+    const newCol = addColumn(targetColId, position);
+    if (onColumnAdd) onColumnAdd(newCol);
+  };
+
+  const handleDeleteColumn = (colId) => {
+    deleteColumn(colId);
+    if (onColumnDelete) onColumnDelete(colId);
+  };
+
+  const handleUpdateHeader = (colId, name) => {
+    updateHeader(colId, name);
+    // Don't call onColumnUpdate here to avoid saving on every keystroke
+  };
+
+  const handleHeaderCommit = (colId, name) => {
+    if (onColumnUpdate) onColumnUpdate({ id: colId, name });
+  };
+
+  const handleUpdateColumnType = (colId, type) => {
+    updateColumnType(colId, type);
+    if (onColumnUpdate) onColumnUpdate({ id: colId, type });
+  };
+
   return (
     <div className="table-card">
       <TableToolbar
@@ -136,11 +165,12 @@ export default function ExcelTable({
           <TableHeader
             columns={columns}
             editingHeader={editingHeader}
-            onUpdateHeader={updateHeader}
+            onUpdateHeader={handleUpdateHeader}
+            onHeaderCommit={handleHeaderCommit}
             onEditHeader={setEditingHeader}
             onEditingBoxBlur={() => setEditingHeader(null)}
-            onAddColumn={addColumn}
-            onDeleteColumn={deleteColumn}
+            onAddColumn={handleAddColumn}
+            onDeleteColumn={handleDeleteColumn}
             onContextMenu={setContextMenu}
             onResizeColumn={updateColumnWidth}
           />
@@ -203,8 +233,9 @@ export default function ExcelTable({
         }}
         onDeleteRow={handleDeleteRow}
         onEditHeader={setEditingHeader}
-        onAddColumn={addColumn}
-        onDeleteColumn={deleteColumn}
+        onAddColumn={handleAddColumn}
+        onDeleteColumn={handleDeleteColumn}
+        onUpdateColumnType={handleUpdateColumnType}
       />
     </div>
   );

@@ -15,29 +15,32 @@ export async function GET(request) {
         const entityType = searchParams.get('entity_type');
         const entityId = searchParams.get('entity_id');
 
-        if (!entityType || !entityId) {
+        if (!entityType) {
             return NextResponse.json({
                 success: false,
-                message: 'entity_type และ entity_id จำเป็น'
+                message: 'entity_type จำเป็น'
             }, { status: 400 });
         }
 
-        // Get all values for this entity with field info
-        const values = await fetchAll(`
+        let query = `
             SELECT 
                 cfv.id,
+                cfv.entity_id,
                 cfv.value,
                 cf.id as field_id,
-                cf.field_name,
-                cf.field_label,
-                cf.field_type,
-                cf.field_options,
-                cf.is_required
+                cf.field_name
             FROM custom_field_values cfv
             JOIN custom_fields cf ON cfv.field_id = cf.id
-            WHERE cf.entity_type = $1 AND cfv.entity_id = $2 AND cf.is_active = true
-            ORDER BY cf.display_order ASC
-        `, [entityType, entityId]);
+            WHERE cf.entity_type = $1 AND cf.is_active = true
+        `;
+        const params = [entityType];
+
+        if (entityId) {
+            query += ` AND cfv.entity_id = $2`;
+            params.push(entityId);
+        }
+
+        const values = await fetchAll(query, params);
 
         // Convert to object format for easy access
         const valuesMap = {};
