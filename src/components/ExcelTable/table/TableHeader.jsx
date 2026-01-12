@@ -86,7 +86,7 @@ export function TableHeader({
                   onClick={() => onAddColumn(col.id)}
                   title="เพิ่มคอลัมน์"
                 >
-                  <Plus size={12} />
+                  <i className="fas fa-plus" style={{ fontSize: '12px' }}></i>
                 </button>
                 <button
                   className="header-btn danger"
@@ -96,7 +96,7 @@ export function TableHeader({
                   }}
                   title="ลบคอลัมน์"
                 >
-                  <X size={12} />
+                  <i className="fas fa-trash" style={{ fontSize: '12px' }}></i>
                 </button>
               </div>
             </div>

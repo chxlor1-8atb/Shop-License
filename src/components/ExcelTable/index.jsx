@@ -164,7 +164,7 @@ export default function ExcelTable({
                     onClick={handleAddRow}
                     style={{ margin: "0 auto", padding: "0.5rem 1rem" }}
                   >
-                    <Plus size={18} /> เพิ่มแถวแรก
+                    <i className="fas fa-plus"></i> เพิ่มแถวแรก
                   </button>
                 </td>
               </tr>

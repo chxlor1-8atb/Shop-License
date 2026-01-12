@@ -61,7 +61,7 @@ export function TableContextMenu({
               onClose();
             }}
           >
-            <Pencil size={16} /> แก้ไขชื่อคอลัมน์
+            <i className="fas fa-pencil-alt"></i> แก้ไขชื่อคอลัมน์
           </div>
           <div
             className="context-menu-item"
@@ -70,7 +70,7 @@ export function TableContextMenu({
               onClose();
             }}
           >
-            <Plus size={16} /> เพิ่มคอลัมน์ด้านซ้าย
+            <i className="fas fa-plus"></i> เพิ่มคอลัมน์ด้านซ้าย
           </div>
           <div
             className="context-menu-item"
@@ -79,7 +79,7 @@ export function TableContextMenu({
               onClose();
             }}
           >
-            <Plus size={16} /> เพิ่มคอลัมน์ด้านขวา
+            <i className="fas fa-plus"></i> เพิ่มคอลัมน์ด้านขวา
           </div>
           <div className="context-menu-divider" />
           <div
@@ -89,7 +89,7 @@ export function TableContextMenu({
               onClose();
             }}
           >
-            <Trash2 size={16} /> ลบคอลัมน์
+            <i className="fas fa-trash"></i> ลบคอลัมน์
           </div>
         </>
       )}

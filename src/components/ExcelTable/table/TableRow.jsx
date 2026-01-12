@@ -44,11 +44,19 @@ export function TableRow({
                 style={{ textAlign: col.align || "left" }}
               />
             ) : (
-              <div className="cell-content">
-                <span
-                  className="cell-text"
-                  style={{ textAlign: col.align || "left" }}
-                >
+              <div
+                className="cell-content"
+                style={{
+                  justifyContent:
+                    col.align === "center"
+                      ? "center"
+                      : col.align === "right"
+                      ? "flex-end"
+                      : "flex-start",
+                  textAlign: col.align || "left",
+                }}
+              >
+                <span className="cell-text" style={{ flex: "0 1 auto" }}>
                   {col.type === "date" && row[col.id]
                     ? new Date(row[col.id]).toLocaleDateString("th-TH", {
                         year: "numeric",
