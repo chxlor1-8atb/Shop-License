@@ -16,20 +16,22 @@ export function useAuthLogin() {
 
     // Initial auth check
     useEffect(() => {
+        router.prefetch('/dashboard');
+
         const verifyAuth = async () => {
-             // ... existing verifyAuth logic
-             // For brevity in this thought, I assume same logic.
-             // But I must write full code.
-             try {
+            // ... existing verifyAuth logic
+            // For brevity in this thought, I assume same logic.
+            // But I must write full code.
+            try {
                 const { authenticated } = await checkAuth();
                 if (authenticated) {
                     router.replace('/dashboard');
                 } else {
                     setCheckingAuth(false);
                 }
-             } catch (e) {
-                 setCheckingAuth(false);
-             }
+            } catch (e) {
+                setCheckingAuth(false);
+            }
         };
         verifyAuth();
     }, [router]);
@@ -87,9 +89,12 @@ export function useAuthLogin() {
                 setLoginSuccess(true);
                 saveCredentials(rememberMe, username, password);
 
+                // Prefetch dashboard for instant navigation
+                router.prefetch('/dashboard');
+
                 setTimeout(() => {
                     router.push('/dashboard');
-                }, 1500);
+                }, 800);
                 return true;
             } else {
                 setError(data.message || 'เข้าสู่ระบบไม่สำเร็จ');

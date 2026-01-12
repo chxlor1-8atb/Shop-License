@@ -177,35 +177,35 @@ html {
     pointer-events: none;
     z-index: 0;
     /* Optimize animation: use transform instead of top/right */
-    transform: translate(10%, -10%);
+    transform: translate3d(10%, -10%, 0);
     animation: bounceOrb1 20s ease-in-out infinite;
-    filter: blur(30px);
+    /* Removed expensive blur filter - using standard gradient transparency instead */
     will-change: transform;
 }
 
 @keyframes bounceOrb1 {
     0% {
-        transform: translate(10%, -10%) scale(1);
+        transform: translate3d(10%, -10%, 0) scale(1);
     }
 
     20% {
-        transform: translate(-30%, 60%) scale(1.2);
+        transform: translate3d(-30%, 60%, 0) scale(1.2);
     }
 
     40% {
-        transform: translate(-70%, 20%) scale(0.8);
+        transform: translate3d(-70%, 20%, 0) scale(0.8);
     }
 
     60% {
-        transform: translate(-10%, 70%) scale(1.1);
+        transform: translate3d(-10%, 70%, 0) scale(1.1);
     }
 
     80% {
-        transform: translate(-50%, 10%) scale(0.9);
+        transform: translate3d(-50%, 10%, 0) scale(0.9);
     }
 
     100% {
-        transform: translate(10%, -10%) scale(1);
+        transform: translate3d(10%, -10%, 0) scale(1);
     }
 }
 
@@ -233,31 +233,30 @@ html {
             transparent 70%);
     pointer-events: none;
     /* Optimize animation: use transform */
-    transform: translate(-10%, 10%);
+    transform: translate3d(-10%, 10%, 0);
     animation: bounceOrb2 25s ease-in-out infinite;
-    filter: blur(25px);
     will-change: transform;
 }
 
 @keyframes bounceOrb2 {
     0% {
-        transform: translate(-10%, 10%) scale(1);
+        transform: translate3d(-10%, 10%, 0) scale(1);
     }
 
     25% {
-        transform: translate(50%, -40%) scale(1.15);
+        transform: translate3d(50%, -40%, 0) scale(1.15);
     }
 
     50% {
-        transform: translate(30%, -10%) scale(0.85);
+        transform: translate3d(30%, -10%, 0) scale(0.85);
     }
 
     75% {
-        transform: translate(0%, -50%) scale(1.1);
+        transform: translate3d(0%, -50%, 0) scale(1.1);
     }
 
     100% {
-        transform: translate(-10%, 10%) scale(1);
+        transform: translate3d(-10%, 10%, 0) scale(1);
     }
 }
 
@@ -277,50 +276,43 @@ html {
             transparent 70%);
     pointer-events: none;
     /* Optimize animation */
-    transform: translate(-50%, -50%);
+    transform: translate3d(-50%, -50%, 0);
     animation: bounceOrb3 18s ease-in-out infinite;
-    filter: blur(35px);
     will-change: transform;
 }
 
 @keyframes bounceOrb3 {
     0% {
-        transform: translate(-50%, -50%) scale(1);
+        transform: translate3d(-50%, -50%, 0) scale(1);
     }
 
     16% {
-        transform: translate(80%, -90%) scale(1.2);
+        transform: translate3d(80%, -90%, 0) scale(1.2);
     }
 
     33% {
-        transform: translate(-80%, 20%) scale(0.9);
+        transform: translate3d(-80%, 20%, 0) scale(0.9);
     }
 
     50% {
-        transform: translate(-90%, -80%) scale(1.15);
+        transform: translate3d(-90%, -80%, 0) scale(1.15);
     }
 
     66% {
-        transform: translate(20%, 30%) scale(0.85);
+        transform: translate3d(20%, 30%, 0) scale(0.85);
     }
 
     83% {
-        transform: translate(10%, -20%) scale(1.1);
+        transform: translate3d(10%, -20%, 0) scale(1.1);
     }
 
     100% {
-        transform: translate(-50%, -50%) scale(1);
+        transform: translate3d(-50%, -50%, 0) scale(1);
     }
 }
 
-/* Hide the shape elements - no longer needed */
+/* Shapes unused */
 .shape {
-    display: none;
-}
-
-.shape--1,
-.shape--2,
-.shape--3 {
     display: none;
 }
 
@@ -485,34 +477,34 @@ html {
 @keyframes floatUp {
     0% {
         opacity: 0;
-        transform: translateY(0) translateX(0) scale(0.5);
+        transform: translate3d(0, 0, 0) scale(0.5);
     }
 
     10% {
         opacity: 1;
-        transform: translateY(-10vh) translateX(10px) scale(1);
+        transform: translate3d(10px, -10vh, 0) scale(1);
     }
 
     30% {
-        transform: translateY(-30vh) translateX(-15px) scale(1.1);
+        transform: translate3d(-15px, -30vh, 0) scale(1.1);
     }
 
     50% {
-        transform: translateY(-50vh) translateX(20px) scale(0.9);
+        transform: translate3d(20px, -50vh, 0) scale(0.9);
     }
 
     70% {
-        transform: translateY(-70vh) translateX(-10px) scale(1);
+        transform: translate3d(-10px, -70vh, 0) scale(1);
     }
 
     90% {
         opacity: 1;
-        transform: translateY(-90vh) translateX(5px) scale(1);
+        transform: translate3d(5px, -90vh, 0) scale(1);
     }
 
     100% {
         opacity: 0;
-        transform: translateY(-120vh) translateX(0) scale(0.5);
+        transform: translate3d(0, -120vh, 0) scale(0.5);
     }
 }
 

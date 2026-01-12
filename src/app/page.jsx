@@ -48,9 +48,7 @@ export default function LoginPage() {
 
 const BackgroundShapes = () => (
   <div className="bg-shapes">
-    <div className="shape shape--1"></div>
-    <div className="shape shape--2"></div>
-    <div className="shape shape--3"></div>
+    {/* Shapes are generated via CSS pseudo-elements for better performance */}
   </div>
 );
 
