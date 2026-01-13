@@ -44,14 +44,23 @@ const ACTION_LABELS = {
 async function loadFont(url) {
     try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error(`Failed to fetch font: ${url}`);
+        if (!response.ok) throw new Error(`Failed to fetch font: ${url} (Status: ${response.status})`);
+
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+            throw new Error(`Font url returned HTML instead of binary: ${url}`);
+        }
+
         const blob = await response.blob();
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => {
-                // remove "data:application/octet-stream;base64," header
-                const base64 = reader.result.split(',')[1];
-                resolve(base64);
+                if (typeof reader.result === 'string') {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                } else {
+                    reject(new Error('Failed to read font blob as string'));
+                }
             };
             reader.onerror = reject;
             reader.readAsDataURL(blob);
@@ -92,10 +101,11 @@ async function getPdfMake() {
         }
 
         // Check and load Thai fonts if missing
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
         const fontTasks = [];
         const requiredFonts = [
-            { name: 'THSarabunNew.ttf', url: '/fonts/THSarabunNew.ttf' },
-            { name: 'THSarabunNew-Bold.ttf', url: '/fonts/THSarabunNew-Bold.ttf' }
+            { name: 'THSarabunNew.ttf', url: `${baseUrl}/fonts/THSarabunNew.ttf` },
+            { name: 'THSarabunNew-Bold.ttf', url: `${baseUrl}/fonts/THSarabunNew-Bold.ttf` }
         ];
 
         requiredFonts.forEach(font => {

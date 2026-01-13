@@ -6,7 +6,7 @@ import { API_ENDPOINTS, STATUS_OPTIONS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import ExcelTable from "@/components/ExcelTable";
 import Pagination from "@/components/ui/Pagination";
-import FilterRow, { SearchInput } from "@/components/ui/FilterRow";
+import { SearchInput } from "@/components/ui/FilterRow";
 import CustomSelect from "@/components/ui/CustomSelect"; // Re-use for filters
 import { exportLicensesToPDF } from "@/lib/pdfExport";
 
@@ -72,6 +72,7 @@ export default function LicensesPage() {
         align: "center",
         type: "select",
         options: STATUS_OPTIONS,
+        isBadge: true,
       },
       { id: "notes", name: "หมายเหตุ", width: 200 },
     ];
@@ -361,24 +362,28 @@ export default function LicensesPage() {
 
   return (
     <div className="card h-100">
-      <div className="card-body p-4">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h3 className="m-0 text-primary">
-            <i className="fas fa-file-alt me-2"></i> ใบอนุญาต
-          </h3>
-        </div>
-
+      <div className="card-header">
+        <h3 className="card-title">
+          <i className="fas fa-file-alt"></i> ใบอนุญาต
+        </h3>
+      </div>
+      <div className="card-body">
         <div className="mb-4">
           {/* Filters */}
-          <FilterRow>
+        <div className="filter-grid">
+          <div className="filter-group">
+            <label className="filter-label">ค้นหา</label>
             <SearchInput
               value={search}
               onChange={(val) => {
                 setSearch(val);
                 pagination.resetPage();
               }}
-              placeholder="ค้นหา..."
+              placeholder="เลขที่ใบอนุญาต, ร้านค้า..."
             />
+          </div>
+          <div className="filter-group">
+            <label className="filter-label">ประเภทใบอนุญาต</label>
             <CustomSelect
               value={filterType}
               onChange={(e) => {
@@ -386,9 +391,10 @@ export default function LicensesPage() {
                 pagination.resetPage();
               }}
               options={[{ value: "", label: "ทุกประเภท" }, ...typeOptions]}
-              placeholder="ประเภทใบอนุญาต"
-              style={{ minWidth: "200px", width: "auto" }}
             />
+          </div>
+          <div className="filter-group">
+            <label className="filter-label">สถานะ</label>
             <CustomSelect
               value={filterStatus}
               onChange={(e) => {
@@ -396,10 +402,9 @@ export default function LicensesPage() {
                 pagination.resetPage();
               }}
               options={STATUS_OPTIONS}
-              placeholder="สถานะ"
-              style={{ minWidth: "180px", width: "auto" }}
             />
-          </FilterRow>
+          </div>
+        </div>
         </div>
 
         {!loading ? (

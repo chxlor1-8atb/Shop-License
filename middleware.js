@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 
 export function middleware(request) {
     const { pathname } = request.nextUrl;
-    
+
     // Skip middleware for API routes with their own caching
     // This reduces middleware overhead for API calls
     if (pathname.startsWith('/api/')) {
@@ -39,7 +39,7 @@ export function middleware(request) {
     );
 
     // ===== Performance Headers =====
-    
+
     // Enable HTTP/2 Server Push hints for critical resources
     response.headers.set('Link', [
         '</image/shop-logo.png>; rel=preload; as=image',
@@ -63,7 +63,7 @@ export const config = {
          * - favicon.ico, favicon.png
          * - public folder assets
          */
-        '/((?!_next/static|_next/image|favicon\\.ico|favicon\\.png|image/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+        '/((?!_next/static|_next/image|favicon\\.ico|favicon\\.png|image/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|ttf|woff2?)$).*)',
     ],
 };
 

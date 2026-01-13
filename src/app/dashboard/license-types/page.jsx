@@ -377,24 +377,50 @@ export default function LicenseTypesPage() {
     <>
       <StatsSection stats={stats} />
 
-      {!loading ? (
-        <ExcelTable
-          initialColumns={columns}
-          initialRows={types}
-          onRowUpdate={handleRowUpdate}
-          onRowDelete={handleRowDelete}
-          onRowAdd={handleRowAdd}
-          onColumnAdd={handleColumnAdd}
-          onColumnUpdate={handleColumnUpdate}
-          onColumnDelete={handleColumnDelete}
-        />
-      ) : (
-        <div className="card">
-          <div className="card-body">
-            <Loading message="กำลังโหลดข้อมูล..." />
-          </div>
+      <div className="card" style={{ 
+        border: 'none', 
+        boxShadow: 'var(--shadow-xl)',
+        background: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(20px)'
+      }}>
+        <div className="card-header" style={{
+          background: 'linear-gradient(135deg, rgba(217, 119, 87, 0.08) 0%, rgba(255, 255, 255, 0) 100%)',
+          borderBottom: '1px solid rgba(217, 119, 87, 0.1)',
+          padding: '1.5rem'
+        }}>
+          <h3 className="card-title" style={{ fontSize: '1.25rem', color: 'var(--primary-dark)' }}>
+            <div style={{
+              width: '32px', height: '32px', 
+              background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+              borderRadius: '8px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', marginRight: '0.75rem',
+              boxShadow: '0 4px 12px rgba(217, 119, 87, 0.3)'
+            }}>
+              <i className="fas fa-tags" style={{ fontSize: '0.9rem' }}></i>
+            </div>
+            ประเภทใบอนุญาต
+          </h3>
         </div>
-      )}
+        <div className="card-body" style={{ padding: '0' }}>
+          {!loading ? (
+            <ExcelTable
+              initialColumns={columns}
+              initialRows={types}
+              onRowUpdate={handleRowUpdate}
+              onRowDelete={handleRowDelete}
+              onRowAdd={handleRowAdd}
+              onColumnAdd={handleColumnAdd}
+              onColumnUpdate={handleColumnUpdate}
+              onColumnDelete={handleColumnDelete}
+            />
+          ) : (
+            <div style={{ padding: '3rem' }}>
+              <Loading />
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
 }

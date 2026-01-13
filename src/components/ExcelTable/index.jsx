@@ -26,6 +26,8 @@ export default function ExcelTable({
   onExport,
   exportLabel,
   exportIcon,
+  allowClear = false,
+  allowReset = false,
 }) {
   // Logic & State management extracted to custom hook
   const {
@@ -53,7 +55,6 @@ export default function ExcelTable({
     resetTable,
     handleCellKeyDown,
   } = useExcelTable({ initialColumns, initialRows });
-
   // Refs for Focus Management (View Logic)
   const tableRef = useRef(null);
   const inputRef = useRef(null);
@@ -62,7 +63,9 @@ export default function ExcelTable({
   useEffect(() => {
     if (editingCell && inputRef.current) {
       inputRef.current.focus();
-      inputRef.current.select(); // Optional: select all text
+      if (typeof inputRef.current.select === 'function') {
+        inputRef.current.select(); // Optional: select all text
+      }
     }
   }, [editingCell]);
 
@@ -165,8 +168,8 @@ export default function ExcelTable({
         }
         exportLabel={exportLabel}
         exportIcon={exportIcon}
-        onClear={clearAll}
-        onReset={resetTable}
+        onClear={allowClear ? clearAll : null}
+        onReset={allowReset ? resetTable : null}
       />
 
       <div className="table-container" ref={tableRef}>
@@ -191,20 +194,55 @@ export default function ExcelTable({
                   colSpan={columns.length + 3}
                   style={{
                     textAlign: "center",
-                    padding: "3rem",
-                    color: "var(--text-muted)",
+                    padding: "4rem 2rem",
+                    background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(249,250,251,0.5) 100%)"
                   }}
                 >
-                  <div style={{ marginBottom: "1rem" }}>
-                    ยังไม่มีข้อมูลในตาราง
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center',
+                    gap: '1.5rem'
+                  }}>
+                    <div style={{
+                      width: '80px', height: '80px',
+                      background: 'linear-gradient(135deg, rgba(217, 119, 87, 0.1), rgba(217, 119, 87, 0.05))',
+                      borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      marginBottom: '0.5rem',
+                      boxShadow: 'inset 0 0 0 1px rgba(217, 119, 87, 0.1)'
+                    }}>
+                      <i className="fas fa-folder-open" style={{ fontSize: '2.5rem', color: 'var(--primary)', opacity: 0.8 }}></i>
+                    </div>
+                    
+                    <div>
+                      <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--gray-800)', fontSize: '1.1rem' }}>ยังไม่มีข้อมูลในตาราง</h4>
+                      <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                        เริ่มต้นด้วยการเพิ่มข้อมูลแถวแรก
+                      </p>
+                    </div>
+
+                    <button
+                      className="btn"
+                      onClick={handleAddRow}
+                      style={{ 
+                        background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                        color: 'white',
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 12px rgba(217, 119, 87, 0.3)',
+                        border: 'none',
+                        fontWeight: 600,
+                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                        transition: 'transform 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                    >
+                      <i className="fas fa-plus"></i> 
+                      <span>เพิ่มแถวแรก</span>
+                    </button>
                   </div>
-                  <button
-                    className="btn btn-outline-primary"
-                    onClick={handleAddRow}
-                    style={{ margin: "0 auto", padding: "0.5rem 1rem" }}
-                  >
-                    <i className="fas fa-plus"></i> เพิ่มแถวแรก
-                  </button>
                 </td>
               </tr>
             )}

@@ -111,70 +111,7 @@
   font-family: monospace;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
 
-.stat-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  color: white;
-}
-
-.stat-icon.primary {
-  background: var(--primary);
-}
-
-.stat-icon.info {
-  background: var(--info);
-}
-
-.stat-icon.success {
-  background: var(--success);
-}
-
-.stat-icon.warning {
-  background: var(--warning);
-}
-
-.stat-icon.danger {
-  background: var(--danger);
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--text-primary);
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-}
 
 .breakdowns-grid {
   display: grid;

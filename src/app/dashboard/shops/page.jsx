@@ -10,8 +10,9 @@ import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import ExcelTable from "@/components/ExcelTable";
 import Pagination from "@/components/ui/Pagination";
-import FilterRow, { SearchInput } from "@/components/ui/FilterRow";
+import { SearchInput } from "@/components/ui/FilterRow";
 import { exportShopsToPDF } from "@/lib/pdfExport";
+import Loading from "@/components/Loading";
 
 // Default column definition
 const STANDARD_COLUMNS = [
@@ -336,25 +337,25 @@ export default function ShopsPage() {
 
   return (
     <div className="card h-100">
-      <div className="card-body p-4">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h3 className="m-0 text-primary">
-            <i className="fas fa-store me-2"></i> รายการร้านค้า
-          </h3>
-          {/* Optional: Add header actions if needed */}
-        </div>
+      <div className="card-header">
+        <h3 className="card-title">
+          <i className="fas fa-store"></i> รายการร้านค้า
+        </h3>
+      </div>
 
-        <div className="mb-4">
-          <FilterRow>
+      <div className="card-body">
+        <div className="filter-grid">
+          <div className="filter-group">
+            <label className="filter-label">ค้นหา</label>
             <SearchInput
               value={search}
               onChange={(val) => {
                 setSearch(val);
                 pagination.resetPage();
               }}
-              placeholder="ค้นหาร้านค้า..."
+              placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร..."
             />
-          </FilterRow>
+          </div>
         </div>
 
         {!loading ? (
@@ -372,7 +373,7 @@ export default function ShopsPage() {
             exportIcon="fa-file-pdf"
           />
         ) : (
-          <div className="text-center p-5">Loading...</div>
+          <Loading />
         )}
 
         <div className="mt-4">

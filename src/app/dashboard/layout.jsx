@@ -6,10 +6,10 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { formatThaiDateFull } from "@/utils/formatters";
 import { logout, checkAuth as checkAuthUtil } from "@/utils/auth";
+import Loading from "@/components/Loading";
 import "../../styles/style.css";
 import "../../styles/sweetalert-custom.css";
 import "../../styles/toast.css";
-import Loading from "@/components/Loading";
 
 // Lazy load heavy components to reduce initial bundle
 const PatchNotesModal = dynamic(
@@ -100,11 +100,7 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="dashboard-container">
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-        crossOrigin="anonymous"
-      />
+
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "show" : ""}`} id="sidebar">
         <div className="sidebar-header">
@@ -209,6 +205,25 @@ export default function DashboardLayout({ children }) {
               <i className="fas fa-file-export"></i>
               <span>ส่งออกข้อมูล</span>
             </Link>
+          </div>
+
+          <div className="nav-section">
+            <div className="nav-section-title">ช่วยเหลือ</div>
+            <button
+              className="nav-link"
+              onClick={() => setShowPatchNotes(true)}
+              style={{
+                background: "none",
+                border: "none",
+                width: "calc(100% - 1.5rem)",
+                cursor: "pointer",
+                textAlign: "left",
+                fontFamily: "inherit"
+              }}
+            >
+              <i className="fas fa-bullhorn"></i>
+              <span>ประกาศและอัปเดต</span>
+            </button>
           </div>
         </nav>
         <div className="sidebar-footer">

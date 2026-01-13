@@ -22,7 +22,21 @@ export default function PatchNotesModal({ isOpen, onClose }) {
     const selectedChangelog = CHANGELOG.find(c => c.version === selectedVersion) || CHANGELOG[0];
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={onClose} style={{
+            visibility: 'visible',
+            opacity: 1,
+            zIndex: 9999,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(4px)'
+        }}>
             <div
                 className="modal-content patch-notes-modal"
                 onClick={e => e.stopPropagation()}

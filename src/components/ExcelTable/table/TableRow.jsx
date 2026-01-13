@@ -84,11 +84,24 @@ export function TableRow({
                         month: "short",
                         day: "numeric",
                       })
-                    : col.type === "select" && col.options
-                    ? col.options.find((o) => o.value == row[col.id])?.label ||
+                  : col.type === "select" && col.options ? (
+                    col.isBadge ? (
+                      <span
+                        className={`badge badge-${row[col.id]}`}
+                        style={{ width: "fit-content" }}
+                      >
+                        {col.options.find((o) => o.value == row[col.id])?.label ||
+                          row[col.id] ||
+                          ""}
+                      </span>
+                    ) : (
+                      col.options.find((o) => o.value == row[col.id])?.label ||
                       row[col.id] ||
                       ""
-                    : row[col.id] || ""}
+                    )
+                  ) : (
+                    row[col.id] || ""
+                  )}
                 </span>
               </div>
             )}

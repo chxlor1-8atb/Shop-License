@@ -26,11 +26,11 @@ export async function GET(request) {
             SELECT 
                 cfv.id,
                 cfv.entity_id,
-                cfv.value,
+                cfv.field_value as value,
                 cf.id as field_id,
                 cf.field_name
             FROM custom_field_values cfv
-            JOIN custom_fields cf ON cfv.field_id = cf.id
+            JOIN custom_fields cf ON cfv.custom_field_id = cf.id
             WHERE cf.entity_type = $1 AND cf.is_active = true
         `;
         const params = [entityType];
@@ -47,9 +47,7 @@ export async function GET(request) {
         values.forEach(v => {
             valuesMap[v.field_name] = {
                 value: v.value,
-                field_id: v.field_id,
-                field_label: v.field_label,
-                field_type: v.field_type
+                field_id: v.field_id
             };
         });
 
@@ -96,10 +94,10 @@ export async function POST(request) {
 
             // Use INSERT ... ON CONFLICT for upsert
             await executeQuery(`
-                INSERT INTO custom_field_values (field_id, entity_id, value)
-                VALUES ($1, $2, $3)
-                ON CONFLICT (field_id, entity_id) 
-                DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+                INSERT INTO custom_field_values(custom_field_id, entity_id, field_value)
+                VALUES($1, $2, $3)
+                ON CONFLICT(custom_field_id, entity_id) 
+                DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = NOW()
             `, [fieldId, entity_id, value?.toString() || '']);
         }
 
@@ -132,8 +130,8 @@ export async function DELETE(request) {
         await executeQuery(`
             DELETE FROM custom_field_values 
             WHERE entity_id = $1 
-            AND field_id IN (SELECT id FROM custom_fields WHERE entity_type = $2)
-        `, [entityId, entityType]);
+            AND custom_field_id IN(SELECT id FROM custom_fields WHERE entity_type = $2)
+            `, [entityId, entityType]);
 
         return NextResponse.json({ success: true, message: 'ลบ Custom Field Values สำเร็จ' });
     } catch (err) {

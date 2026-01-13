@@ -5,6 +5,20 @@
 
 export const CHANGELOG = [
     {
+        version: '2.6.0',
+        date: '2026-01-13',
+        title: 'ปรับปรุงประสิทธิภาพและดีไซน์',
+        changes: [
+            { type: 'feature', text: 'เพิ่มเมนู "ช่วยเหลือ" และประกาศอัปเดตในแถบเมนูข้าง' },
+            { type: 'improve', text: 'ปรับปรุงดีไซน์หน้า Dashboard ให้ทันสมัย (Glassmorphism)' },
+            { type: 'improve', text: 'ปรับปรุงหน้าประวัติกิจกรรม (Activity Logs) แบบใหม่' },
+            { type: 'fix', text: 'แก้ไขปัญหา Pagination ทับซ้อนกับเนื้อหา' },
+            { type: 'fix', text: 'แก้ไขปัญหา CSS Caching ที่ทำให้หน้าเว็บแสดงผลผิดเพี้ยน' },
+            { type: 'fix', text: 'แก้ไข API Error 500 หน้า License Types' },
+            { type: 'improve', text: 'เปลี่ยนลิงก์หน้า Dashboard ให้รองรับภาษาไทยเต็มรูปแบบ' }
+        ]
+    },
+    {
         version: '2.5.0',
         date: '2026-01-05',
         title: 'ปรับปรุง UI หน้า Login',

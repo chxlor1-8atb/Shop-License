@@ -8,13 +8,16 @@ export function TableToolbar({
   return (
     <div className="table-toolbar">
       <div className="toolbar-group">
-
-        <button className="btn btn-ghost" onClick={onClear}>
-          <i className="fas fa-eraser"></i> ล้างข้อมูล
-        </button>
-        <button className="btn btn-ghost" onClick={onReset}>
-          <i className="fas fa-redo"></i> รีเซ็ต
-        </button>
+        {onClear && (
+          <button className="btn btn-ghost" onClick={onClear}>
+            <i className="fas fa-eraser"></i> ล้างข้อมูล
+          </button>
+        )}
+        {onReset && (
+          <button className="btn btn-ghost" onClick={onReset}>
+            <i className="fas fa-redo"></i> รีเซ็ต
+          </button>
+        )}
       </div>
 
       <div

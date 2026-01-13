@@ -50,7 +50,12 @@ export default function CustomSelect({
         }
     }, [isOpen, searchable]);
 
-    const handleSelect = (optionValue) => {
+    const handleSelect = (optionValue, e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
         if (disabled) return;
 
         // Mimic event object for compatibility
@@ -66,7 +71,12 @@ export default function CustomSelect({
         setSearchTerm('');
     };
 
-    const handleToggle = () => {
+    const handleToggle = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
         if (disabled) return;
         setIsOpen(!isOpen);
         if (isOpen) setSearchTerm('');
@@ -132,7 +142,7 @@ export default function CustomSelect({
                         <div
                             key={index}
                             className={`custom-option ${value == opt.value ? 'selected' : ''}`}
-                            onClick={() => handleSelect(opt.value)}
+                            onClick={(e) => handleSelect(opt.value, e)}
                         >
                             {opt.label || opt.name}
                         </div>

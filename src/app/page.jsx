@@ -47,9 +47,7 @@ export default function LoginPage() {
 // Sub-components
 
 const BackgroundShapes = () => (
-  <div className="bg-shapes">
-    {/* Shapes are generated via CSS pseudo-elements for better performance */}
-  </div>
+  <div className="bg-shapes" suppressHydrationWarning />
 );
 
 const Particles = () => (
