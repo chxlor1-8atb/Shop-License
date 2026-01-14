@@ -805,6 +805,10 @@ html {
 
 .feature-tag svg {
     font-size: 0.75rem;
+    width: 1em;
+    height: 1em;
+    min-width: 1em;
+    flex-shrink: 0;
 }
 
 /* Feature tag colors */

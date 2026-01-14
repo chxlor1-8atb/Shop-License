@@ -36,15 +36,15 @@ export function useAuthLogin() {
         verifyAuth();
     }, [router]);
 
-    // Load credentials
+    // Load credentials - Only username for security
     useEffect(() => {
         const savedData = localStorage.getItem('rememberMe');
         if (savedData) {
             try {
                 const data = JSON.parse(atob(savedData));
-                if (data.username && data.password) {
+                // Only restore username, never password
+                if (data.username) {
                     setUsername(data.username);
-                    setPassword(atob(data.password));
                     setRememberMe(true);
                 }
             } catch (e) {
@@ -58,9 +58,10 @@ export function useAuthLogin() {
         if (error) setError('');
     }, [username, password]);
 
-    const saveCredentials = (shouldRemember, user, pass) => {
+    const saveCredentials = (shouldRemember, user) => {
         if (shouldRemember) {
-            const savedData = { username: user, password: btoa(pass) };
+            // SECURITY: Never store passwords in localStorage, even encoded
+            const savedData = { username: user };
             localStorage.setItem('rememberMe', btoa(JSON.stringify(savedData)));
         } else {
             localStorage.removeItem('rememberMe');
@@ -87,7 +88,7 @@ export function useAuthLogin() {
             if (data.success) {
                 setUnlocked(true);
                 setLoginSuccess(true);
-                saveCredentials(rememberMe, username, password);
+                saveCredentials(rememberMe, username);
 
                 // Prefetch dashboard for instant navigation
                 router.prefetch('/dashboard');
