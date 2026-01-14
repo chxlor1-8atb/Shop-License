@@ -18,6 +18,7 @@ export default function EditableCell({
     disabled = false,
     displayValue = null, // Custom display value (e.g., for showing label instead of id)
     className = '',
+    ariaLabel,
 }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value);
@@ -136,6 +137,7 @@ export default function EditableCell({
                         }}
                         disabled={isSaving}
                         className="editable-cell-custom-select"
+                        aria-label={ariaLabel}
                     />
                 );
             case 'date':
@@ -146,6 +148,7 @@ export default function EditableCell({
                         onChange={(e) => setEditValue(e.target.value)}
                         onBlur={handleBlur}
                         className="editable-cell-date-picker"
+                        aria-label={ariaLabel}
                     />
                 );
             case 'number':
@@ -160,6 +163,7 @@ export default function EditableCell({
                         disabled={isSaving}
                         placeholder={placeholder}
                         className="editable-cell-input"
+                        aria-label={ariaLabel}
                     />
                 );
             default:
@@ -174,6 +178,7 @@ export default function EditableCell({
                         disabled={isSaving}
                         placeholder={placeholder}
                         className="editable-cell-input"
+                        aria-label={ariaLabel}
                     />
                 );
         }

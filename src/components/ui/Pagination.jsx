@@ -224,8 +224,9 @@ export default function Pagination({
 
                 {showItemsPerPage && onItemsPerPageChange && (
                     <div className="pagination-per-page">
-                        <span className="pagination-per-page-label">แสดง</span>
+                        <label htmlFor="items-per-page-select" className="pagination-per-page-label">แสดง</label>
                         <CustomSelect
+                            id="items-per-page-select"
                             value={itemsPerPage}
                             onChange={(e) => onItemsPerPageChange(parseInt(e.target.value, 10))}
                             options={[
@@ -235,6 +236,7 @@ export default function Pagination({
                                 { value: 100, label: '100' }
                             ]}
                             className="pagination-select"
+                            aria-label="จำนวนรายการต่อหน้า"
                         />
                         <span className="pagination-per-page-suffix">รายการ</span>
                     </div>

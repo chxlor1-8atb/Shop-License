@@ -32,15 +32,19 @@ export function SearchInput({
     value,
     onChange,
     placeholder = 'ค้นหา...',
-    className = ''
+    className = '',
+    id,
+    ...props
 }) {
     return (
         <input
+            id={id}
             type="text"
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             className={className}
+            {...props}
         />
     );
 }

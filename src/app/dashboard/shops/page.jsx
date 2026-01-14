@@ -346,8 +346,9 @@ export default function ShopsPage() {
       <div className="card-body">
         <div className="filter-grid">
           <div className="filter-group">
-            <label className="filter-label">ค้นหา</label>
+            <label htmlFor="shop-search" className="filter-label">ค้นหา</label>
             <SearchInput
+              id="shop-search"
               value={search}
               onChange={(val) => {
                 setSearch(val);

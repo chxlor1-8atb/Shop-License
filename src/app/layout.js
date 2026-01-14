@@ -103,8 +103,8 @@ export default function RootLayout({ children }) {
             </head>
             <body>
                 {children}
-                <SpeedInsights />
-                <Analytics />
+                <SpeedInsights debug={false} />
+                <Analytics debug={false} />
             </body>
         </html>
     );

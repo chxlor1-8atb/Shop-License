@@ -339,6 +339,7 @@ function UserRow({ user, onUpdate, onDelete }) {
           displayValue={user.full_name || "-"}
           type="text"
           onSave={(value) => onUpdate(user.id, "full_name", value)}
+          ariaLabel={`แก้ไขชื่อ-นามสกุล ของ ${user.username}`}
         />
       </td>
       <td>
@@ -348,6 +349,7 @@ function UserRow({ user, onUpdate, onDelete }) {
           type="select"
           options={ROLE_OPTIONS}
           onSave={(value) => onUpdate(user.id, "role", value)}
+          ariaLabel={`แก้ไขบทบาท ของ ${user.username}`}
         />
       </td>
       <td>{formatThaiDateTime(user.created_at)}</td>
@@ -374,8 +376,9 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
   return (
     <form onSubmit={onSubmit}>
       <div className="form-group">
-        <label>ชื่อผู้ใช้ *</label>
+        <label htmlFor="form-username">ชื่อผู้ใช้ *</label>
         <input
+          id="form-username"
           type="text"
           name="username"
           value={formData.username}
@@ -384,8 +387,9 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
         />
       </div>
       <div className="form-group">
-        <label>ชื่อ-นามสกุล *</label>
+        <label htmlFor="form-fullname">ชื่อ-นามสกุล *</label>
         <input
+          id="form-fullname"
           type="text"
           name="full_name"
           value={formData.full_name}
@@ -394,8 +398,9 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
         />
       </div>
       <div className="form-group">
-        <label>รหัสผ่าน *</label>
+        <label htmlFor="form-password">รหัสผ่าน *</label>
         <input
+          id="form-password"
           type="password"
           name="password"
           value={formData.password}
@@ -404,8 +409,9 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
         />
       </div>
       <div className="form-group">
-        <label>บทบาท *</label>
+        <label htmlFor="form-role">บทบาท *</label>
         <CustomSelect
+          id="form-role"
           name="role"
           value={formData.role}
           onChange={handleChange}

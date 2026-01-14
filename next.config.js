@@ -49,32 +49,37 @@ const nextConfig = {
             upgrade-insecure-requests;
         `.replace(/\s{2,}/g, ' ').trim();
 
+        const securityHeaders = [
+            {
+                key: 'X-Frame-Options',
+                value: 'DENY',
+            },
+            {
+                key: 'X-Content-Type-Options',
+                value: 'nosniff',
+            },
+            {
+                key: 'Referrer-Policy',
+                value: 'strict-origin-when-cross-origin',
+            },
+            {
+                key: 'Permissions-Policy',
+                value: 'camera=(), microphone=(), geolocation=()',
+            },
+        ];
+
+        // Only apply CSP in production to avoid interfering with React DevTools and Hot Reload in development
+        if (process.env.NODE_ENV === 'production') {
+            securityHeaders.push({
+                key: 'Content-Security-Policy',
+                value: cspHeader,
+            });
+        }
+
         return [
-            // Security headers for all routes
             {
                 source: '/:path*',
-                headers: [
-                    {
-                        key: 'Content-Security-Policy',
-                        value: cspHeader,
-                    },
-                    {
-                        key: 'X-Frame-Options',
-                        value: 'DENY',
-                    },
-                    {
-                        key: 'X-Content-Type-Options',
-                        value: 'nosniff',
-                    },
-                    {
-                        key: 'Referrer-Policy',
-                        value: 'strict-origin-when-cross-origin',
-                    },
-                    {
-                        key: 'Permissions-Policy',
-                        value: 'camera=(), microphone=(), geolocation=()',
-                    },
-                ],
+                headers: securityHeaders,
             },
         ];
     },

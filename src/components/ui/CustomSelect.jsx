@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 
 export default function CustomSelect({
     value,
@@ -13,12 +13,14 @@ export default function CustomSelect({
     icon,
     disabled = false,
     searchable = false,
-    searchPlaceholder = 'ค้นหา...'
+    searchPlaceholder = 'ค้นหา...',
+    id
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const wrapperRef = useRef(null);
     const searchInputRef = useRef(null);
+    const searchInputId = useId();
 
     const selectedOption = options.find(opt => opt.value == value);
 
@@ -84,6 +86,7 @@ export default function CustomSelect({
 
     return (
         <div
+            id={id}
             className={`custom-select-wrapper ${className} ${disabled ? 'disabled' : ''} ${searchable ? 'searchable' : ''} ${isOpen ? 'open' : ''}`}
             ref={wrapperRef}
             style={style}
@@ -91,6 +94,10 @@ export default function CustomSelect({
             <div
                 className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
                 onClick={handleToggle}
+                role="combobox"
+                aria-expanded={isOpen}
+                aria-haspopup="listbox"
+                aria-controls={`${id || searchInputId}-list`}
             >
                 <div className="value-container">
                     {icon && <i className={`${icon} mr-2`}></i>}
@@ -103,7 +110,11 @@ export default function CustomSelect({
                 </div>
             </div>
 
-            <div className={`custom-select-options ${isOpen ? 'show' : ''}`}>
+            <div 
+                className={`custom-select-options ${isOpen ? 'show' : ''}`}
+                role="listbox"
+                id={`${id || searchInputId}-list`}
+            >
                 {label && (
                     <div className="custom-select-header">
                         {label}
@@ -115,12 +126,14 @@ export default function CustomSelect({
                         <i className="fas fa-search search-icon"></i>
                         <input
                             ref={searchInputRef}
+                            id={searchInputId}
                             type="text"
                             className="custom-select-search-input"
                             placeholder={searchPlaceholder}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             onClick={(e) => e.stopPropagation()}
+                            aria-label="Search options"
                         />
                         {searchTerm && (
                             <button

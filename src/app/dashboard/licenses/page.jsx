@@ -372,8 +372,9 @@ export default function LicensesPage() {
           {/* Filters */}
         <div className="filter-grid">
           <div className="filter-group">
-            <label className="filter-label">ค้นหา</label>
+            <label htmlFor="license-search" className="filter-label">ค้นหา</label>
             <SearchInput
+              id="license-search"
               value={search}
               onChange={(val) => {
                 setSearch(val);
@@ -383,8 +384,9 @@ export default function LicensesPage() {
             />
           </div>
           <div className="filter-group">
-            <label className="filter-label">ประเภทใบอนุญาต</label>
+            <label htmlFor="license-type-filter" className="filter-label">ประเภทใบอนุญาต</label>
             <CustomSelect
+              id="license-type-filter"
               value={filterType}
               onChange={(e) => {
                 setFilterType(e.target.value);
@@ -394,8 +396,9 @@ export default function LicensesPage() {
             />
           </div>
           <div className="filter-group">
-            <label className="filter-label">สถานะ</label>
+            <label htmlFor="license-status-filter" className="filter-label">สถานะ</label>
             <CustomSelect
+              id="license-status-filter"
               value={filterStatus}
               onChange={(e) => {
                 setFilterStatus(e.target.value);
