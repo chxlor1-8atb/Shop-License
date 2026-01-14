@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-// Force restart: resolve hydration mismatch
+// Force restart: resolve hydration mismatch - timestamp: 2026-01-14
 const nextConfig = {
     // Enable React strict mode for better development
     reactStrictMode: true,
