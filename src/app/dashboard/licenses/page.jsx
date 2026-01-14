@@ -9,6 +9,7 @@ import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
 import CustomSelect from "@/components/ui/CustomSelect"; // Re-use for filters
 import { exportLicensesToPDF } from "@/lib/pdfExport";
+import TableSkeleton from "@/components/ui/TableSkeleton";
 
 // Helper to format options for ExcelTable select columns
 const formatOptions = (items, labelKey = "name", valueKey = "id") =>
@@ -425,7 +426,52 @@ export default function LicensesPage() {
             exportIcon="fa-file-pdf"
           />
         ) : (
-          <div className="text-center p-5">Loading...</div>
+          <div className="table-card">
+            <div className="table-container">
+              <table className="excel-table">
+                <thead>
+                  <tr>
+                    {columns.length > 0
+                      ? columns.map((col) => (
+                          <th
+                            key={col.id}
+                            style={{ width: col.width, minWidth: col.width }}
+                          >
+                            <div className="th-content">{col.name}</div>
+                          </th>
+                        ))
+                      : [
+                          "ร้านค้า",
+                          "ประเภทใบอนุญาต",
+                          "เลขที่ใบอนุญาต",
+                          "วันที่ออก",
+                          "วันหมดอายุ",
+                          "สถานะ",
+                          "หมายเหตุ",
+                        ].map((header, i) => (
+                          <th key={i} style={{ minWidth: "150px" }}>
+                            <div className="th-content">{header}</div>
+                          </th>
+                        ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <TableSkeleton
+                    rows={10}
+                    columns={[
+                      { width: "90%" },
+                      { width: "80%" },
+                      { width: "70%" },
+                      { width: "60%", center: true },
+                      { width: "60%", center: true },
+                      { width: "50%", center: true, rounded: true },
+                      { width: "70%" },
+                    ]}
+                  />
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
         <div className="mt-4">

@@ -6,6 +6,7 @@ import { API_ENDPOINTS } from '@/constants';
 import { formatThaiDateTime, getInitial } from '@/utils/formatters';
 import Modal from '@/components/ui/Modal';
 import Pagination from '@/components/ui/Pagination';
+import { StatsGridSkeleton, TableSkeleton, Skeleton } from '@/components/ui/Skeleton';
 
 
 
@@ -372,16 +373,15 @@ function UserAvatar({ name }) {
 function DashboardSkeleton() {
     return (
         <div>
-            <div className="stats-grid" style={{ minHeight: '120px' }}>
-                {[...Array(5)].map((_, i) => (
-                    <div key={i} className="stat-card" style={{ opacity: 0.7 }}>
-                        <div className="skeleton-cell skeleton-animate" style={{ width: '56px', height: '56px', borderRadius: '12px' }} />
-                        <div className="stat-content" style={{ gap: '0.5rem' }}>
-                            <div className="skeleton-cell skeleton-animate" style={{ width: '60%', height: '28px' }} />
-                            <div className="skeleton-cell skeleton-animate" style={{ width: '80%', height: '16px' }} />
-                        </div>
-                    </div>
-                ))}
+            <StatsGridSkeleton count={5} />
+            
+            <div className="card" style={{ marginTop: '1.5rem' }}>
+                <div className="card-header" style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <Skeleton width="250px" height="32px" />
+                </div>
+                <div className="card-body">
+                    <TableSkeleton rows={5} columns={4} />
+                </div>
             </div>
         </div>
     );

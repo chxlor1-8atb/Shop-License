@@ -703,6 +703,10 @@ html {
     letter-spacing: -0.02em;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    min-height: 2.4em; /* Reserve space for 2 lines */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .hero__title--highlight {
@@ -712,6 +716,7 @@ html {
     background-clip: text;
     position: relative;
     display: inline-block;
+    width: fit-content; /* Ensure gradient highlight fits content */
 }
 
 .hero__title--highlight::after {
@@ -734,6 +739,7 @@ html {
     max-width: 420px;
     margin-bottom: var(--space-section);
     font-weight: 400;
+    min-height: 5.1em; /* Reserve space for 3 lines */
 }
 
 /* ====================================
@@ -758,6 +764,7 @@ html {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    min-height: 84px; /* Reserve space for 2 rows of tags */
 }
 
 .feature-tag {

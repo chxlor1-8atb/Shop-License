@@ -5,6 +5,16 @@
 
 export const CHANGELOG = [
     {
+        version: '2.6.1',
+        date: '2026-01-14',
+        title: 'ปรับปรุงการโหลดและสิ่งอำนวยความสะดวก',
+        changes: [
+            { type: 'feature', text: 'เพิ่ม Skeleton Loaders สำหรับการโหลดข้อมูลที่ราบรื่นขึ้นในหน้า Dashboard' },
+            { type: 'improve', text: 'ปรับปรุงการเข้าถึง (Accessibility) โดยเพิ่ม Aria Labels สำหรับ Screen Readers' },
+            { type: 'improve', text: 'ปรับปรุงสถานะการโหลดของ Stats Grid และตารางกิจกรรมล่าสุด' }
+        ]
+    },
+    {
         version: '2.6.0',
         date: '2026-01-13',
         title: 'ปรับปรุงประสิทธิภาพและดีไซน์',

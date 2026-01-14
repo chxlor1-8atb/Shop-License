@@ -36,6 +36,9 @@ export function TableRow({
               col.type === "select" ? (
                 <select
                   ref={inputRef}
+                  id={`cell-select-${row.id}-${col.id}`}
+                  name={`cell-select-${row.id}-${col.id}`}
+                  aria-label={`แก้ไข ${col.name}`}
                   className="cell-input"
                   value={row[col.id] || ""}
                   onChange={(e) => onCellChange(row.id, col.id, e.target.value)}
@@ -53,6 +56,9 @@ export function TableRow({
               ) : (
                 <input
                   ref={inputRef}
+                  id={`cell-input-${row.id}-${col.id}`}
+                  name={`cell-input-${row.id}-${col.id}`}
+                  aria-label={`แก้ไข ${col.name}`}
                   type={col.type || "text"}
                   className="cell-input"
                   value={row[col.id] || ""}
@@ -118,6 +124,7 @@ export function TableRow({
           className="row-action-btn"
           onClick={() => onDeleteRow(row.id)}
           title="ลบแถว"
+          aria-label="ลบแถว"
         >
           <i className="fas fa-trash"></i>
         </button>

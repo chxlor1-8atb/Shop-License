@@ -20,13 +20,8 @@ const PatchNotesModal = dynamic(
   { ssr: false }
 );
 
-const VersionBadge = dynamic(
-  () =>
-    import("@/components/PatchNotesModal").then((mod) => ({
-      default: mod.VersionBadge,
-    })),
-  { ssr: false, loading: () => <span className="version-badge-placeholder" /> }
-);
+import VersionBadge from "@/components/VersionBadge";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
@@ -298,12 +293,15 @@ export default function DashboardLayout({ children }) {
             </button>
             <h1 id="pageTitle">Dashboard</h1>
           </div>
-          <div
-            className="header-actions"
-            style={{ display: "flex", alignItems: "center", gap: "1rem" }}
-          >
+          <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <VersionBadge onClick={() => setShowPatchNotes(true)} />
-            <span>{currentDate}</span>
+            <div style={{ minWidth: "200px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+              {currentDate ? (
+                <span>{currentDate}</span>
+              ) : (
+                <Skeleton width="180px" height="20px" />
+              )}
+            </div>
           </div>
         </header>
         <div className="content-body">{children}</div>

@@ -86,18 +86,25 @@ export default function CustomSelect({
 
     return (
         <div
-            id={id}
             className={`custom-select-wrapper ${className} ${disabled ? 'disabled' : ''} ${searchable ? 'searchable' : ''} ${isOpen ? 'open' : ''}`}
             ref={wrapperRef}
             style={style}
         >
             <div
+                id={id}
                 className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
                 onClick={handleToggle}
                 role="combobox"
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
                 aria-controls={`${id || searchInputId}-list`}
+                tabIndex={disabled ? -1 : 0}
+                aria-label={label || placeholder}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        handleToggle(e);
+                    }
+                }}
             >
                 <div className="value-container">
                     {icon && <i className={`${icon} mr-2`}></i>}
@@ -142,6 +149,7 @@ export default function CustomSelect({
                                     e.stopPropagation();
                                     setSearchTerm('');
                                 }}
+                                aria-label="Clear search"
                             >
                                 <i className="fas fa-times"></i>
                             </button>
@@ -154,8 +162,16 @@ export default function CustomSelect({
                     {filteredOptions.map((opt, index) => (
                         <div
                             key={index}
+                            role="option"
+                            aria-selected={value == opt.value}
                             className={`custom-option ${value == opt.value ? 'selected' : ''}`}
                             onClick={(e) => handleSelect(opt.value, e)}
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    handleSelect(opt.value, e);
+                                }
+                            }}
                         >
                             {opt.label || opt.name}
                         </div>

@@ -77,6 +77,8 @@ export function TableHeader({
                   }}
                   onFocus={(e) => e.target.select()}
                   aria-label={`แก้ไขชื่อคอลัมน์ ${col.name}`}
+                  id={`header-input-${col.id}`}
+                  name={`header-input-${col.id}`}
                 />
               ) : (
                 <span

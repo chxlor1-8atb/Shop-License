@@ -12,7 +12,7 @@ import ExcelTable from "@/components/ExcelTable";
 import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
 import { exportShopsToPDF } from "@/lib/pdfExport";
-import Loading from "@/components/Loading";
+import TableSkeleton from "@/components/ui/TableSkeleton";
 
 // Default column definition
 const STANDARD_COLUMNS = [
@@ -374,7 +374,38 @@ export default function ShopsPage() {
             exportIcon="fa-file-pdf"
           />
         ) : (
-          <Loading />
+          <div className="table-card">
+            <div className="table-container">
+              <table className="excel-table">
+                <thead>
+                  <tr>
+                    {columns.map((col) => (
+                      <th
+                        key={col.id}
+                        style={{ width: col.width, minWidth: col.width }}
+                      >
+                        <div className="th-content">{col.name}</div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <TableSkeleton
+                    rows={10}
+                    columns={[
+                      { width: "90%" },
+                      { width: "80%" },
+                      { width: "70%" },
+                      { width: "85%" },
+                      { width: "70%" },
+                      { width: "60%" },
+                      { width: "40%", center: true },
+                    ]}
+                  />
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
         <div className="mt-4">

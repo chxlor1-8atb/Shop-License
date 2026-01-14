@@ -233,34 +233,4 @@ export default function PatchNotesModal({ isOpen, onClose }) {
     );
 }
 
-/**
- * Version Badge Component
- * ใช้แสดง version badge ที่คลิกแล้วเปิด Patch Notes
- */
-export function VersionBadge({ onClick }) {
-    const latest = getLatestVersion();
 
-    return (
-        <button
-            onClick={onClick}
-            title="ดู Patch Notes"
-            style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.375rem',
-                padding: '0.25rem 0.625rem',
-                background: 'linear-gradient(135deg, #fff7ed, #ffedd5)',
-                border: '1px solid #fed7aa',
-                borderRadius: '20px',
-                color: '#ea580c',
-                fontSize: '0.75rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-            }}
-        >
-            <i className="fas fa-code-branch"></i>
-            v{latest?.version}
-        </button>
-    );
-}
