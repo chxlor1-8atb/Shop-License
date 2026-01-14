@@ -40,7 +40,7 @@ export default function ExpiringPage() {
     const [dateTo, setDateTo] = useState('');
     const [sortOrder, setSortOrder] = useState('expiry_asc');
     const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(20);
+    const [limit, setLimit] = useState(10);
 
     useEffect(() => {
         fetchData();
