@@ -11,7 +11,10 @@ export const CHANGELOG = [
         changes: [
             { type: 'feature', text: 'เพิ่ม Skeleton Loaders สำหรับการโหลดข้อมูลที่ราบรื่นขึ้นในหน้า Dashboard' },
             { type: 'improve', text: 'ปรับปรุงการเข้าถึง (Accessibility) โดยเพิ่ม Aria Labels สำหรับ Screen Readers' },
-            { type: 'improve', text: 'ปรับปรุงสถานะการโหลดของ Stats Grid และตารางกิจกรรมล่าสุด' }
+            { type: 'improve', text: 'ปรับปรุงสถานะการโหลดของ Stats Grid และตารางกิจกรรมล่าสุด' },
+            { type: 'fix', text: 'แก้ไขปัญหาหน้าเว็บเลื่อนได้ขณะเปิด Patch Notes Modal' },
+            { type: 'improve', text: 'ปรับปรุง Patch Notes Modal ให้รองรับการแสดงผลบนมือถือ (Responsive)' },
+            { type: 'improve', text: 'ลบปุ่ม "เข้าใจแล้ว" ที่ซ้ำซ้อนออก เพื่อให้หน้าต่างดูสะอาดตาขึ้น' }
         ]
     },
     {

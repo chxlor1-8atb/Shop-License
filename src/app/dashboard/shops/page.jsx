@@ -33,7 +33,7 @@ const STANDARD_COLUMNS = [
 ];
 
 export default function ShopsPage() {
-  const pagination = usePagination(20);
+  const pagination = usePagination(10);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -391,7 +391,7 @@ export default function ShopsPage() {
                 </thead>
                 <tbody>
                   <TableSkeleton
-                    rows={10}
+                    rows={pagination.limit}
                     columns={[
                       { width: "90%" },
                       { width: "80%" },

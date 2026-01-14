@@ -17,12 +17,22 @@ export default function PatchNotesModal({ isOpen, onClose }) {
         }
     }, [isOpen]);
 
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = 'unset';
+            };
+        }
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const selectedChangelog = CHANGELOG.find(c => c.version === selectedVersion) || CHANGELOG[0];
 
     return (
-        <div className="modal-overlay" onClick={onClose} style={{
+        <div className="modal-overlay" style={{
             visibility: 'visible',
             opacity: 1,
             zIndex: 9999,
@@ -38,21 +48,15 @@ export default function PatchNotesModal({ isOpen, onClose }) {
             backdropFilter: 'blur(4px)'
         }}>
             <div
-                className="modal-content patch-notes-modal"
+                className="modal-content patch-notes-modal-content"
                 onClick={e => e.stopPropagation()}
-                style={{
-                    maxWidth: '700px',
-                    maxHeight: '80vh',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}
             >
                 {/* Header */}
                 <div className="modal-header" style={{
                     background: 'linear-gradient(135deg, #f97316, #ea580c)',
                     color: 'white',
-                    padding: '1.25rem 1.5rem'
+                    padding: '1.25rem 1.5rem',
+                    flexShrink: 0
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <i className="fas fa-clipboard-list" style={{ fontSize: '1.5rem' }}></i>
@@ -83,44 +87,19 @@ export default function PatchNotesModal({ isOpen, onClose }) {
                 </div>
 
                 {/* Content */}
-                <div style={{
-                    display: 'flex',
-                    flex: 1,
-                    overflow: 'hidden',
-                    background: '#f8fafc'
-                }}>
+                <div className="patch-notes-container">
                     {/* Version List Sidebar */}
-                    <div style={{
-                        width: '180px',
-                        borderRight: '1px solid #e2e8f0',
-                        background: 'white',
-                        overflowY: 'auto',
-                        padding: '0.5rem'
-                    }}>
+                    <div className="patch-notes-sidebar">
                         {CHANGELOG.map(log => (
                             <button
                                 key={log.version}
                                 onClick={() => setSelectedVersion(log.version)}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem 1rem',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    background: selectedVersion === log.version
-                                        ? 'linear-gradient(135deg, #fff7ed, #ffedd5)'
-                                        : 'transparent',
-                                    color: selectedVersion === log.version ? '#ea580c' : '#64748b',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    marginBottom: '0.25rem',
-                                    transition: 'all 0.2s ease',
-                                    fontWeight: selectedVersion === log.version ? '600' : '400'
-                                }}
+                                className={`patch-notes-version-btn ${selectedVersion === log.version ? 'active' : ''}`}
                             >
-                                <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>
+                                <div style={{ fontSize: '0.9375rem', fontWeight: '600' }}>
                                     v{log.version}
                                 </div>
-                                <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                                <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
                                     {formatThaiDate(log.date)}
                                 </div>
                             </button>
@@ -128,19 +107,16 @@ export default function PatchNotesModal({ isOpen, onClose }) {
                     </div>
 
                     {/* Change Details */}
-                    <div style={{
-                        flex: 1,
-                        overflowY: 'auto',
-                        padding: '1.5rem'
-                    }}>
+                    <div className="patch-notes-detail">
                         {selectedChangelog && (
                             <>
-                                <div style={{ marginBottom: '1.5rem' }}>
+                                <div style={{ marginBottom: '2rem' }}>
                                     <div style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '0.75rem',
-                                        marginBottom: '0.5rem'
+                                        marginBottom: '0.5rem',
+                                        flexWrap: 'wrap'
                                     }}>
                                         <span style={{
                                             background: 'linear-gradient(135deg, #f97316, #ea580c)',
@@ -148,18 +124,20 @@ export default function PatchNotesModal({ isOpen, onClose }) {
                                             padding: '0.25rem 0.75rem',
                                             borderRadius: '20px',
                                             fontSize: '0.875rem',
-                                            fontWeight: '600'
+                                            fontWeight: '600',
+                                            boxShadow: '0 2px 8px rgba(249, 115, 22, 0.3)'
                                         }}>
                                             v{selectedChangelog.version}
                                         </span>
-                                        <span style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                                        <span style={{ color: '#64748b', fontSize: '0.9375rem' }}>
                                             {formatThaiDateFull(selectedChangelog.date)}
                                         </span>
                                     </div>
                                     <h3 style={{
                                         margin: 0,
-                                        fontSize: '1.25rem',
-                                        color: '#1e293b'
+                                        fontSize: '1.5rem',
+                                        color: '#1e293b',
+                                        fontWeight: '700'
                                     }}>
                                         {selectedChangelog.title}
                                     </h3>
@@ -170,35 +148,27 @@ export default function PatchNotesModal({ isOpen, onClose }) {
                                     padding: 0,
                                     margin: 0,
                                     display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '0.75rem'
+                                    flexDirection: 'column'
                                 }}>
                                     {selectedChangelog.changes.map((change, idx) => {
                                         const badge = getChangeTypeBadge(change.type);
                                         return (
                                             <li
                                                 key={idx}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'flex-start',
-                                                    gap: '0.75rem',
-                                                    padding: '0.75rem 1rem',
-                                                    background: 'white',
-                                                    borderRadius: '8px',
-                                                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-                                                }}
+                                                className="patch-change-item"
                                             >
                                                 <span className={`badge ${badge.class}`} style={{
                                                     display: 'inline-flex',
                                                     alignItems: 'center',
-                                                    gap: '0.25rem',
+                                                    gap: '0.35rem',
                                                     fontSize: '0.75rem',
-                                                    whiteSpace: 'nowrap'
+                                                    whiteSpace: 'nowrap',
+                                                    padding: '0.35rem 0.75rem'
                                                 }}>
                                                     <i className={badge.icon}></i>
                                                     {badge.label}
                                                 </span>
-                                                <span style={{ color: '#334155', fontSize: '0.9375rem' }}>
+                                                <span style={{ color: '#334155', fontSize: '1rem', lineHeight: '1.5' }}>
                                                     {change.text}
                                                 </span>
                                             </li>
@@ -210,24 +180,7 @@ export default function PatchNotesModal({ isOpen, onClose }) {
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div style={{
-                    padding: '1rem 1.5rem',
-                    borderTop: '1px solid #e2e8f0',
-                    background: 'white',
-                    display: 'flex',
-                    justifyContent: 'flex-end'
-                }}>
-                    <button
-                        onClick={onClose}
-                        className="btn btn-primary"
-                        style={{
-                            background: 'linear-gradient(135deg, #f97316, #ea580c)'
-                        }}
-                    >
-                        <i className="fas fa-check"></i> เข้าใจแล้ว
-                    </button>
-                </div>
+
             </div>
         </div>
     );

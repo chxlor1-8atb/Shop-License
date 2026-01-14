@@ -16,7 +16,7 @@ const formatOptions = (items, labelKey = "name", valueKey = "id") =>
   items.map((item) => ({ label: item[labelKey], value: item[valueKey] }));
 
 export default function LicensesPage() {
-  const pagination = usePagination(20);
+  const pagination = usePagination(10);
   const { shopOptions, typeOptions } = useDropdownData(); // Use hook for dropdown data
 
   // Convert hook options to ExcelTable format {label, value}

@@ -41,7 +41,7 @@ const ROLE_BADGE_STYLES = {
  * UsersPage Component
  */
 export default function UsersPage() {
-  const pagination = usePagination(20);
+  const pagination = usePagination(10);
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
