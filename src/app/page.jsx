@@ -18,29 +18,49 @@ import "../styles/login-slide.css";
 // for now Page just structures the layout.
 
 export default function LoginPage() {
-  return (
-    <div className="login-body">
-      <BackgroundShapes />
-      <Particles />
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Shop License System',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'THB'
+    },
+    description: 'ระบบจัดการใบอนุญาตร้านค้าช่วยให้คุณจัดการข้อมูลและต่ออายุใบอนุญาตได้อย่างมีประสิทธิภาพ'
+  };
 
-      <div className="login-container">
-        <div className="login-card">
-          {/* Left Side: Brand & Info */}
-          <div className="card-left">
-            <div className="card-left__content">
-              <BrandHeader />
-              <HeroSection />
-              <FeaturesList />
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <main className="login-body">
+        <BackgroundShapes />
+        <Particles />
+
+        <div className="login-container">
+          <div className="login-card">
+            {/* Left Side: Brand & Info */}
+            <div className="card-left">
+              <div className="card-left__content">
+                <BrandHeader />
+                <HeroSection />
+                <FeaturesList />
+              </div>
+            </div>
+
+            {/* Right Side: Login Form */}
+            <div className="card-right">
+              <LoginForm />
             </div>
           </div>
-
-          {/* Right Side: Login Form */}
-          <div className="card-right">
-            <LoginForm />
-          </div>
         </div>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }
 

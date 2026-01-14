@@ -20,10 +20,57 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 export const metadata = {
-    title: 'ระบบจัดการใบอนุญาตร้านค้า',
-    description: 'Shop License Management System',
+    title: {
+        default: 'ระบบจัดการใบอนุญาตร้านค้า | Shop License System',
+        template: '%s | Shop License System'
+    },
+    description: 'ระบบจัดการใบอนุญาตร้านค้าครบวงจร ช่วยให้คุณจัดการข้อมูลร้านค้า ใบอนุญาต และการแจ้งเตือนวันหมดอายุได้อย่างมีประสิทธิภาพ ปลอดภัย และใช้งานง่าย',
+    keywords: ['ระบบจัดการร้านค้า', 'ใบอนุญาต', 'Shop License', 'Management System', 'ต่ออายุใบอนุญาต', 'ระบบแจ้งเตือน'],
+    authors: [{ name: 'Shop License Team' }],
+    creator: 'Shop License Team',
+    publisher: 'Shop License System',
+    formatDetection: {
+        email: false,
+        address: false,
+        telephone: false,
+    },
     icons: {
         icon: '/image/favicon.png',
+        shortcut: '/image/favicon.png',
+        apple: '/image/favicon.png',
+    },
+    openGraph: {
+        title: 'ระบบจัดการใบอนุญาตร้านค้า | Shop License System',
+        description: 'ยกระดับการจัดการร้านค้าของคุณด้วยระบบที่ใช้งานง่าย ปลอดภัย และรวดเร็ว',
+        url: 'https://shop-license-system.vercel.app',
+        siteName: 'Shop License System',
+        images: [
+            {
+                url: '/image/og-image.png', // Make sure this exists or use a placeholder if not
+                width: 1200,
+                height: 630,
+                alt: 'Shop License System Preview',
+            },
+        ],
+        locale: 'th_TH',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'ระบบจัดการใบอนุญาตร้านค้า',
+        description: 'จัดการใบอนุญาตร้านค้าของคุณได้ง่ายๆ ในที่เดียว',
+        images: ['/image/og-image.png'],
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+        },
     },
 };
 
