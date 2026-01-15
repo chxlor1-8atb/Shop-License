@@ -377,32 +377,14 @@ export default function LicenseTypesPage() {
     <>
       <StatsSection stats={stats} />
 
-      <div className="card" style={{ 
-        border: 'none', 
-        boxShadow: 'var(--shadow-xl)',
-        background: 'rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(20px)'
-      }}>
-        <div className="card-header" style={{
-          background: 'linear-gradient(135deg, rgba(217, 119, 87, 0.08) 0%, rgba(255, 255, 255, 0) 100%)',
-          borderBottom: '1px solid rgba(217, 119, 87, 0.1)',
-          padding: '1.5rem'
-        }}>
-          <h3 className="card-title" style={{ fontSize: '1.25rem', color: 'var(--primary-dark)' }}>
-            <div style={{
-              width: '32px', height: '32px', 
-              background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
-              borderRadius: '8px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', marginRight: '0.75rem',
-              boxShadow: '0 4px 12px rgba(217, 119, 87, 0.3)'
-            }}>
-              <i className="fas fa-tags" style={{ fontSize: '0.9rem' }}></i>
-            </div>
+      <div className="card">
+        <div className="card-header">
+          <h3 className="card-title">
+            <i className="fas fa-tags"></i>
             ประเภทใบอนุญาต
           </h3>
         </div>
-        <div className="card-body" style={{ padding: '0' }}>
+        <div className="card-body">
           {!loading ? (
             <ExcelTable
               initialColumns={columns}
@@ -415,7 +397,7 @@ export default function LicenseTypesPage() {
               onColumnDelete={handleColumnDelete}
             />
           ) : (
-            <div style={{ padding: '3rem' }}>
+            <div className="p-5">
               <Loading />
             </div>
           )}
@@ -430,7 +412,7 @@ export default function LicenseTypesPage() {
  */
 function StatsSection({ stats }) {
   return (
-    <div className="stats-grid" style={{ marginBottom: "1.5rem" }}>
+    <div className="stats-grid">
       <div className="stat-card">
         <div className="stat-icon primary">
           <i className="fas fa-tags"></i>
