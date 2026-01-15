@@ -7,6 +7,7 @@ import { formatThaiDateTime } from "@/utils/formatters";
 import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
 import { exportUsersToPDF, exportUserCredentialsPDF } from "@/lib/pdfExport";
 import Swal from "sweetalert2";
+import "@/components/ExcelTable/ExcelTable.css"; // Import shared soft table styles
 
 // UI Components
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -234,7 +235,7 @@ export default function UsersPage() {
 
         <div className="card-body">
           <div className="table-container">
-            <table className="data-table">
+            <table className="excel-table">
               <thead>
                 <tr>
                   <th>ชื่อผู้ใช้</th>
@@ -353,7 +354,7 @@ function UserRow({ user, onUpdate, onDelete }) {
         />
       </td>
       <td>{formatThaiDateTime(user.created_at)}</td>
-      <td className="text-center">
+      <td className="text-center row-actions">
         <button
           className="btn btn-danger btn-icon"
           onClick={() => onDelete(user.id)}
