@@ -1,0 +1,139 @@
+/* Softening the ExcelTable UI */
+
+.table-container {
+    padding: 0.5rem;
+    /* Add outer padding */
+    background: transparent;
+}
+
+.excel-table {
+    border-collapse: separate !important;
+    border-spacing: 0 8px !important;
+    /* Proper spacing for card rows */
+    width: 100%;
+}
+
+/* Header Styling */
+.excel-table thead tr {
+    background: transparent;
+}
+
+.excel-table th {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 1rem 1.5rem !important;
+    /* Spacious padding */
+    text-transform: none !important;
+    /* Remove uppercase if aggressive */
+    letter-spacing: normal !important;
+}
+
+.excel-table th:first-child {
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+}
+
+.excel-table th:last-child {
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+/* Body/Row Styling */
+.excel-table tbody tr {
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 16px;
+    /* Row rounding */
+}
+
+.excel-table tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    /* Lift effect */
+    background: white;
+    z-index: 2;
+    position: relative;
+}
+
+.excel-table td {
+    border: none !important;
+    /* Remove harsh grid borders */
+    padding: 1rem 1.5rem !important;
+    vertical-align: middle;
+    background: transparent !important;
+    /* Let row background show */
+}
+
+.excel-table td:first-child {
+    border-top-left-radius: 16px;
+    border-bottom-left-radius: 16px;
+}
+
+.excel-table td:last-child {
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+
+/* Specific Columns Styling */
+.excel-table td.row-number {
+    padding: 1rem 0.5rem !important;
+    text-align: center;
+    width: 50px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.excel-table td.row-actions {
+    padding: 0.5rem !important;
+    text-align: center;
+    width: 60px;
+}
+
+.excel-table td.add-column-cell {
+    width: 0;
+    padding: 0 !important;
+}
+
+/* Cell Content Alignment */
+.cell-content {
+    padding: 0 !important;
+    /* Reset redundant padding */
+    min-height: auto !important;
+}
+
+/* Input/Edit State Styling */
+.cell-input {
+    border-radius: 8px;
+    padding: 0.5rem;
+    background: var(--bg-tertiary) !important;
+}
+
+.data-cell.editing {
+    background: white !important;
+    box-shadow: 0 0 0 2px var(--primary) !important;
+    border-radius: 8px;
+}
+
+/* Fix resizing handle visibility */
+.resize-handle {
+    height: 50%;
+    top: 25%;
+    opacity: 0;
+}
+
+.excel-table th:hover .resize-handle {
+    opacity: 1;
+}
+
+/* Toolbar Styling - Floating & Rounded */
+.table-toolbar {
+    border-radius: 16px !important;
+    border: none !important;
+    margin-bottom: 0.5rem;
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(10px);
+}

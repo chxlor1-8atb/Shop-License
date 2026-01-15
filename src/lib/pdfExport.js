@@ -84,20 +84,32 @@ async function getPdfMake() {
             throw new Error('Failed to load pdfMake module');
         }
 
-        if (typeof window !== 'undefined' && !window.pdfMake) {
-            window.pdfMake = pdfMake;
-        }
-
-        // Helper to ensure VFS exists on both local and window instance
+        // Initialize VFS if missing
         if (!pdfMake.vfs) pdfMake.vfs = {};
-        if (typeof window !== 'undefined' && window.pdfMake && !window.pdfMake.vfs) {
-            window.pdfMake.vfs = {};
+
+        // Import default fonts (Roboto) as fallback
+        try {
+            const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
+            const pdfFonts = pdfFontsModule.default || pdfFontsModule;
+
+            if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
+                pdfMake.vfs = { ...pdfMake.vfs, ...pdfFonts.pdfMake.vfs };
+            } else if (pdfFonts && pdfFonts.vfs) {
+                pdfMake.vfs = { ...pdfMake.vfs, ...pdfFonts.vfs };
+            }
+        } catch (e) {
+            console.warn('Could not load default vfs_fonts:', e);
         }
 
-        // Sync VFS if separated
-        if (typeof window !== 'undefined' && window.pdfMake && window.pdfMake.vfs !== pdfMake.vfs) {
-            pdfMake.vfs = { ...pdfMake.vfs, ...window.pdfMake.vfs };
-            window.pdfMake.vfs = pdfMake.vfs; // Point to same object
+        // Sync with global window instance if available
+        if (typeof window !== 'undefined') {
+            if (!window.pdfMake) window.pdfMake = pdfMake;
+            if (!window.pdfMake.vfs) window.pdfMake.vfs = {};
+
+            // Merge both ways to ensure consistency
+            const mergedVfs = { ...pdfMake.vfs, ...window.pdfMake.vfs };
+            pdfMake.vfs = mergedVfs;
+            window.pdfMake.vfs = mergedVfs;
         }
 
         // Check and load Thai fonts if missing
@@ -114,6 +126,10 @@ async function getPdfMake() {
                     loadFont(font.url).then(base64 => {
                         if (base64) {
                             pdfMake.vfs[font.name] = base64;
+                            // Update window global too
+                            if (typeof window !== 'undefined' && window.pdfMake) {
+                                window.pdfMake.vfs[font.name] = base64;
+                            }
                         }
                     }).catch(err => {
                         console.warn(`Failed to load font ${font.name}:`, err);
@@ -143,10 +159,10 @@ async function getPdfMake() {
         }
 
         // Re-evaluate availability after fallbacks
-        const safeRegular = (typeof pdfMake.vfs['THSarabunNew.ttf'] === 'string') ? 'THSarabunNew.ttf' : 'Roboto-Regular.ttf';
-        const safeBold = (typeof pdfMake.vfs['THSarabunNew-Bold.ttf'] === 'string') ? 'THSarabunNew-Bold.ttf' : 'Roboto-Medium.ttf';
+        const finalRegular = (typeof pdfMake.vfs['THSarabunNew.ttf'] === 'string') ? 'THSarabunNew.ttf' : 'Roboto-Regular.ttf';
+        const finalBold = (typeof pdfMake.vfs['THSarabunNew-Bold.ttf'] === 'string') ? 'THSarabunNew-Bold.ttf' : 'Roboto-Medium.ttf';
 
-        console.log(`PDF Export: Using fonts Regular=${safeRegular}, Bold=${safeBold}`);
+        console.log(`PDF Export: Using fonts Regular=${finalRegular}, Bold=${finalBold}`);
 
         pdfMake.fonts = {
             Roboto: {
@@ -156,10 +172,10 @@ async function getPdfMake() {
                 bolditalics: 'Roboto-MediumItalic.ttf'
             },
             THSarabunNew: {
-                normal: safeRegular,
-                bold: safeBold,
-                italics: safeRegular,
-                bolditalics: safeBold
+                normal: finalRegular,
+                bold: finalBold,
+                italics: finalRegular,
+                bolditalics: finalBold
             }
         };
 

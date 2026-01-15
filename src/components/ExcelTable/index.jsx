@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import "./ExcelTable.css";
 
 import { useExcelTable } from "./table/TableHooks";
 import { TableToolbar } from "./table/TableToolbar";

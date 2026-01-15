@@ -106,7 +106,7 @@ export default function CustomSelect({
                     }
                 }}
             >
-                <div className="value-container">
+                <div className="custom-select-text">
                     {icon && <i className={`${icon} mr-2`}></i>}
                     <span className={!selectedOption ? 'placeholder' : ''}>
                         {selectedOption ? selectedOption.label || selectedOption.name : placeholder}

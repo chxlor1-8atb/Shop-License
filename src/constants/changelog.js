@@ -7,13 +7,14 @@ export const CHANGELOG = [
     {
         version: '2.6.2',
         date: '2026-01-15',
-        title: 'System Update History (ประวัติการอัปเดตระบบทั้งหมด)',
+        title: 'อัปเดตแพทช์ 2.6.2',
         changes: [
             // Version 2.6.2
             { type: 'feature', text: 'เพิ่มปุ่มล้างประวัติกิจกรรม (Clear Activity Logs)' },
             { type: 'improve', text: 'เพิ่ม Scroll Support ในส่วนแสดงรายการ License Types เพื่อรองรับข้อมูลจำนวนมาก' },
             { type: 'improve', text: 'ปรับดีไซน์ปุ่มลบ (Delete Button) ให้เป็นธีมสีแดงมาตรฐานเดียวกันทุกหน้า' },
             { type: 'fix', text: 'แก้ไขปัญหาขนาดตัวอักษรไม่เท่ากันในหน้า License Types' },
+            { type: 'improve', text: 'ตรวจสอบข้อมูล Performance Audit (CSS Selectors & Layout) เพื่อการติดตามผล' },
 
             // Version 2.6.1
             { type: 'feature', text: 'เพิ่ม Skeleton Loaders สำหรับการโหลดข้อมูลที่ราบรื่นขึ้นในหน้า Dashboard' },
