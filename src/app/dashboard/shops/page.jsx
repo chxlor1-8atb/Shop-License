@@ -1,11 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { usePagination } from "@/hooks";
-// import { useSchema } from '@/hooks'; // useSchema might be useful if we want to sync columns with backend 'custom_fields' definition?
-// Actually LicenseTypesPage manages custom fields manually. ShopsPage used useSchema.
-// Let's stick to manual management to match LicenseTypesPage pattern if simpler, or wrap useSchema results into ExcelTable columns.
-// Since we want "License Type Capabilities", we should follow its pattern.
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import ExcelTable from "@/components/ExcelTable";
@@ -14,14 +10,14 @@ import { SearchInput } from "@/components/ui/FilterRow";
 import { exportShopsToPDF } from "@/lib/pdfExport";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 
-// Default column definition
+// Default column definition (fallback if DB not seeded)
 const STANDARD_COLUMNS = [
   { id: "shop_name", name: "ชื่อร้านค้า", width: 250, align: "left" },
   { id: "owner_name", name: "ชื่อเจ้าของ", width: 200, align: "left" },
   { id: "phone", name: "เบอร์โทรศัพท์", width: 150, align: "left" },
-  { id: "address", name: "ที่อยู่", width: 300, align: "left" }, // Added address as it was in form
-  { id: "email", name: "อีเมล", width: 200, align: "left" }, // Added email
-  { id: "notes", name: "หมายเหตุ", width: 200, align: "left" }, // Added notes
+  { id: "address", name: "ที่อยู่", width: 300, align: "left" },
+  { id: "email", name: "อีเมล", width: 200, align: "left" },
+  { id: "notes", name: "หมายเหตุ", width: 200, align: "left" },
   {
     id: "license_count",
     name: "จำนวนใบอนุญาต",
@@ -32,12 +28,23 @@ const STANDARD_COLUMNS = [
   },
 ];
 
+// Column width mapping for consistent display
+const COLUMN_WIDTHS = {
+  shop_name: 250,
+  owner_name: 200,
+  phone: 150,
+  address: 300,
+  email: 200,
+  notes: 200,
+  license_count: 120,
+};
+
 export default function ShopsPage() {
   const pagination = usePagination(10);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [columns, setColumns] = useState(STANDARD_COLUMNS);
+  const [columns, setColumns] = useState([]);
 
   // We can use a simplified approach for custom columns like LicenseTypesPage
   // Or just use what we have. API supports 'custom_fields' jsonb.
@@ -46,11 +53,6 @@ export default function ShopsPage() {
   // But LicenseTypesPage fetches metadata.
   // Let's try to preserve the existing "custom fields" logic if possible
   // or simplify to just "if it's not standard, it's custom".
-
-  // Fetch custom columns on mount
-  useEffect(() => {
-    fetchCustomColumns();
-  }, []);
 
   useEffect(() => {
     fetchShops();
@@ -301,18 +303,13 @@ export default function ShopsPage() {
     }
   };
 
-  // Standard column definitions with default values
-  const STANDARD_COLUMN_DEFS = {
-    shop_name: { width: 250, type: "text", align: "left" },
-    owner_name: { width: 200, type: "text", align: "left" },
-    phone: { width: 150, type: "text", align: "left" },
-    address: { width: 300, type: "text", align: "left" },
-    email: { width: 200, type: "text", align: "left" },
-    notes: { width: 200, type: "text", align: "left" },
-    license_count: { width: 120, type: "number", align: "center", readOnly: true },
-  };
+  // We need to fetch Custom Fields to initialColumns!
+  // Similar to LicenseTypesPage.
+  useEffect(() => {
+    fetchCustomColumns();
+  }, []);
 
-  const fetchCustomColumns = async () => {
+  const fetchCustomColumns = useCallback(async () => {
     try {
       const res = await fetch(
         `/api/custom-fields?entity_type=shops&t=${Date.now()}`
@@ -320,37 +317,37 @@ export default function ShopsPage() {
       const data = await res.json();
       
       if (data.success && data.fields.length > 0) {
-        // Map DB fields to columns, preserving db_id for all columns
-        const mergedColumns = data.fields
+        // Map DB fields to columns - all columns from DB have db_id for editing
+        const dbColumns = data.fields
           .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
           .map((f) => {
-            // Get standard column definition if exists
-            const standardDef = STANDARD_COLUMN_DEFS[f.field_name];
+            // Get standard column settings if this is a system field
+            const standardCol = STANDARD_COLUMNS.find((sc) => sc.id === f.field_name);
             
             return {
               id: f.field_name,
               name: f.field_label, // Use label from DB (editable)
-              type: f.field_type || (standardDef?.type || "text"),
-              width: standardDef?.width || 150,
-              align: standardDef?.align || "left",
-              readOnly: standardDef?.readOnly || false,
+              type: f.field_type || "text",
+              width: COLUMN_WIDTHS[f.field_name] || standardCol?.width || 150,
+              align: standardCol?.align || "left",
+              readOnly: f.field_name === 'license_count', // license_count is computed
               isCustom: !f.is_system_field,
               isSystem: f.is_system_field,
-              db_id: f.id, // Store DB ID for updates
+              db_id: f.id, // Store DB ID for updates - THIS ENABLES EDITING!
             };
           });
-
-        setColumns(mergedColumns);
+        
+        setColumns(dbColumns);
       } else {
-        // Fallback to STANDARD_COLUMNS if no DB fields found
+        // Fallback to standard columns if DB not seeded
         setColumns(STANDARD_COLUMNS);
       }
     } catch (e) {
       console.error(e);
-      // Fallback on error
+      // Fallback to standard columns on error
       setColumns(STANDARD_COLUMNS);
     }
-  };
+  }, []);
 
   const handleExport = async () => {
     try {
