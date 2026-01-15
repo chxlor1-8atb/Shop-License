@@ -49,6 +49,33 @@ export async function GET(request) {
     }
 }
 
+export async function DELETE(request) {
+    try {
+        const cookieStore = await cookies();
+        const session = await getIronSession(cookieStore, sessionOptions);
+
+        if (!session.userId || session.role !== 'admin') {
+            return NextResponse.json(
+                { success: false, message: 'Admin access required' },
+                { status: 403 }
+            );
+        }
+
+        await fetchAll('DELETE FROM audit_logs');
+
+        return NextResponse.json({
+            success: true,
+            message: 'ล้างข้อมูลเรียบร้อยแล้ว'
+        });
+    } catch (err) {
+        console.error('Clear logs error:', err);
+        return NextResponse.json(
+            { success: false, message: 'เกิดข้อผิดพลาด: ' + err.message },
+            { status: 500 }
+        );
+    }
+}
+
 /**
  * Get paginated activity logs with filters
  */

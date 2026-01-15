@@ -386,16 +386,18 @@ export default function LicenseTypesPage() {
         </div>
         <div className="card-body">
           {!loading ? (
-            <ExcelTable
-              initialColumns={columns}
-              initialRows={types}
-              onRowUpdate={handleRowUpdate}
-              onRowDelete={handleRowDelete}
-              onRowAdd={handleRowAdd}
-              onColumnAdd={handleColumnAdd}
-              onColumnUpdate={handleColumnUpdate}
-              onColumnDelete={handleColumnDelete}
-            />
+            <div style={{ overflow: "auto", maxHeight: "600px" }}>
+              <ExcelTable
+                initialColumns={columns}
+                initialRows={types}
+                onRowUpdate={handleRowUpdate}
+                onRowDelete={handleRowDelete}
+                onRowAdd={handleRowAdd}
+                onColumnAdd={handleColumnAdd}
+                onColumnUpdate={handleColumnUpdate}
+                onColumnDelete={handleColumnDelete}
+              />
+            </div>
           ) : (
             <div className="p-5">
               <Loading />

@@ -101,6 +101,28 @@ export default function ActivityLogsPage() {
     }
   };
 
+  const handleClearLogs = async () => {
+    if (!confirm("คุณแน่ใจหรือไม่ที่จะล้างข้อมูลบันทึกกิจกรรมทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้")) {
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/activity-logs", {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("ล้างข้อมูลเรียบร้อยแล้ว");
+        fetchStats();
+      } else {
+        alert(data.message || "เกิดข้อผิดพลาดในการล้างข้อมูล");
+      }
+    } catch (error) {
+      console.error("Failed to clear logs:", error);
+      alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="card">
@@ -118,10 +140,17 @@ export default function ActivityLogsPage() {
   return (
     <div className="secure-content" style={{ maxWidth: "800px", margin: "0 auto" }}>
       <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">
+        <div className="card-header d-flex justify-content-between align-items-center">
+          <h3 className="card-title mb-0">
             <i className="fas fa-globe"></i> IP ที่เข้าใช้งานบ่อย (7 วัน)
           </h3>
+          <button 
+            className="btn btn-danger btn-sm" 
+            onClick={handleClearLogs}
+            style={{ fontSize: '14px', padding: '5px 15px' }}
+          >
+            <i className="fas fa-trash-alt mr-2"></i> ล้างข้อมูล
+          </button>
         </div>
         <div className="card-body">
           {loading ? (

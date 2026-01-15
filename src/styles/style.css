@@ -585,6 +585,12 @@ select option:checked {
     box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
 }
 
+.btn-danger:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #DC2626, #B91C1C);
+}
+
 .btn-warning {
     background: linear-gradient(135deg, var(--warning), #D97706);
     color: var(--gray-800);
@@ -1761,10 +1767,14 @@ select option:checked {
 }
 
 /* Tables - Glass */
-/* .table-container {
-    overflow-x: auto;
+.table-container {
+    overflow: auto;
     border-radius: var(--border-radius);
-} */
+    /* Ensure smooth scrolling on touch devices */
+    -webkit-overflow-scrolling: touch;
+    /* Optional: Limit max height if needed, but for now just enable scroll */
+    max-width: 100%;
+}
 
 .data-table {
     width: 100%;
@@ -6701,9 +6711,19 @@ img {
     transform: scale(1.1);
 }
 
+.header-btn.danger {
+    background: linear-gradient(135deg, var(--danger), #DC2626);
+    color: white;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+    opacity: 0.9;
+}
+
 .header-btn.danger:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger);
+    background: linear-gradient(135deg, var(--danger), #DC2626);
+    color: white !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+    opacity: 1;
 }
 
 /* ที่จับสำหรับปรับขนาดคอลัมน์ */
@@ -6805,14 +6825,20 @@ img {
 }
 
 .row-action-btn {
-    background: transparent;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--danger), #DC2626);
+    color: white;
     border: none;
-    color: var(--text-muted);
+    border-radius: var(--border-radius);
     cursor: pointer;
-    padding: 0.4rem;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    opacity: 0.6;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.9;
 }
 
 .excel-table tr:hover .row-action-btn {
@@ -6820,9 +6846,9 @@ img {
 }
 
 .row-action-btn:hover {
-    color: var(--danger) !important;
-    background: rgba(239, 68, 68, 0.1);
-    transform: scale(1.1);
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
 }
 
 /* เซลล์เพิ่มคอลัมน์ */
