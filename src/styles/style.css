@@ -2895,44 +2895,52 @@ body:has(.sidebar.show) .mobile-toggle i {
 }
 
 /* ========================================
-   Custom Select Dropdown - Themed
+   Custom Select Dropdown - Unified Glassmorphism
    ======================================== */
-/* ========================================
-   Custom Select Dropdown - Themed
-   ======================================== */
+
+/* Wrapper */
 .custom-select-wrapper {
     position: relative;
     display: inline-block;
-    min-width: 180px;
-    max-width: 250px;
+    min-width: 160px;
     width: auto;
-    box-sizing: border-box;
-    font-family: var(--font-thai);
+    font-family: inherit;
 }
 
+/* Trigger Button */
 .custom-select-trigger {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
-    background-color: #FFFFFF;
-    border: 1.5px solid #D97757;
-    /* Primary Orange */
-    border-radius: 20px;
-    /* More rounded */
-    color: var(--text-primary);
-    font-weight: 500;
-    font-size: 0.9375rem;
-    line-height: 1.4;
-    padding: 0.5rem 1rem;
-    height: 42px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
+    gap: 0.75rem;
     width: 100%;
-    box-sizing: border-box;
+    height: 42px;
+    padding: 0 1rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    user-select: none;
 }
 
+.custom-select-trigger:hover {
+    background: rgba(255, 255, 255, 0.98);
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-sm);
+}
+
+.custom-select-wrapper.open .custom-select-trigger {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-glow);
+}
+
+/* Select Text */
 .custom-select-trigger .custom-select-text {
     flex: 1;
     text-align: left;
@@ -2941,187 +2949,88 @@ body:has(.sidebar.show) .mobile-toggle i {
     text-overflow: ellipsis;
 }
 
-.custom-select-trigger:hover {
-    background-color: #FFF5F0;
-    /* Light orange tint on hover */
-    box-shadow: 0 4px 12px rgba(217, 119, 87, 0.15);
+.custom-select-trigger .custom-select-text .placeholder {
+    color: var(--text-muted);
 }
 
-.custom-select-wrapper.open .custom-select-trigger {
-    border-color: #C4623F;
-    /* Darker orange when open */
-    background-color: #FFF;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    /* Optional: if you want it to look connected, but the image shows disconnected. 
-       Image shows trigger is separate. Let's keep it rounded. */
-    border-radius: 20px;
+/* Arrow Icon */
+.custom-select-trigger .arrow-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
 }
 
 .custom-select-trigger .arrow {
-    width: 14px;
-    height: 14px;
-    transition: transform 0.25s ease;
-    color: #D97757;
-    /* Primary Orange */
-    flex-shrink: 0;
-    font-size: 1rem;
+    font-size: 0.75rem;
+    color: var(--primary);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .custom-select-wrapper.open .custom-select-trigger .arrow {
     transform: rotate(180deg);
 }
 
+/* Dropdown Options Panel */
 .custom-select-options {
     position: absolute;
-    top: calc(100% + 4px);
+    top: calc(100% + 6px);
     left: 0;
     min-width: 100%;
     width: max-content;
-    max-width: min(450px, calc(100vw - 2rem));
-    background: #FFFFFF !important;
-    border: 2px solid #D97757;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(217, 119, 87, 0.15);
-    /* Responsive max-height based on viewport */
-    max-height: min(350px, 50vh);
+    max-width: min(400px, calc(100vw - 2rem));
+    max-height: min(320px, 50vh);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
     overflow: hidden;
-    /* Hide overflow for header rounding */
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-8px);
-    transition: all 0.2s ease;
+    transform: translateY(-8px) scale(0.98);
+    transform-origin: top center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 9999;
     display: flex;
     flex-direction: column;
 }
 
-/* New Header Style from Image */
-.custom-select-header {
-    background-color: #D97757;
-    color: #FFFFFF;
-    padding: 12px 16px;
-    font-weight: 600;
-    font-size: 0.9375rem;
-    margin-bottom: 0;
-    /* Remove border-radius and let parent overflow:hidden handle it */
-    border-radius: 0;
-}
-
+.custom-select-options.show,
 .custom-select-wrapper.open .custom-select-options {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
 }
 
-.custom-select-option,
-.custom-option {
-    padding: 10px 14px;
-    cursor: pointer;
-    font-size: 0.9375rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    transition: all 0.15s ease;
-    background: #FFFFFF;
-    border-bottom: 1px solid rgba(217, 119, 87, 0.1);
-    position: relative;
-}
-
-.custom-select-option:first-child,
-.custom-option:first-child {
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-}
-
-/* Fix: Remove top radius if header is present */
-.custom-select-header~.custom-select-options-list .custom-select-option:first-child,
-.custom-select-header~.custom-select-options-list .custom-option:first-child {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-}
-
-.custom-select-option:last-child,
-.custom-option:last-child {
-    border-bottom: none;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-}
-
-.custom-select-option:hover,
-.custom-option:hover {
-    background-color: rgba(217, 119, 87, 0.08);
-    color: #C4623F;
-}
-
-.custom-select-option.selected,
-.custom-option.selected {
-    background-color: #D97757;
-    color: #FFFFFF;
+/* Header (Label) */
+.custom-select-header {
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
     font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
 }
 
-.custom-select-option.selected:hover,
-.custom-option.selected:hover {
-    background-color: #C4623F;
-    color: #FFFFFF;
-}
-
-/* Remove the checkmark for cleaner look like the image */
-.custom-select-option.selected::after,
-.custom-option.selected::after {
-    display: none;
-}
-
-/* Custom scrollbar for dropdown */
-.custom-select-options::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-select-options::-webkit-scrollbar-track {
-    background: rgba(216, 211, 200, 0.3);
-    border-radius: 3px;
-}
-
-.custom-select-options::-webkit-scrollbar-thumb {
-    background: var(--primary-light);
-    border-radius: 3px;
-}
-
-.custom-select-options::-webkit-scrollbar-thumb:hover {
-    background: var(--primary);
-}
-
-/* Hide original select when custom is active */
-.custom-select-wrapper select.hidden-select {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-    width: 100%;
-    height: 100%;
-}
-
-/* ========================================
-   Custom Select Search Feature
-   ======================================== */
-
+/* Search Box */
 .custom-select-search {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.625rem 0.75rem;
-    background: linear-gradient(180deg, rgba(248, 247, 245, 1) 0%, rgba(243, 241, 237, 1) 100%);
-    border-bottom: 1px solid rgba(216, 211, 200, 0.4);
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    margin: -6px -6px 6px -6px;
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
 }
 
 .custom-select-search .search-icon {
-    width: 16px;
-    height: 16px;
     color: var(--text-muted);
+    font-size: 0.875rem;
     flex-shrink: 0;
     transition: color 0.2s ease;
 }
@@ -3134,17 +3043,18 @@ body:has(.sidebar.show) .mobile-toggle i {
     flex: 1;
     border: none;
     background: transparent;
-    box-shadow: none;
     font-size: 0.875rem;
+    font-family: inherit;
     color: var(--text-primary);
-    padding: 0.25rem 0;
     outline: none;
     min-width: 0;
+    padding: 0;
+    height: auto;
+    box-shadow: none;
 }
 
 .custom-select-search-input::placeholder {
     color: var(--text-muted);
-    opacity: 0.8;
 }
 
 .custom-select-search .search-clear {
@@ -3155,50 +3065,91 @@ body:has(.sidebar.show) .mobile-toggle i {
     height: 20px;
     padding: 0;
     border: none;
-    background: rgba(100, 116, 139, 0.15);
+    background: rgba(0, 0, 0, 0.08);
     border-radius: 50%;
     cursor: pointer;
-    opacity: 0;
-    pointer-events: none;
+    color: var(--text-muted);
+    font-size: 0.7rem;
     transition: all 0.2s ease;
     flex-shrink: 0;
 }
 
-.custom-select-search .search-clear svg {
-    width: 12px;
-    height: 12px;
-    color: var(--text-secondary);
-}
-
 .custom-select-search .search-clear:hover {
-    background: rgba(220, 38, 38, 0.15);
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
 }
 
-.custom-select-search .search-clear:hover svg {
-    color: #DC2626;
-}
-
-/* Options list container */
+/* Options List Container */
 .custom-select-options-list {
     flex: 1;
     overflow-y: auto;
-    background: #FFFFFF !important;
+    overscroll-behavior: contain;
 }
 
-/* Option focused state (keyboard navigation) */
-.custom-select-option.focused {
-    background: linear-gradient(135deg, rgba(217, 119, 87, 0.12) 0%, rgba(217, 119, 87, 0.06) 100%);
+/* Custom Scrollbar */
+.custom-select-options-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.custom-select-options-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-select-options-list::-webkit-scrollbar-thumb {
+    background: var(--border-dark);
+    border-radius: 3px;
+}
+
+.custom-select-options-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+}
+
+/* Individual Option */
+.custom-select-option,
+.custom-option {
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    position: relative;
+}
+
+.custom-select-option:last-child,
+.custom-option:last-child {
+    border-bottom: none;
+}
+
+.custom-select-option:hover,
+.custom-option:hover {
+    background: var(--primary-bg);
     color: var(--primary-dark);
 }
 
-.custom-select-option.focused.selected {
+.custom-select-option.selected,
+.custom-option.selected {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
+    font-weight: 600;
 }
 
-/* No results message */
+.custom-select-option.selected:hover,
+.custom-option.selected:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #A85438 100%);
+}
+
+/* Disabled Option */
+.custom-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* No Results Message */
 .custom-select-no-results {
-    display: none;
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -3208,96 +3159,51 @@ body:has(.sidebar.show) .mobile-toggle i {
     text-align: center;
 }
 
-.custom-select-no-results svg {
-    width: 32px;
-    height: 32px;
+/* Disabled Wrapper */
+.custom-select-wrapper.disabled {
     opacity: 0.5;
+    pointer-events: none;
 }
 
-.custom-select-no-results span {
-    font-size: 0.875rem;
-    font-weight: 500;
+.custom-select-wrapper.disabled .custom-select-trigger {
+    cursor: not-allowed;
+    background: var(--bg-tertiary);
 }
 
-/* Adjust dropdown height for searchable selects */
-.custom-select-wrapper.searchable .custom-select-options {
-    /* Responsive max-height: smaller of fixed size or viewport-based */
-    max-height: min(360px, 60vh);
-    display: flex;
-    flex-direction: column;
+/* Hide native select */
+.custom-select-wrapper select.hidden-select {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
 }
 
-.custom-select-wrapper.searchable .custom-select-options-list {
-    /* Allow options list to fill available space minus search bar */
-    max-height: min(280px, calc(60vh - 60px));
-    overflow-y: auto;
-    /* Smooth scrolling */
-    scroll-behavior: smooth;
-    /* Better scroll snap for touch */
-    overscroll-behavior: contain;
-}
-
-/* Custom scrollbar for options list */
-.custom-select-options-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-select-options-list::-webkit-scrollbar-track {
-    background: rgba(216, 211, 200, 0.3);
-    border-radius: 3px;
-}
-
-.custom-select-options-list::-webkit-scrollbar-thumb {
-    background: var(--primary-light);
-    border-radius: 3px;
-}
-
-.custom-select-options-list::-webkit-scrollbar-thumb:hover {
-    background: var(--primary);
-}
-
-/* Responsive adjustments for different screen sizes */
-
-/* Tablets and small laptops */
-@media (max-height: 700px) {
+/* Responsive: Smaller screens */
+@media (max-height: 600px) {
     .custom-select-options {
         max-height: min(240px, 45vh);
     }
+}
 
-    .custom-select-wrapper.searchable .custom-select-options {
-        max-height: min(300px, 50vh);
+@media (max-width: 480px) {
+    .custom-select-wrapper {
+        min-width: 140px;
     }
 
-    .custom-select-wrapper.searchable .custom-select-options-list {
-        max-height: min(220px, calc(50vh - 60px));
+    .custom-select-trigger {
+        height: 38px;
+        padding: 0 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .custom-select-option,
+    .custom-option {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.875rem;
     }
 }
 
-/* Mobile devices */
-@media (max-height: 500px) {
-    .custom-select-options {
-        max-height: min(180px, 40vh);
-    }
-
-    .custom-select-wrapper.searchable .custom-select-options {
-        max-height: min(220px, 45vh);
-    }
-
-    .custom-select-wrapper.searchable .custom-select-options-list {
-        max-height: min(150px, calc(45vh - 60px));
-    }
-
-    .custom-select-option {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8125rem;
-    }
-
-    .custom-select-search {
-        padding: 0.5rem 0.625rem;
-    }
-}
-
-/* Small width screens - ensure dropdown fits */
 @media (max-width: 480px) {
     .custom-select-options {
         max-width: calc(100vw - 3rem);
@@ -6533,6 +6439,7 @@ img {
     border-bottom: 1px solid rgba(216, 211, 200, 0.4);
     flex-wrap: wrap;
     align-items: center;
+    border-radius: 12px;
 }
 
 .toolbar-group {
