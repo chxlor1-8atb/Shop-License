@@ -393,7 +393,7 @@ export default function ShopsPage() {
 
       <div className="card-body">
         <div className="filter-grid">
-          <div className="filter-group">
+          <div className="filter-group" style={{ maxWidth: '400px' }}>
             <label htmlFor="shop-search" className="filter-label">ค้นหา</label>
             <SearchInput
               id="shop-search"
