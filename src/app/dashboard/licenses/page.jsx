@@ -30,67 +30,95 @@ export default function LicensesPage() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+
+  // Define Standard Columns with dependencies
+  // We need to recreate columns when options change
   const [columns, setColumns] = useState([]);
 
-  // Standard column configuration (for options, width, align)
-  const STANDARD_CONFIG = {
-    shop_id: { width: 200, type: "select", options: shopOptions },
-    license_type_id: { width: 200, type: "select", options: typeOptions },
-    license_number: { width: 200, type: "text" },
-    issue_date: { width: 150, type: "date", align: "center" },
-    expiry_date: { width: 150, type: "date", align: "center" },
-    status: { width: 120, type: "select", align: "center", options: STATUS_OPTIONS, isBadge: true },
-    notes: { width: 200, type: "text" },
-  };
-
-  // Fallback columns if DB not seeded
-  const FALLBACK_COLUMNS = [
-    { id: "shop_id", name: "ร้านค้า", width: 200, type: "select", options: shopOptions },
-    { id: "license_type_id", name: "ประเภทใบอนุญาต", width: 200, type: "select", options: typeOptions },
-    { id: "license_number", name: "เลขที่ใบอนุญาต", width: 200 },
-    { id: "issue_date", name: "วันที่ออก", width: 150, type: "date", align: "center" },
-    { id: "expiry_date", name: "วันหมดอายุ", width: 150, type: "date", align: "center" },
-    { id: "status", name: "สถานะ", width: 120, align: "center", type: "select", options: STATUS_OPTIONS, isBadge: true },
-    { id: "notes", name: "หมายเหตุ", width: 200 },
-  ];
-
   const fetchCustomColumns = useCallback(async () => {
+    const baseCols = [
+      {
+        id: "shop_id",
+        name: "ร้านค้า",
+        width: 200,
+        type: "select",
+        options: shopOptions,
+      },
+      {
+        id: "license_type_id",
+        name: "ประเภทใบอนุญาต",
+        width: 200,
+        type: "select",
+        options: typeOptions,
+      },
+      { id: "license_number", name: "เลขที่ใบอนุญาต", width: 200 },
+      {
+        id: "issue_date",
+        name: "วันที่ออก",
+        width: 150,
+        type: "date",
+        align: "center",
+      },
+      {
+        id: "expiry_date",
+        name: "วันหมดอายุ",
+        width: 150,
+        type: "date",
+        align: "center",
+      },
+      {
+        id: "status",
+        name: "สถานะ",
+        width: 120,
+        align: "center",
+        type: "select",
+        options: STATUS_OPTIONS,
+        isBadge: true,
+      },
+      { id: "notes", name: "หมายเหตุ", width: 200 },
+    ];
+
     try {
       const res = await fetch(
         `/api/custom-fields?entity_type=licenses&t=${Date.now()}`
       );
       const data = await res.json();
-      
-      if (data.success && data.fields.length > 0) {
-        // Map DB fields to columns - all columns from DB have db_id for editing
-        const dbColumns = data.fields
-          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-          .map((f) => {
-            // Get standard column config if this is a system field
-            const standardConfig = STANDARD_CONFIG[f.field_name];
-            
-            return {
-              id: f.field_name,
-              name: f.field_label, // Use label from DB (editable!)
-              type: standardConfig?.type || f.field_type || "text",
-              width: standardConfig?.width || 150,
-              align: standardConfig?.align || "left",
-              options: standardConfig?.options, // Apply select options
-              isBadge: standardConfig?.isBadge,
-              isCustom: !f.is_system_field,
-              isSystem: f.is_system_field,
-              db_id: f.id, // Store DB ID for updates - THIS ENABLES EDITING!
-            };
-          });
-        
-        setColumns(dbColumns);
+      if (data.success) {
+        const apiFields = data.fields || [];
+
+        // Update Base Cols with info from DB if available
+        const updatedBaseCols = baseCols.map((col) => {
+           const match = apiFields.find((f) => f.field_name === col.id);
+           if (match) {
+             return {
+               ...col,
+               name: match.field_label, 
+               db_id: match.id,
+               isSystem: true 
+             };
+           }
+           return col;
+        });
+
+        // Get pure custom columns
+        const pureCustomCols = apiFields
+          .filter((f) => !baseCols.find((bc) => bc.id === f.field_name))
+          .map((f) => ({
+            id: f.field_name,
+            name: f.field_label,
+            type: f.field_type || "text",
+            width: 150,
+            isCustom: true,
+            db_id: f.id,
+          }));
+
+        setColumns([...updatedBaseCols, ...pureCustomCols]);
       } else {
-        // Fallback to standard columns if DB not seeded
-        setColumns(FALLBACK_COLUMNS);
+        setColumns(baseCols);
       }
     } catch (e) {
       console.error(e);
-      setColumns(FALLBACK_COLUMNS);
+      setColumns(baseCols);
     }
   }, [shopOptions, typeOptions]);
 
@@ -282,8 +310,41 @@ export default function LicensesPage() {
 
   const handleColumnUpdate = async (updatedCol) => {
     const col = columns.find((c) => c.id === updatedCol.id);
-    if (!col || !col.db_id) return;
+    if (!col) return;
 
+    // If it's a standard column without a DB record yet, creating it now allows persistence of the name change.
+    if (!col.db_id) {
+      const payload = {
+        entity_type: "licenses",
+        field_name: col.id,
+        field_label: updatedCol.name !== undefined ? updatedCol.name : col.name,
+        field_type: updatedCol.type !== undefined ? updatedCol.type : (col.type || "text"),
+        show_in_table: true,
+        display_order: columns.findIndex(c => c.id === col.id) + 1
+      };
+
+      try {
+        const res = await fetch("/api/custom-fields", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showSuccess("บันทึกชื่อคอลัมน์เรียบร้อย");
+          // Refresh to link this column to the new DB ID
+          fetchCustomColumns();
+        } else {
+          showError(data.message);
+        }
+      } catch (e) {
+        showError(e.message);
+      }
+      return;
+    }
+
+    // Existing DB Update Logic
     const payload = {
       id: col.db_id,
       field_label: updatedCol.name !== undefined ? updatedCol.name : col.name,

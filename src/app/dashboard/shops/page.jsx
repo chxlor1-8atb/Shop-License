@@ -1,7 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { usePagination } from "@/hooks";
+// import { useSchema } from '@/hooks'; // useSchema might be useful if we want to sync columns with backend 'custom_fields' definition?
+// Actually LicenseTypesPage manages custom fields manually. ShopsPage used useSchema.
+// Let's stick to manual management to match LicenseTypesPage pattern if simpler, or wrap useSchema results into ExcelTable columns.
+// Since we want "License Type Capabilities", we should follow its pattern.
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import ExcelTable from "@/components/ExcelTable";
@@ -10,14 +14,14 @@ import { SearchInput } from "@/components/ui/FilterRow";
 import { exportShopsToPDF } from "@/lib/pdfExport";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 
-// Default column definition (fallback if DB not seeded)
+// Default column definition
 const STANDARD_COLUMNS = [
   { id: "shop_name", name: "ชื่อร้านค้า", width: 250, align: "left" },
   { id: "owner_name", name: "ชื่อเจ้าของ", width: 200, align: "left" },
   { id: "phone", name: "เบอร์โทรศัพท์", width: 150, align: "left" },
-  { id: "address", name: "ที่อยู่", width: 300, align: "left" },
-  { id: "email", name: "อีเมล", width: 200, align: "left" },
-  { id: "notes", name: "หมายเหตุ", width: 200, align: "left" },
+  { id: "address", name: "ที่อยู่", width: 300, align: "left" }, // Added address as it was in form
+  { id: "email", name: "อีเมล", width: 200, align: "left" }, // Added email
+  { id: "notes", name: "หมายเหตุ", width: 200, align: "left" }, // Added notes
   {
     id: "license_count",
     name: "จำนวนใบอนุญาต",
@@ -28,23 +32,12 @@ const STANDARD_COLUMNS = [
   },
 ];
 
-// Column width mapping for consistent display
-const COLUMN_WIDTHS = {
-  shop_name: 250,
-  owner_name: 200,
-  phone: 150,
-  address: 300,
-  email: 200,
-  notes: 200,
-  license_count: 120,
-};
-
 export default function ShopsPage() {
   const pagination = usePagination(10);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [columns, setColumns] = useState([]);
+  const [columns, setColumns] = useState(STANDARD_COLUMNS);
 
   // We can use a simplified approach for custom columns like LicenseTypesPage
   // Or just use what we have. API supports 'custom_fields' jsonb.
@@ -246,8 +239,37 @@ export default function ShopsPage() {
   const handleColumnUpdate = async (updatedCol) => {
     // Find the column to get its db_id
     const col = columns.find((c) => c.id === updatedCol.id);
+    if (!col) return;
 
-    if (!col || !col.db_id) return;
+    // Auto-create in DB if standard column doesn't have a record yet
+    if (!col.db_id) {
+      const payload = {
+        entity_type: "shops",
+        field_name: col.id,
+        field_label: updatedCol.name !== undefined ? updatedCol.name : col.name,
+        field_type: updatedCol.type !== undefined ? updatedCol.type : (col.type || "text"),
+        show_in_table: true,
+        display_order: columns.findIndex(c => c.id === col.id) + 1
+      };
+
+      try {
+        const res = await fetch("/api/custom-fields", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showSuccess("บันทึกชื่อคอลัมน์เรียบร้อย");
+          fetchCustomColumns();
+        } else {
+          showError(data.message);
+        }
+      } catch (e) {
+        showError(e.message);
+      }
+      return;
+    }
 
     const payload = {
       id: col.db_id,
@@ -309,45 +331,48 @@ export default function ShopsPage() {
     fetchCustomColumns();
   }, []);
 
-  const fetchCustomColumns = useCallback(async () => {
+  const fetchCustomColumns = async () => {
     try {
       const res = await fetch(
         `/api/custom-fields?entity_type=shops&t=${Date.now()}`
       );
       const data = await res.json();
-      
-      if (data.success && data.fields.length > 0) {
-        // Map DB fields to columns - all columns from DB have db_id for editing
-        const dbColumns = data.fields
-          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-          .map((f) => {
-            // Get standard column settings if this is a system field
-            const standardCol = STANDARD_COLUMNS.find((sc) => sc.id === f.field_name);
-            
+      if (data.success) {
+        const apiFields = data.fields || [];
+
+        // Map standard columns to db fields if they exist
+        const updatedStandardCols = STANDARD_COLUMNS.map((col) => {
+          const match = apiFields.find((f) => f.field_name === col.id);
+          if (match) {
             return {
-              id: f.field_name,
-              name: f.field_label, // Use label from DB (editable)
-              type: f.field_type || "text",
-              width: COLUMN_WIDTHS[f.field_name] || standardCol?.width || 150,
-              align: standardCol?.align || "left",
-              readOnly: f.field_name === 'license_count', // license_count is computed
-              isCustom: !f.is_system_field,
-              isSystem: f.is_system_field,
-              db_id: f.id, // Store DB ID for updates - THIS ENABLES EDITING!
+              ...col,
+              name: match.field_label,
+              db_id: match.id,
+              isSystem: true,
             };
-          });
-        
-        setColumns(dbColumns);
-      } else {
-        // Fallback to standard columns if DB not seeded
-        setColumns(STANDARD_COLUMNS);
+          }
+          return col;
+        });
+
+        // Pure custom columns
+        const customCols = apiFields
+          .filter((f) => !STANDARD_COLUMNS.find((sc) => sc.id === f.field_name))
+          .map((f) => ({
+            id: f.field_name,
+            name: f.field_label,
+            type: f.field_type || "text",
+            width: 150,
+            isCustom: true,
+            db_id: f.id,
+          }));
+
+        // Merge with standard
+        setColumns([...updatedStandardCols, ...customCols]);
       }
     } catch (e) {
       console.error(e);
-      // Fallback to standard columns on error
-      setColumns(STANDARD_COLUMNS);
     }
-  }, []);
+  };
 
   const handleExport = async () => {
     try {
