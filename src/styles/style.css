@@ -269,73 +269,59 @@ a:hover {
 
 /* Modern Select Dropdown - Global Override with Smooth Transitions */
 select {
-    /* Use background-color for the base, keep background-image separate */
-    background-color: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border: 1.5px solid rgba(216, 211, 200, 0.5) !important;
-    border-radius: var(--border-radius) !important;
+    /* Clean modern style with orange border */
+    background-color: #FFFFFF !important;
+    border: 2px solid #D97757 !important;
+    border-radius: 8px !important;
     color: var(--text-primary) !important;
     font-weight: 500 !important;
     font-size: 0.9375rem !important;
-    padding: 0.75rem 2.75rem 0.75rem 1rem !important;
+    padding: 0.625rem 2.5rem 0.625rem 1rem !important;
     appearance: none !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
-    /* Arrow icon - properly positioned and won't be affected by hover */
+    /* Arrow icon - orange chevron */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23D97757' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
-    background-position: right 1rem center !important;
+    background-position: right 0.875rem center !important;
     background-size: 14px !important;
-    box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.03),
-        inset 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 2px 8px rgba(217, 119, 87, 0.1) !important;
     cursor: pointer !important;
-    transition:
-        background-color 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease,
-        transform 0.15s ease !important;
+    transition: all 0.2s ease !important;
     min-width: 140px;
 }
 
 select:hover {
-    background-color: rgba(255, 255, 255, 1) !important;
-    border-color: rgba(217, 119, 87, 0.5) !important;
-    box-shadow:
-        0 4px 16px rgba(217, 119, 87, 0.1),
-        inset 0 1px 2px rgba(255, 255, 255, 0.9) !important;
-    /* Arrow stays in place because we're using background-color, not background */
+    background-color: #FFFFFF !important;
+    border-color: #C4623F !important;
+    box-shadow: 0 4px 16px rgba(217, 119, 87, 0.15) !important;
 }
 
 select:focus {
     outline: none !important;
-    background-color: rgba(255, 255, 255, 1) !important;
-    border-color: var(--primary) !important;
-    box-shadow:
-        0 0 0 3px rgba(217, 119, 87, 0.12),
-        0 6px 20px rgba(217, 119, 87, 0.15),
-        inset 0 1px 2px rgba(255, 255, 255, 0.9) !important;
+    background-color: #FFFFFF !important;
+    border-color: #C4623F !important;
+    box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.12), 0 4px 16px rgba(217, 119, 87, 0.15) !important;
 }
 
 /* Option Styling - Clean & Simple */
 select option {
     background: #FFFFFF !important;
     color: var(--text-primary) !important;
-    padding: 12px 16px !important;
+    padding: 10px 14px !important;
     font-weight: 500 !important;
     font-size: 0.9375rem !important;
 }
 
 select option:hover,
 select option:focus {
-    background-color: #FFF5F0 !important;
-    color: var(--primary-dark) !important;
+    background-color: rgba(217, 119, 87, 0.08) !important;
+    color: #C4623F !important;
 }
 
 select option:checked {
-    background: linear-gradient(0deg, #D97757 0%, #D97757 100%) !important;
-    color: white !important;
+    background-color: #D97757 !important;
+    color: #FFFFFF !important;
     font-weight: 600 !important;
 }
 
@@ -2860,12 +2846,14 @@ body:has(.sidebar.show) .mobile-toggle i {
 /* Force pagination dropdown to open upwards to prevent clipping */
 .pagination-select .custom-select-options {
     top: auto;
-    bottom: calc(100% + 6px);
-    border-radius: 12px;
+    bottom: calc(100% + 4px);
+    border: 2px solid #D97757;
+    border-radius: 8px;
     max-height: 200px;
     min-width: 100%;
     left: auto;
     right: 0;
+    box-shadow: 0 4px 16px rgba(217, 119, 87, 0.15);
     /* Align to right edge to prevent overflow on right side */
     transform: translateY(8px);
     transform-origin: bottom right;
@@ -2978,15 +2966,15 @@ body:has(.sidebar.show) .mobile-toggle i {
 
 .custom-select-options {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 4px);
     left: 0;
     min-width: 100%;
     width: max-content;
     max-width: min(450px, calc(100vw - 2rem));
     background: #FFFFFF !important;
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border: 2px solid #D97757;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(217, 119, 87, 0.15);
     /* Responsive max-height based on viewport */
     max-height: min(350px, 50vh);
     overflow: hidden;
@@ -3018,43 +3006,55 @@ body:has(.sidebar.show) .mobile-toggle i {
     transform: translateY(0);
 }
 
-.custom-select-option {
-    padding: 12px 16px;
+.custom-select-option,
+.custom-option {
+    padding: 10px 14px;
     cursor: pointer;
     font-size: 0.9375rem;
     font-weight: 500;
     color: var(--text-primary);
     transition: all 0.15s ease;
     background: #FFFFFF;
-    border-bottom: 1px solid #F0F0F0;
-}
-
-.custom-select-option:last-child {
-    border-bottom: none;
-}
-
-.custom-select-option:hover {
-    background-color: #FFF5F0;
-    color: #C4623F;
-}
-
-.custom-select-option.selected {
-    background-color: #FFF5F0;
-    color: #D97757;
-    font-weight: 600;
+    border-bottom: 1px solid rgba(217, 119, 87, 0.1);
     position: relative;
 }
 
-.custom-select-option.selected::after {
-    content: '\f00c';
-    /* FontAwesome check */
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #D97757;
+.custom-select-option:first-child,
+.custom-option:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.custom-select-option:last-child,
+.custom-option:last-child {
+    border-bottom: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.custom-select-option:hover,
+.custom-option:hover {
+    background-color: rgba(217, 119, 87, 0.08);
+    color: #C4623F;
+}
+
+.custom-select-option.selected,
+.custom-option.selected {
+    background-color: #D97757;
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.custom-select-option.selected:hover,
+.custom-option.selected:hover {
+    background-color: #C4623F;
+    color: #FFFFFF;
+}
+
+/* Remove the checkmark for cleaner look like the image */
+.custom-select-option.selected::after,
+.custom-option.selected::after {
+    display: none;
 }
 
 /* Custom scrollbar for dropdown */
@@ -3563,18 +3563,18 @@ body:has(.sidebar.show) .mobile-toggle i {
 
 .custom-options {
     position: absolute;
-    top: calc(100% + 0.5rem);
+    top: calc(100% + 4px);
     left: 0;
     right: 0;
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
+    background: #FFFFFF;
+    border: 2px solid #D97757;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(217, 119, 87, 0.15);
     z-index: 9999;
     overflow: hidden;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-10px);
+    transform: translateY(-8px);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     max-height: 300px;
     overflow-y: auto;
@@ -3586,44 +3586,23 @@ body:has(.sidebar.show) .mobile-toggle i {
     transform: translateY(0);
 }
 
-.custom-option {
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    color: var(--text-primary);
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #fff;
-}
-
-.custom-option:hover {
-    background-color: var(--primary-bg);
-    color: var(--primary-dark);
-}
-
-.custom-option.selected {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: white;
-}
-
 /* Scrollbar for options */
 .custom-options::-webkit-scrollbar {
     width: 6px;
 }
 
 .custom-options::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: rgba(217, 119, 87, 0.1);
+    border-radius: 3px;
 }
 
 .custom-options::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
+    background: #D97757;
+    border-radius: 3px;
 }
 
 .custom-options::-webkit-scrollbar-thumb:hover {
-    background: #bbb;
+    background: #C4623F;
 }
 
 
@@ -5352,8 +5331,10 @@ tr:focus-within:has(.editable-cell) {
     min-width: 160px;
     max-height: 200px;
     z-index: 9999;
-    background: #fff !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    background: #FFFFFF !important;
+    border: 2px solid #D97757;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(217, 119, 87, 0.15);
 }
 
 .editable-cell-custom-select .custom-select-options-list {
@@ -5361,18 +5342,21 @@ tr:focus-within:has(.editable-cell) {
 }
 
 .editable-cell-custom-select .custom-option {
-    padding: 0.5rem 0.75rem;
+    padding: 10px 14px;
     font-size: 0.875rem;
-    background: #fff;
+    background: #FFFFFF;
+    border-bottom: 1px solid rgba(217, 119, 87, 0.1);
 }
 
 .editable-cell-custom-select .custom-option:hover {
-    background: var(--primary-bg, #FEF3E2);
+    background-color: rgba(217, 119, 87, 0.08);
+    color: #C4623F;
 }
 
 .editable-cell-custom-select .custom-option.selected {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: white;
+    background-color: #D97757;
+    color: #FFFFFF;
+    font-weight: 600;
 }
 
 /* Saving state */
