@@ -1961,20 +1961,19 @@ select option:checked {
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* Search & Filter - Glass */
+/* Search & Filter - Orange Border Design */
 .search-box input,
 .filter-row input,
 .filter-row select,
 .filter-row .custom-select-wrapper {
     padding: 0.5rem 0.75rem;
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(10px);
-    border: 1.5px solid rgba(216, 211, 200, 0.5);
-    border-radius: var(--border-radius);
+    background: #FFFFFF;
+    border: 2px solid #D97757;
+    border-radius: 8px;
     color: var(--text-primary);
     font-size: 0.875rem;
     line-height: 1.4;
-    transition: all var(--transition);
+    transition: all 0.2s ease;
     min-width: 180px;
     max-width: 280px;
     width: 180px;

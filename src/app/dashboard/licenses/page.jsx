@@ -35,71 +35,72 @@ export default function LicensesPage() {
   // We need to recreate columns when options change
   const [columns, setColumns] = useState([]);
 
-  const fetchCustomColumns = useCallback(async () => {
-    const baseCols = [
-      {
-        id: "shop_id",
-        name: "ร้านค้า",
-        width: 200,
-        type: "select",
-        options: shopOptions,
-      },
-      {
-        id: "license_type_id",
-        name: "ประเภทใบอนุญาต",
-        width: 200,
-        type: "select",
-        options: typeOptions,
-      },
-      { id: "license_number", name: "เลขที่ใบอนุญาต", width: 200 },
-      {
-        id: "issue_date",
-        name: "วันที่ออก",
-        width: 150,
-        type: "date",
-        align: "center",
-      },
-      {
-        id: "expiry_date",
-        name: "วันหมดอายุ",
-        width: 150,
-        type: "date",
-        align: "center",
-      },
-      {
-        id: "status",
-        name: "สถานะ",
-        width: 120,
-        align: "center",
-        type: "select",
-        options: STATUS_OPTIONS,
-        isBadge: true,
-      },
-      { id: "notes", name: "หมายเหตุ", width: 200 },
-    ];
+  // Standard column definitions with default values
+  const STANDARD_COLUMN_DEFS = {
+    shop_id: { width: 200, type: "select", options: shopOptions },
+    license_type_id: { width: 200, type: "select", options: typeOptions },
+    license_number: { width: 200, type: "text" },
+    issue_date: { width: 150, type: "date", align: "center" },
+    expiry_date: { width: 150, type: "date", align: "center" },
+    status: { width: 120, type: "select", align: "center", options: STATUS_OPTIONS, isBadge: true },
+    notes: { width: 200, type: "text" },
+  };
 
+  const fetchCustomColumns = useCallback(async () => {
     try {
       const res = await fetch(
         `/api/custom-fields?entity_type=licenses&t=${Date.now()}`
       );
       const data = await res.json();
-      if (data.success) {
-        const customCols = data.fields.map((f) => ({
-          id: f.field_name,
-          name: f.field_label,
-          type: f.field_type || "text",
-          width: 150,
-          isCustom: true,
-          db_id: f.id,
-        }));
+      
+      if (data.success && data.fields.length > 0) {
+        // Map DB fields to columns, preserving db_id for all columns
+        const mergedColumns = data.fields
+          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+          .map((f) => {
+            // Get standard column definition if exists
+            const standardDef = STANDARD_COLUMN_DEFS[f.field_name];
+            
+            return {
+              id: f.field_name,
+              name: f.field_label, // Use label from DB (editable)
+              type: f.field_type || (standardDef?.type || "text"),
+              width: standardDef?.width || 150,
+              align: standardDef?.align || "left",
+              options: standardDef?.options || undefined,
+              isBadge: standardDef?.isBadge || false,
+              isCustom: !f.is_system_field,
+              isSystem: f.is_system_field,
+              db_id: f.id, // Store DB ID for updates
+            };
+          });
 
-        // Merge with standard
-        setColumns([...baseCols, ...customCols]);
+        setColumns(mergedColumns);
       } else {
+        // Fallback to hardcoded columns if no DB fields found
+        const baseCols = [
+          { id: "shop_id", name: "ร้านค้า", width: 200, type: "select", options: shopOptions },
+          { id: "license_type_id", name: "ประเภทใบอนุญาต", width: 200, type: "select", options: typeOptions },
+          { id: "license_number", name: "เลขที่ใบอนุญาต", width: 200 },
+          { id: "issue_date", name: "วันที่ออก", width: 150, type: "date", align: "center" },
+          { id: "expiry_date", name: "วันหมดอายุ", width: 150, type: "date", align: "center" },
+          { id: "status", name: "สถานะ", width: 120, align: "center", type: "select", options: STATUS_OPTIONS, isBadge: true },
+          { id: "notes", name: "หมายเหตุ", width: 200 },
+        ];
         setColumns(baseCols);
       }
     } catch (e) {
       console.error(e);
+      // Fallback on error
+      const baseCols = [
+        { id: "shop_id", name: "ร้านค้า", width: 200, type: "select", options: shopOptions },
+        { id: "license_type_id", name: "ประเภทใบอนุญาต", width: 200, type: "select", options: typeOptions },
+        { id: "license_number", name: "เลขที่ใบอนุญาต", width: 200 },
+        { id: "issue_date", name: "วันที่ออก", width: 150, type: "date", align: "center" },
+        { id: "expiry_date", name: "วันหมดอายุ", width: 150, type: "date", align: "center" },
+        { id: "status", name: "สถานะ", width: 120, align: "center", type: "select", options: STATUS_OPTIONS, isBadge: true },
+        { id: "notes", name: "หมายเหตุ", width: 200 },
+      ];
       setColumns(baseCols);
     }
   }, [shopOptions, typeOptions]);

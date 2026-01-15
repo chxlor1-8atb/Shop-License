@@ -47,6 +47,11 @@ export default function ShopsPage() {
   // Let's try to preserve the existing "custom fields" logic if possible
   // or simplify to just "if it's not standard, it's custom".
 
+  // Fetch custom columns on mount
+  useEffect(() => {
+    fetchCustomColumns();
+  }, []);
+
   useEffect(() => {
     fetchShops();
   }, [pagination.page, pagination.limit, search]);
@@ -296,11 +301,16 @@ export default function ShopsPage() {
     }
   };
 
-  // We need to fetch Custom Fields to initialColumns!
-  // Similar to LicenseTypesPage.
-  useEffect(() => {
-    fetchCustomColumns();
-  }, []);
+  // Standard column definitions with default values
+  const STANDARD_COLUMN_DEFS = {
+    shop_name: { width: 250, type: "text", align: "left" },
+    owner_name: { width: 200, type: "text", align: "left" },
+    phone: { width: 150, type: "text", align: "left" },
+    address: { width: 300, type: "text", align: "left" },
+    email: { width: 200, type: "text", align: "left" },
+    notes: { width: 200, type: "text", align: "left" },
+    license_count: { width: 120, type: "number", align: "center", readOnly: true },
+  };
 
   const fetchCustomColumns = async () => {
     try {
@@ -308,21 +318,37 @@ export default function ShopsPage() {
         `/api/custom-fields?entity_type=shops&t=${Date.now()}`
       );
       const data = await res.json();
-      if (data.success) {
-        const customCols = data.fields.map((f) => ({
-          id: f.field_name,
-          name: f.field_label,
-          type: f.field_type || "text",
-          width: 150,
-          isCustom: true,
-          db_id: f.id,
-        }));
+      
+      if (data.success && data.fields.length > 0) {
+        // Map DB fields to columns, preserving db_id for all columns
+        const mergedColumns = data.fields
+          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+          .map((f) => {
+            // Get standard column definition if exists
+            const standardDef = STANDARD_COLUMN_DEFS[f.field_name];
+            
+            return {
+              id: f.field_name,
+              name: f.field_label, // Use label from DB (editable)
+              type: f.field_type || (standardDef?.type || "text"),
+              width: standardDef?.width || 150,
+              align: standardDef?.align || "left",
+              readOnly: standardDef?.readOnly || false,
+              isCustom: !f.is_system_field,
+              isSystem: f.is_system_field,
+              db_id: f.id, // Store DB ID for updates
+            };
+          });
 
-        // Merge with standard
-        setColumns([...STANDARD_COLUMNS, ...customCols]);
+        setColumns(mergedColumns);
+      } else {
+        // Fallback to STANDARD_COLUMNS if no DB fields found
+        setColumns(STANDARD_COLUMNS);
       }
     } catch (e) {
       console.error(e);
+      // Fallback on error
+      setColumns(STANDARD_COLUMNS);
     }
   };
 
