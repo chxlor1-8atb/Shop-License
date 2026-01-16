@@ -423,10 +423,30 @@ export default function ShopsPage() {
   };
 
   return (
-    <div className="card h-100">
+    <div className="card">
       <div className="card-header">
         <h3 className="card-title">
           <i className="fas fa-store"></i> รายการร้านค้า
+          <span style={{ 
+            fontSize: '0.85rem', 
+            color: 'var(--text-muted)', 
+            fontWeight: 'normal', 
+            marginLeft: '1rem',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <i className="fas fa-lightbulb" style={{ 
+              color: '#f59e0b',
+              background: 'none',
+              boxShadow: 'none',
+              width: 'auto',
+              height: 'auto',
+              padding: 0,
+              borderRadius: 0 
+            }}></i>
+            คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข | คลิกขวาเพื่อเปิดเมนู
+          </span>
         </h3>
       </div>
 
@@ -447,19 +467,21 @@ export default function ShopsPage() {
         </div>
 
         {!loading ? (
-          <ExcelTable
-            initialColumns={columns}
-            initialRows={shops}
-            onRowUpdate={handleRowUpdate}
-            onRowDelete={handleRowDelete}
-            onRowAdd={handleRowAdd}
-            onColumnAdd={handleColumnAdd}
-            onColumnUpdate={handleColumnUpdate}
-            onColumnDelete={handleColumnDelete}
-            onExport={handleExport}
-            exportLabel="Export PDF"
-            exportIcon="fa-file-pdf"
-          />
+          <div style={{ overflow: "auto", maxHeight: "600px" }}>
+            <ExcelTable
+              initialColumns={columns}
+              initialRows={shops}
+              onRowUpdate={handleRowUpdate}
+              onRowDelete={handleRowDelete}
+              onRowAdd={handleRowAdd}
+              onColumnAdd={handleColumnAdd}
+              onColumnUpdate={handleColumnUpdate}
+              onColumnDelete={handleColumnDelete}
+              onExport={handleExport}
+              exportLabel="Export PDF"
+              exportIcon="fa-file-pdf"
+            />
+          </div>
         ) : (
           <div className="table-card">
             <div className="table-container">

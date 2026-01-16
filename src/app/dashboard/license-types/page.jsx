@@ -36,8 +36,15 @@ const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
 
 // Constants
 const STANDARD_COLUMNS = [
-  { id: "name", name: "ชื่อประเภท", width: 250, align: "left" },
-  { id: "description", name: "คำอธิบาย", width: 400, align: "left" },
+  { id: "name", name: "ชื่อประเภท", width: 200, align: "left" },
+  {
+    id: "price",
+    name: "ราคา (บาท)",
+    width: 120,
+    align: "right",
+    type: "number",
+  },
+  { id: "description", name: "คำอธิบาย", width: 350, align: "left" },
   {
     id: "validity_days",
     name: "อายุ (วัน)",
@@ -110,42 +117,51 @@ export default function LicenseTypesPage() {
         const fields = fieldsData.fields || [];
         setCustomFields(fields);
 
-        // Map DB fields to columns
-        // This ensures we use the DB's label (name) and keep track of db_id
-        const mergedColumns = fields
-          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-          .map((f) => {
-            // Check if it's a standard/system column
-            const standardCol = STANDARD_COLUMNS.find(
-              (sc) => sc.id === f.field_name
-            );
-
-            return {
-              id: f.field_name,
-              name: f.field_label, // Use label from DB
-              type: f.field_type || "text",
-              width: standardCol ? standardCol.width : 150,
-              align: standardCol ? standardCol.align : "left",
-              readOnly: standardCol ? standardCol.readOnly : false,
-              isCustom: !f.is_system_field,
-              isSystem: f.is_system_field,
-              db_id: f.id, // Store DB ID for updates
-            };
+        // Refactored: Prioritize STANDARD_COLUMNS order, then append Custom Columns
+        const dbColsMap = new Map();
+        fields.forEach((f) => {
+          dbColsMap.set(f.field_name, {
+            id: f.field_name,
+            name: f.field_label,
+            type: f.field_type || "text",
+            isCustom: !f.is_system_field,
+            isSystem: f.is_system_field,
+            db_id: f.id,
+            display_order: f.display_order || 0,
           });
+        });
 
-        // Add any missing standard columns (in case they aren't in DB yet/deleted)
-        // Ideally they should always be in DB if we seeded correctly
-        STANDARD_COLUMNS.forEach((sc) => {
-          if (!mergedColumns.find((mc) => mc.id === sc.id)) {
-            mergedColumns.push(sc);
+        // 1. Build columns based on STANDARD_COLUMNS order
+        const finalCols = STANDARD_COLUMNS.map((sc) => {
+          const dbCol = dbColsMap.get(sc.id);
+          if (dbCol) {
+            // Merge DB info
+            return {
+              ...sc,
+              name: dbCol.name,
+              db_id: dbCol.db_id,
+              isSystem: dbCol.isSystem,
+            };
+          }
+          return sc;
+        });
+
+        // 2. Add remaining custom fields
+        const customCols = [];
+        dbColsMap.forEach((col, key) => {
+          if (!STANDARD_COLUMNS.find((sc) => sc.id === key)) {
+            customCols.push({
+              ...col,
+              width: 150,
+              align: "left",
+            });
           }
         });
 
-        // Ensure "license_count" is there if it's not in DB fields
-        // (It appeared in STANDARD_COLUMNS but might not be in custom_fields table if it's a pure computed field?)
-        // In the previous run check, license_count WAS in the table.
+        // Sort custom cols by display_order
+        customCols.sort((a, b) => a.display_order - b.display_order);
 
-        setColumns(mergedColumns);
+        setColumns([...finalCols, ...customCols]);
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -294,6 +310,7 @@ export default function LicenseTypesPage() {
 
     const standardData = {
       name: updatedRow.name,
+      price: updatedRow.price || 0,
       description: updatedRow.description || "",
       validity_days: updatedRow.validity_days || 365,
     };

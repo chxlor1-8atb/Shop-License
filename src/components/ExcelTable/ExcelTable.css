@@ -318,15 +318,31 @@
 }
 
 /* Header Text - Stay on single line with icon */
+/* Header Text - Stay on single line with icon */
 .header-text {
     flex: 0 0 auto !important;
     white-space: nowrap !important;
-    text-align: left !important;
+    text-align: center !important;
+    /* Center text */
     font-weight: 600;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    /* Ensure icon and text are centered */
     gap: 6px;
     color: var(--text-secondary);
+}
+
+.header-input {
+    text-align: center !important;
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-weight: 600;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
 }
 
 /* Header Actions - Soft Pill Style, Inline After Text */

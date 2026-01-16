@@ -15,12 +15,18 @@ const exportUserCredentialsPDF = async (...args) => {
   return exportFn(...args);
 };
 import Swal from "sweetalert2";
-import "@/components/ExcelTable/ExcelTable.css"; // Import shared soft table styles
+import dynamic from "next/dynamic";
+
+
+// Lazy load heavy ExcelTable component
+const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
+  ssr: false,
+  loading: () => <TableSkeleton rows={5} columns={[{ width: "20%" }, { width: "25%" }, { width: "15%" }, { width: "20%" }]} />,
+});
 
 // UI Components
 import CustomSelect from "@/components/ui/CustomSelect";
 import Pagination from "@/components/ui/Pagination";
-import EditableCell from "@/components/ui/EditableCell";
 import Modal from "@/components/ui/Modal";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 
@@ -33,18 +39,20 @@ const INITIAL_FORM_DATA = {
   role: "user",
 };
 
-const ROLE_BADGE_STYLES = {
-  admin: {
-    backgroundColor: "rgba(124, 58, 237, 0.1)",
-    color: "#7c3aed",
-    border: "1px solid rgba(124, 58, 237, 0.2)",
+const USER_COLUMNS = [
+  { id: "username", name: "ชื่อผู้ใช้", width: 150, align: "center", readOnly: true },
+  { id: "full_name", name: "ชื่อ-นามสกุล", width: 250, align: "left" },
+  { 
+    id: "role", 
+    name: "บทบาท", 
+    width: 150, 
+    align: "center", 
+    type: "select", 
+    options: ROLE_OPTIONS.map(opt => ({ value: opt.value, label: opt.label })),
+    isBadge: true 
   },
-  user: {
-    backgroundColor: "rgba(59, 130, 246, 0.1)",
-    color: "#3b82f6",
-    border: "1px solid rgba(59, 130, 246, 0.2)",
-  },
-};
+  { id: "formatted_created_at", name: "วันที่สร้าง", width: 200, align: "center", readOnly: true },
+];
 
 /**
  * UsersPage Component
@@ -56,6 +64,11 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalAdmins: 0,
+    totalRegularUsers: 0
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -73,8 +86,17 @@ export default function UsersPage() {
       const data = await response.json();
 
       if (data.success) {
-        setUsers(data.users || []);
+        // Pre-format data for ExcelTable
+        const formattedUsers = (data.users || []).map(u => ({
+          ...u,
+          formatted_created_at: formatThaiDateTime(u.created_at)
+        }));
+        
+        setUsers(formattedUsers);
         pagination.updateFromResponse(data.pagination);
+        if (data.stats) {
+          setStats(data.stats);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -83,16 +105,17 @@ export default function UsersPage() {
     }
   }, [pagination.page, pagination.limit]);
 
-  const handleInlineUpdate = async (userId, field, value) => {
-    const user = users.find((u) => u.id === userId);
+  const handleRowUpdate = async (updatedRow) => {
+    const user = users.find((u) => u.id === updatedRow.id);
     if (!user) return;
 
+    // Detect what changed or just send everything that is editable
     const updateData = {
-      id: userId,
-      username: user.username,
-      full_name: user.full_name || "",
-      role: user.role,
-      [field]: value,
+      id: updatedRow.id,
+      username: updatedRow.username, // Should match original
+      full_name: updatedRow.full_name || "",
+      role: updatedRow.role,
+      // password is not updated here
     };
 
     try {
@@ -105,31 +128,30 @@ export default function UsersPage() {
 
       if (data.success) {
         setUsers((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, [field]: value } : u))
+          prev.map((u) => (u.id === updatedRow.id ? { ...u, ...updatedRow } : u))
         );
       } else {
+        // Revert on failure
+        fetchUsers();
         throw new Error(data.message);
       }
     } catch (error) {
       showError(error.message);
-      throw error;
+      fetchUsers();
     }
   };
 
   const handleDelete = async (id) => {
-    // Find the user to delete
     const userToDelete = users.find((u) => u.id === id);
     if (!userToDelete) return;
 
-    // Remove from UI immediately (optimistic)
+    // Optimistic update
     setUsers((prev) => prev.filter((u) => u.id !== id));
 
-    // Show pending delete toast
     pendingDelete({
       itemName: `ผู้ใช้ "${userToDelete.full_name || userToDelete.username}"`,
       duration: 5000,
       onDelete: async () => {
-        // Timer ended - actually delete from database
         try {
           const response = await fetch(`${API_ENDPOINTS.USERS}?id=${id}`, {
             method: "DELETE",
@@ -138,21 +160,18 @@ export default function UsersPage() {
 
           if (data.success) {
             showSuccess("ลบผู้ใช้งานสำเร็จ");
+            fetchUsers(); // Refresh to ensure stats are correct
           } else {
-            // Failed - restore user
             setUsers((prev) => [...prev, userToDelete]);
             showError(data.message);
           }
         } catch (error) {
-          // Error - restore user
           setUsers((prev) => [...prev, userToDelete]);
           showError(error.message);
         }
       },
       onCancel: () => {
-        // User cancelled - restore user to list
         setUsers((prev) => {
-          // Check if not already in list
           if (prev.find((u) => u.id === id)) return prev;
           return [...prev, userToDelete].sort((a, b) => a.id - b.id);
         });
@@ -162,7 +181,7 @@ export default function UsersPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const submittedData = { ...formData }; // Capture data before clear
+    const submittedData = { ...formData }; 
 
     try {
       const response = await fetch(API_ENDPOINTS.USERS, {
@@ -177,7 +196,6 @@ export default function UsersPage() {
         showSuccess(data.message);
         fetchUsers();
 
-        // Prompt for Credentials PDF
         Swal.fire({
           title: "สร้างผู้ใช้สำเร็จ",
           text: "ต้องการดาวน์โหลดเอกสารแจ้งรหัสผ่าน (PDF) หรือไม่?",
@@ -213,20 +231,33 @@ export default function UsersPage() {
     setShowModal(true);
   };
 
-  const skeletonColumns = [
-    { width: "20%" },
-    { width: "25%" },
-    { width: "15%", rounded: true },
-    { width: "20%" },
-    { width: "10%", center: true },
-  ];
-
   return (
     <>
+      <StatsSection stats={stats} />
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">
             <i className="fas fa-users"></i> รายการผู้ใช้งาน
+            <span style={{ 
+              fontSize: '0.85rem', 
+              color: 'var(--text-muted)', 
+              fontWeight: 'normal', 
+              marginLeft: '1rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <i className="fas fa-lightbulb" style={{ 
+                color: '#f59e0b',
+                background: 'none',
+                boxShadow: 'none',
+                width: 'auto',
+                height: 'auto',
+                padding: 0,
+                borderRadius: 0 
+              }}></i>
+              คลิก 2 ครั้งที่ข้อมูลเพื่อแก้ไขได้ทันที
+            </span>
           </h3>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
@@ -242,41 +273,23 @@ export default function UsersPage() {
         </div>
 
         <div className="card-body">
-          <div className="table-container">
-            <table className="excel-table">
-              <thead>
-                <tr>
-                  <th>ชื่อผู้ใช้</th>
-                  <th>ชื่อ-นามสกุล</th>
-                  <th>บทบาท</th>
-                  <th>วันที่สร้าง</th>
-                  <th className="text-center" style={{ width: "80px" }}>
-                    ลบ
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <TableSkeleton rows={5} columns={skeletonColumns} />
-                ) : users.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="text-center">
-                      ไม่พบข้อมูล
-                    </td>
-                  </tr>
-                ) : (
-                  users.map((user) => (
-                    <UserRow
-                      key={user.id}
-                      user={user}
-                      onUpdate={handleInlineUpdate}
-                      onDelete={handleDelete}
-                    />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          {!loading ? (
+             <div style={{ overflow: "auto", maxHeight: "600px" }}>
+              <ExcelTable
+                initialColumns={USER_COLUMNS}
+                initialRows={users}
+                onRowUpdate={handleRowUpdate}
+                onRowDelete={handleDelete}
+                // No column add/delete for this view
+              />
+            </div>
+          ) : (
+            <div className="table-card">
+              <div className="table-container">
+                 <TableSkeleton rows={5} columns={[{ width: "20%" }, { width: "25%" }, { width: "15%" }, { width: "20%" }]} />
+              </div>
+            </div>
+          )}
 
           <Pagination
             currentPage={pagination.page}
@@ -305,72 +318,6 @@ export default function UsersPage() {
         />
       </Modal>
     </>
-  );
-}
-
-/**
- * RoleBadge Component
- */
-function RoleBadge({ role }) {
-  const styles = ROLE_BADGE_STYLES[role] || ROLE_BADGE_STYLES.user;
-  const label = role === "admin" ? "ผู้ดูแลระบบ" : "เจ้าหน้าที่";
-
-  return (
-    <span
-      className="badge"
-      style={{
-        ...styles,
-        padding: "0.25rem 0.75rem",
-        borderRadius: "9999px",
-        fontSize: "0.75rem",
-        fontWeight: 600,
-      }}
-    >
-      {label}
-    </span>
-  );
-}
-
-/**
- * UserRow Component
- */
-function UserRow({ user, onUpdate, onDelete }) {
-  return (
-    <tr>
-      <td>
-        <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>
-          {user.username}
-        </span>
-      </td>
-      <td>
-        <EditableCell
-          value={user.full_name || ""}
-          displayValue={user.full_name || "-"}
-          type="text"
-          onSave={(value) => onUpdate(user.id, "full_name", value)}
-          ariaLabel={`แก้ไขชื่อ-นามสกุล ของ ${user.username}`}
-        />
-      </td>
-      <td>
-        <EditableCell
-          value={user.role}
-          displayValue={<RoleBadge role={user.role} />}
-          type="select"
-          options={ROLE_OPTIONS}
-          onSave={(value) => onUpdate(user.id, "role", value)}
-          ariaLabel={`แก้ไขบทบาท ของ ${user.username}`}
-        />
-      </td>
-      <td>{formatThaiDateTime(user.created_at)}</td>
-      <td className="text-center row-actions">
-        <button
-          className="btn btn-danger btn-icon"
-          onClick={() => onDelete(user.id)}
-        >
-          <i className="fas fa-trash"></i>
-        </button>
-      </td>
-    </tr>
   );
 }
 
@@ -445,5 +392,42 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
         </button>
       </div>
     </form>
+  );
+}
+
+/**
+ * StatsSection Component
+ */
+function StatsSection({ stats }) {
+  return (
+    <div className="stats-grid">
+      <div className="stat-card">
+        <div className="stat-icon primary">
+          <i className="fas fa-users"></i>
+        </div>
+        <div className="stat-content">
+          <div className="stat-value">{stats.totalUsers || 0}</div>
+          <div className="stat-label">ผู้ใช้ทั้งหมด</div>
+        </div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-icon success">
+            <i className="fas fa-user-shield"></i>
+        </div>
+        <div className="stat-content">
+          <div className="stat-value">{stats.totalAdmins || 0}</div>
+          <div className="stat-label">ผู้ดูแลระบบ</div>
+        </div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-icon info">
+            <i className="fas fa-user"></i>
+        </div>
+        <div className="stat-content">
+          <div className="stat-value">{stats.totalRegularUsers || 0}</div>
+          <div className="stat-label">ผู้ใช้ทั่วไป</div>
+        </div>
+      </div>
+    </div>
   );
 }

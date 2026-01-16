@@ -40,7 +40,7 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { name, description, validity_days } = body;
+        const { name, price, description, validity_days } = body;
 
         // Note: Legacy JS used 'type_name' but schema uses 'name'. Mapped in JS or here.
         // Let's stick to DB schema 'name'. The UI should send 'name'.
@@ -50,8 +50,8 @@ export async function POST(request) {
         }
 
         const result = await executeQuery(
-            `INSERT INTO license_types (name, description, validity_days) VALUES ($1, $2, $3) RETURNING id`,
-            [name, description || '', parseInt(validity_days) || 365]
+            `INSERT INTO license_types (name, price, description, validity_days) VALUES ($1, $2, $3, $4) RETURNING id`,
+            [name, parseFloat(price) || 0, description || '', parseInt(validity_days) || 365]
         );
 
         // Result from neon is the array of rows directly
@@ -81,15 +81,15 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { id, name, description, validity_days } = body;
+        const { id, name, price, description, validity_days } = body;
 
         if (!id || !name) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
         }
 
         await executeQuery(
-            `UPDATE license_types SET name = $1, description = $2, validity_days = $3 WHERE id = $4`,
-            [name, description, parseInt(validity_days), id]
+            `UPDATE license_types SET name = $1, price = $2, description = $3, validity_days = $4 WHERE id = $5`,
+            [name, parseFloat(price) || 0, description, parseInt(validity_days), id]
         );
 
         // Log activity

@@ -27,8 +27,21 @@ export async function GET(request) {
         const limit = parseInt(searchParams.get('limit'), 10) || 20;
         const offset = (page - 1) * limit;
 
-        const countResult = await fetchOne('SELECT COUNT(*) as total FROM users');
-        const total = parseInt(countResult?.total || 0, 10);
+        const statsResult = await fetchOne(`
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admins,
+                SUM(CASE WHEN role = 'user' THEN 1 ELSE 0 END) as regular_users
+            FROM users
+        `);
+
+        const total = parseInt(statsResult?.total || 0, 10);
+        const stats = {
+            totalUsers: total,
+            totalAdmins: parseInt(statsResult?.admins || 0, 10),
+            totalRegularUsers: parseInt(statsResult?.regular_users || 0, 10)
+        };
+
         const totalPages = Math.ceil(total / limit);
 
         const users = await fetchAll(`
@@ -46,7 +59,8 @@ export async function GET(request) {
                 limit,
                 total,
                 totalPages
-            }
+            },
+            stats
         });
     } catch (err) {
         return NextResponse.json({ success: false, message: err.message }, { status: 500 });

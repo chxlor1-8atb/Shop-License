@@ -11,6 +11,7 @@ import Pagination from '@/components/ui/Pagination';
 import FilterRow, { SearchInput } from '@/components/ui/FilterRow';
 import TableSkeleton from '@/components/ui/TableSkeleton';
 import DatePicker from '@/components/ui/DatePicker';
+import '@/components/ExcelTable/ExcelTable.css';
 
 // Constants - Expiry thresholds
 const EXPIRY_THRESHOLDS = {
@@ -232,6 +233,18 @@ export default function ExpiringPage() {
             <div className="card-header">
                 <h3 className="card-title">
                     <i className="fas fa-bell"></i> ใบอนุญาตใกล้หมดอายุ
+                    <span style={{ 
+                        fontSize: '0.85rem', 
+                        color: 'var(--text-muted)', 
+                        fontWeight: 'normal', 
+                        marginLeft: '1rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                    }}>
+                        <i className="fas fa-info-circle" style={{ color: '#3b82f6' }}></i>
+                        ตรวจสอบรายการที่ต้องดำเนินการต่ออายุ
+                    </span>
                 </h3>
                 <StatusFilterBadges
                     currentFilter={statusFilter}
@@ -326,37 +339,41 @@ export default function ExpiringPage() {
                     </button>
                 </FilterRow>
 
-                <div className="table-container">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>รหัสร้าน</th>
-                                <th>ชื่อร้าน</th>
-                                <th>ประเภท</th>
-                                <th>เลขที่</th>
-                                <th className="text-center">หมดอายุ</th>
-                                <th className="text-center">สถานะ</th>
-                                <th className="text-center" style={{ width: '50px' }}>จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <TableSkeleton rows={5} columns={skeletonColumns} />
-                            ) : currentData.length === 0 ? (
+                <div className="table-card">
+                    <div className="table-container" style={{ maxHeight: '600px', overflow: 'auto' }}>
+                        <table className="excel-table">
+                            <thead>
                                 <tr>
-                                    <td colSpan="6" className="text-center">ไม่พบข้อมูล</td>
+                                    <th>รหัสร้านค้า</th>
+                                    <th>ชื่อร้านค้า</th>
+                                    <th>ประเภท</th>
+                                    <th>เลขที่</th>
+                                    <th className="text-center">หมดอายุ</th>
+                                    <th className="text-center">สถานะ</th>
+                                    <th className="row-actions">
+                                        <i className="fas fa-trash-alt" style={{ color: 'var(--text-muted)' }}></i>
+                                    </th>
                                 </tr>
-                            ) : (
-                                currentData.map(license => (
-                                    <ExpiringLicenseRow 
-                                        key={license.id} 
-                                        license={license} 
-                                        onDelete={() => handleDelete(license)}
-                                    />
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <TableSkeleton rows={5} columns={skeletonColumns} />
+                                ) : currentData.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="7" className="text-center">ไม่พบข้อมูล</td>
+                                    </tr>
+                                ) : (
+                                    currentData.map(license => (
+                                        <ExpiringLicenseRow 
+                                            key={license.id} 
+                                            license={license} 
+                                            onDelete={() => handleDelete(license)}
+                                        />
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <Pagination
@@ -458,16 +475,16 @@ function ExpiringLicenseRow({ license, onDelete }) {
                     <i className={expiryStatus.icon}></i> {expiryStatus.text}
                 </span>
             </td>
-            <td className="text-center">
+            <td className="row-actions">
                 <button 
-                    className="btn-icon text-danger hover:bg-red-50 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+                    className="header-btn danger"
                     onClick={(e) => {
                         e.stopPropagation();
                         onDelete();
                     }}
                     title="ลบรายการ"
                 >
-                    <i className="fas fa-trash"></i>
+                    <i className="fas fa-trash-alt"></i>
                 </button>
             </td>
         </tr>
