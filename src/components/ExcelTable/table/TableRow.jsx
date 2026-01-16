@@ -30,7 +30,9 @@ export function TableRow({
             key={col.id}
             className={`data-cell ${isEditing ? "editing" : ""}`}
             style={{ width: col.width }}
-            onClick={() => onCellClick(row.id, col.id)}
+            data-type={col.type}
+            onContextMenu={(e) => onContextMenu(e, "cell", row.id, col.id)}
+            onDoubleClick={() => onCellClick(row.id, col.id)}
           >
             {isEditing && !col.readOnly ? (
               col.type === "select" ? (

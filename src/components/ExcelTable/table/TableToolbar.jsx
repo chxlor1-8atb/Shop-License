@@ -5,6 +5,11 @@ export function TableToolbar({
   exportLabel = "Export JSON",
   exportIcon = "fa-file-code",
 }) {
+  // Hide toolbar if no actions available
+  if (!onClear && !onReset) {
+    return null;
+  }
+
   return (
     <div className="table-toolbar">
       <div className="toolbar-group">
@@ -23,13 +28,9 @@ export function TableToolbar({
       <div
         className="toolbar-group"
         style={{
-          color: "var(--text-muted)",
-          fontSize: "0.875rem",
           marginLeft: "auto",
         }}
       >
-        <i className="fas fa-lightbulb"></i> คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข |
-        คลิกขวาเพื่อเปิดเมนู
       </div>
     </div>
   );

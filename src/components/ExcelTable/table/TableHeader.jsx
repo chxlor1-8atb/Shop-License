@@ -45,6 +45,7 @@ export function TableHeader({
             key={col.id}
             className="header-cell"
             style={{ width: col.width }}
+            data-type={col.type}
             onContextMenu={(e) => onContextMenu(e, "column", null, col.id)}
           >
             <div className="header-content">
@@ -119,26 +120,6 @@ export function TableHeader({
                   {col.name}
                 </span>
               )}
-
-              <div className="header-actions">
-                <button
-                  className="header-btn"
-                  onClick={() => onAddColumn(col.id)}
-                  title="เพิ่มคอลัมน์"
-                >
-                  <i className="fas fa-plus" style={{ fontSize: "12px" }}></i>
-                </button>
-                <button
-                  className="header-btn danger"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Stop propagation to prevent context menu or other things
-                    onDeleteColumn(col.id);
-                  }}
-                  title="ลบคอลัมน์"
-                >
-                  <i className="fas fa-trash" style={{ fontSize: "12px" }}></i>
-                </button>
-              </div>
             </div>
 
             <div
@@ -156,7 +137,7 @@ export function TableHeader({
             <i className="fas fa-plus"></i>
           </button>
         </th>
-        <th className="row-actions row-actions-header"></th>
+        <th className="row-actions row-actions-header">ลบ</th>
       </tr>
     </thead>
   );

@@ -6,15 +6,19 @@
 export const CHANGELOG = [
     {
         version: '2.6.2',
-        date: '2026-01-15',
+        date: '2026-01-16',
         title: 'อัปเดตแพทช์ 2.6.2',
         changes: [
             // Version 2.6.2
             { type: 'feature', text: 'เพิ่มปุ่มล้างประวัติกิจกรรม (Clear Activity Logs)' },
+            { type: 'feature', text: 'ประวัติการใช้งานล่าสุด: ล้างข้อมูลอัตโนมัติทุกสัปดาห์' },
             { type: 'improve', text: 'เพิ่ม Scroll Support ในส่วนแสดงรายการ License Types เพื่อรองรับข้อมูลจำนวนมาก' },
             { type: 'improve', text: 'ปรับดีไซน์ปุ่มลบ (Delete Button) ให้เป็นธีมสีแดงมาตรฐานเดียวกันทุกหน้า' },
             { type: 'fix', text: 'แก้ไขปัญหาขนาดตัวอักษรไม่เท่ากันในหน้า License Types' },
             { type: 'improve', text: 'ตรวจสอบข้อมูล Performance Audit (CSS Selectors & Layout) เพื่อการติดตามผล' },
+            { type: 'improve', text: 'ปรับปรุง Table Header UI ให้ปุ่ม Action แสดงในบรรทัดเดียวกับข้อความ' },
+            { type: 'improve', text: 'ออกแบบปุ่มให้นุ่มนวลและมีมุมโค้งมน (Rounded Design)' },
+            { type: 'improve', text: 'ปรับขนาด Input Box ในเซลล์ตารางให้กะทัดรัดและพอดีกับคอลัมน์' },
 
             // Version 2.6.1
             { type: 'feature', text: 'เพิ่ม Skeleton Loaders สำหรับการโหลดข้อมูลที่ราบรื่นขึ้นในหน้า Dashboard' },

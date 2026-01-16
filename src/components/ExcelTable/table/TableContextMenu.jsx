@@ -6,6 +6,7 @@ export function TableContextMenu({
   onAddRow,
   onDuplicateRow,
   onDeleteRow,
+  onEditCell,
   onEditHeader,
   onAddColumn,
   onDeleteColumn,
@@ -20,6 +21,51 @@ export function TableContextMenu({
       style={{ left: contextMenu.x, top: contextMenu.y }}
       onClick={(e) => e.stopPropagation()}
     >
+      {/* Cell Context Menu */}
+      {contextMenu.type === "cell" && (
+        <>
+          <div
+            className="context-menu-item"
+            onClick={() => {
+              if (onEditCell) onEditCell(contextMenu.rowId, contextMenu.colId);
+              onClose();
+            }}
+          >
+            <i className="fas fa-pencil-alt"></i> แก้ไขข้อมูล
+          </div>
+          <div className="context-menu-divider" />
+          <div
+            className="context-menu-item"
+            onClick={() => {
+              onAddRow(contextMenu.rowId);
+              onClose();
+            }}
+          >
+            <i className="fas fa-plus"></i> เพิ่มแถวด้านล่าง
+          </div>
+          <div
+            className="context-menu-item"
+            onClick={() => {
+              onDuplicateRow(contextMenu.rowId);
+              onClose();
+            }}
+          >
+            <i className="fas fa-copy"></i> ทำซ้ำแถว
+          </div>
+          <div className="context-menu-divider" />
+          <div
+            className="context-menu-item danger"
+            onClick={() => {
+              onDeleteRow(contextMenu.rowId);
+              onClose();
+            }}
+          >
+            <i className="fas fa-trash"></i> ลบแถว
+          </div>
+        </>
+      )}
+
+      {/* Row Context Menu */}
       {contextMenu.type === "row" && (
         <>
           <div

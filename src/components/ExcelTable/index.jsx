@@ -277,9 +277,11 @@ export default function ExcelTable({
         }}
         onDuplicateRow={(rowId) => {
           duplicateRow(rowId);
-          // TODO: Handle duplicate callback if needed
         }}
         onDeleteRow={handleDeleteRow}
+        onEditCell={(rowId, colId) => {
+          setEditingCell({ rowId, colId });
+        }}
         onEditHeader={setEditingHeader}
         onAddColumn={handleAddColumn}
         onDeleteColumn={handleDeleteColumn}

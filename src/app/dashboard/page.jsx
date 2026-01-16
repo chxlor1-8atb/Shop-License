@@ -158,8 +158,12 @@ function RecentActivityCard({ activities }) {
         <>
             <div className="card" style={{ marginTop: '1.5rem' }}>
                 <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h3 className="card-title">
-                        <i className="fas fa-history"></i> ประวัติการใช้งานล่าสุด
+                    <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <i className="fas fa-history"></i> 
+                        <span>ประวัติการใช้งานล่าสุด</span>
+                        <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 'normal' }}>
+                            (ล้างข้อมูลอัตโนมัติทุกสัปดาห์)
+                        </span>
                     </h3>
                     <div className="card-actions activity-filter-actions">
                         <button 

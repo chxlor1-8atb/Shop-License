@@ -407,6 +407,26 @@ export default function LicenseTypesPage() {
           <h3 className="card-title">
             <i className="fas fa-tags"></i>
             ประเภทใบอนุญาต
+            <span style={{ 
+              fontSize: '0.85rem', 
+              color: 'var(--text-muted)', 
+              fontWeight: 'normal', 
+              marginLeft: '1rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <i className="fas fa-lightbulb" style={{ 
+                color: '#f59e0b',
+                background: 'none',
+                boxShadow: 'none',
+                width: 'auto',
+                height: 'auto',
+                padding: 0,
+                borderRadius: 0 
+              }}></i>
+              คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข | คลิกขวาเพื่อเปิดเมนู
+            </span>
           </h3>
         </div>
         <div className="card-body">

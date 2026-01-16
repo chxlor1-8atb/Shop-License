@@ -1,16 +1,42 @@
 /* Softening the ExcelTable UI */
 
+/* Table Container with Scroll (Horizontal & Vertical) */
 .table-container {
     padding: 0.5rem;
-    /* Add outer padding */
     background: transparent;
+    overflow: auto !important;
+    /* Enable both horizontal and vertical scroll */
+    max-height: 70vh;
+    /* Limit height for vertical scroll */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(217, 119, 87, 0.4) transparent;
+}
+
+.table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: rgba(217, 119, 87, 0.4);
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(217, 119, 87, 0.6);
 }
 
 .excel-table {
     border-collapse: separate !important;
     border-spacing: 0 8px !important;
-    /* Proper spacing for card rows */
     width: 100%;
+    min-width: max-content;
+    /* Ensure table expands to fit content, enabling horizontal scroll */
 }
 
 /* Header Styling - Theme Matched */
@@ -28,22 +54,21 @@
 
 .excel-table th {
     background: #ffffff !important;
-    /* Solid background */
     border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
     color: var(--text-secondary);
     font-weight: 600;
     font-size: 0.875rem;
-    padding: 0.875rem 1.5rem !important;
+    padding: 0.75rem 0.5rem !important;
+    /* Reduced horizontal padding */
     text-transform: none !important;
     letter-spacing: normal !important;
-    /* Sticky Header */
     position: sticky !important;
     top: 0 !important;
     z-index: 1001 !important;
-    /* Higher than hover rows and thead */
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
-    /* Separator line */
+    overflow: visible !important;
+    /* Allow content to overflow */
 }
 
 .excel-table th:first-child {
@@ -96,11 +121,10 @@
 
 .excel-table td {
     border: none !important;
-    /* Remove harsh grid borders */
-    padding: 1rem 1.5rem !important;
+    padding: 0.75rem 0.75rem !important;
+    /* Match header padding */
     vertical-align: middle;
     background: transparent !important;
-    /* Let row background show */
 }
 
 .excel-table td:first-child {
@@ -151,28 +175,120 @@
     width: 60px;
 }
 
-.excel-table td.add-column-cell {
-    width: 0;
-    padding: 0 !important;
+.excel-table td.add-column-cell,
+.excel-table th.add-column-cell {
+    width: auto;
+    padding: 0 0.5rem !important;
+    vertical-align: middle;
 }
 
-/* Cell Content Alignment */
+/* Add Column Button - Soft & Visible */
+.add-column-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 2px dashed rgba(217, 119, 87, 0.3);
+    background: rgba(217, 119, 87, 0.05);
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 1rem;
+}
+
+.add-column-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(217, 119, 87, 0.3);
+}
+
+/* Cell Content Alignment - Match Header Layout */
 .cell-content {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    /* Default: left align for text */
     padding: 0 !important;
-    /* Reset redundant padding */
-    min-height: auto !important;
+    /* No extra padding, td handles it */
+    min-height: 1.5em;
+    white-space: nowrap;
 }
 
-/* Input/Edit State Styling */
+/* Number columns - Center aligned */
+.excel-table td[data-type="number"],
+.excel-table td[data-type="number"] .cell-content,
+.cell-content.number-cell {
+    text-align: center !important;
+    justify-content: center !important;
+}
+
+/* Row number column - always centered */
+.excel-table td.row-number {
+    text-align: center !important;
+}
+
+/* Header Alignment for Number Columns */
+.excel-table th[data-type="number"] .header-content {
+    justify-content: center !important;
+}
+
+/* Row actions column (delete button) - centered */
+.excel-table td.row-actions,
+.excel-table th.row-actions {
+    text-align: center !important;
+    width: 60px !important;
+    min-width: 60px !important;
+}
+
+/* Input/Edit State - Invisible Border (Clean Inline Edit) */
 .cell-input {
-    border-radius: 8px;
-    padding: 0.5rem;
-    background: var(--bg-tertiary) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    color: var(--gray-800);
+    width: 100% !important;
+    text-align: inherit;
+    /* Inherit alignment from parent td */
+    font-size: inherit;
+    font-family: inherit;
+    line-height: inherit;
+}
+
+/* Force center alignment for inputs in number columns */
+.excel-table td[data-type="number"] .cell-input {
+    text-align: center !important;
+}
+
+.cell-input:focus {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 .data-cell.editing {
-    background: white !important;
-    box-shadow: 0 0 0 2px var(--primary) !important;
+    background: rgba(217, 119, 87, 0.04) !important;
+    /* Very subtle highlight to show editing */
+    box-shadow: none !important;
+    padding: 0.75rem 0.75rem !important;
+}
+
+/* Edit via Context Menu - No hover edit hint needed */
+/* Cell hover: subtle highlight only */
+.excel-table td:not(.row-number):not(.row-actions):not(.add-column-cell) .cell-content {
+    transition: all 0.2s ease;
+}
+
+.excel-table td:not(.row-number):not(.row-actions):not(.add-column-cell):hover .cell-content {
+    background: rgba(217, 119, 87, 0.04);
     border-radius: 8px;
 }
 
@@ -187,20 +303,130 @@
     opacity: 1;
 }
 
-/* Header Content - Centering */
+/* Header Content - Fixed Layout */
 .header-content {
+    display: flex !important;
+    align-items: center !important;
     justify-content: center !important;
-    text-align: center !important;
+    /* Center align all headers */
+    /* flex-start was previous default */
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    padding: 0 0.75rem !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
 }
 
+/* Header Text - Stay on single line with icon */
+.header-text {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+}
+
+/* Header Actions - Soft Pill Style, Inline After Text */
+.header-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-left: 8px !important;
+    /* Space from text */
+    padding: 4px 8px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-radius: 20px !important;
+    /* Pill shape */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+    opacity: 0 !important;
+    transform: translateX(-8px) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    pointer-events: none !important;
+    flex-shrink: 0 !important;
+}
+
+.excel-table th:hover .header-actions {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    pointer-events: auto !important;
+}
+
+/* Action Buttons - Soft & Round */
+.header-btn {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    background: rgba(0, 0, 0, 0.04) !important;
+    color: var(--gray-600) !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.header-btn:hover {
+    background: var(--primary) !important;
+    color: white !important;
+    transform: scale(1.1) !important;
+}
+
+.header-btn.danger:hover {
+    background: #ef4444 !important;
+    color: white !important;
+}
+
+/* Row Number Column - No Actions */
+th.row-number .header-content {
+    justify-content: center !important;
+}
+
+th.row-number .header-actions {
+    display: none !important;
+}
+
+/* Redundant rules cleaned up */
+
+/* Toolbar Styling - Soft & Rounded */
 /* Toolbar Styling - Soft & Rounded */
 .table-toolbar {
-    border-radius: 16px !important;
+    border-radius: 12px !important;
     border: none !important;
-    margin-bottom: 1rem;
-    padding: 0.875rem 1.25rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
     background: rgba(255, 255, 255, 0.6) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    /* Ensure spacing if buttons exist */
+    min-height: auto;
+}
+
+/* Help Tip Compact Styling */
+.help-tip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    cursor: help;
+    transition: all 0.2s ease;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+}
+
+.help-tip:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--primary);
+}
+
+.help-tip i {
+    font-size: 1rem;
 }
