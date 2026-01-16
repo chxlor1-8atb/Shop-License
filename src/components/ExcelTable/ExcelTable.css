@@ -41,13 +41,18 @@
     border-bottom-right-radius: 16px;
 }
 
-/* Body/Row Styling */
+/* Body/Row Styling - LCP Optimized */
+.excel-table tbody {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+}
+
 .excel-table tbody tr {
     background: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     border-radius: 16px;
-    /* Row rounding */
+    contain: layout style paint;
 }
 
 .excel-table tbody tr:hover {
@@ -129,11 +134,11 @@
     opacity: 1;
 }
 
-/* Toolbar Styling - Floating & Rounded */
+/* Toolbar Styling - Floating & Rounded - LCP Optimized */
 .table-toolbar {
     border-radius: 16px !important;
     border: none !important;
     margin-bottom: 0.5rem;
-    background: rgba(255, 255, 255, 0.4) !important;
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(4px);
 }

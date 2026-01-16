@@ -94,6 +94,13 @@ export default function RootLayout({ children }) {
 
                 {/* Google Fonts - Inter and Noto Sans Thai are handled by next/font/google above */}
 
+                {/* Preload Font Awesome for faster icon rendering */}
+                <link
+                    rel="preload"
+                    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+                    as="style"
+                    crossOrigin="anonymous"
+                />
                 <link
                     rel="stylesheet"
                     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"

@@ -11,7 +11,11 @@ import { showSuccess, showError } from "@/utils/alerts";
 import ExcelTable from "@/components/ExcelTable";
 import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
-import { exportShopsToPDF } from "@/lib/pdfExport";
+// Lazy load PDF export to reduce initial bundle size
+const exportShopsToPDF = async (...args) => {
+  const { exportShopsToPDF: exportFn } = await import("@/lib/pdfExport");
+  return exportFn(...args);
+};
 import TableSkeleton from "@/components/ui/TableSkeleton";
 
 // Default column definition
@@ -47,8 +51,19 @@ export default function ShopsPage() {
   // Let's try to preserve the existing "custom fields" logic if possible
   // or simplify to just "if it's not standard, it's custom".
 
+  // Initial parallel data fetch for faster loading
   useEffect(() => {
-    fetchShops();
+    const loadInitialData = async () => {
+      await Promise.all([fetchCustomColumns(), fetchShops()]);
+    };
+    loadInitialData();
+  }, []);
+
+  // Refetch shops when filters change
+  useEffect(() => {
+    if (columns.length > 0) {
+      fetchShops();
+    }
   }, [pagination.page, pagination.limit, search]);
 
   const fetchShops = useCallback(async () => {
@@ -325,11 +340,7 @@ export default function ShopsPage() {
     }
   };
 
-  // We need to fetch Custom Fields to initialColumns!
-  // Similar to LicenseTypesPage.
-  useEffect(() => {
-    fetchCustomColumns();
-  }, []);
+  // Custom columns are now fetched in parallel above
 
   const fetchCustomColumns = async () => {
     try {

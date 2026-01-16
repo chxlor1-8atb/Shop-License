@@ -40,13 +40,13 @@
     --bg-sidebar: rgba(45, 42, 36, 0.95);
     --bg-overlay: rgba(26, 24, 21, 0.5);
 
-    /* Glassmorphism */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-bg-dark: rgba(45, 42, 36, 0.85);
+    /* Glassmorphism - Optimized blur for better LCP */
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-bg-dark: rgba(45, 42, 36, 0.95);
     --glass-border: rgba(255, 255, 255, 0.4);
     --glass-border-dark: rgba(255, 255, 255, 0.1);
-    --glass-blur: 20px;
-    --glass-blur-lg: 30px;
+    --glass-blur: 8px;
+    --glass-blur-lg: 12px;
 
     /* Text */
     --text-primary: #2D2A24;

@@ -5,7 +5,15 @@ import { usePagination } from "@/hooks";
 import { API_ENDPOINTS, ROLE_OPTIONS } from "@/constants";
 import { formatThaiDateTime } from "@/utils/formatters";
 import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
-import { exportUsersToPDF, exportUserCredentialsPDF } from "@/lib/pdfExport";
+// Lazy load PDF exports to reduce initial bundle size
+const exportUsersToPDF = async (...args) => {
+  const { exportUsersToPDF: exportFn } = await import("@/lib/pdfExport");
+  return exportFn(...args);
+};
+const exportUserCredentialsPDF = async (...args) => {
+  const { exportUserCredentialsPDF: exportFn } = await import("@/lib/pdfExport");
+  return exportFn(...args);
+};
 import Swal from "sweetalert2";
 import "@/components/ExcelTable/ExcelTable.css"; // Import shared soft table styles
 

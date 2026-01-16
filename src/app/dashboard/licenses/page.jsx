@@ -8,7 +8,11 @@ import ExcelTable from "@/components/ExcelTable";
 import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
 import CustomSelect from "@/components/ui/CustomSelect"; // Re-use for filters
-import { exportLicensesToPDF } from "@/lib/pdfExport";
+// Lazy load PDF export to reduce initial bundle size
+const exportLicensesToPDF = async (...args) => {
+  const { exportLicensesToPDF: exportFn } = await import("@/lib/pdfExport");
+  return exportFn(...args);
+};
 import TableSkeleton from "@/components/ui/TableSkeleton";
 
 // Helper to format options for ExcelTable select columns
@@ -122,12 +126,20 @@ export default function LicensesPage() {
     }
   }, [shopOptions, typeOptions]);
 
+  // Initial parallel data fetch for faster loading
   useEffect(() => {
-    fetchCustomColumns();
-  }, [fetchCustomColumns]);
+    // Fetch columns and licenses in parallel for better performance
+    const loadInitialData = async () => {
+      await Promise.all([fetchCustomColumns(), fetchLicenses()]);
+    };
+    loadInitialData();
+  }, []);
 
+  // Refetch licenses when filters change
   useEffect(() => {
-    fetchLicenses();
+    if (columns.length > 0) {
+      fetchLicenses();
+    }
   }, [pagination.page, pagination.limit, search, filterType, filterStatus]);
 
   const fetchLicenses = useCallback(async () => {
