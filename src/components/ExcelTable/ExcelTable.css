@@ -14,27 +14,48 @@
 }
 
 /* Header Styling - Theme Matched */
+/* Header Styling - Theme Matched */
+.excel-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
 .excel-table thead tr {
     background: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.02));
 }
 
 .excel-table th {
-    background: transparent !important;
-    border: none !important;
+    background: #ffffff !important;
+    /* Solid background */
+    border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
     color: var(--text-secondary);
     font-weight: 600;
     font-size: 0.875rem;
     padding: 0.875rem 1.5rem !important;
     text-transform: none !important;
     letter-spacing: normal !important;
+    /* Sticky Header */
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1001 !important;
+    /* Higher than hover rows and thead */
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+    /* Separator line */
 }
 
 .excel-table th:first-child {
-    border-radius: 0;
+    border-top-left-radius: 16px;
+    border-bottom-left-radius: 16px;
+    border-left: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
 
 .excel-table th:last-child {
-    border-radius: 0;
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+    border-right: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Body/Row Styling - Theme Matched & Easy to Read */
@@ -93,12 +114,35 @@
 }
 
 /* Specific Columns Styling */
+/* Unified Row Number Column Styling */
+/* Unified Row Number Column Styling - Width & Alignment */
+.excel-table td.row-number,
+.excel-table th.row-number {
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    box-sizing: border-box !important;
+    color: var(--text-muted);
+}
+
 .excel-table td.row-number {
     padding: 1rem 0.5rem !important;
-    text-align: center;
-    width: 50px;
-    color: var(--text-muted);
+    /* Match standard td vertical padding */
     font-weight: 500;
+}
+
+.excel-table th.row-number {
+    padding: 0.875rem 0.5rem !important;
+    /* Match standard th vertical padding */
+    font-weight: 600;
+}
+
+/* Specific override for header font weight if needed, but 500 is fine */
+.excel-table th.row-number {
+    font-weight: 600;
+    /* Headers usually bolder */
 }
 
 .excel-table td.row-actions {
@@ -141,6 +185,12 @@
 
 .excel-table th:hover .resize-handle {
     opacity: 1;
+}
+
+/* Header Content - Centering */
+.header-content {
+    justify-content: center !important;
+    text-align: center !important;
 }
 
 /* Toolbar Styling - Soft & Rounded */

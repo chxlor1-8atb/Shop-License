@@ -2440,6 +2440,7 @@ body:has(.sidebar.show) .mobile-toggle i {
     .main-content {
         margin-left: 0;
         width: 100%;
+        max-width: 100%;
     }
 
     /* Hide floating mobile toggle - now using header button instead */

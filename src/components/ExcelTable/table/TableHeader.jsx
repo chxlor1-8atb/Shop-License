@@ -83,7 +83,7 @@ export function TableHeader({
               ) : (
                 <span
                   className="header-text"
-                  style={{ textAlign: col.align || "center" }}
+                  style={{ textAlign: "center" }}
                   onDoubleClick={() => onEditHeader(col.id)}
                 >
                   {col.type === "date" && (
