@@ -13,7 +13,7 @@
     width: 100%;
 }
 
-/* Header Styling */
+/* Header Styling - Theme Matched */
 .excel-table thead tr {
     background: transparent;
 }
@@ -24,42 +24,46 @@
     color: var(--text-secondary);
     font-weight: 600;
     font-size: 0.875rem;
-    padding: 1rem 1.5rem !important;
-    /* Spacious padding */
+    padding: 0.875rem 1.5rem !important;
     text-transform: none !important;
-    /* Remove uppercase if aggressive */
     letter-spacing: normal !important;
 }
 
 .excel-table th:first-child {
-    border-top-left-radius: 16px;
-    border-bottom-left-radius: 16px;
+    border-radius: 0;
 }
 
 .excel-table th:last-child {
-    border-top-right-radius: 16px;
-    border-bottom-right-radius: 16px;
+    border-radius: 0;
 }
 
-/* Body/Row Styling - LCP Optimized */
+/* Body/Row Styling - Theme Matched & Easy to Read */
 .excel-table tbody {
     content-visibility: auto;
     contain-intrinsic-size: auto 500px;
 }
 
 .excel-table tbody tr {
-    background: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        0 1px 2px rgba(0, 0, 0, 0.02);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     contain: layout style paint;
+}
+
+.excel-table tbody tr:nth-child(even) {
+    background: rgba(248, 246, 243, 0.8);
 }
 
 .excel-table tbody tr:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-    /* Lift effect */
-    background: white;
+    box-shadow:
+        0 8px 24px rgba(217, 119, 87, 0.12),
+        0 4px 12px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 250, 248, 0.95);
     z-index: 2;
     position: relative;
 }
@@ -134,11 +138,14 @@
     opacity: 1;
 }
 
-/* Toolbar Styling - Floating & Rounded - LCP Optimized */
+/* Toolbar Styling - Soft & Rounded */
 .table-toolbar {
     border-radius: 16px !important;
     border: none !important;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.875rem 1.25rem;
     background: rgba(255, 255, 255, 0.6) !important;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }

@@ -1,10 +1,38 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
-import ExcelTable from "@/components/ExcelTable";
-import Loading from "@/components/Loading";
+import TableSkeleton from "@/components/ui/TableSkeleton";
+
+// Lazy load heavy ExcelTable component
+const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
+  ssr: false,
+  loading: () => (
+    <div className="table-card">
+      <div className="table-container">
+        <table className="excel-table">
+          <thead>
+            <tr>
+              {["ชื่อประเภท", "คำอธิบาย", "อายุ (วัน)", "ใบอนุญาต"].map((h, i) => (
+                <th key={i}><div className="th-content">{h}</div></th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <TableSkeleton rows={5} columns={[
+              { width: "80%" },
+              { width: "90%" },
+              { width: "50%", center: true },
+              { width: "40%", center: true },
+            ]} />
+          </tbody>
+        </table>
+      </div>
+    </div>
+  ),
+});
 
 // Constants
 const STANDARD_COLUMNS = [
@@ -42,23 +70,20 @@ export default function LicenseTypesPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Fetch License Types
-      const typesRes = await fetch(
-        `${API_ENDPOINTS.LICENSE_TYPES}?t=${new Date().getTime()}`
-      );
-      const typesData = await typesRes.json();
-
-      // 2. Fetch Custom Fields
-      const fieldsRes = await fetch(
-        `/api/custom-fields?entity_type=license_types&t=${new Date().getTime()}`
-      );
-      const fieldsData = await fieldsRes.json();
-
-      // 3. Fetch Custom Field Values
-      const valuesRes = await fetch(
-        `/api/custom-field-values?entity_type=license_types&t=${new Date().getTime()}`
-      );
-      const valuesData = await valuesRes.json();
+      const timestamp = Date.now();
+      
+      // Parallel fetch all data at once - significantly faster than sequential
+      const [typesRes, fieldsRes, valuesRes] = await Promise.all([
+        fetch(`${API_ENDPOINTS.LICENSE_TYPES}?t=${timestamp}`),
+        fetch(`/api/custom-fields?entity_type=license_types&t=${timestamp}`),
+        fetch(`/api/custom-field-values?entity_type=license_types&t=${timestamp}`)
+      ]);
+      
+      const [typesData, fieldsData, valuesData] = await Promise.all([
+        typesRes.json(),
+        fieldsRes.json(),
+        valuesRes.json()
+      ]);
 
       let mergedTypes = [];
       if (typesData.success) {
@@ -399,8 +424,26 @@ export default function LicenseTypesPage() {
               />
             </div>
           ) : (
-            <div className="p-5">
-              <Loading />
+            <div className="table-card">
+              <div className="table-container">
+                <table className="excel-table">
+                  <thead>
+                    <tr>
+                      {["ชื่อประเภท", "คำอธิบาย", "อายุ (วัน)", "ใบอนุญาต"].map((h, i) => (
+                        <th key={i}><div className="th-content">{h}</div></th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <TableSkeleton rows={5} columns={[
+                      { width: "80%" },
+                      { width: "90%" },
+                      { width: "50%", center: true },
+                      { width: "40%", center: true },
+                    ]} />
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

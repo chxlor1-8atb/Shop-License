@@ -27,9 +27,18 @@ const nextConfig = {
             'sweetalert2',
             'bcryptjs',
             '@neondatabase/serverless',
-            'iron-session'
+            'iron-session',
+            'lucide-react',
+            'react-icons',
+            'clsx',
+            'tailwind-merge'
         ],
+        // Enable CSS optimization 
+        optimizeCss: true,
     },
+
+    // Transpile specific packages for better code splitting
+    transpilePackages: ['pdfmake'],
 
     // Headers for caching static assets and security
     async headers() {

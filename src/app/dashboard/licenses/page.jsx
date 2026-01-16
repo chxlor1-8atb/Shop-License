@@ -1,19 +1,51 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { usePagination, useDropdownData } from "@/hooks";
 import { API_ENDPOINTS, STATUS_OPTIONS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
-import ExcelTable from "@/components/ExcelTable";
 import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
-import CustomSelect from "@/components/ui/CustomSelect"; // Re-use for filters
+import CustomSelect from "@/components/ui/CustomSelect";
+import TableSkeleton from "@/components/ui/TableSkeleton";
+
 // Lazy load PDF export to reduce initial bundle size
 const exportLicensesToPDF = async (...args) => {
   const { exportLicensesToPDF: exportFn } = await import("@/lib/pdfExport");
   return exportFn(...args);
 };
-import TableSkeleton from "@/components/ui/TableSkeleton";
+
+// Lazy load heavy ExcelTable component
+const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
+  ssr: false,
+  loading: () => (
+    <div className="table-card">
+      <div className="table-container">
+        <table className="excel-table">
+          <thead>
+            <tr>
+              {["ร้านค้า", "ประเภทใบอนุญาต", "เลขที่ใบอนุญาต", "วันที่ออก", "วันหมดอายุ", "สถานะ", "หมายเหตุ"].map((h, i) => (
+                <th key={i} style={{ minWidth: "120px" }}><div className="th-content">{h}</div></th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <TableSkeleton rows={10} columns={[
+              { width: "90%" },
+              { width: "80%" },
+              { width: "70%" },
+              { width: "60%", center: true },
+              { width: "60%", center: true },
+              { width: "50%", center: true, rounded: true },
+              { width: "70%" },
+            ]} />
+          </tbody>
+        </table>
+      </div>
+    </div>
+  ),
+});
 
 // Helper to format options for ExcelTable select columns
 const formatOptions = (items, labelKey = "name", valueKey = "id") =>
