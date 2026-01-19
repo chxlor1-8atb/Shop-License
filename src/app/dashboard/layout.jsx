@@ -35,8 +35,12 @@ export default function DashboardLayout({ children }) {
 
   useEffect(() => {
     const init = async () => {
-      await checkAuth();
-      fetchExpiringCount();
+      // Parallelize initial data fetching to improve FCP
+      const [authResult] = await Promise.all([
+        checkAuth(),
+        fetchExpiringCount()
+      ]);
+      // Note: checkAuth itself handles the redirect if not authenticated
     };
     init();
     updateDateTime();
@@ -67,11 +71,13 @@ export default function DashboardLayout({ children }) {
       const { authenticated, user: authUser } = await checkAuthUtil();
       if (!authenticated) {
         router.push("/");
-        return;
+        return { authenticated: false };
       }
       setUser(authUser);
+      return { authenticated: true, user: authUser };
     } catch {
       router.push("/");
+      return { authenticated: false };
     } finally {
       setLoading(false);
     }
@@ -104,6 +110,7 @@ export default function DashboardLayout({ children }) {
               src="/image/shop-logo.png"
               alt="Shop License"
               style={{ width: "40px", height: "40px", borderRadius: "12px" }}
+              loading="eager"
             />
             <span>Shop License</span>
           </div>
