@@ -7418,18 +7418,13 @@ img {
 /* ========================================
    Patch Notes Modal - Responsive
    ======================================== */
+/* Patch Notes specific content styling */
 .patch-notes-modal-content {
-    background: white;
-    border-radius: var(--border-radius-lg);
+    /* Layout inherited from .modal .modal-xl */
+    height: 80vh;
+    /* Specific preferred height */
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    width: 90%;
-    max-width: 950px;
-    height: 85vh;
-    max-height: 800px;
-    box-shadow: var(--shadow-2xl);
-    animation: modalPopped 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Ensure rounded corners */
 }
 
 @keyframes modalPopped {
@@ -7521,11 +7516,8 @@ img {
 /* Responsive Mobile - Tablet */
 @media (max-width: 768px) {
     .patch-notes-modal-content {
-        width: calc(100% - 1.5rem);
-        height: calc(100vh - 1.5rem);
-        max-width: none;
-        max-height: none;
-        border-radius: 12px;
+        height: 70vh;
+        /* Adjust height for tablet */
     }
 
     .patch-notes-container {
@@ -7572,9 +7564,7 @@ img {
 /* Responsive Mobile - Phones */
 @media (max-width: 640px) {
     .patch-notes-modal-content {
-        width: calc(100% - 1rem);
-        height: calc(100vh - 1rem);
-        border-radius: 10px;
+        height: 80vh;
     }
 
     .patch-notes-sidebar {
@@ -7614,9 +7604,8 @@ img {
 /* Responsive Extra Small Phones */
 @media (max-width: 480px) {
     .patch-notes-modal-content {
-        width: 100%;
-        height: 100vh;
-        border-radius: 0;
+        height: 100%;
+        /* Full height on small mobile */
     }
 
     .patch-notes-sidebar {

@@ -51,6 +51,7 @@ const INITIAL_FORM_DATA = {
   username: "",
   full_name: "",
   password: "",
+  confirm_password: "",
   role: "user",
 };
 
@@ -198,6 +199,13 @@ export default function UsersPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Password confirmation validation
+    if (formData.password && formData.password !== formData.confirm_password) {
+      showError("รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน");
+      return;
+    }
+
     const submittedData = { ...formData }; 
 
     try {
@@ -289,7 +297,8 @@ export default function UsersPage() {
     if (!selectedUser) return;
     setFormData({
         ...selectedUser,
-        password: "" // Keep password blank for security/optional update
+        password: "", // Keep password blank for security/optional update
+        confirm_password: ""
     });
     setShowModal(true);
   };
@@ -350,7 +359,8 @@ export default function UsersPage() {
                   setSelectedUser(row);
                   setFormData({
                     ...row,
-                    password: "" // Keep password blank for security
+                    password: "", // Keep password blank for security
+                    confirm_password: ""
                   });
                   setShowModal(true);
                 }}
@@ -453,6 +463,18 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
           required={!isEdit}
           minLength={6}
           placeholder={isEdit ? "เว้นว่างถ้าไม่ต้องการเปลี่ยนรหัสผ่าน" : "ขั้นต่ำ 6 ตัวอักษร"}
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="form-confirm-password">{isEdit ? 'ยืนยันรหัสผ่านใหม่' : 'ยืนยันรหัสผ่าน *'}</label>
+        <input
+          id="form-confirm-password"
+          type="password"
+          name="confirm_password"
+          value={formData.confirm_password || ""}
+          onChange={handleChange}
+          required={!isEdit || !!formData.password}
+          placeholder={isEdit ? "ยืนยันรหัสผ่านใหม่" : "ยืนยันรหัสผ่านอีกครั้ง"}
         />
       </div>
       <div className="form-group">
