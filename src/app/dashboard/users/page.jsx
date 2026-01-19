@@ -18,7 +18,25 @@ import dynamic from "next/dynamic";
 // Lazy load heavy ExcelTable component
 const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
   ssr: false,
-  loading: () => <TableSkeleton rows={5} columns={[{ width: "20%" }, { width: "25%" }, { width: "15%" }, { width: "20%" }]} />,
+  loading: () => (
+    <div className="table-card">
+      <div className="table-container">
+        <table className="excel-table">
+          <thead>
+            <tr>
+              <th style={{ width: "20%" }}><div className="th-content">ชื่อผู้ใช้</div></th>
+              <th style={{ width: "25%" }}><div className="th-content">ชื่อ-นามสกุล</div></th>
+              <th style={{ width: "15%" }}><div className="th-content">บทบาท</div></th>
+              <th style={{ width: "20%" }}><div className="th-content">วันที่สร้าง</div></th>
+            </tr>
+          </thead>
+          <tbody>
+            <TableSkeleton rows={5} columns={[{ width: "20%" }, { width: "25%" }, { width: "15%" }, { width: "20%" }]} />
+          </tbody>
+        </table>
+      </div>
+    </div>
+  ),
 });
 
 // UI Components
@@ -342,7 +360,18 @@ export default function UsersPage() {
           ) : (
             <div className="table-card">
               <div className="table-container">
-                 <TableSkeleton rows={5} columns={[{ width: "20%" }, { width: "25%" }, { width: "15%" }, { width: "20%" }]} />
+                 <table className="excel-table">
+                   <thead>
+                     <tr>
+                       {USER_COLUMNS.map((col, i) => (
+                         <th key={i} style={{ width: col.width }}><div className="th-content">{col.name}</div></th>
+                       ))}
+                     </tr>
+                   </thead>
+                   <tbody>
+                      <TableSkeleton rows={5} columns={[{ width: "20%" }, { width: "25%" }, { width: "15%" }, { width: "20%" }]} />
+                   </tbody>
+                 </table>
               </div>
             </div>
           )}

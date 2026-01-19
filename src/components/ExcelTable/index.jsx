@@ -184,7 +184,7 @@ export default function ExcelTable({
             onHeaderCommit={handleHeaderCommit}
             onEditHeader={setEditingHeader}
             onEditingBoxBlur={() => setEditingHeader(null)}
-            onAddColumn={handleAddColumn}
+            onAddColumn={onColumnAdd ? handleAddColumn : undefined}
             onDeleteColumn={handleDeleteColumn}
             onContextMenu={setContextMenu}
             onResizeColumn={updateColumnWidth}

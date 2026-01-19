@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { API_ENDPOINTS, STATUS_OPTIONS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import CustomSelect from "./CustomSelect";
@@ -111,9 +112,9 @@ export default function ShopDetailModal({
 
   if (!isOpen || !shop) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay show" onClick={onClose}>
-      <div className="shop-detail-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="shop-info-header">
             <div className="shop-avatar">
@@ -272,6 +273,7 @@ export default function ShopDetailModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

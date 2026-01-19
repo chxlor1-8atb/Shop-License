@@ -108,18 +108,6 @@
         /* Prevent wrapping */
     }
 
-    /* Forms & Modals */
-    .modal {
-        width: 95%;
-        margin: 1rem;
-    }
-
-    .modal-body {
-        padding: 1rem;
-        grid-template-columns: 1fr !important;
-        /* Stack form fields */
-    }
-
     /* Chart */
     .chart-card canvas {
         max-height: 250px;
@@ -169,10 +157,6 @@
 
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-
-    .modal {
-        width: 90%;
     }
 }
 

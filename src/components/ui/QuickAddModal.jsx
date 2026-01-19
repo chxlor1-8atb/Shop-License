@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import CustomSelect from "./CustomSelect";
 import DatePicker from "./DatePicker";
 import "./QuickAddModal.css";
@@ -86,9 +87,9 @@ export default function QuickAddModal({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay show" onClick={onClose}>
-      <div className="quick-add-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>
             <i className={`fas ${type === "shop" ? "fa-store" : "fa-file-alt"}`}></i>
@@ -102,7 +103,7 @@ export default function QuickAddModal({
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
             {error && (
-              <div className="alert alert-error">
+              <div className="error-message">
                 <i className="fas fa-exclamation-circle"></i> {error}
               </div>
             )}
@@ -285,6 +286,7 @@ export default function QuickAddModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

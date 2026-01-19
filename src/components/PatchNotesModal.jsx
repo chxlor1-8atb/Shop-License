@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { CHANGELOG, getChangeTypeBadge, getLatestVersion } from '@/constants/changelog';
 import { formatThaiDate, formatThaiDateFull } from '@/utils/formatters';
 
@@ -30,64 +31,37 @@ export default function PatchNotesModal({ isOpen, onClose }) {
     if (!isOpen) return null;
 
     const selectedChangelog = CHANGELOG.find(c => c.version === selectedVersion) || CHANGELOG[0];
+    
+    // Safety check for document
+    if (typeof document === 'undefined') return null;
 
-    return (
-        <div className="modal-overlay" style={{
-            visibility: 'visible',
-            opacity: 1,
-            zIndex: 9999,
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backdropFilter: 'blur(4px)'
-        }}>
+    return createPortal(
+        <div className="modal-overlay show">
             <div
-                className="modal-content patch-notes-modal-content"
+                className="modal modal-xl patch-notes-modal-content"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="modal-header" style={{
-                    background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                    color: 'white',
-                    padding: '1.25rem 1.5rem',
-                    flexShrink: 0
-                }}>
+                <div className="modal-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <i className="fas fa-clipboard-list" style={{ fontSize: '1.5rem' }}></i>
+                        <i className="fas fa-clipboard-list" style={{ fontSize: '1.5rem', color: '#ea580c' }}></i>
                         <div>
                             <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Patch Notes</h2>
-                            <p style={{ margin: 0, opacity: 0.9, fontSize: '0.875rem' }}>
+                            <p style={{ margin: 0, opacity: 0.7, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                                 ประวัติการอัปเดตและแก้ไขบั๊ก
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        style={{
-                            background: 'rgba(255,255,255,0.2)',
-                            border: 'none',
-                            borderRadius: '8px',
-                            color: 'white',
-                            width: '36px',
-                            height: '36px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
+                        className="modal-close"
                     >
                         <i className="fas fa-times"></i>
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="patch-notes-container">
+                <div className="patch-notes-container modal-body" style={{ padding: 0, display: 'flex', overflow: 'hidden' }}>
                     {/* Version List Sidebar */}
                     <div className="patch-notes-sidebar">
                         {CHANGELOG.map(log => (
@@ -182,7 +156,8 @@ export default function PatchNotesModal({ isOpen, onClose }) {
 
 
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

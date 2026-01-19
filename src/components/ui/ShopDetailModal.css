@@ -14,13 +14,7 @@
     flex-direction: column;
 }
 
-/* Modal Body Scroll */
-.shop-detail-modal .modal-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1.25rem;
-    -webkit-overflow-scrolling: touch;
-}
+/* Modal Body Scroll - Handled globally */
 
 /* Modal Header */
 .shop-detail-modal .modal-header {
@@ -224,8 +218,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    max-height: 300px;
-    overflow-y: auto;
+    /* Let the modal body handle scrolling */
 }
 
 .license-card {
@@ -326,9 +319,7 @@
         font-size: 1.1rem;
     }
 
-    .licenses-list {
-        max-height: 250px;
-    }
+
 }
 
 /* Mobile phones */
@@ -425,9 +416,7 @@
         font-size: 0.75rem;
     }
 
-    .licenses-list {
-        max-height: 200px;
-    }
+
 }
 
 /* Extra small phones */
@@ -450,9 +439,7 @@
         font-size: 0.875rem;
     }
 
-    .licenses-list {
-        max-height: calc(100vh - 450px);
-    }
+
 
     .empty-state {
         padding: 1.5rem;
