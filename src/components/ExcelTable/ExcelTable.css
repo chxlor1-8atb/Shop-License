@@ -172,7 +172,7 @@
 .excel-table td.row-actions {
     padding: 0.5rem !important;
     text-align: center;
-    width: 60px;
+    width: 80px;
 }
 
 .excel-table td.add-column-cell,
@@ -236,12 +236,20 @@
     justify-content: center !important;
 }
 
-/* Row actions column (delete button) - centered */
-.excel-table td.row-actions,
+/* Row actions column (delete button) - centered header, right aligned body */
+/* Row actions column (delete button) - centered aligned */
 .excel-table th.row-actions {
     text-align: center !important;
-    width: 60px !important;
-    min-width: 60px !important;
+    width: 80px !important;
+    min-width: 80px !important;
+    padding-right: 0.5rem !important;
+}
+
+.excel-table td.row-actions {
+    text-align: center !important;
+    width: 80px !important;
+    min-width: 80px !important;
+    padding-right: 0.5rem !important;
 }
 
 /* Input/Edit State - Invisible Border (Clean Inline Edit) */

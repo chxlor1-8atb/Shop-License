@@ -7155,8 +7155,8 @@ img {
 
 /* การจัดการแถว */
 .row-actions {
-    width: 48px;
-    min-width: 48px;
+    width: 80px;
+    min-width: 80px;
     background: rgba(255, 255, 255, 0.2);
     text-align: center;
     border-left: 1px solid rgba(216, 211, 200, 0.3);
