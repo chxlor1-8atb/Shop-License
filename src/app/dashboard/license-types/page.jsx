@@ -36,15 +36,9 @@ const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
 
 // Constants
 const STANDARD_COLUMNS = [
-  { id: "name", name: "ชื่อประเภท", width: 200, align: "left" },
-  {
-    id: "price",
-    name: "ราคา (บาท)",
-    width: 120,
-    align: "right",
-    type: "number",
-  },
-  { id: "description", name: "คำอธิบาย", width: 350, align: "left" },
+  { id: "name", name: "ชื่อประเภท", width: 250, align: "left" },
+// Price column removed as requested
+  { id: "description", name: "คำอธิบาย", width: 420, align: "left" },
   {
     id: "validity_days",
     name: "อายุ (วัน)",
@@ -310,7 +304,7 @@ export default function LicenseTypesPage() {
 
     const standardData = {
       name: updatedRow.name,
-      price: updatedRow.price || 0,
+
       description: updatedRow.description || "",
       validity_days: updatedRow.validity_days || 365,
     };

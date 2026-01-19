@@ -48,7 +48,12 @@ export function TableHeader({
             data-type={col.type}
             onContextMenu={(e) => onContextMenu(e, "column", null, col.id)}
           >
-            <div className="header-content">
+            <div 
+              className="header-content"
+              style={{
+                justifyContent: 'center'
+              }}
+            >
               {editingHeader === col.id ? (
                 <input
                   ref={(el) => {
@@ -62,6 +67,7 @@ export function TableHeader({
                   autoFocus // Use autoFocus for simplicity
                   type="text"
                   className="header-input"
+                  style={{ textAlign: col.align || 'left' }}
                   value={col.name}
                   onChange={(e) => onUpdateHeader(col.id, e.target.value)}
                   onBlur={() => {
@@ -84,7 +90,6 @@ export function TableHeader({
               ) : (
                 <span
                   className="header-text"
-                  style={{ textAlign: "center" }}
                   onDoubleClick={() => onEditHeader(col.id)}
                 >
                   {col.type === "date" && (
@@ -107,7 +112,17 @@ export function TableHeader({
                       }}
                     ></i>
                   )}
-                  {(col.type === "text" || !col.type) && (
+                  {col.type === "select" && (
+                    <i
+                      className="fas fa-list"
+                      style={{
+                        marginRight: "6px",
+                        fontSize: "12px",
+                        color: "#999",
+                      }}
+                    ></i>
+                  )}
+                  {(col.type === "text" || (!col.type && col.type !== "select")) && (
                     <i
                       className="fas fa-font"
                       style={{
@@ -128,15 +143,17 @@ export function TableHeader({
             />
           </th>
         ))}
-        <th className="add-column-cell">
-          <button
-            className="add-column-btn"
-            onClick={() => onAddColumn()}
-            title="เพิ่มคอลัมน์"
-          >
-            <i className="fas fa-plus"></i>
-          </button>
-        </th>
+        {onAddColumn && (
+          <th className="add-column-cell">
+            <button
+              className="add-column-btn"
+              onClick={() => onAddColumn()}
+              title="เพิ่มคอลัมน์"
+            >
+              <i className="fas fa-plus"></i>
+            </button>
+          </th>
+        )}
         <th className="row-actions row-actions-header">ลบ</th>
       </tr>
     </thead>

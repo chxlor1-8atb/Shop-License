@@ -70,13 +70,13 @@ export const ENTITY_TYPES = {
 };
 
 /**
- * Cleanup old logs (older than 3 months)
+ * Cleanup old logs (older than 7 days)
  * This runs with a low probability to avoid performance impact
  */
 async function cleanupOldLogs() {
     try {
-        // Postgres SQL to delete logs older than 3 months
-        await query(`DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '3 months'`);
+        // Postgres SQL to delete logs older than 7 days
+        await query(`DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '7 days'`);
     } catch (error) {
         // Silent fail is acceptable for maintenance tasks
         console.error('Failed to cleanup old audit logs:', error);

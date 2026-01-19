@@ -262,6 +262,7 @@ export default function ExcelTable({
                 onCellKeyDown={handleCellKeyDown}
                 onDeleteRow={handleDeleteRow}
                 onContextMenu={setContextMenu}
+                onAddColumn={onColumnAdd} // Pass to conditionally render empty cell
               />
             ))}
           </tbody>

@@ -11,6 +11,7 @@ export function TableRow({
   onCellKeyDown,
   onDeleteRow,
   onContextMenu,
+  onAddColumn, // Control rendering of add column cell
 }) {
   return (
     <tr
@@ -117,8 +118,8 @@ export function TableRow({
         );
       })}
 
-      {/* เซลล์ว่างสำหรับปุ่มเพิ่มคอลัมน์ */}
-      <td className="add-column-cell" />
+      {/* เซลล์ว่างสำหรับปุ่มเพิ่มคอลัมน์ - Only if feature enabled */}
+      {onAddColumn && <td className="add-column-cell" />}
 
       {/* การจัดการแถว */}
       <td className="row-actions">
