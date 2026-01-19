@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { usePagination } from "@/hooks";
+import { usePagination, useDropdownData } from "@/hooks";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
 import TableSkeleton from "@/components/ui/TableSkeleton";
+import ShopDetailModal from "@/components/ui/ShopDetailModal";
+import QuickAddModal from "@/components/ui/QuickAddModal";
+import { mutate } from "swr"; // Import mutate
 
 // Lazy load PDF export to reduce initial bundle size
 const exportShopsToPDF = async (...args) => {
@@ -66,18 +69,16 @@ const STANDARD_COLUMNS = [
 
 export default function ShopsPage() {
   const pagination = usePagination(10);
+  const { typeOptions } = useDropdownData();
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [columns, setColumns] = useState(STANDARD_COLUMNS);
-
-  // We can use a simplified approach for custom columns like LicenseTypesPage
-  // Or just use what we have. API supports 'custom_fields' jsonb.
-  // If we want "dynamic schema" support like before, we should fetch schema.
-  // For now, let's assume columns are driven by data or saved state.
-  // But LicenseTypesPage fetches metadata.
-  // Let's try to preserve the existing "custom fields" logic if possible
-  // or simplify to just "if it's not standard, it's custom".
+  
+  // Modal states
+  const [selectedShop, setSelectedShop] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   // Initial parallel data fetch for faster loading
   useEffect(() => {
@@ -182,6 +183,7 @@ export default function ShopsPage() {
         if (data.success) {
           showSuccess("สร้างร้านค้าเรียบร้อย");
           fetchShops(); // Refresh to get real ID
+          mutate('/api/shops?limit=1000'); // Update dropdown cache
         } else {
           showError(data.message);
         }
@@ -204,6 +206,7 @@ export default function ShopsPage() {
           setShops((prev) =>
             prev.map((s) => (s.id === updatedRow.id ? updatedRow : s))
           );
+          mutate('/api/shops?limit=1000'); // Update dropdown cache
         } else {
           showError(data.message);
           fetchShops(); // Revert
@@ -225,6 +228,7 @@ export default function ShopsPage() {
         showSuccess("ลบร้านค้าเรียบร้อย");
         setShops((prev) => prev.filter((s) => s.id !== rowId));
         // Optional: refresh if page empty?
+        mutate('/api/shops?limit=1000'); // Update dropdown cache
       } else {
         showError(data.message);
         fetchShops();
@@ -422,6 +426,72 @@ export default function ShopsPage() {
     }
   };
 
+  // Handle row click to show detail modal
+  const handleRowClick = (row) => {
+    // Don't open for new rows
+    if (row.id.toString().startsWith("id_")) return;
+    setSelectedShop(row);
+    setShowDetailModal(true);
+  };
+
+  // Handle quick add shop with optional license
+  const handleQuickAddShop = async (formData) => {
+    // Create shop first
+    const shopPayload = {
+      shop_name: formData.shop_name,
+      owner_name: formData.owner_name,
+      phone: formData.phone,
+      address: formData.address,
+      email: formData.email,
+      notes: formData.notes,
+    };
+
+    const shopRes = await fetch(API_ENDPOINTS.SHOPS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(shopPayload),
+    });
+    const shopData = await shopRes.json();
+
+    if (!shopData.success) {
+      throw new Error(shopData.message || "ไม่สามารถสร้างร้านค้าได้");
+    }
+
+    // If user wants to create license too
+    if (formData.create_license && formData.license_type_id && formData.license_number) {
+      // Need to get the new shop ID - fetch shops again
+      const shopsRes = await fetch(`${API_ENDPOINTS.SHOPS}?search=${encodeURIComponent(formData.shop_name)}&limit=1`);
+      const shopsData = await shopsRes.json();
+      const newShop = shopsData.shops?.[0];
+
+      if (newShop) {
+        const licenseRes = await fetch(API_ENDPOINTS.LICENSES, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            shop_id: newShop.id,
+            license_type_id: formData.license_type_id,
+            license_number: formData.license_number,
+            issue_date: new Date().toISOString().split("T")[0],
+            status: "active",
+          }),
+        });
+        const licenseData = await licenseRes.json();
+
+        if (!licenseData.success) {
+          showError("สร้างร้านค้าแล้วแต่ไม่สามารถสร้างใบอนุญาตได้: " + licenseData.message);
+        } else {
+          showSuccess("สร้างร้านค้าและใบอนุญาตเรียบร้อย");
+        }
+      }
+    } else {
+      showSuccess("สร้างร้านค้าเรียบร้อย");
+    }
+
+    fetchShops();
+    mutate('/api/shops?limit=1000'); // Update dropdown cache
+  };
+
   return (
     <div className="card">
       <div className="card-header">
@@ -451,8 +521,8 @@ export default function ShopsPage() {
       </div>
 
       <div className="card-body">
-        <div className="filter-grid">
-          <div className="filter-group" style={{ maxWidth: '400px' }}>
+        <div className="filter-grid" style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap' }}>
+          <div className="filter-group" style={{ maxWidth: '400px', flex: 1 }}>
             <label htmlFor="shop-search" className="filter-label">ค้นหา</label>
             <SearchInput
               id="shop-search"
@@ -464,6 +534,25 @@ export default function ShopsPage() {
               placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร..."
             />
           </div>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowQuickAdd(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1.25rem',
+              borderRadius: '8px',
+              fontWeight: 500,
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              border: 'none',
+              color: 'white',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            <i className="fas fa-plus"></i> สร้างร้านค้าใหม่
+          </button>
         </div>
 
         {!loading ? (
@@ -478,6 +567,7 @@ export default function ShopsPage() {
               onColumnUpdate={handleColumnUpdate}
               onColumnDelete={handleColumnDelete}
               onExport={handleExport}
+              onRowClick={handleRowClick}
               exportLabel="Export PDF"
               exportIcon="fa-file-pdf"
             />
@@ -531,6 +621,27 @@ export default function ShopsPage() {
           />
         </div>
       </div>
+
+      {/* Shop Detail Modal */}
+      <ShopDetailModal
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setSelectedShop(null);
+        }}
+        shop={selectedShop}
+        typeOptions={typeOptions}
+        onLicenseCreated={fetchShops}
+      />
+
+      {/* Quick Add Shop Modal */}
+      <QuickAddModal
+        isOpen={showQuickAdd}
+        onClose={() => setShowQuickAdd(false)}
+        type="shop"
+        typeOptions={typeOptions}
+        onSubmit={handleQuickAddShop}
+      />
     </div>
   );
 }

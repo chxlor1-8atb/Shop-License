@@ -107,3 +107,5 @@ CREATE TABLE IF NOT EXISTS schema_definitions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(table_name, column_key)
 );
+
+ALTER TABLE license_types ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT 0;

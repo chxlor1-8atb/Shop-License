@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { usePagination, useDropdownData } from "@/hooks";
 import { API_ENDPOINTS, STATUS_OPTIONS } from "@/constants";
@@ -9,6 +9,8 @@ import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
 import CustomSelect from "@/components/ui/CustomSelect";
 import TableSkeleton from "@/components/ui/TableSkeleton";
+import QuickAddModal from "@/components/ui/QuickAddModal";
+import { mutate } from "swr"; // Import mutate
 
 // Lazy load PDF export to reduce initial bundle size
 const exportLicensesToPDF = async (...args) => {
@@ -51,21 +53,29 @@ const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
 const formatOptions = (items, labelKey = "name", valueKey = "id") =>
   items.map((item) => ({ label: item[labelKey], value: item[valueKey] }));
 
+// Special value for "create new shop" option
+const CREATE_NEW_SHOP_VALUE = "__CREATE_NEW__";
+
 export default function LicensesPage() {
   const pagination = usePagination(10);
-  const { shopOptions, typeOptions } = useDropdownData(); // Use hook for dropdown data
-
-  // Convert hook options to ExcelTable format {label, value}
-  // shopOptions/typeOptions from hook are already {label, value} usually?
-  // Let's verify hook usage in original file:
-  // options={[{ value: '', label: '-- เลือกร้านค้า --' }, ...shopOptions]}
-  // So they are compatible.
+  const { shopOptions, typeOptions, shops } = useDropdownData(); // Use hook for dropdown data
 
   const [licenses, setLicenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  
+  // Modal for creating new shop
+  const [showQuickAddShop, setShowQuickAddShop] = useState(false);
+  // Modal for quick adding license
+  const [showQuickAddLicense, setShowQuickAddLicense] = useState(false);
+
+  // Enhanced shop options with "Create New" option
+  const enhancedShopOptions = useMemo(() => [
+    { value: CREATE_NEW_SHOP_VALUE, label: "➕ สร้างร้านค้าใหม่..." },
+    ...shopOptions,
+  ], [shopOptions]);
 
   // Define Standard Columns with dependencies
   // We need to recreate columns when options change
@@ -78,7 +88,7 @@ export default function LicensesPage() {
         name: "ร้านค้า",
         width: 200,
         type: "select",
-        options: shopOptions,
+        options: enhancedShopOptions,
       },
       {
         id: "license_type_id",
@@ -156,7 +166,7 @@ export default function LicensesPage() {
       console.error(e);
       setColumns(baseCols);
     }
-  }, [shopOptions, typeOptions]);
+  }, [enhancedShopOptions, typeOptions]);
 
   // Initial parallel data fetch for faster loading
   useEffect(() => {
@@ -208,6 +218,13 @@ export default function LicensesPage() {
   // --- Row Handlers ---
 
   const handleRowUpdate = async (updatedRow) => {
+    // Check if user selected "Create New Shop" option
+    if (updatedRow.shop_id === CREATE_NEW_SHOP_VALUE) {
+      setShowQuickAddShop(true);
+      // Reset the shop_id so it doesn't show the special value
+      return;
+    }
+
     const isNew = updatedRow.id.toString().startsWith("id_");
 
     const standardData = {
@@ -456,10 +473,63 @@ export default function LicensesPage() {
     }
   };
 
+  // Handle creating new shop from licenses page
+  const handleQuickAddShop = async (formData) => {
+    const shopPayload = {
+      shop_name: formData.shop_name,
+      owner_name: formData.owner_name,
+      phone: formData.phone,
+      address: formData.address,
+    };
+
+    const res = await fetch(API_ENDPOINTS.SHOPS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(shopPayload),
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.message || "ไม่สามารถสร้างร้านค้าได้");
+    }
+
+    showSuccess("สร้างร้านค้าเรียบร้อย กรุณาเลือกร้านค้าใหม่จากรายการ");
+    // Reload the page or refetch shop options
+    mutate('/api/shops?limit=1000'); // Update dropdown cache
+    // window.location.reload(); // No longer needed
+  };
+
+  // Handle creating new license via quick add modal
+  const handleQuickAddLicense = async (formData) => {
+    const payload = {
+      shop_id: formData.shop_id,
+      license_type_id: formData.license_type_id,
+      license_number: formData.license_number,
+      issue_date: formData.issue_date,
+      expiry_date: formData.expiry_date,
+      status: formData.status || "active",
+      notes: formData.notes,
+    };
+
+    const res = await fetch(API_ENDPOINTS.LICENSES, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.message || "ไม่สามารถสร้างใบอนุญาตได้");
+    }
+
+    showSuccess("สร้างใบอนุญาตเรียบร้อย");
+    fetchLicenses();
+  };
+
   return (
     <div className="card">
-      <div className="card-header">
-        <h3 className="card-title">
+      <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <h3 className="card-title" style={{ margin: 0 }}>
           <i className="fas fa-file-alt"></i> ใบอนุญาต
           <span style={{ 
             fontSize: '0.85rem', 
@@ -482,6 +552,14 @@ export default function LicensesPage() {
             คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข | คลิกขวาเพื่อเปิดเมนู
           </span>
         </h3>
+        <button 
+          className="btn btn-primary"
+          onClick={() => setShowQuickAddLicense(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <i className="fas fa-plus"></i>
+          เพิ่มใบอนุญาตง่ายๆ
+        </button>
       </div>
       <div className="card-body">
         <div className="mb-4">
@@ -605,6 +683,25 @@ export default function LicensesPage() {
           />
         </div>
       </div>
+
+      {/* Quick Add Shop Modal */}
+      <QuickAddModal
+        isOpen={showQuickAddShop}
+        onClose={() => setShowQuickAddShop(false)}
+        type="shop"
+        typeOptions={typeOptions}
+        onSubmit={handleQuickAddShop}
+      />
+
+      {/* Quick Add License Modal */}
+      <QuickAddModal
+        isOpen={showQuickAddLicense}
+        onClose={() => setShowQuickAddLicense(false)}
+        type="license"
+        shopOptions={shopOptions}
+        typeOptions={typeOptions}
+        onSubmit={handleQuickAddLicense}
+      />
     </div>
   );
 }

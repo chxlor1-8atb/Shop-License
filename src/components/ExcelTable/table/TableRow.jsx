@@ -1,3 +1,6 @@
+import CustomSelect from "../../ui/CustomSelect";
+import DatePicker from "../../ui/DatePicker";
+
 export function TableRow({
   row,
   rowIndex,
@@ -11,6 +14,7 @@ export function TableRow({
   onCellKeyDown,
   onDeleteRow,
   onContextMenu,
+  onRowClick,
   onAddColumn, // Control rendering of add column cell
 }) {
   return (
@@ -18,8 +22,22 @@ export function TableRow({
       className={selectedRow === row.id ? "selected-row" : ""}
       onContextMenu={(e) => onContextMenu(e, "row", row.id)}
     >
-      {/* ลำดับแถว */}
-      <td className="row-number">{rowIndex + 1}</td>
+      {/* ลำดับแถว - คลิกเพื่อดูรายละเอียด */}
+      <td 
+        className="row-number" 
+        onClick={() => onRowClick && onRowClick(row)}
+        style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+        title={onRowClick ? "คลิกเพื่อดูรายละเอียด" : undefined}
+      >
+        {onRowClick ? (
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            {rowIndex + 1}
+            <i className="fas fa-external-link-alt" style={{ fontSize: '0.65rem', opacity: 0.5 }}></i>
+          </span>
+        ) : (
+          rowIndex + 1
+        )}
+      </td>
 
       {/* เซลล์ข้อมูล */}
       {columns.map((col) => {
@@ -37,25 +55,22 @@ export function TableRow({
           >
             {isEditing && !col.readOnly ? (
               col.type === "select" ? (
-                <select
-                  ref={inputRef}
-                  id={`cell-select-${row.id}-${col.id}`}
-                  name={`cell-select-${row.id}-${col.id}`}
-                  aria-label={`แก้ไข ${col.name}`}
-                  className="cell-input"
+                <CustomSelect
                   value={row[col.id] || ""}
                   onChange={(e) => onCellChange(row.id, col.id, e.target.value)}
+                  options={[{ value: "", label: "-- เลือก --" }, ...(col.options || [])]}
+                  autoFocus={true}
                   onBlur={() => onCellBlur(row.id, col.id)}
-                  onKeyDown={(e) => onCellKeyDown(e, row.id, col.id)}
-                  style={{ textAlign: col.align || "left" }}
-                >
-                  <option value="">-- เลือก --</option>
-                  {col.options?.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                  className="cell-input-custom"
+                />
+              ) : col.type === "date" ? (
+                <DatePicker
+                  value={row[col.id] || ""}
+                  onChange={(e) => onCellChange(row.id, col.id, e.target.value)}
+                  autoFocus={true}
+                  onBlur={() => onCellBlur(row.id, col.id)}
+                  className="cell-input-custom"
+                />
               ) : (
                 <input
                   ref={inputRef}

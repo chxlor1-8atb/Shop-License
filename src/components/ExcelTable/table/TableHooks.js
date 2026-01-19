@@ -114,8 +114,8 @@ export function useExcelTable({
     );
   }, []);
 
-  const addRow = useCallback((afterRowId = null) => {
-    const newRow = { id: generateId() };
+  const addRow = useCallback((afterRowId = null, initialData = {}) => {
+    const newRow = { id: generateId(), ...initialData };
     setRows((prevRows) => {
       if (afterRowId) {
         const index = prevRows.findIndex((r) => r.id === afterRowId);

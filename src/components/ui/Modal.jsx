@@ -63,17 +63,17 @@ export default function Modal({
 
     const modalContent = (
         <div
-            className="modal-overlay show"
-            style={{ display: 'flex' }}
+            className="modal-overlay"
+            style={{ display: 'flex', zIndex: 9999 }}
             onClick={handleBackdropClick}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
         >
             <div
-                className={`modal show ${className}`.trim()}
+                className={`modal ${size === 'lg' ? 'modal-lg' : size === 'xl' ? 'modal-xl' : ''} ${className}`.trim()}
                 onClick={(e) => e.stopPropagation()}
-                style={size === 'lg' ? { maxWidth: '700px', width: '90%' } : size === 'xl' ? { maxWidth: '900px', width: '95%' } : {}}
+                style={{}} // Removed inline styles in favor of CSS classes
             >
                 <div className="modal-header">
                     <h3 id="modal-title" className="modal-title">{title}</h3>

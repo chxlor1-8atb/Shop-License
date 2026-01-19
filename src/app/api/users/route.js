@@ -80,6 +80,10 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
         }
 
+        if (password.length < 6) {
+            return NextResponse.json({ success: false, message: 'Password must be at least 6 characters' }, { status: 400 });
+        }
+
         // Check if username exists
         const existing = await fetchOne('SELECT id FROM users WHERE username = $1', [username]);
         if (existing) {
@@ -130,6 +134,9 @@ export async function PUT(request) {
         let paramIndex = 3;
 
         if (password) {
+            if (password.length < 6) {
+                return NextResponse.json({ success: false, message: 'Password must be at least 6 characters' }, { status: 400 });
+            }
             const hashedPassword = await bcrypt.hash(password, 10);
             query += `, password = $${paramIndex}`;
             params.push(hashedPassword);

@@ -6,10 +6,7 @@ import { API_ENDPOINTS, ROLE_OPTIONS } from "@/constants";
 import { formatThaiDateTime } from "@/utils/formatters";
 import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
 // Lazy load PDF exports to reduce initial bundle size
-const exportUsersToPDF = async (...args) => {
-  const { exportUsersToPDF: exportFn } = await import("@/lib/pdfExport");
-  return exportFn(...args);
-};
+
 const exportUserCredentialsPDF = async (...args) => {
   const { exportUserCredentialsPDF: exportFn } = await import("@/lib/pdfExport");
   return exportFn(...args);
@@ -41,7 +38,7 @@ const INITIAL_FORM_DATA = {
 
 const USER_COLUMNS = [
   { id: "username", name: "ชื่อผู้ใช้", width: 150, align: "center", readOnly: true },
-  { id: "full_name", name: "ชื่อ-นามสกุล", width: 250, align: "left" },
+  { id: "full_name", name: "ชื่อ-นามสกุล", width: 250, align: "center" },
   { 
     id: "role", 
     name: "บทบาท", 
@@ -63,6 +60,8 @@ export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+
+  const [selectedUser, setSelectedUser] = useState(null); // Track selected user
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -184,36 +183,73 @@ export default function UsersPage() {
     const submittedData = { ...formData }; 
 
     try {
-      const response = await fetch(API_ENDPOINTS.USERS, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
+      let response;
+      let data;
+
+      if (formData.id) {
+        // Update existing user (PUT)
+        const updatePayload = {
+            id: formData.id,
+            full_name: formData.full_name,
+            role: formData.role,
+            // Only send password if user entered one
+            ...(formData.password ? { password: formData.password } : {})
+        };
+
+        if (formData.password && formData.password.length < 6) {
+             showError("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+             return;
+        }
+
+        response = await fetch(API_ENDPOINTS.USERS, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatePayload),
+        });
+
+      } else {
+        // Create new user (POST)
+        if (!formData.password || formData.password.length < 6) {
+             showError("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+             return;
+        }
+
+        response = await fetch(API_ENDPOINTS.USERS, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+        });
+      }
+
+      data = await response.json();
 
       if (data.success) {
         setShowModal(false);
         showSuccess(data.message);
         fetchUsers();
+        setSelectedUser(null); // Clear selection
 
-        Swal.fire({
-          title: "สร้างผู้ใช้สำเร็จ",
-          text: "ต้องการดาวน์โหลดเอกสารแจ้งรหัสผ่าน (PDF) หรือไม่?",
-          icon: "success",
-          showCancelButton: true,
-          confirmButtonText: "ดาวน์โหลด PDF",
-          cancelButtonText: "ปิด",
-          reverseButtons: true,
-          confirmButtonColor: "#3b82f6",
-          cancelButtonColor: "#64748b",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            exportUserCredentialsPDF({
-              ...submittedData,
-              role: submittedData.role || "user",
+        // Only ask for PDF on Create
+        if (!formData.id) {
+            Swal.fire({
+            title: "สร้างผู้ใช้สำเร็จ",
+            text: "ต้องการดาวน์โหลดเอกสารแจ้งรหัสผ่าน (PDF) หรือไม่?",
+            icon: "success",
+            showCancelButton: true,
+            confirmButtonText: "ดาวน์โหลด PDF",
+            cancelButtonText: "ปิด",
+            reverseButtons: true,
+            confirmButtonColor: "#3b82f6",
+            cancelButtonColor: "#64748b",
+            }).then((result) => {
+            if (result.isConfirmed) {
+                exportUserCredentialsPDF({
+                ...submittedData,
+                role: submittedData.role || "user",
+                });
+            }
             });
-          }
-        });
+        }
       } else {
         showError(data.message);
       }
@@ -222,12 +258,21 @@ export default function UsersPage() {
     }
   };
 
-  const handleExportList = () => {
-    exportUsersToPDF(users);
-  };
+
 
   const openModal = () => {
     setFormData(INITIAL_FORM_DATA);
+    setSelectedUser(null);
+    setShowModal(true);
+  };
+
+
+  const openEditModal = () => {
+    if (!selectedUser) return;
+    setFormData({
+        ...selectedUser,
+        password: "" // Keep password blank for security/optional update
+    });
     setShowModal(true);
   };
 
@@ -260,13 +305,16 @@ export default function UsersPage() {
             </span>
           </h3>
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={handleExportList}
+
+            <button 
+                type="button"
+                className={`btn btn-sm ${selectedUser ? 'btn-warning' : 'btn-secondary'}`}
+                onClick={openEditModal}
+                disabled={!selectedUser}
             >
-              <i className="fas fa-file-pdf"></i> Export PDF
+                <i className="fas fa-edit"></i> แก้ไข
             </button>
-            <button className="btn btn-primary btn-sm" onClick={openModal}>
+            <button type="button" className="btn btn-primary btn-sm" onClick={openModal}>
               <i className="fas fa-plus"></i> เพิ่มผู้ใช้
             </button>
           </div>
@@ -280,6 +328,7 @@ export default function UsersPage() {
                 initialRows={users}
                 onRowUpdate={handleRowUpdate}
                 onRowDelete={handleDelete}
+                onRowClick={(row) => setSelectedUser(row)}
                 // No column add/delete for this view
               />
             </div>
@@ -308,7 +357,7 @@ export default function UsersPage() {
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title="เพิ่มผู้ใช้ใหม่"
+        title={formData.id ? "แก้ไขข้อมูลผู้ใช้" : "เพิ่มผู้ใช้ใหม่"}
       >
         <UserForm
           formData={formData}
@@ -325,6 +374,8 @@ export default function UsersPage() {
  * UserForm Component
  */
 function UserForm({ formData, onChange, onSubmit, onCancel }) {
+  const isEdit = !!formData.id;
+
   const handleChange = (e) => {
     onChange({ ...formData, [e.target.name]: e.target.value });
   };
@@ -340,6 +391,8 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
           value={formData.username}
           onChange={handleChange}
           required
+          disabled={isEdit} // Username is unique identifier, not usually editable
+          style={isEdit ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed' } : {}}
         />
       </div>
       <div className="form-group">
@@ -354,14 +407,16 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
         />
       </div>
       <div className="form-group">
-        <label htmlFor="form-password">รหัสผ่าน *</label>
+        <label htmlFor="form-password">{isEdit ? 'รหัสผ่านใหม่ (ว่างไว้ถ้าไม่เปลี่ยน)' : 'รหัสผ่าน *'}</label>
         <input
           id="form-password"
           type="password"
           name="password"
           value={formData.password}
           onChange={handleChange}
-          required
+          required={!isEdit}
+          minLength={6}
+          placeholder={isEdit ? "เว้นว่างถ้าไม่ต้องการเปลี่ยนรหัสผ่าน" : "ขั้นต่ำ 6 ตัวอักษร"}
         />
       </div>
       <div className="form-group">

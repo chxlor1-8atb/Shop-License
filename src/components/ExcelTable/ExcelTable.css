@@ -210,7 +210,7 @@
 .cell-content {
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-start !important;
+    justify-content: flex-start;
     /* Default: left align for text */
     padding: 0 !important;
     /* No extra padding, td handles it */
@@ -443,4 +443,33 @@ th.row-number .header-actions {
 
 .help-tip i {
     font-size: 1rem;
+}
+
+/* Custom Component Integration in Table */
+.cell-input-custom {
+    width: 100%;
+    min-width: 100px;
+}
+
+.excel-table td .custom-select-wrapper,
+.excel-table td .datepicker-wrapper {
+    width: 100%;
+    margin: -0.5rem 0;
+    /* Compensation for cell padding if needed, or just let it fit */
+}
+
+.excel-table td .custom-select-trigger,
+.excel-table td .datepicker-trigger {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    height: auto;
+    min-height: 32px;
+    padding: 4px 8px;
+}
+
+/* Ensure dropdowns are above other rows */
+.excel-table td .custom-select-options,
+.excel-table td .datepicker-dropdown {
+    min-width: 200px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }

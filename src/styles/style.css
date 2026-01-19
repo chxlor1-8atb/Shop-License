@@ -218,6 +218,18 @@ body {
     }
 }
 
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 
 /* Typography */
 h1,
@@ -1114,11 +1126,132 @@ select option:checked {
 
 /* ... existing animation code ... */
 
-/* Tables - Glass (Removed duplicate simple table-container definition to avoid conflicts) */
-/* .table-container {
-    overflow-x: auto;
-    border-radius: var(--border-radius);
-} */
+/* Responsive White Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    max-width: 600px;
+    /* Default max-width */
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal.modal-lg {
+    max-width: 800px;
+}
+
+.modal.modal-xl {
+    max-width: 1100px;
+}
+
+.modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--gray-500);
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.modal-close:hover {
+    background: var(--gray-100, #f3f4f6);
+    color: var(--danger);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background: #f9fafb;
+    flex-shrink: 0;
+}
+
+/* Mobile Responsiveness for Modals */
+@media (max-width: 640px) {
+    .modal {
+        max-height: 95vh;
+        margin: 0;
+        border-radius: 12px;
+    }
+
+    .modal-header {
+        padding: 1rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 1rem;
+        flex-direction: column-reverse;
+        gap: 0.5rem;
+    }
+
+    .modal-footer button {
+        width: 100%;
+    }
+
+    /* Adjust grid layouts within modals for mobile */
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
 
 .content-body.page-transitioning {
     opacity: 0;
@@ -1983,47 +2116,163 @@ select option:checked {
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* Search & Filter - Orange Border Design */
-.search-box input,
-.filter-row input:not(.custom-select-search-input),
-.filter-row select:not(.hidden-select) {
-    padding: 0.5rem 0.75rem;
-    background: #FFFFFF;
-    border: 2px solid #D97757;
-    border-radius: 8px;
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    line-height: 1.4;
-    transition: all 0.2s ease;
-    min-width: 180px;
-    max-width: 280px;
-    width: 180px;
-    height: 38px;
-    box-sizing: border-box;
+/* Modal Dark Theme - Premium Dark Style */
+.modal.modal-dark {
+    background: #1a1f2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-family: var(--font-noto-thai), 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Custom select wrapper - allow wider for longer text */
-.filter-row .custom-select-wrapper {
-    padding: 0;
-    background: transparent;
-    border: none;
-    backdrop-filter: none;
-    height: auto;
-    width: auto;
-    min-width: 180px;
-    max-width: 320px;
+.modal.modal-dark .modal-header {
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.search-box input:focus,
-.filter-row input:focus,
-.filter-row select:focus {
-    outline: none;
-    background: rgba(255, 255, 255, 0.85);
-    border-color: var(--primary);
-    box-shadow: var(--shadow-glow);
+.modal.modal-dark .modal-title {
+    color: #fff;
 }
 
-/* Loading */
+.modal.modal-dark .modal-close {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.modal.modal-dark .modal-close:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.modal.modal-dark .modal-body {
+    color: #ccc;
+}
+
+.modal.modal-dark .modal-footer {
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Dark modal form elements */
+.modal.modal-dark .form-label,
+.modal.modal-dark label {
+    color: #ccc;
+    font-weight: 500;
+}
+
+.modal.modal-dark .form-input,
+.modal.modal-dark input[type="text"],
+.modal.modal-dark input[type="password"],
+.modal.modal-dark input[type="email"],
+.modal.modal-dark input[type="tel"],
+.modal.modal-dark textarea,
+.modal.modal-dark select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.modal.modal-dark .form-input::placeholder,
+.modal.modal-dark input::placeholder,
+.modal.modal-dark textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.modal.modal-dark .form-input:focus,
+.modal.modal-dark input:focus,
+.modal.modal-dark textarea:focus,
+.modal.modal-dark select:focus {
+    border-color: #a855f7;
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    /* Slightly lighter on focus */
+}
+
+/* Dark modal checkbox divider */
+.modal.modal-dark .form-divider {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modal.modal-dark .checkbox-label {
+    color: #ddd;
+}
+
+.modal.modal-dark .checkbox-label input[type="checkbox"] {
+    accent-color: #a855f7;
+}
+
+/* Dark modal buttons */
+.modal.modal-dark .btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ccc;
+}
+
+.modal.modal-dark .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.modal.modal-dark .btn-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.modal.modal-dark .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+}
+
+/* Custom Select in Dark Modal */
+.modal.modal-dark .custom-select-trigger {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.modal.modal-dark .custom-select-dropdown {
+    background: #1a1f2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.modal.modal-dark .custom-select-option {
+    color: #ccc;
+}
+
+.modal.modal-dark .custom-select-option:hover {
+    background: rgba(139, 92, 246, 0.1);
+    color: #fff;
+}
+
+/* Search & Filter in Dark Modal */
+.modal.modal-dark .search-box input,
+.modal.modal-dark .filter-row input:not(.custom-select-search-input),
+.modal.modal-dark .filter-row select:not(.hidden-select) {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.modal.modal-dark .search-box input:focus,
+.modal.modal-dark .filter-row input:focus,
+.modal.modal-dark .filter-row select:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #a855f7;
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+}
+
+/* Loading state in dark modal */
+.modal.modal-dark .loading {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.modal.modal-dark .loading i {
+    color: #a855f7;
+}
+
+/* Base Loading */
 .loading {
     display: flex;
     align-items: center;

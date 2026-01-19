@@ -14,7 +14,9 @@ export default function CustomSelect({
     disabled = false,
     searchable = false,
     searchPlaceholder = 'ค้นหา...',
-    id
+    id,
+    autoFocus = false,
+    onBlur
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -33,17 +35,43 @@ export default function CustomSelect({
         : options;
 
     useEffect(() => {
+        if (autoFocus && !disabled) {
+            // If autoFocus is true, focus the wrapper and open the dropdown
+            if (wrapperRef.current) {
+                wrapperRef.current.focus();
+            }
+            setIsOpen(true);
+        }
+    }, [autoFocus, disabled]);
+
+    useEffect(() => {
         function handleClickOutside(event) {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                setIsOpen(false);
-                setSearchTerm('');
+                if (isOpen) {
+                    setIsOpen(false);
+                    setSearchTerm('');
+                    // Trigger onBlur when clicking outside if we were open (interaction finished)
+                     if (onBlur) onBlur(event);
+                }
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [wrapperRef]);
+    }, [wrapperRef, isOpen, onBlur]);
+
+    const handleBlur = (e) => {
+        // Only trigger blur if focus leaves the entire wrapper
+        if (onBlur && wrapperRef.current && !wrapperRef.current.contains(e.relatedTarget)) {
+             // If clicking outside handles this, we might double fire, but usually handleBlur is for Tab navigation
+             // We can check if we are clicking inside in the mousedown handler.
+             // For simplicity, let's allow onBlur to fire.
+             // But we need to close formatting.
+             setIsOpen(false);
+             onBlur(e);
+        }
+    };
 
     // Focus search input when dropdown opens
     useEffect(() => {
@@ -89,6 +117,7 @@ export default function CustomSelect({
             className={`custom-select-wrapper ${className} ${disabled ? 'disabled' : ''} ${searchable ? 'searchable' : ''} ${isOpen ? 'open' : ''}`}
             ref={wrapperRef}
             style={style}
+            onBlur={handleBlur}
         >
             <div
                 id={id}

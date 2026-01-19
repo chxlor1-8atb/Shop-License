@@ -273,6 +273,7 @@ function RecentActivityCard({ activities }) {
                 isOpen={!!selectedLog}
                 onClose={() => setSelectedLog(null)}
                 title="รายละเอียดกิจกรรม"
+                className=""
             >
                 {selectedLog && (
                     <div className="activity-details">

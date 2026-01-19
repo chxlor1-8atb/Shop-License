@@ -24,11 +24,13 @@ export default function ExcelTable({
   onColumnAdd,
   onColumnDelete,
   onColumnUpdate,
+  onRowClick,
   onExport,
   exportLabel,
   exportIcon,
   allowClear = false,
   allowReset = false,
+  defaultRowValues = {},
 }) {
   // Logic & State management extracted to custom hook
   const {
@@ -96,7 +98,7 @@ export default function ExcelTable({
   };
 
   const handleAddRow = () => {
-    const newRow = addRow();
+    const newRow = addRow(null, defaultRowValues);
     if (onRowAdd) onRowAdd(newRow);
   };
 
@@ -262,6 +264,7 @@ export default function ExcelTable({
                 onCellKeyDown={handleCellKeyDown}
                 onDeleteRow={handleDeleteRow}
                 onContextMenu={setContextMenu}
+                onRowClick={onRowClick}
                 onAddColumn={onColumnAdd} // Pass to conditionally render empty cell
               />
             ))}
@@ -273,7 +276,7 @@ export default function ExcelTable({
         contextMenu={contextMenu}
         onClose={() => setContextMenu(null)}
         onAddRow={(id) => {
-          const newRow = addRow(id);
+          const newRow = addRow(id, defaultRowValues);
           if (onRowAdd) onRowAdd(newRow);
         }}
         onDuplicateRow={(rowId) => {

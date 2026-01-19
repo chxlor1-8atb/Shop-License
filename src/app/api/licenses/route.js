@@ -14,6 +14,7 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
+        const shop_id = searchParams.get('shop_id') || '';
         const search = searchParams.get('search') || '';
         const license_type = searchParams.get('license_type') || '';
         const status = searchParams.get('status') || '';
@@ -35,6 +36,12 @@ export async function GET(request) {
         if (search) {
             whereClauses.push(`(s.shop_name ILIKE $${paramIndex} OR l.license_number ILIKE $${paramIndex})`);
             params.push(`%${search}%`);
+            paramIndex++;
+        }
+
+        if (shop_id) {
+            whereClauses.push(`l.shop_id = $${paramIndex}`);
+            params.push(shop_id);
             paramIndex++;
         }
 

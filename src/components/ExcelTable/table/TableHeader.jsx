@@ -51,7 +51,7 @@ export function TableHeader({
             <div 
               className="header-content"
               style={{
-                justifyContent: 'center'
+                justifyContent: col.align === 'center' ? 'center' : col.align === 'right' ? 'flex-end' : 'flex-start'
               }}
             >
               {editingHeader === col.id ? (

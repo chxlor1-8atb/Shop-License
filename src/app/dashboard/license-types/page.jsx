@@ -38,7 +38,7 @@ const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
 const STANDARD_COLUMNS = [
   { id: "name", name: "ชื่อประเภท", width: 250, align: "left" },
 // Price column removed as requested
-  { id: "description", name: "คำอธิบาย", width: 420, align: "left" },
+  { id: "description", name: "ข้อมูลอื่นๆ", width: 420, align: "left" },
   {
     id: "validity_days",
     name: "อายุ (วัน)",
