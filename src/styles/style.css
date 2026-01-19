@@ -339,7 +339,8 @@ select option:checked {
 
 .form-group select,
 .form-input,
-.form-group input {
+.form-group input,
+.form-group textarea {
     width: 100%;
     padding: 0.875rem 1rem;
     background: #FFFFFF;
@@ -3164,7 +3165,14 @@ body:has(.sidebar.show) .mobile-toggle i {
     margin-bottom: 1.25rem;
 }
 
-.form-group label {
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group label,
+.form-label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
@@ -3172,32 +3180,11 @@ body:has(.sidebar.show) .mobile-toggle i {
     font-size: 0.875rem;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 0.625rem 0.875rem;
-    border: 1px solid var(--glass-border);
-    border-radius: var(--border-radius);
-    background: rgba(255, 255, 255, 0.5);
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    transition: all var(--transition);
+.required::after {
+    content: " *";
+    color: var(--danger);
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.1);
-}
-
-.form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-}
 
 /* ========================================
    Pagination Styles

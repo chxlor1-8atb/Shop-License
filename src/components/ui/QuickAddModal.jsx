@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import CustomSelect from "./CustomSelect";
 import DatePicker from "./DatePicker";
+import Modal from "./Modal";
 import "./QuickAddModal.css";
 
 const DEFAULT_PREFILL = {};
@@ -87,130 +88,88 @@ export default function QuickAddModal({
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div className="modal-overlay show" onClick={onClose}>
-      <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>
-            <i className={`fas ${type === "shop" ? "fa-store" : "fa-file-alt"}`}></i>
-            {type === "shop" ? " สร้างร้านค้าใหม่" : " สร้างใบอนุญาตใหม่"}
-          </h3>
-          <button className="modal-close" onClick={onClose}>
-            <i className="fas fa-times"></i>
-          </button>
-        </div>
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      title={
+        <>
+          <i className={`fas ${type === "shop" ? "fa-store" : "fa-file-alt"}`} style={{ marginRight: '0.75rem' }}></i>
+          {type === "shop" ? " สร้างร้านค้าใหม่" : " สร้างใบอนุญาตใหม่"}
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit}>
+        {error && (
+          <div className="error-message">
+            <i className="fas fa-exclamation-circle"></i> {error}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            {error && (
-              <div className="error-message">
-                <i className="fas fa-exclamation-circle"></i> {error}
+        {type === "shop" ? (
+          // Shop Form
+          <>
+            <div className="form-group">
+              <label className="form-label required">ชื่อร้านค้า</label>
+              <input
+                type="text"
+                className="form-input"
+                value={formData.shop_name || ""}
+                onChange={(e) => handleChange("shop_name", e.target.value)}
+                placeholder="กรอกชื่อร้านค้า"
+                required
+                autoFocus
+              />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">ชื่อเจ้าของ</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.owner_name || ""}
+                  onChange={(e) => handleChange("owner_name", e.target.value)}
+                  placeholder="ชื่อเจ้าของร้าน"
+                />
               </div>
-            )}
+              <div className="form-group">
+                <label className="form-label">เบอร์โทรศัพท์</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.phone || ""}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                  placeholder="0xx-xxx-xxxx"
+                />
+              </div>
+            </div>
 
-            {type === "shop" ? (
-              // Shop Form
-              <>
-                <div className="form-group">
-                  <label className="form-label required">ชื่อร้านค้า</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.shop_name || ""}
-                    onChange={(e) => handleChange("shop_name", e.target.value)}
-                    placeholder="กรอกชื่อร้านค้า"
-                    required
-                    autoFocus
-                  />
-                </div>
+            <div className="form-group">
+              <label className="form-label">ที่อยู่</label>
+              <textarea
+                className="form-input"
+                value={formData.address || ""}
+                onChange={(e) => handleChange("address", e.target.value)}
+                placeholder="ที่อยู่ร้านค้า"
+                rows={2}
+              />
+            </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">ชื่อเจ้าของ</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.owner_name || ""}
-                      onChange={(e) => handleChange("owner_name", e.target.value)}
-                      placeholder="ชื่อเจ้าของร้าน"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">เบอร์โทรศัพท์</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.phone || ""}
-                      onChange={(e) => handleChange("phone", e.target.value)}
-                      placeholder="0xx-xxx-xxxx"
-                    />
-                  </div>
-                </div>
+            <div className="form-divider">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={formData.create_license || false}
+                  onChange={(e) => handleChange("create_license", e.target.checked)}
+                />
+                <span>สร้างใบอนุญาตพร้อมกัน</span>
+              </label>
+            </div>
 
-                <div className="form-group">
-                  <label className="form-label">ที่อยู่</label>
-                  <textarea
-                    className="form-input"
-                    value={formData.address || ""}
-                    onChange={(e) => handleChange("address", e.target.value)}
-                    placeholder="ที่อยู่ร้านค้า"
-                    rows={2}
-                  />
-                </div>
-
-                {/* Option to create license too */}
-                <div className="form-divider">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={formData.create_license || false}
-                      onChange={(e) => handleChange("create_license", e.target.checked)}
-                    />
-                    <span>สร้างใบอนุญาตพร้อมกัน</span>
-                  </label>
-                </div>
-
-                {formData.create_license && (
-                  <div className="nested-form">
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label className="form-label required">ประเภทใบอนุญาต</label>
-                        <CustomSelect
-                          value={formData.license_type_id || ""}
-                          onChange={(e) => handleChange("license_type_id", e.target.value)}
-                          options={[{ value: "", label: "-- เลือกประเภท --" }, ...typeOptions]}
-                          searchable={true}
-                          searchPlaceholder="🔍 ค้นหาประเภท..."
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label required">เลขที่ใบอนุญาต</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={formData.license_number || ""}
-                          onChange={(e) => handleChange("license_number", e.target.value)}
-                          placeholder="เลขที่ใบอนุญาต"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              // License Form
-              <>
-                <div className="form-group">
-                  <label className="form-label required">ร้านค้า</label>
-                  <CustomSelect
-                    value={formData.shop_id || ""}
-                    onChange={(e) => handleChange("shop_id", e.target.value)}
-                    options={[{ value: "", label: "-- เลือกร้านค้า --" }, ...shopOptions]}
-                    searchable={true}
-                    searchPlaceholder="🔍 ค้นหาร้านค้า..."
-                  />
-                </div>
-
+            {formData.create_license && (
+              <div className="nested-form">
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label required">ประเภทใบอนุญาต</label>
@@ -230,63 +189,110 @@ export default function QuickAddModal({
                       value={formData.license_number || ""}
                       onChange={(e) => handleChange("license_number", e.target.value)}
                       placeholder="เลขที่ใบอนุญาต"
-                      required
                     />
                   </div>
                 </div>
+              </div>
+            )}
+          </>
+        ) : (
+          // License Form
+          <>
+            <div className="form-group">
+              <label className="form-label required">ร้านค้า</label>
+              <CustomSelect
+                value={formData.shop_id || ""}
+                onChange={(e) => handleChange("shop_id", e.target.value)}
+                options={[{ value: "", label: "-- เลือกร้านค้า --" }, ...shopOptions]}
+                searchable={true}
+                searchPlaceholder="🔍 ค้นหาร้านค้า..."
+              />
+            </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">วันที่ออก</label>
-                    <DatePicker
-                      value={formData.issue_date || ""}
-                      onChange={(e) => handleChange("issue_date", e.target.value)}
-                      placeholder="เลือกวันที่ออก"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">วันหมดอายุ</label>
-                    <DatePicker
-                      value={formData.expiry_date || ""}
-                      onChange={(e) => handleChange("expiry_date", e.target.value)}
-                      placeholder="เลือกวันหมดอายุ"
-                    />
-                  </div>
-                </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label required">ประเภทใบอนุญาต</label>
+                <CustomSelect
+                  value={formData.license_type_id || ""}
+                  onChange={(e) => handleChange("license_type_id", e.target.value)}
+                  options={[{ value: "", label: "-- เลือกประเภท --" }, ...typeOptions]}
+                  searchable={true}
+                  searchPlaceholder="🔍 ค้นหาประเภท..."
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label required">เลขที่ใบอนุญาต</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.license_number || ""}
+                  onChange={(e) => handleChange("license_number", e.target.value)}
+                  placeholder="เลขที่ใบอนุญาต"
+                  required
+                />
+              </div>
+            </div>
 
-                <div className="form-group">
-                  <label className="form-label">หมายเหตุ</label>
-                  <textarea
-                    className="form-input"
-                    value={formData.notes || ""}
-                    onChange={(e) => handleChange("notes", e.target.value)}
-                    placeholder="หมายเหตุเพิ่มเติม"
-                    rows={2}
-                  />
-                </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">วันที่ออก</label>
+                <DatePicker
+                  value={formData.issue_date || ""}
+                  onChange={(e) => handleChange("issue_date", e.target.value)}
+                  placeholder="เลือกวันที่ออก"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">วันหมดอายุ</label>
+                <DatePicker
+                  value={formData.expiry_date || ""}
+                  onChange={(e) => handleChange("expiry_date", e.target.value)}
+                  placeholder="เลือกวันหมดอายุ"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">หมายเหตุ</label>
+              <textarea
+                className="form-input"
+                value={formData.notes || ""}
+                onChange={(e) => handleChange("notes", e.target.value)}
+                placeholder="หมายเหตุเพิ่มเติม"
+                rows={2}
+              />
+            </div>
+          </>
+        )}
+
+        <div
+          className="modal-footer"
+          style={{
+            marginTop: "1.5rem",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "0.5rem",
+            background: "none",
+            borderTop: "none",
+            padding: 0
+          }}
+        >
+          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
+            ยกเลิก
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? (
+              <>
+                <i className="fas fa-spinner fa-spin"></i> กำลังบันทึก...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-save"></i> บันทึก
               </>
             )}
-          </div>
-
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
-              ยกเลิก
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? (
-                <>
-                  <i className="fas fa-spinner fa-spin"></i> กำลังบันทึก...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-save"></i> บันทึก
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>,
-    document.body
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

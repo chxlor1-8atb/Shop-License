@@ -429,7 +429,7 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
   return (
     <form onSubmit={onSubmit}>
       <div className="form-group">
-        <label htmlFor="form-username">ชื่อผู้ใช้ *</label>
+        <label htmlFor="form-username" className="form-label required">ชื่อผู้ใช้</label>
         <input
           id="form-username"
           type="text"
@@ -439,10 +439,11 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
           required
           disabled={isEdit} // Username is unique identifier, not usually editable
           style={isEdit ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed' } : {}}
+          className="form-input"
         />
       </div>
       <div className="form-group">
-        <label htmlFor="form-fullname">ชื่อ-นามสกุล *</label>
+        <label htmlFor="form-fullname" className="form-label required">ชื่อ-นามสกุล</label>
         <input
           id="form-fullname"
           type="text"
@@ -450,10 +451,11 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
           value={formData.full_name}
           onChange={handleChange}
           required
+          className="form-input"
         />
       </div>
       <div className="form-group">
-        <label htmlFor="form-password">{isEdit ? 'รหัสผ่านใหม่ (ว่างไว้ถ้าไม่เปลี่ยน)' : 'รหัสผ่าน *'}</label>
+        <label htmlFor="form-password" className="form-label required">{isEdit ? 'รหัสผ่านใหม่ (ว่างไว้ถ้าไม่เปลี่ยน)' : 'รหัสผ่าน'}</label>
         <input
           id="form-password"
           type="password"
@@ -463,10 +465,11 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
           required={!isEdit}
           minLength={6}
           placeholder={isEdit ? "เว้นว่างถ้าไม่ต้องการเปลี่ยนรหัสผ่าน" : "ขั้นต่ำ 6 ตัวอักษร"}
+          className="form-input"
         />
       </div>
       <div className="form-group">
-        <label htmlFor="form-confirm-password">{isEdit ? 'ยืนยันรหัสผ่านใหม่' : 'ยืนยันรหัสผ่าน *'}</label>
+        <label htmlFor="form-confirm-password" className="form-label required">{isEdit ? 'ยืนยันรหัสผ่านใหม่' : 'ยืนยันรหัสผ่าน'}</label>
         <input
           id="form-confirm-password"
           type="password"
@@ -475,10 +478,11 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
           onChange={handleChange}
           required={!isEdit || !!formData.password}
           placeholder={isEdit ? "ยืนยันรหัสผ่านใหม่" : "ยืนยันรหัสผ่านอีกครั้ง"}
+          className="form-input"
         />
       </div>
       <div className="form-group">
-        <label htmlFor="form-role">บทบาท *</label>
+        <label htmlFor="form-role" className="form-label required">บทบาท</label>
         <CustomSelect
           id="form-role"
           name="role"
