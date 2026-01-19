@@ -63,7 +63,7 @@ export default function Modal({
 
     const modalContent = (
         <div
-            className="modal-overlay"
+            className="modal-overlay show"
             style={{ display: 'flex', zIndex: 9999 }}
             onClick={handleBackdropClick}
             role="dialog"
