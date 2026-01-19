@@ -328,7 +328,14 @@ export default function UsersPage() {
                 initialRows={users}
                 onRowUpdate={handleRowUpdate}
                 onRowDelete={handleDelete}
-                onRowClick={(row) => setSelectedUser(row)}
+                onRowClick={(row) => {
+                  setSelectedUser(row);
+                  setFormData({
+                    ...row,
+                    password: "" // Keep password blank for security
+                  });
+                  setShowModal(true);
+                }}
                 // No column add/delete for this view
               />
             </div>
