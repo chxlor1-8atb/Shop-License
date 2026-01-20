@@ -552,13 +552,8 @@ export default function LicensesPage() {
             คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข | คลิกขวาเพื่อเปิดเมนู
           </span>
         </h3>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowQuickAddLicense(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <i className="fas fa-plus"></i>
-          เพิ่มใบอนุญาตง่ายๆ
+        <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowQuickAddLicense(true)}>
+          <i className="fas fa-plus"></i> เพิ่มใบอนุญาต
         </button>
       </div>
       <div className="card-body">

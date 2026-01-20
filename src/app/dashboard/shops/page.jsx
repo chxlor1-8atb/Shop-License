@@ -518,6 +518,11 @@ export default function ShopsPage() {
             คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข | คลิกขวาเพื่อเปิดเมนู
           </span>
         </h3>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowQuickAdd(true)}>
+            <i className="fas fa-plus"></i> สร้างร้านค้าใหม่
+          </button>
+        </div>
       </div>
 
       <div className="card-body">
@@ -534,25 +539,6 @@ export default function ShopsPage() {
               placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร..."
             />
           </div>
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowQuickAdd(true)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1.25rem',
-              borderRadius: '8px',
-              fontWeight: 500,
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
-          >
-            <i className="fas fa-plus"></i> สร้างร้านค้าใหม่
-          </button>
         </div>
 
         {!loading ? (
