@@ -96,16 +96,104 @@ export default function DashboardPage() {
  */
 function StatsGrid({ stats }) {
     return (
-        <div className="stats-grid">
-            {STAT_CARDS.map(card => (
-                <StatCard
-                    key={card.key}
-                    value={stats[card.key]}
-                    label={card.suffix ? `${card.label} (${stats[card.suffix]} วัน)` : card.label}
-                    icon={card.icon}
-                    variant={card.variant}
-                />
-            ))}
+        <div className="card mb-3" style={{ border: 'none', boxShadow: 'var(--shadow-sm)' }}>
+            <div className="card-body p-2">
+                <div className="dashboard-stats-row">
+                    {STAT_CARDS.map((card, index) => (
+                        <div key={card.key} className="stat-item">
+                            <div className={`stat-icon ${card.variant}`}>
+                                <i className={card.icon}></i>
+                            </div>
+                            <div className="stat-content">
+                                <div className="stat-value text-dark">{stats[card.key]}</div>
+                                <div className="stat-label">
+                                    {card.suffix ? `${card.label} (${stats[card.suffix]} วัน)` : card.label}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <style jsx>{`
+                .dashboard-stats-row {
+                    display: grid;
+                    grid-template-columns: repeat(5, 1fr);
+                    gap: 1rem;
+                }
+                @media (max-width: 992px) {
+                    .dashboard-stats-row {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+                @media (max-width: 576px) {
+                    .dashboard-stats-row {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                .stat-item {
+                    padding: 0.5rem 1rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                    position: relative;
+                }
+                .stat-item:not(:last-child)::after {
+                    content: '';
+                    position: absolute;
+                    right: -0.5rem;
+                    top: 20%;
+                    height: 60%;
+                    width: 1px;
+                    background-color: var(--border-color);
+                    opacity: 0.5;
+                }
+                @media (max-width: 992px) {
+                    .stat-item:not(:last-child)::after {
+                        display: none;
+                    }
+                    .stat-item {
+                        background-color: #f9fafb;
+                        border-radius: 8px;
+                        padding: 1rem;
+                    }
+                }
+                .stat-icon {
+                    width: 40px;
+                    height: 40px;
+                    min-width: 40px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.1rem;
+                }
+                .stat-content {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    overflow: hidden;
+                }
+                .stat-value {
+                    font-size: 1.125rem;
+                    font-weight: 700;
+                    line-height: 1.2;
+                    color: var(--text-primary);
+                }
+                .stat-label {
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                
+                /* Icon Colors - Based on existing variants */
+                .stat-icon.primary { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+                .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+                .stat-icon.danger  { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+                .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+                .stat-icon.info    { background: rgba(79, 70, 229, 0.1); color: #4f46e5; }
+            `}</style>
         </div>
     );
 }
