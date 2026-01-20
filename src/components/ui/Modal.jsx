@@ -7,8 +7,8 @@ import { createPortal } from 'react-dom';
  * Modal Component
  * Reusable modal wrapper with consistent styling
  * Handles:
- * - Backdrop click to close
- * - Escape key to close
+ * - Backdrop click to close (optional, disabled by default)
+ * - Escape key to close (optional, disabled by default)
  * - Focus trap (accessibility)
  * - React Portal (renders outside parent DOM hierarchy)
  * 
@@ -17,6 +17,8 @@ import { createPortal } from 'react-dom';
  * @param {string} title - Modal title
  * @param {ReactNode} children - Modal content
  * @param {string} className - Additional CSS classes
+ * @param {boolean} closeOnBackdropClick - Allow closing by clicking backdrop (default: false)
+ * @param {boolean} closeOnEscape - Allow closing by pressing Escape (default: false)
  */
 export default function Modal({
     isOpen,
@@ -25,7 +27,9 @@ export default function Modal({
     children,
     className = '',
     showCloseButton = true,
-    size = '' // 'lg' for large, 'xl' for extra large
+    size = '', // 'lg' for large, 'xl' for extra large
+    closeOnBackdropClick = false, // Disabled by default - only close via X button
+    closeOnEscape = false // Disabled by default
 }) {
     const [mounted, setMounted] = useState(false);
 
@@ -34,12 +38,12 @@ export default function Modal({
         return () => setMounted(false);
     }, []);
 
-    // Handle escape key
+    // Handle escape key (only if enabled)
     const handleKeyDown = useCallback((e) => {
-        if (e.key === 'Escape') {
+        if (closeOnEscape && e.key === 'Escape') {
             onClose();
         }
-    }, [onClose]);
+    }, [onClose, closeOnEscape]);
 
     useEffect(() => {
         if (isOpen) {
@@ -56,7 +60,8 @@ export default function Modal({
     if (!mounted || !isOpen) return null;
 
     const handleBackdropClick = (e) => {
-        if (e.target === e.currentTarget) {
+        // Only close on backdrop click if enabled
+        if (closeOnBackdropClick && e.target === e.currentTarget) {
             onClose();
         }
     };
@@ -96,3 +101,4 @@ export default function Modal({
 
     return createPortal(modalContent, document.body);
 }
+

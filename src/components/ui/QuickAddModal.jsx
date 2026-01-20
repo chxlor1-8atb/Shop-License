@@ -92,7 +92,7 @@ export default function QuickAddModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="lg"
+      size="md"
       title={
         <>
           <i className={`fas ${type === "shop" ? "fa-store" : "fa-file-alt"}`} style={{ marginRight: '0.75rem' }}></i>
