@@ -136,10 +136,24 @@ export default function ExpiringPage() {
         return filteredLicenses.slice((page - 1) * limit, page * limit);
     }, [filteredLicenses, page, limit]);
 
-    // Count expired for button
-    const expiredCount = useMemo(() => {
-        return allLicenses.filter(l => parseInt(l.days_until_expiry) < 0).length;
+    // Count stats for cards
+    const stats = useMemo(() => {
+        const expired = allLicenses.filter(l => parseInt(l.days_until_expiry) < 0).length;
+        const critical = allLicenses.filter(l => {
+            const days = parseInt(l.days_until_expiry);
+            return days >= 0 && days <= EXPIRY_THRESHOLDS.CRITICAL;
+        }).length;
+        const warning = allLicenses.filter(l => {
+            const days = parseInt(l.days_until_expiry);
+            return days > EXPIRY_THRESHOLDS.CRITICAL && days <= EXPIRY_THRESHOLDS.WARNING;
+        }).length;
+        const info = allLicenses.filter(l => parseInt(l.days_until_expiry) > EXPIRY_THRESHOLDS.WARNING).length;
+        
+        return { expired, critical, warning, info, total: allLicenses.length };
     }, [allLicenses]);
+
+    // Count expired for button
+    const expiredCount = stats.expired;
 
     // Reset to page 1 when filters change
     useEffect(() => {
@@ -229,7 +243,9 @@ export default function ExpiringPage() {
     ];
 
     return (
-        <div className="card">
+        <>
+            <StatsSection stats={stats} onFilterClick={handleStatusFilterToggle} currentFilter={statusFilter} />
+            <div className="card">
             <div className="card-header">
                 <h3 className="card-title">
                     <i className="fas fa-bell"></i> ใบอนุญาตใกล้หมดอายุ
@@ -242,7 +258,7 @@ export default function ExpiringPage() {
                         alignItems: 'center',
                         gap: '0.5rem'
                     }}>
-                        <i className="fas fa-info-circle" style={{ color: '#3b82f6' }}></i>
+                        <i className="fas fa-info-circle"></i>
                         ตรวจสอบรายการที่ต้องดำเนินการต่ออายุ
                     </span>
                 </h3>
@@ -260,7 +276,7 @@ export default function ExpiringPage() {
                             value={search}
                             onChange={setSearch}
                             placeholder="ค้นหาร้านค้า, เลขที่..."
-                            className="w-full"
+                            className="w-full form-input"
                         />
                     </div>
 
@@ -350,9 +366,7 @@ export default function ExpiringPage() {
                                     <th>เลขที่</th>
                                     <th className="text-center">หมดอายุ</th>
                                     <th className="text-center">สถานะ</th>
-                                    <th className="row-actions">
-                                        <i className="fas fa-trash-alt" style={{ color: 'var(--text-muted)' }}></i>
-                                    </th>
+                                    <th className="row-actions">ลบ</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -421,6 +435,7 @@ export default function ExpiringPage() {
                 }
             `}</style>
         </div>
+        </>
     );
 }
 
@@ -528,4 +543,151 @@ function getExpiryStatus(daysLeft) {
         icon: 'fas fa-clock',
         text: `เหลือ ${daysLeft} วัน`
     };
+}
+
+/**
+ * StatsSection Component - แสดง stat cards ด้านบน ใช้สีเดียวกับ badge
+ */
+function StatsSection({ stats, onFilterClick, currentFilter }) {
+    const statCards = [
+        {
+            key: 'expired',
+            icon: 'fas fa-times-circle',
+            value: stats.expired,
+            label: 'หมดอายุแล้ว',
+            colorClass: 'expired'
+        },
+        {
+            key: 'critical',
+            icon: 'fas fa-exclamation-triangle',
+            value: stats.critical,
+            label: '≤ 7 วัน',
+            colorClass: 'critical'
+        },
+        {
+            key: 'warning',
+            icon: 'fas fa-exclamation-circle',
+            value: stats.warning,
+            label: '8-14 วัน',
+            colorClass: 'warning'
+        },
+        {
+            key: 'info',
+            icon: 'fas fa-clock',
+            value: stats.info,
+            label: '> 14 วัน',
+            colorClass: 'info'
+        }
+    ];
+
+    return (
+        <div className="card mb-3" style={{ border: 'none', boxShadow: 'var(--shadow-sm)' }}>
+            <div className="card-body p-2">
+                <div className="expiring-stats-row">
+                    {statCards.map((card, index) => (
+                        <div
+                            key={card.key}
+                            className={`stat-item ${currentFilter === card.key ? 'active' : ''}`}
+                            onClick={() => onFilterClick(card.key)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <div className={`stat-icon ${card.colorClass}`}>
+                                <i className={card.icon}></i>
+                            </div>
+                            <div className="stat-content">
+                                <div className="stat-value">{card.value}</div>
+                                <div className="stat-label">{card.label}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <style jsx>{`
+                .expiring-stats-row {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 1rem;
+                }
+                @media (max-width: 768px) {
+                    .expiring-stats-row {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                .stat-item {
+                    padding: 0.5rem 1rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                    border-radius: 8px;
+                    transition: all 0.2s ease;
+                    position: relative;
+                }
+                .stat-item:not(:last-child)::after {
+                    content: '';
+                    position: absolute;
+                    right: -0.5rem;
+                    top: 20%;
+                    height: 60%;
+                    width: 1px;
+                    background-color: var(--border-color);
+                    opacity: 0.5;
+                }
+                @media (max-width: 768px) {
+                    .stat-item:not(:last-child)::after {
+                        display: none;
+                    }
+                }
+                .stat-item:hover {
+                    background-color: rgba(0,0,0,0.02);
+                }
+                .stat-item.active {
+                    background-color: rgba(255, 255, 255, 1);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                    transform: scale(1.02);
+                }
+                .stat-icon {
+                    width: 40px;
+                    height: 40px;
+                    min-width: 40px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.1rem;
+                }
+                .stat-content {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                }
+                .stat-value {
+                    font-size: 1.125rem;
+                    font-weight: 700;
+                    line-height: 1.2;
+                    color: var(--text-primary);
+                }
+                .stat-label {
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    white-space: nowrap;
+                }
+                .stat-icon.expired {
+                    background: rgba(220, 38, 38, 0.1);
+                    color: #dc2626;
+                }
+                .stat-icon.critical {
+                    background: rgba(234, 88, 12, 0.1);
+                    color: #ea580c;
+                }
+                .stat-icon.warning {
+                    background: rgba(217, 119, 6, 0.1);
+                    color: #d97706;
+                }
+                .stat-icon.info {
+                    background: rgba(37, 99, 235, 0.1);
+                    color: #2563eb;
+                }
+            `}</style>
+        </div>
+    );
 }
