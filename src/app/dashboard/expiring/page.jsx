@@ -582,7 +582,7 @@ function StatsSection({ stats, onFilterClick, currentFilter }) {
 
     return (
         <div className="card mb-3" style={{ border: 'none', boxShadow: 'var(--shadow-sm)' }}>
-            <div className="card-body p-2">
+            <div className="card-body" style={{ padding: '0.5rem' }}>
                 <div className="expiring-stats-row">
                     {statCards.map((card, index) => (
                         <div
@@ -606,7 +606,7 @@ function StatsSection({ stats, onFilterClick, currentFilter }) {
                 .expiring-stats-row {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
-                    gap: 1rem;
+                    gap: 0.5rem;
                 }
                 @media (max-width: 768px) {
                     .expiring-stats-row {
@@ -614,10 +614,10 @@ function StatsSection({ stats, onFilterClick, currentFilter }) {
                     }
                 }
                 .stat-item {
-                    padding: 0.5rem 1rem;
+                    padding: 0.25rem 0.5rem;
                     display: flex;
                     align-items: center;
-                    gap: 1rem;
+                    gap: 0.75rem;
                     border-radius: 8px;
                     transition: all 0.2s ease;
                     position: relative;
@@ -625,7 +625,7 @@ function StatsSection({ stats, onFilterClick, currentFilter }) {
                 .stat-item:not(:last-child)::after {
                     content: '';
                     position: absolute;
-                    right: -0.5rem;
+                    right: -0.25rem;
                     top: 20%;
                     height: 60%;
                     width: 1px;

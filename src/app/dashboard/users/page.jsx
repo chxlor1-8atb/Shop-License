@@ -516,35 +516,102 @@ function UserForm({ formData, onChange, onSubmit, onCancel }) {
  * StatsSection Component
  */
 function StatsSection({ stats }) {
+  const statItems = [
+    { label: 'ผู้ใช้ทั้งหมด', value: stats.totalUsers || 0, icon: 'fas fa-users', colorClass: 'primary' },
+    { label: 'ผู้ดูแลระบบ', value: stats.totalAdmins || 0, icon: 'fas fa-user-shield', colorClass: 'success' },
+    { label: 'ผู้ใช้ทั่วไป', value: stats.totalRegularUsers || 0, icon: 'fas fa-user', colorClass: 'info' }
+  ];
+
   return (
-    <div className="stats-grid">
-      <div className="stat-card">
-        <div className="stat-icon primary">
-          <i className="fas fa-users"></i>
-        </div>
-        <div className="stat-content">
-          <div className="stat-value">{stats.totalUsers || 0}</div>
-          <div className="stat-label">ผู้ใช้ทั้งหมด</div>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon success">
-            <i className="fas fa-user-shield"></i>
-        </div>
-        <div className="stat-content">
-          <div className="stat-value">{stats.totalAdmins || 0}</div>
-          <div className="stat-label">ผู้ดูแลระบบ</div>
+    <div className="card mb-3" style={{ border: 'none', boxShadow: 'var(--shadow-sm)' }}>
+      <div className="card-body" style={{ padding: '0.5rem' }}>
+        <div className="users-stats-row">
+          {statItems.map((item, index) => (
+            <div key={index} className="stat-item">
+              <div className={`stat-icon ${item.colorClass}`}>
+                <i className={item.icon}></i>
+              </div>
+              <div className="stat-content">
+                <div className="stat-value text-dark">{item.value}</div>
+                <div className="stat-label">{item.label}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-      <div className="stat-card">
-        <div className="stat-icon info">
-            <i className="fas fa-user"></i>
-        </div>
-        <div className="stat-content">
-          <div className="stat-value">{stats.totalRegularUsers || 0}</div>
-          <div className="stat-label">ผู้ใช้ทั่วไป</div>
-        </div>
-      </div>
+      <style jsx>{`
+        .users-stats-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 0.5rem;
+        }
+        @media (max-width: 768px) {
+          .users-stats-row {
+            grid-template-columns: repeat(1, 1fr);
+          }
+        }
+        .stat-item {
+          padding: 0.25rem 0.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          position: relative;
+        }
+        .stat-item:not(:last-child)::after {
+          content: '';
+          position: absolute;
+          right: -0.25rem;
+          top: 20%;
+          height: 60%;
+          width: 1px;
+          background-color: var(--border-color);
+          opacity: 0.5;
+        }
+        @media (max-width: 768px) {
+          .stat-item:not(:last-child)::after {
+            display: none;
+          }
+          .stat-item {
+            background-color: #f9fafb;
+            border-radius: 6px;
+            padding: 0.75rem;
+          }
+        }
+        .stat-icon {
+          width: 36px;
+          height: 36px;
+          min-width: 36px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1rem;
+        }
+        /* Icon Colors */
+        .stat-icon.primary { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .stat-icon.info    { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+        .stat-content {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          overflow: hidden;
+        }
+        .stat-value {
+          font-size: 1rem;
+          font-weight: 700;
+          line-height: 1.2;
+          color: var(--text-primary);
+        }
+        .stat-label {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      `}</style>
     </div>
   );
 }

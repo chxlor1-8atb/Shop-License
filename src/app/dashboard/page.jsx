@@ -97,7 +97,7 @@ export default function DashboardPage() {
 function StatsGrid({ stats }) {
     return (
         <div className="card mb-3" style={{ border: 'none', boxShadow: 'var(--shadow-sm)' }}>
-            <div className="card-body p-2">
+            <div className="card-body" style={{ padding: '0.5rem' }}>
                 <div className="dashboard-stats-row">
                     {STAT_CARDS.map((card, index) => (
                         <div key={card.key} className="stat-item">
@@ -118,7 +118,7 @@ function StatsGrid({ stats }) {
                 .dashboard-stats-row {
                     display: grid;
                     grid-template-columns: repeat(5, 1fr);
-                    gap: 1rem;
+                    gap: 0.5rem;
                 }
                 @media (max-width: 992px) {
                     .dashboard-stats-row {
@@ -131,16 +131,16 @@ function StatsGrid({ stats }) {
                     }
                 }
                 .stat-item {
-                    padding: 0.5rem 1rem;
+                    padding: 0.25rem 0.5rem;
                     display: flex;
                     align-items: center;
-                    gap: 1rem;
+                    gap: 0.75rem;
                     position: relative;
                 }
                 .stat-item:not(:last-child)::after {
                     content: '';
                     position: absolute;
-                    right: -0.5rem;
+                    right: -0.25rem;
                     top: 20%;
                     height: 60%;
                     width: 1px;
@@ -153,19 +153,19 @@ function StatsGrid({ stats }) {
                     }
                     .stat-item {
                         background-color: #f9fafb;
-                        border-radius: 8px;
-                        padding: 1rem;
+                        border-radius: 6px;
+                        padding: 0.75rem;
                     }
                 }
                 .stat-icon {
-                    width: 40px;
-                    height: 40px;
-                    min-width: 40px;
-                    border-radius: 10px;
+                    width: 36px;
+                    height: 36px;
+                    min-width: 36px;
+                    border-radius: 8px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 1.1rem;
+                    font-size: 1rem;
                 }
                 .stat-content {
                     display: flex;
@@ -174,13 +174,13 @@ function StatsGrid({ stats }) {
                     overflow: hidden;
                 }
                 .stat-value {
-                    font-size: 1.125rem;
+                    font-size: 1rem;
                     font-weight: 700;
                     line-height: 1.2;
                     color: var(--text-primary);
                 }
                 .stat-label {
-                    font-size: 0.8rem;
+                    font-size: 0.75rem;
                     color: var(--text-muted);
                     white-space: nowrap;
                     overflow: hidden;
