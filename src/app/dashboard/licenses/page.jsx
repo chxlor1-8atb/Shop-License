@@ -89,6 +89,7 @@ export default function LicensesPage() {
         width: 200,
         type: "select",
         options: enhancedShopOptions,
+        display_order: 1,
       },
       {
         id: "license_type_id",
@@ -96,14 +97,21 @@ export default function LicensesPage() {
         width: 200,
         type: "select",
         options: typeOptions,
+        display_order: 2,
       },
-      { id: "license_number", name: "เลขที่ใบอนุญาต", width: 200 },
+      { 
+        id: "license_number", 
+        name: "เลขที่ใบอนุญาต", 
+        width: 200,
+        display_order: 3,
+      },
       {
         id: "issue_date",
         name: "วันที่ออก",
         width: 150,
         type: "date",
         align: "center",
+        display_order: 4,
       },
       {
         id: "expiry_date",
@@ -111,6 +119,7 @@ export default function LicensesPage() {
         width: 150,
         type: "date",
         align: "center",
+        display_order: 5,
       },
       {
         id: "status",
@@ -120,8 +129,14 @@ export default function LicensesPage() {
         type: "select",
         options: STATUS_OPTIONS,
         isBadge: true,
+        display_order: 6,
       },
-      { id: "notes", name: "หมายเหตุ", width: 200 },
+      { 
+        id: "notes", 
+        name: "หมายเหตุ", 
+        width: 200,
+        display_order: 7,
+      },
     ];
 
     try {
@@ -140,15 +155,17 @@ export default function LicensesPage() {
                ...col,
                name: match.field_label, 
                db_id: match.id,
-               isSystem: true 
+               isSystem: true,
+               display_order: match.display_order !== undefined ? match.display_order : col.display_order
              };
            }
            return col;
         });
 
-        // Get pure custom columns
+        // Get pure custom columns with proper ordering
         const pureCustomCols = apiFields
           .filter((f) => !baseCols.find((bc) => bc.id === f.field_name))
+          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
           .map((f) => ({
             id: f.field_name,
             name: f.field_label,
@@ -156,9 +173,18 @@ export default function LicensesPage() {
             width: 150,
             isCustom: true,
             db_id: f.id,
+            display_order: f.display_order || 0,
           }));
 
-        setColumns([...updatedBaseCols, ...pureCustomCols]);
+        // Combine and sort all columns by display_order
+        const allColumns = [...updatedBaseCols, ...pureCustomCols];
+        const sortedColumns = allColumns.sort((a, b) => {
+          const orderA = a.display_order !== undefined ? a.display_order : 999;
+          const orderB = b.display_order !== undefined ? b.display_order : 999;
+          return orderA - orderB;
+        });
+
+        setColumns(sortedColumns);
       } else {
         setColumns(baseCols);
       }

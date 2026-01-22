@@ -109,3 +109,37 @@ CREATE TABLE IF NOT EXISTS schema_definitions (
 );
 
 ALTER TABLE license_types ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT 0;
+
+-- Custom Fields System
+CREATE TABLE IF NOT EXISTS custom_fields (
+    id SERIAL PRIMARY KEY,
+    entity_type VARCHAR(50) NOT NULL,
+    field_name VARCHAR(100) NOT NULL,
+    field_label VARCHAR(255) NOT NULL,
+    field_type VARCHAR(50) DEFAULT 'text',
+    field_options JSONB DEFAULT '[]',
+    is_required BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+    display_order INTEGER DEFAULT 0,
+    show_in_table BOOLEAN DEFAULT true,
+    show_in_form BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(entity_type, field_name)
+);
+
+CREATE TABLE IF NOT EXISTS custom_field_values (
+    id SERIAL PRIMARY KEY,
+    custom_field_id INTEGER REFERENCES custom_fields(id) ON DELETE CASCADE,
+    entity_id INTEGER NOT NULL,
+    field_value TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(custom_field_id, entity_id)
+);
+
+-- Indexes for custom fields
+CREATE INDEX IF NOT EXISTS idx_custom_fields_entity_type ON custom_fields(entity_type);
+CREATE INDEX IF NOT EXISTS idx_custom_fields_active ON custom_fields(is_active);
+CREATE INDEX IF NOT EXISTS idx_custom_field_values_entity ON custom_field_values(entity_id);
+CREATE INDEX IF NOT EXISTS idx_custom_field_values_field ON custom_field_values(custom_field_id);

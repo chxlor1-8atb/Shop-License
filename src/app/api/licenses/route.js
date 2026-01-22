@@ -68,11 +68,18 @@ export async function GET(request) {
 
         // Parallelize Count and Data Fetch
         const query = `
-            SELECT l.*, s.shop_name, lt.name as type_name
+            SELECT l.*, s.shop_name, lt.name as type_name,
+                   COALESCE(
+                       json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
+                       '{}'::json
+                   ) as custom_fields
             FROM licenses l
             LEFT JOIN shops s ON l.shop_id = s.id
             LEFT JOIN license_types lt ON l.license_type_id = lt.id
+            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id
+            LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
             ${whereSQL}
+            GROUP BY l.id, s.shop_name, lt.name
             ORDER BY l.id DESC
             LIMIT ${limit} OFFSET ${offset}
         `;
@@ -115,10 +122,40 @@ export async function POST(request) {
         }
 
         const result = await executeQuery(
-            `INSERT INTO licenses (shop_id, license_type_id, license_number, issue_date, expiry_date, status, notes, custom_fields) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-            [shop_id, license_type_id, license_number, issue_date, expiry_date, status || 'active', notes, JSON.stringify(custom_fields || {})]
+            `INSERT INTO licenses (shop_id, license_type_id, license_number, issue_date, expiry_date, status, notes) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+            [shop_id, license_type_id, license_number, issue_date, expiry_date, status || 'active', notes]
         );
+
+        const licenseId = result?.rows?.[0]?.id;
+
+        // Save custom fields if provided
+        if (custom_fields && licenseId && Object.keys(custom_fields).length > 0) {
+            // Get all active custom fields for licenses
+            const fields = await fetchAll(
+                'SELECT id, field_name FROM custom_fields WHERE entity_type = $1 AND is_active = true',
+                ['licenses']
+            );
+
+            // Create field name to ID map
+            const fieldMap = {};
+            fields.forEach(f => {
+                fieldMap[f.field_name] = f.id;
+            });
+
+            // Insert custom field values
+            for (const [fieldName, value] of Object.entries(custom_fields)) {
+                const fieldId = fieldMap[fieldName];
+                if (fieldId && value !== undefined && value !== null) {
+                    await executeQuery(`
+                        INSERT INTO custom_field_values (custom_field_id, entity_id, field_value)
+                        VALUES ($1, $2, $3)
+                        ON CONFLICT (custom_field_id, entity_id) 
+                        DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = NOW()
+                    `, [fieldId, licenseId, value?.toString() || '']);
+                }
+            }
+        }
 
         // Log activity
         const currentUser = await getCurrentUser();
@@ -126,7 +163,7 @@ export async function POST(request) {
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.CREATE,
             entityType: ENTITY_TYPES.LICENSE,
-            entityId: result?.rows?.[0]?.id || null,
+            entityId: licenseId || null,
             details: `เพิ่มใบอนุญาตหมายเลข: ${license_number}`
         });
 
@@ -151,10 +188,47 @@ export async function PUT(request) {
 
         await executeQuery(
             `UPDATE licenses 
-             SET shop_id = $1, license_type_id = $2, license_number = $3, issue_date = $4, expiry_date = $5, status = $6, notes = $7, custom_fields = $8
-             WHERE id = $9`,
-            [shop_id, license_type_id, license_number, issue_date, expiry_date, status, notes, JSON.stringify(custom_fields || {}), id]
+             SET shop_id = $1, license_type_id = $2, license_number = $3, issue_date = $4, expiry_date = $5, status = $6, notes = $7
+             WHERE id = $8`,
+            [shop_id, license_type_id, license_number, issue_date, expiry_date, status, notes, id]
         );
+
+        // Update custom fields if provided
+        if (custom_fields && Object.keys(custom_fields).length > 0) {
+            // Get all active custom fields for licenses
+            const fields = await fetchAll(
+                'SELECT id, field_name FROM custom_fields WHERE entity_type = $1 AND is_active = true',
+                ['licenses']
+            );
+
+            // Create field name to ID map
+            const fieldMap = {};
+            fields.forEach(f => {
+                fieldMap[f.field_name] = f.id;
+            });
+
+            // Update custom field values
+            for (const [fieldName, value] of Object.entries(custom_fields)) {
+                const fieldId = fieldMap[fieldName];
+                if (fieldId !== undefined) {
+                    if (value !== undefined && value !== null && value !== '') {
+                        // Insert or update the value
+                        await executeQuery(`
+                            INSERT INTO custom_field_values (custom_field_id, entity_id, field_value)
+                            VALUES ($1, $2, $3)
+                            ON CONFLICT (custom_field_id, entity_id) 
+                            DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = NOW()
+                        `, [fieldId, id, value?.toString() || '']);
+                    } else {
+                        // Delete the value if it's empty/null
+                        await executeQuery(
+                            'DELETE FROM custom_field_values WHERE custom_field_id = $1 AND entity_id = $2',
+                            [fieldId, id]
+                        );
+                    }
+                }
+            }
+        }
 
         // Log activity
         const currentUser = await getCurrentUser();
