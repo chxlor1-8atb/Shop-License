@@ -87,12 +87,21 @@ export default function ShopsPage() {
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [columns, setColumns] = useState(STANDARD_COLUMNS);
   
   // Modal states
   const [selectedShop, setSelectedShop] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Initial parallel data fetch for faster loading
   useEffect(() => {
@@ -107,7 +116,7 @@ export default function ShopsPage() {
     if (columns.length > 0) {
       fetchShops();
     }
-  }, [pagination.page, pagination.limit, search]);
+  }, [pagination.page, pagination.limit, debouncedSearch]);
 
   const fetchShops = useCallback(async () => {
     setLoading(true);
@@ -115,7 +124,7 @@ export default function ShopsPage() {
       const params = new URLSearchParams({
         page: pagination.page,
         limit: pagination.limit,
-        search,
+        search: debouncedSearch,
       });
 
       const response = await fetch(`${API_ENDPOINTS.SHOPS}?${params}`);
@@ -146,7 +155,7 @@ export default function ShopsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, search]);
+  }, [pagination.page, pagination.limit, debouncedSearch]);
 
   // --- Row Handlers ---
 

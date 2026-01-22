@@ -222,7 +222,20 @@ export default function LicenseTypesPage() {
 
       if (data.success) {
         showSuccess("เพิ่มคอลัมน์เรียบร้อย");
-        fetchData(); // Reload to sync with DB
+        // Add column locally instead of fetchData() to preserve unsaved rows
+        const newColumn = {
+          id: fieldName,
+          name: payload.field_label,
+          type: payload.field_type,
+          width: 150,
+          align: "left",
+          isCustom: true,
+          db_id: data.field?.id || null,
+          display_order: maxOrder,
+        };
+        setColumns((prev) => [...prev, newColumn]);
+        // Add empty field to all existing rows
+        setTypes((prev) => prev.map((t) => ({ ...t, [fieldName]: "" })));
       } else {
         showError(data.message);
       }
@@ -336,7 +349,7 @@ export default function LicenseTypesPage() {
 
     try {
       if (isNew) {
-        if (!updatedRow.name) return;
+        if (!updatedRow.name) return; // Wait until name is filled
         const res = await fetch(API_ENDPOINTS.LICENSE_TYPES, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -345,8 +358,38 @@ export default function LicenseTypesPage() {
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
 
-        showSuccess("สร้างเรียบร้อย (กรุณารีโหลดเพื่อแก้ไขข้อมูลเสริม)");
-        fetchData();
+        // Get the new ID from API response
+        const newTypeId = data.type?.id || data.id;
+        
+        if (newTypeId) {
+          // Update local state - replace temp ID with real ID
+          setTypes((prev) =>
+            prev.map((t) =>
+              t.id === updatedRow.id
+                ? { ...t, ...standardData, ...customValues, id: newTypeId, license_count: 0 }
+                : t
+            )
+          );
+          showSuccess("สร้างประเภทใบอนุญาตเรียบร้อย");
+          
+          // Save custom values with new ID
+          if (Object.keys(customValues).length > 0) {
+            const valuesPayload = {
+              entity_type: "license_types",
+              entity_id: newTypeId,
+              values: customValues,
+            };
+            await fetch("/api/custom-field-values", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(valuesPayload),
+            });
+          }
+        } else {
+          // Fallback to fetchData if no ID returned
+          showSuccess("สร้างเรียบร้อย");
+          fetchData();
+        }
         return;
       } else {
         const updatePayload = { id: typeId, ...standardData };
