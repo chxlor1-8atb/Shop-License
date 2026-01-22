@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { usePagination, useDropdownData } from "@/hooks";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
@@ -64,6 +65,19 @@ const STANDARD_COLUMNS = [
     align: "center",
     readOnly: true,
     type: "number",
+    render: (value, row) => (
+      value > 0 ? (
+        <Link 
+          href={`/dashboard/licenses?shop_id=${row.id}`}
+          className="text-primary hover:underline font-medium"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {value} <i className="fas fa-external-link-alt" style={{ fontSize: '0.7em' }}></i>
+        </Link>
+      ) : (
+        <span className="text-muted">-</span>
+      )
+    ),
   },
 ];
 

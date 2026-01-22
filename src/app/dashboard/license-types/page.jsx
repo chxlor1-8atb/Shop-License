@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import TableSkeleton from "@/components/ui/TableSkeleton";
@@ -52,6 +53,18 @@ const STANDARD_COLUMNS = [
     width: 100,
     align: "center",
     readOnly: true,
+    render: (value, row) => (
+      parseInt(value) > 0 ? (
+        <Link 
+          href={`/dashboard/licenses?license_type=${row.id}`}
+          className="text-primary hover:underline font-medium"
+        >
+          {value} <i className="fas fa-external-link-alt" style={{ fontSize: '0.7em' }}></i>
+        </Link>
+      ) : (
+         <span className="text-muted">0</span>
+      )
+    ),
   },
 ];
 

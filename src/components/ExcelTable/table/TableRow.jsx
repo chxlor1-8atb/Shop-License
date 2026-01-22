@@ -102,7 +102,9 @@ export function TableRow({
                 }}
               >
                 <span className="cell-text" style={{ flex: "0 1 auto" }}>
-                  {col.type === "date" && row[col.id]
+                  {col.render ? (
+                    col.render(row[col.id], row)
+                  ) : col.type === "date" && row[col.id]
                     ? new Date(row[col.id]).toLocaleDateString("th-TH", {
                         year: "numeric",
                         month: "short",

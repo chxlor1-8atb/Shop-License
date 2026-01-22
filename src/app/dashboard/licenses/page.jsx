@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData } from "@/hooks";
 import { API_ENDPOINTS, STATUS_OPTIONS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
@@ -58,15 +59,19 @@ const formatOptions = (items, labelKey = "name", valueKey = "id") =>
 // Special value for "create new shop" option
 const CREATE_NEW_SHOP_VALUE = "__CREATE_NEW__";
 
-export default function LicensesPage() {
-  const pagination = usePagination(10);
+function LicensesPageContent() {
+  const searchParams = useSearchParams();
   const { shopOptions, typeOptions, shops } = useDropdownData(); // Use hook for dropdown data
+  const pagination = usePagination();
 
   const [licenses, setLicenses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  
+  // Initialize from URL params
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [filterType, setFilterType] = useState(searchParams.get("license_type") || "");
+  const [filterStatus, setFilterStatus] = useState(searchParams.get("status") || "");
+  const [filterShop, setFilterShop] = useState(searchParams.get("shop_id") || "");
   
   // Modal for creating new shop
   const [showQuickAddShop, setShowQuickAddShop] = useState(false);
@@ -215,7 +220,7 @@ export default function LicensesPage() {
     if (columns.length > 0) {
       fetchLicenses();
     }
-  }, [pagination.page, pagination.limit, search, filterType, filterStatus]);
+  }, [pagination.page, pagination.limit, search, filterType, filterStatus, filterShop]);
 
   const fetchLicenses = useCallback(async () => {
     setLoading(true);
@@ -226,6 +231,7 @@ export default function LicensesPage() {
         search,
         license_type: filterType,
         status: filterStatus,
+        shop_id: filterShop,
       });
 
       const response = await fetch(`${API_ENDPOINTS.LICENSES}?${params}`);
@@ -246,7 +252,7 @@ export default function LicensesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, search, filterType, filterStatus]);
+  }, [pagination.page, pagination.limit, search, filterType, filterStatus, filterShop]);
 
   // --- Row Handlers ---
 
@@ -499,6 +505,7 @@ export default function LicensesPage() {
         search,
         type: typeOptions.find((t) => t.value == filterType)?.label,
         status: STATUS_OPTIONS.find((s) => s.value == filterStatus)?.label,
+        shop: shopOptions.find((s) => s.value == filterShop)?.label,
       });
     } catch (err) {
       console.error(err);
@@ -602,7 +609,21 @@ export default function LicensesPage() {
                 setSearch(val);
                 pagination.resetPage();
               }}
-              placeholder="เลขที่ใบอนุญาต, ร้านค้า..."
+              placeholder="เลขที่ใบอนุญาต..."
+            />
+          </div>
+          <div className="filter-group">
+            <label htmlFor="shop-filter" className="filter-label">ร้านค้า</label>
+            <CustomSelect
+              id="shop-filter"
+              value={filterShop}
+              onChange={(e) => {
+                setFilterShop(e.target.value);
+                pagination.resetPage();
+              }}
+              options={[{ value: "", label: "ทุกร้านค้า" }, ...shopOptions]}
+              placeholder="เลือกร้านค้า..."
+              isSearchable={true} 
             />
           </div>
           <div className="filter-group">
@@ -739,5 +760,13 @@ export default function LicensesPage() {
         onSubmit={handleQuickAddLicense}
       />
     </div>
+  );
+}
+
+export default function LicensesPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-center">Loading...</div>}>
+      <LicensesPageContent />
+    </Suspense>
   );
 }
