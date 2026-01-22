@@ -103,28 +103,14 @@ export default function ShopsPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Initial parallel data fetch for faster loading
-  useEffect(() => {
-    const loadInitialData = async () => {
-      await Promise.all([fetchCustomColumns(), fetchShops()]);
-    };
-    loadInitialData();
-  }, []);
-
-  // Refetch shops when filters change
-  useEffect(() => {
-    if (columns.length > 0) {
-      fetchShops();
-    }
-  }, [pagination.page, pagination.limit, debouncedSearch]);
-
-  const fetchShops = useCallback(async () => {
+  // Shared fetch function that takes search as parameter to avoid stale closures
+  const performFetchShops = async (searchValue) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
         page: pagination.page,
         limit: pagination.limit,
-        search: debouncedSearch,
+        search: searchValue,
       });
 
       const response = await fetch(`${API_ENDPOINTS.SHOPS}?${params}`);
@@ -140,14 +126,6 @@ export default function ShopsPage() {
 
         setShops(formattedShops);
         pagination.updateFromResponse(data.pagination);
-
-        // Update columns if we discover new custom fields in data?
-        // Or stick to fixed columns + dynamic add?
-        // ShopsPage previously used `useSchema`.
-        // Let's rely on ExcelTable's onColumnAdd to manage columns locally
-        // and maybe save them to persistent storage/API if we want.
-        // For this implementation, I will just start with STANDARD_COLUMNS.
-        // If the user adds a column in ExcelTable, onColumnAdd is called.
       }
     } catch (error) {
       console.error("Failed to fetch shops:", error);
@@ -155,7 +133,27 @@ export default function ShopsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Initial parallel data fetch for faster loading
+  useEffect(() => {
+    const loadInitialData = async () => {
+      await Promise.all([fetchCustomColumns(), performFetchShops("")]);
+    };
+    loadInitialData();
+  }, []);
+
+  // Refetch shops when filters change - use debouncedSearch directly
+  useEffect(() => {
+    if (columns.length > 0) {
+      performFetchShops(debouncedSearch);
+    }
   }, [pagination.page, pagination.limit, debouncedSearch]);
+
+  // Keep fetchShops for external use (e.g., after updates)
+  const fetchShops = useCallback(async () => {
+    await performFetchShops(debouncedSearch);
+  }, [debouncedSearch]);
 
   // --- Row Handlers ---
 

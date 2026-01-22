@@ -462,7 +462,8 @@ export default function LicenseTypesPage() {
   };
 
   const handleRowAdd = (newRow) => {
-    // Handled via onRowUpdate when saved
+    // Add the new row to types immediately so stats update
+    setTypes((prev) => [...prev, { ...newRow, license_count: 0 }]);
   };
 
   return (
