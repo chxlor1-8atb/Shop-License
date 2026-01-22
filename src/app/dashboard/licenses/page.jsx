@@ -27,20 +27,22 @@ const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
         <table className="excel-table">
           <thead>
             <tr>
-              {["ร้านค้า", "ประเภทใบอนุญาต", "เลขที่ใบอนุญาต", "วันที่ออก", "วันหมดอายุ", "สถานะ", "หมายเหตุ"].map((h, i) => (
+              {["ร้านค้า", "ประเภทใบอนุญาต", "สถานที่จำหน่าย", "จำนวนเงิน", "เลขที่ใบอนุญาต", "วันที่ออก", "วันหมดอายุ", "พื้นที่ (ตารางเมตร)", "พื้นที่ (แรงม้า)"].map((h, i) => (
                 <th key={i} style={{ minWidth: "120px" }}><div className="th-content">{h}</div></th>
               ))}
             </tr>
           </thead>
           <tbody>
             <TableSkeleton rows={10} columns={[
-              { width: "90%" },
-              { width: "80%" },
-              { width: "70%" },
-              { width: "60%", center: true },
-              { width: "60%", center: true },
-              { width: "50%", center: true, rounded: true },
-              { width: "70%" },
+              { width: "180px" }, // Shop
+              { width: "150px" }, // Type
+              { width: "150px" }, // Location
+              { width: "100px" }, // Amount
+              { width: "150px" }, // License No
+              { width: "120px", center: true }, // Issue Date
+              { width: "120px", center: true }, // Expiry
+              { width: "100px" }, // Area Sqm
+              { width: "100px" }, // Area HP
             ]} />
           </tbody>
         </table>
@@ -103,7 +105,7 @@ export default function LicensesPage() {
         id: "license_number", 
         name: "เลขที่ใบอนุญาต", 
         width: 200,
-        display_order: 3,
+        display_order: 5,
       },
       {
         id: "issue_date",
@@ -111,7 +113,7 @@ export default function LicensesPage() {
         width: 150,
         type: "date",
         align: "center",
-        display_order: 4,
+        display_order: 6,
       },
       {
         id: "expiry_date",
@@ -119,7 +121,7 @@ export default function LicensesPage() {
         width: 150,
         type: "date",
         align: "center",
-        display_order: 5,
+        display_order: 7,
       },
       {
         id: "status",
@@ -129,13 +131,13 @@ export default function LicensesPage() {
         type: "select",
         options: STATUS_OPTIONS,
         isBadge: true,
-        display_order: 6,
+        display_order: 10,
       },
       { 
         id: "notes", 
         name: "หมายเหตุ", 
         width: 200,
-        display_order: 7,
+        display_order: 100, 
       },
     ];
 
@@ -156,7 +158,9 @@ export default function LicensesPage() {
                name: match.field_label, 
                db_id: match.id,
                isSystem: true,
-               display_order: match.display_order !== undefined ? match.display_order : col.display_order
+               display_order: match.display_order !== undefined && match.display_order !== null 
+                  ? Number(match.display_order) 
+                  : col.display_order
              };
            }
            return col;
@@ -165,7 +169,6 @@ export default function LicensesPage() {
         // Get pure custom columns with proper ordering
         const pureCustomCols = apiFields
           .filter((f) => !baseCols.find((bc) => bc.id === f.field_name))
-          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
           .map((f) => ({
             id: f.field_name,
             name: f.field_label,
@@ -173,7 +176,9 @@ export default function LicensesPage() {
             width: 150,
             isCustom: true,
             db_id: f.id,
-            display_order: f.display_order || 0,
+            display_order: f.display_order !== undefined && f.display_order !== null 
+              ? Number(f.display_order) 
+              : 99,
           }));
 
         // Combine and sort all columns by display_order
@@ -184,6 +189,7 @@ export default function LicensesPage() {
           return orderA - orderB;
         });
 
+        console.log("Columns sorted:", sortedColumns.map(c => `${c.name} (${c.display_order})`));
         setColumns(sortedColumns);
       } else {
         setColumns(baseCols);
@@ -194,13 +200,14 @@ export default function LicensesPage() {
     }
   }, [enhancedShopOptions, typeOptions]);
 
-  // Initial parallel data fetch for faster loading
+  // Reload columns when options change (fixes missing labels in table)
   useEffect(() => {
-    // Fetch columns and licenses in parallel for better performance
-    const loadInitialData = async () => {
-      await Promise.all([fetchCustomColumns(), fetchLicenses()]);
-    };
-    loadInitialData();
+    fetchCustomColumns();
+  }, [fetchCustomColumns]);
+
+  // Initial license data fetch
+  useEffect(() => {
+    fetchLicenses();
   }, []);
 
   // Refetch licenses when filters change
@@ -659,13 +666,17 @@ export default function LicensesPage() {
                       : [
                           "ร้านค้า",
                           "ประเภทใบอนุญาต",
+                          "สถานที่จำหน่าย",
+                          "จำนวนเงิน",
                           "เลขที่ใบอนุญาต",
                           "วันที่ออก",
                           "วันหมดอายุ",
+                          "พื้นที่ (ตารางเมตร)",
+                          "พื้นที่ (แรงม้า)",
                           "สถานะ",
                           "หมายเหตุ",
                         ].map((header, i) => (
-                          <th key={i} style={{ minWidth: "150px" }}>
+                          <th key={i} style={{ minWidth: "120px" }}>
                             <div className="th-content">{header}</div>
                           </th>
                         ))}
@@ -675,13 +686,17 @@ export default function LicensesPage() {
                   <TableSkeleton
                     rows={10}
                     columns={[
-                      { width: "90%" },
-                      { width: "80%" },
-                      { width: "70%" },
-                      { width: "60%", center: true },
-                      { width: "60%", center: true },
-                      { width: "50%", center: true, rounded: true },
-                      { width: "70%" },
+                      { width: "180px" }, // Shop
+                      { width: "150px" }, // Type
+                      { width: "150px" }, // Location
+                      { width: "100px" }, // Amount
+                      { width: "150px" }, // License No
+                      { width: "120px", center: true }, // Issue Date
+                      { width: "120px", center: true }, // Expiry
+                      { width: "100px" }, // Area Sqm
+                      { width: "100px" }, // Area HP
+                      { width: "120px", center: true, rounded: true }, // Status
+                      { width: "200px" }, // Notes
                     ]}
                   />
                 </tbody>
