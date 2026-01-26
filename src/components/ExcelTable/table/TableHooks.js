@@ -25,6 +25,42 @@ export const defaultRows = [
 const generateId = () =>
   `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+// Helper function for deep comparison of rows
+const areRowsEqual = (prevRows, newRows) => {
+  if (!prevRows || !newRows) return prevRows === newRows;
+  if (prevRows.length !== newRows.length) return false;
+
+  // Compare by serializing - handles nested objects too
+  try {
+    return JSON.stringify(prevRows) === JSON.stringify(newRows);
+  } catch {
+    return false;
+  }
+};
+
+// Helper to check if rows have meaningful data changes (ignoring temp IDs)
+const hasRealDataChanges = (localRows, newRows) => {
+  if (!localRows || !newRows) return true;
+
+  // If lengths differ significantly, it's a real change
+  if (Math.abs(localRows.length - newRows.length) > 1) return true;
+
+  // Check if newRows contains actual DB IDs we don't have locally
+  const localRealIds = new Set(
+    localRows
+      .filter(r => !r.id.toString().startsWith('id_'))
+      .map(r => r.id)
+  );
+  const newRealIds = new Set(newRows.map(r => r.id));
+
+  // If there are new IDs from the server, accept the update
+  for (const id of newRealIds) {
+    if (!localRealIds.has(id)) return true;
+  }
+
+  return false;
+};
+
 export function useExcelTable({
   initialColumns = defaultColumns,
   initialRows = defaultRows,
@@ -35,6 +71,24 @@ export function useExcelTable({
   const [editingHeader, setEditingHeader] = useState(null); // colId
   const [contextMenu, setContextMenu] = useState(null); // { x, y, type, rowId?, colId? }
   const [selectedRow, setSelectedRow] = useState(null);
+
+  // Track if user is currently editing to prevent override
+  const isEditingRef = useRef(false);
+  // Track previous initialRows to detect actual data changes
+  const prevInitialRowsRef = useRef(initialRows);
+  // Track if there's a pending save operation
+  const pendingSaveRef = useRef(false);
+  // Store initialRows that arrived while pending save was true
+  const pendingInitialRowsRef = useRef(null);
+  // Debounce timer for sync
+  const syncTimerRef = useRef(null);
+  // Track rows that were recently modified locally
+  const recentlyModifiedRef = useRef(new Set());
+
+  // Update editing ref when editingCell changes
+  useEffect(() => {
+    isEditingRef.current = editingCell !== null;
+  }, [editingCell]);
 
   // Update effect if props change (optional, depends on if we want full sync)
   // Use JSON.stringify to compare arrays to prevent unnecessary updates
@@ -49,9 +103,98 @@ export function useExcelTable({
     });
   }, [initialColumns]);
 
+  // Helper function to perform the actual sync
+  const performSync = useCallback((newRows) => {
+    setRows(currentRows => {
+      // Double-check we're not in edit mode
+      if (isEditingRef.current) {
+        return currentRows;
+      }
+
+      // Clear recently modified refs since we're doing a full sync after save
+      recentlyModifiedRef.current.clear();
+
+      // For rows that exist in both places, prefer server data
+      // But keep temp rows that haven't been saved yet
+      const tempRows = currentRows.filter(r =>
+        r.id.toString().startsWith('id_') &&
+        !newRows.find(ir => ir.id === r.id)
+      );
+
+      // Check if we have unsaved temp rows
+      if (tempRows.length > 0) {
+        return [...newRows, ...tempRows];
+      }
+
+      return newRows;
+    });
+  }, []);
+
+  // Sync rows from parent with improved protection
   useEffect(() => {
-    setRows(initialRows);
-  }, [initialRows]);
+    // Clear any pending sync timer
+    if (syncTimerRef.current) {
+      clearTimeout(syncTimerRef.current);
+    }
+
+    // Skip if user is currently editing
+    if (isEditingRef.current) {
+      prevInitialRowsRef.current = initialRows;
+      return;
+    }
+
+    // If there's a pending save, store the data for later sync
+    if (pendingSaveRef.current) {
+      pendingInitialRowsRef.current = initialRows;
+      return;
+    }
+
+    // Check if initialRows actually changed from previous props
+    if (areRowsEqual(prevInitialRowsRef.current, initialRows)) {
+      return;
+    }
+
+    // Debounce the sync to prevent rapid updates
+    syncTimerRef.current = setTimeout(() => {
+      performSync(initialRows);
+      prevInitialRowsRef.current = initialRows;
+    }, 100);
+
+    return () => {
+      if (syncTimerRef.current) {
+        clearTimeout(syncTimerRef.current);
+      }
+    };
+  }, [initialRows, performSync]);
+
+  // Helper to mark a row as recently modified
+  const markRowModified = (rowId) => {
+    recentlyModifiedRef.current.add(rowId);
+    // Clear the mark after 2 seconds
+    setTimeout(() => {
+      recentlyModifiedRef.current.delete(rowId);
+    }, 2000);
+  };
+
+  // Helper to set pending save status
+  // When setting to false, check if there's pending data to sync
+  const setPendingSave = (value) => {
+    pendingSaveRef.current = value;
+
+    // When save is complete, sync any pending data
+    if (!value && pendingInitialRowsRef.current) {
+      const pendingData = pendingInitialRowsRef.current;
+      pendingInitialRowsRef.current = null;
+
+      // Small delay to ensure state is stable
+      setTimeout(() => {
+        if (!isEditingRef.current && !pendingSaveRef.current) {
+          performSync(pendingData);
+          prevInitialRowsRef.current = pendingData;
+        }
+      }, 50);
+    }
+  };
 
   // Actions
   const handleCellClick = useCallback((rowId, colId) => {
@@ -60,6 +203,8 @@ export function useExcelTable({
   }, []);
 
   const updateCell = useCallback((rowId, colId, value) => {
+    // Mark row as modified to prevent sync override
+    markRowModified(rowId);
     setRows((prev) =>
       prev.map((row) => (row.id === rowId ? { ...row, [colId]: value } : row))
     );
@@ -227,6 +372,9 @@ export function useExcelTable({
     }
   }, []);
 
+  // Helper to get current rows (for save operations)
+  const getRows = useCallback(() => rows, [rows]);
+
   return {
     columns,
     rows,
@@ -253,5 +401,9 @@ export function useExcelTable({
     clearAll,
     resetTable,
     setRows, // Exposed for special cases if needed
+    // Helpers for save state management
+    markRowModified,
+    setPendingSave,
+    getRows,
   };
 }

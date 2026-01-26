@@ -57,6 +57,9 @@ export default function ExcelTable({
     clearAll,
     resetTable,
     handleCellKeyDown,
+    // Save state helpers
+    getRows,
+    setPendingSave,
   } = useExcelTable({ initialColumns, initialRows });
   // Refs for Focus Management (View Logic)
   const tableRef = useRef(null);
@@ -86,15 +89,50 @@ export default function ExcelTable({
     // However, we are updating local state here.
   };
 
-  const handleCellBlur = (rowId, colId) => {
+  const handleCellBlur = async (rowId, colId) => {
     setEditingCell(null);
     if (onRowUpdate) {
-      // Find the updated row and notify parent
-      const row = rows.find((r) => r.id === rowId);
+      // Use getRows() to get the most up-to-date data
+      const currentRows = getRows();
+      const row = currentRows.find((r) => r.id === rowId);
       if (row) {
-        onRowUpdate(row);
+        // Mark as pending save to prevent sync override
+        setPendingSave(true);
+        try {
+          await onRowUpdate(row);
+        } finally {
+          // Allow sync after a short delay
+          setTimeout(() => {
+            setPendingSave(false);
+          }, 500);
+        }
       }
     }
+  };
+
+  // Wrapper for handleCellKeyDown to save data when Enter/Tab is pressed
+  const handleCellKeyDownWrapper = async (e, rowId, colId) => {
+    // Save current row before moving to next cell (Enter or Tab)
+    if (e.key === "Enter" || e.key === "Tab") {
+      if (onRowUpdate) {
+        // Use getRows() to get the most up-to-date data
+        const currentRows = getRows();
+        const row = currentRows.find((r) => r.id === rowId);
+        if (row) {
+          // Mark as pending save
+          setPendingSave(true);
+          try {
+            await onRowUpdate(row);
+          } finally {
+            setTimeout(() => {
+              setPendingSave(false);
+            }, 500);
+          }
+        }
+      }
+    }
+    // Call the original handler to move to next cell
+    handleCellKeyDown(e, rowId, colId);
   };
 
   const handleAddRow = () => {
@@ -261,7 +299,7 @@ export default function ExcelTable({
                 onCellClick={handleCellClick}
                 onCellChange={handleCellChange}
                 onCellBlur={(rowId, colId) => handleCellBlur(rowId, colId)}
-                onCellKeyDown={handleCellKeyDown}
+                onCellKeyDown={handleCellKeyDownWrapper}
                 onDeleteRow={handleDeleteRow}
                 onContextMenu={setContextMenu}
                 onRowClick={onRowClick}
