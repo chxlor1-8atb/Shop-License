@@ -314,14 +314,30 @@ function RecentActivityCard({ activities }) {
                     </div>
                 </div>
                 <div className="card-body">
-                    <div className="table-responsive">
-                        <table className="data-table">
+                    <div className="table-container">
+                        <table className="excel-table">
                             <thead>
                                 <tr>
-                                    <th>เวลา</th>
-                                    <th className="hide-on-mobile">ผู้ใช้งาน</th>
-                                    <th>กิจกรรม</th>
-                                    <th className="hide-on-mobile">รายละเอียด</th>
+                                    <th style={{ width: '20%' }}>
+                                        <div className="header-content justify-center">
+                                            <span className="header-text">เวลา</span>
+                                        </div>
+                                    </th>
+                                    <th className="hide-on-mobile" style={{ width: '25%' }}>
+                                        <div className="header-content justify-center">
+                                            <span className="header-text">ผู้ใช้งาน</span>
+                                        </div>
+                                    </th>
+                                    <th style={{ width: '15%' }}>
+                                        <div className="header-content justify-center">
+                                            <span className="header-text">กิจกรรม</span>
+                                        </div>
+                                    </th>
+                                    <th className="hide-on-mobile" style={{ width: '40%' }}>
+                                        <div className="header-content justify-center">
+                                            <span className="header-text">รายละเอียด</span>
+                                        </div>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -333,8 +349,8 @@ function RecentActivityCard({ activities }) {
                                     />
                                 )) : (
                                     <tr>
-                                        <td colSpan="4" className="text-center">
-                                            ไม่มีข้อมูลกิจกรรมล่าสุด
+                                        <td colSpan="4" className="text-center" style={{ padding: '3rem' }}>
+                                            <div style={{ color: 'var(--text-muted)' }}>ไม่มีข้อมูลกิจกรรมล่าสุด</div>
                                         </td>
                                     </tr>
                                 )}
@@ -357,6 +373,124 @@ function RecentActivityCard({ activities }) {
                         </div>
                     )}
                 </div>
+                <style jsx>{`
+                    /* Table Container - Match ExcelTable */
+                    .table-container {
+                        padding: 0.5rem;
+                        background: transparent;
+                        overflow-x: auto;
+                    }
+
+                    /* Use :global to penetrate component scope to ActivityRow */
+                    .recent-activity-card :global(.excel-table) {
+                        border-collapse: separate !important;
+                        border-spacing: 0 0.75rem !important; /* Visible gap between rows */
+                        width: 100%;
+                        background: transparent !important;
+                    }
+
+                    /* Header Styling */
+                    .recent-activity-card :global(.excel-table thead tr) {
+                        background: transparent;
+                        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.02));
+                    }
+
+                    .recent-activity-card :global(.excel-table th) {
+                        background: #ffffff;
+                        border-top: 1px solid rgba(0, 0, 0, 0.05);
+                        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                        color: var(--text-secondary);
+                        font-weight: 600;
+                        font-size: 0.875rem;
+                        padding: 0.75rem 0.5rem;
+                        text-align: center;
+                        vertical-align: middle;
+                        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+                    }
+
+                    .recent-activity-card :global(.excel-table th:first-child) {
+                        border-top-left-radius: 16px;
+                        border-bottom-left-radius: 16px;
+                        border-left: 1px solid rgba(0, 0, 0, 0.05);
+                    }
+
+                    .recent-activity-card :global(.excel-table th:last-child) {
+                        border-top-right-radius: 16px;
+                        border-bottom-right-radius: 16px;
+                        border-right: 1px solid rgba(0, 0, 0, 0.05);
+                    }
+
+                    .header-content {
+                        display: flex;
+                        align-items: center;
+                        width: 100%;
+                        padding: 0 0.75rem;
+                        box-sizing: border-box;
+                    }
+                    
+                    .header-content.justify-center {
+                        justify-content: center;
+                    }
+
+                    .header-text {
+                        flex: 0 0 auto;
+                        white-space: nowrap;
+                        font-weight: 600;
+                        color: var(--text-secondary);
+                    }
+
+                    /* Hide specific columns on mobile */
+                    @media (max-width: 768px) {
+                        .hide-on-mobile {
+                            display: none;
+                        }
+                    }
+
+                    /* Body/Row Styling - Match ExcelTable */
+                    .recent-activity-card :global(.excel-table tbody tr) {
+                        background: #ffffff !important; /* Force white background */
+                        border-radius: 16px !important;
+                        box-shadow: 
+                            0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+                            0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+                        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+
+                    .recent-activity-card :global(.excel-table tbody tr:hover) {
+                        transform: translateY(-2px);
+                        box-shadow: 
+                            0 10px 15px -3px rgba(217, 119, 87, 0.1), 
+                            0 4px 6px -2px rgba(217, 119, 87, 0.05) !important;
+                        background: #fffafa !important; /* Slight tint on hover */
+                        position: relative;
+                        z-index: 10;
+                    }
+
+                    .recent-activity-card :global(.excel-table td) {
+                        border: none !important; /* Remove defaults */
+                        border-bottom: none !important;
+                        padding: 1rem 0.75rem !important; /* Larger padding */
+                        vertical-align: middle;
+                        background: transparent !important;
+                        text-align: center;
+                    }
+
+                    /* Important: Round corners for the row card effect */
+                    .recent-activity-card :global(.excel-table td:first-child) {
+                        border-top-left-radius: 16px;
+                        border-bottom-left-radius: 16px;
+                    }
+
+                    .recent-activity-card :global(.excel-table td:last-child) {
+                        border-top-right-radius: 16px;
+                        border-bottom-right-radius: 16px;
+                    }
+
+                    /* Specific cell adjustments */
+                    .recent-activity-card :global(.excel-table td .user-info-cell) {
+                        justify-content: center;
+                    }
+                `}</style>
             </div>
 
             <Modal
