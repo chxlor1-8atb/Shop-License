@@ -20,7 +20,24 @@ export default function DatePicker({
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(value ? new Date(value) : new Date());
+    const [position, setPosition] = useState('left');
     const wrapperRef = useRef(null);
+
+    // Auto-detect position to prevent overflow
+    useEffect(() => {
+        if (isOpen && wrapperRef.current) {
+            const rect = wrapperRef.current.getBoundingClientRect();
+            const spaceRight = window.innerWidth - rect.left;
+            const minWidth = 320; // Approx dropdown width
+            
+            // If space on right is less than minWidth, try to align right (expand to left)
+            if (spaceRight < minWidth) {
+                setPosition('right');
+            } else {
+                setPosition('left');
+            }
+        }
+    }, [isOpen]);
 
     const selectedDate = value ? new Date(value) : null;
     const DAYS = lang === 'th' ? DAYS_TH : DAYS_EN;
@@ -164,7 +181,10 @@ export default function DatePicker({
 
             {/* Calendar Dropdown */}
             {isOpen && (
-                <div className="datepicker-dropdown">
+                <div 
+                    className={`datepicker-dropdown ${position === 'right' ? 'align-right' : ''}`}
+                    onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+                >
                     {/* Top Display (Selected Date) */}
                     <div className="datepicker-display-top">
                         <span className="display-label">วันที่เลือก</span>

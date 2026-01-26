@@ -4510,7 +4510,7 @@ body:has(.sidebar.show) .mobile-toggle i {
     cursor: pointer;
     transition: all 0.2s ease;
     /* width: 100%; Removed to fit content */
-    min-width: 180px; 
+    min-width: 180px;
     /* added min-width to ensure it's not too small but still compact */
     height: 42px;
     /* Match height */
@@ -4563,9 +4563,10 @@ body:has(.sidebar.show) .mobile-toggle i {
 .datepicker-dropdown {
     position: absolute;
     top: calc(100% + 8px);
-    left: auto;
-    right: 0;
-    /* Align to right to prevent overflow */
+    left: 0;
+    right: auto;
+    /* Default align left */
+
     min-width: 320px;
     max-width: calc(100vw - 2rem);
     /* Ensure it doesn't overflow viewport */
@@ -4579,6 +4580,11 @@ body:has(.sidebar.show) .mobile-toggle i {
     display: flex;
     flex-direction: column;
     padding: 0;
+}
+
+.datepicker-dropdown.align-right {
+    left: auto;
+    right: 0;
 }
 
 @keyframes datepickerSlideIn {
