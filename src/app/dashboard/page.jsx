@@ -558,18 +558,39 @@ function ActivityRow({ log, onClick }) {
 
     return (
         <tr onClick={onClick} style={{ cursor: 'pointer' }}>
-            <td>{formatThaiDateTime(log.created_at)}</td>
+            <td>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                    {formatThaiDateTime(log.created_at)}
+                </div>
+            </td>
             <td className="hide-on-mobile">
-                <div className="user-info-cell" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div className="user-info-cell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                     <UserAvatar name={log.user_name} />
                     {log.user_name}
                 </div>
             </td>
             <td>
-                <span className={`badge ${badgeClass}`}>{log.action}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                    <span className={`badge ${badgeClass}`}>{log.action}</span>
+                </div>
             </td>
-            <td className="hide-on-mobile" style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {log.entity_type} {log.entity_id ? `#${log.entity_id}` : ''}
+            <td className="hide-on-mobile">
+                <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    maxWidth: '100%',
+                    margin: '0 auto'
+                }}>
+                    <span style={{
+                        maxWidth: '250px',
+                        whiteSpace: 'nowrap', 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis'
+                    }}>
+                        {log.entity_type} {log.entity_id ? `#${log.entity_id}` : ''}
+                    </span>
+                </div>
             </td>
         </tr>
     );
