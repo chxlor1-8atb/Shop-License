@@ -103,7 +103,7 @@ export async function POST(request) {
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.CREATE,
             entityType: ENTITY_TYPES.USER,
-            entityId: result?.rows?.[0]?.id || null,
+            entityId: result?.[0]?.id || null,
             details: `เพิ่มผู้ใช้: ${username} (สิทธิ์: ${role})`
         });
 

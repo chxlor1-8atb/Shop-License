@@ -85,7 +85,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 
 -- Initial Admin User (password: admin)
 INSERT INTO users (username, password, full_name, role)
-VALUES ('admin', '$2a$10$YourHashHereOrGeneratedInScript', 'Administrator', 'admin')
+VALUES ('admin', '$2a$10$KmoCm3CWEYNAUhcnuvgM9OGe7fJUuES3Ru5juLpH5EaPxM8vNac3W', 'Administrator', 'admin')
 ON CONFLICT (username) DO NOTHING;
 
 INSERT INTO notification_settings (id, days_before_expiry, is_active)

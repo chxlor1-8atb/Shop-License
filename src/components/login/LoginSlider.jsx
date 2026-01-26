@@ -31,12 +31,12 @@ export const LoginSlider = ({ slider, loading, unlocked, error }) => {
           id="sliderBtn"
           ref={slider.sliderBtnRef}
           style={{
-            translate: `${
+            transform: `translateX(${
               slider.slideProgress > 4 ? slider.slideProgress - 4 : 0
-            }px 0`,
+            }px)`,
             transition: slider.isDragging
               ? "none"
-              : "translate 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.15s ease, background 0.3s ease",
+              : "transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease",
           }}
           onMouseDown={slider.handleStartDrag}
           onTouchStart={slider.handleStartDrag}

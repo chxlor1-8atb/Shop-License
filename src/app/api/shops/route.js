@@ -93,7 +93,7 @@ export async function POST(request) {
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.CREATE,
             entityType: ENTITY_TYPES.SHOP,
-            entityId: result?.rows?.[0]?.id || null,
+            entityId: result?.[0]?.id || null,
             details: `เพิ่มร้านค้า: ${shop_name}`
         });
 

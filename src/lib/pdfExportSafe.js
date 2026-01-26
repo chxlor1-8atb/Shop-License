@@ -29,13 +29,41 @@ const STATUS_CONFIG = {
 };
 
 /**
- * Initialize pdfMake with fonts
+ * Helper to load font file as base64
+ */
+async function loadFont(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch font: ${url}`);
+
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                if (typeof reader.result === 'string') {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                } else {
+                    reject(new Error('Failed to read font blob'));
+                }
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        console.error('Error loading font:', e);
+        return null;
+    }
+}
+
+/**
+ * Initialize pdfMake with fonts (including Thai)
  */
 async function getPdfMake() {
     try {
         const pdfMakeModule = await import('pdfmake/build/pdfmake');
         const pdfMake = pdfMakeModule.default || pdfMakeModule;
-        
+
         if (!pdfMake) {
             console.error('Failed to load pdfMake module');
             throw new Error('Failed to load pdfMake module');
@@ -55,7 +83,7 @@ async function getPdfMake() {
         try {
             const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
             const pdfFonts = pdfFontsModule.default || pdfFontsModule;
-            
+
             // Robust vfs assignment
             let vfs = null;
             if (pdfFonts) {
@@ -76,13 +104,61 @@ async function getPdfMake() {
             // vfs is already initialized to {} above, so we are safe
         }
 
-        // Assign standard fonts map
+        // Load Thai fonts
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+        const fontTasks = [];
+        const requiredFonts = [
+            { name: 'THSarabunNew.ttf', url: `${baseUrl}/fonts/THSarabunNew.ttf` },
+            { name: 'THSarabunNew-Bold.ttf', url: `${baseUrl}/fonts/THSarabunNew-Bold.ttf` }
+        ];
+
+        requiredFonts.forEach(font => {
+            if (!pdfMake.vfs[font.name]) {
+                fontTasks.push(
+                    loadFont(font.url).then(base64 => {
+                        if (base64) {
+                            pdfMake.vfs[font.name] = base64;
+                        }
+                    }).catch(err => {
+                        console.warn(`Failed to load font ${font.name}:`, err);
+                    })
+                );
+            }
+        });
+
+        if (fontTasks.length > 0) {
+            await Promise.all(fontTasks);
+        }
+
+        // Check if Thai fonts are available
+        const hasThaiRegular = typeof pdfMake.vfs['THSarabunNew.ttf'] === 'string';
+        const hasThaiBold = typeof pdfMake.vfs['THSarabunNew-Bold.ttf'] === 'string';
+
+        // Fallback if one is missing
+        if (hasThaiRegular && !hasThaiBold) {
+            pdfMake.vfs['THSarabunNew-Bold.ttf'] = pdfMake.vfs['THSarabunNew.ttf'];
+        }
+        if (!hasThaiRegular && hasThaiBold) {
+            pdfMake.vfs['THSarabunNew.ttf'] = pdfMake.vfs['THSarabunNew-Bold.ttf'];
+        }
+
+        // Determine which fonts to use
+        const finalRegular = hasThaiRegular || hasThaiBold ? 'THSarabunNew.ttf' : 'Roboto-Regular.ttf';
+        const finalBold = hasThaiRegular || hasThaiBold ? 'THSarabunNew-Bold.ttf' : 'Roboto-Medium.ttf';
+
+        // Assign fonts map with Thai support
         pdfMake.fonts = {
             Roboto: {
                 normal: 'Roboto-Regular.ttf',
                 bold: 'Roboto-Medium.ttf',
                 italics: 'Roboto-Italic.ttf',
                 bolditalics: 'Roboto-MediumItalic.ttf'
+            },
+            THSarabunNew: {
+                normal: finalRegular,
+                bold: finalBold,
+                italics: finalRegular,
+                bolditalics: finalBold
             }
         };
 
@@ -342,9 +418,9 @@ function getStyles() {
  */
 export async function exportLicensesToPDF(licenses, filters = {}) {
     const pdfMake = await getPdfMake();
-    
+
     const title = 'License Report';
-    
+
     // Calculate statistics
     const stats = {
         'Total': licenses.length,
@@ -369,7 +445,8 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
-        
+        defaultStyle: { font: 'THSarabunNew' },
+
         header: (currentPage, pageCount) => ({
             text: `Page ${currentPage} of ${pageCount}`,
             alignment: 'right',
@@ -407,9 +484,9 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
  */
 export async function exportShopsToPDF(shops) {
     const pdfMake = await getPdfMake();
-    
+
     const title = 'Shop Report';
-    
+
     const stats = {
         'Total Shops': shops.length
     };
@@ -428,7 +505,8 @@ export async function exportShopsToPDF(shops) {
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
-        
+        defaultStyle: { font: 'THSarabunNew' },
+
         header: (currentPage, pageCount) => ({
             text: `Page ${currentPage} of ${pageCount}`,
             alignment: 'right',
@@ -463,9 +541,9 @@ export async function exportShopsToPDF(shops) {
  */
 export async function exportUsersToPDF(users) {
     const pdfMake = await getPdfMake();
-    
+
     const title = 'User Report';
-    
+
     const stats = {
         'Total Users': users.length
     };
@@ -481,7 +559,8 @@ export async function exportUsersToPDF(users) {
         pageSize: 'A4',
         pageOrientation: 'portrait',
         pageMargins: [40, 40, 40, 60],
-        
+        defaultStyle: { font: 'THSarabunNew' },
+
         header: (currentPage, pageCount) => ({
             text: `Page ${currentPage} of ${pageCount}`,
             alignment: 'right',

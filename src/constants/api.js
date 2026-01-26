@@ -19,7 +19,7 @@ export const API_ENDPOINTS = {
     DASHBOARD_ACTIVITY: '/api/dashboard?action=recent_activity',
 
     // Reports
-    EXPIRING: '/api/expiring',
+    EXPIRING: '/api/licenses/expiring',
 
     // Notifications
     NOTIFICATIONS: '/api/notifications',

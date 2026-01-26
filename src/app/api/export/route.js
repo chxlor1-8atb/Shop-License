@@ -101,21 +101,31 @@ export async function GET(request) {
             'revoked': 'ถูกเพิกถอน'
         };
 
-        // Convert to CSV
+        // Define column keys mapping to ensure correct order
+        const columnKeys = {
+            licenses: ['license_number', 'shop_name', 'type_name', 'issue_date', 'expiry_date', 'status', 'notes'],
+            shops: ['shop_name', 'owner_name', 'phone', 'email', 'address', 'notes', 'created_at'],
+            users: ['username', 'created_at']
+        };
+
+        // Convert to CSV with explicit column order
         const csvRows = [];
         csvRows.push(columns.join(',')); // Header
 
+        const keys = columnKeys[type] || Object.keys(data[0] || {});
+
         for (const row of data) {
-            const values = Object.values(row).map((val, index) => {
+            const values = keys.map(key => {
+                let val = row[key];
                 if (val === null || val === undefined) return '';
-                
+
                 let stringVal = String(val);
-                
-                // Translate status values to Thai (status is typically the 6th column for licenses)
-                if (statusMap[stringVal.toLowerCase()]) {
+
+                // Translate status values to Thai
+                if (key === 'status' && statusMap[stringVal.toLowerCase()]) {
                     stringVal = statusMap[stringVal.toLowerCase()];
                 }
-                
+
                 // Escape quotes and wrap in quotes if contains comma or quote
                 if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
                     return `"${stringVal.replace(/"/g, '""')}"`;

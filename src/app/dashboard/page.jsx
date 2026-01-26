@@ -37,9 +37,14 @@ export default function DashboardPage() {
 
     const [user, setUser] = useState(null);
 
+    const initialized = useState(false);
+
     useEffect(() => {
-        checkAuth();
-        fetchDashboardData();
+        if (!initialized[0]) {
+            initialized[1](true);
+            checkAuth();
+            fetchDashboardData();
+        }
     }, []);
 
     const checkAuth = async () => {
@@ -65,9 +70,6 @@ export default function DashboardPage() {
             const activityData = await safeParseJson(recentRes);
 
             if (statsData.success) setStats(statsData.stats);
-            if (activityData?.success) {
-                setRecentActivity(activityData.activities || []);
-            }
             if (activityData?.success) {
                 setRecentActivity(activityData.activities || []);
             }

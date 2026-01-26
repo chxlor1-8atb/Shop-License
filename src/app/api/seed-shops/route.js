@@ -296,7 +296,7 @@ export async function POST(request) {
                             // ดึง custom fields สำหรับ license
                             const customFields = await fetchAll(
                                 'SELECT id, field_name FROM custom_fields WHERE entity_type = $1 AND is_active = true',
-                                ['license']
+                                ['licenses']
                             );
 
                             // สุ่มค่าสำหรับแต่ละ field
