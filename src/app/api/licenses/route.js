@@ -115,9 +115,14 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
+        console.log('[POST /api/licenses] Body:', body);
+
         const { shop_id, license_type_id, license_number, issue_date, expiry_date, status, notes, custom_fields } = body;
 
+        console.log('[POST /api/licenses] Extracted:', { shop_id, license_type_id, license_number });
+
         if (!shop_id || !license_type_id || !license_number) {
+            console.error('[POST /api/licenses] Missing required fields');
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
         }
 
@@ -127,7 +132,9 @@ export async function POST(request) {
             [shop_id, license_type_id, license_number, issue_date, expiry_date, status || 'active', notes]
         );
 
-        const licenseId = result?.rows?.[0]?.id;
+        const licenseId = result?.rows?.[0]?.id || result?.[0]?.id; // Handle both neon formats
+
+        console.log('[POST /api/licenses] Created ID:', licenseId);
 
         // Save custom fields if provided
         if (custom_fields && licenseId && Object.keys(custom_fields).length > 0) {
@@ -169,6 +176,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true, message: 'เพิ่มใบอนุญาตเรียบร้อยแล้ว' });
     } catch (err) {
+        console.error('[POST /api/licenses] Error:', err);
         return NextResponse.json({ success: false, message: err.message }, { status: 500 });
     }
 }
