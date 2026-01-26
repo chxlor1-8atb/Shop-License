@@ -459,9 +459,13 @@ th.row-number .header-actions {
     min-width: 100px;
 }
 
-.excel-table td .custom-select-wrapper,
-.excel-table td .datepicker-wrapper {
+.excel-table td .custom-select-wrapper {
     width: 100%;
+}
+
+.excel-table td .datepicker-wrapper {
+    width: auto;
+
     margin: -0.5rem 0;
     /* Compensation for cell padding if needed, or just let it fit */
 }

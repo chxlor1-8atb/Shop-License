@@ -4484,7 +4484,7 @@ body:has(.sidebar.show) .mobile-toggle i {
 .datepicker-wrapper {
     position: relative;
     display: inline-block;
-    width: 100%;
+
 }
 
 /* When calendar is open, bring to front */
@@ -4509,7 +4509,9 @@ body:has(.sidebar.show) .mobile-toggle i {
     /* More rounded */
     cursor: pointer;
     transition: all 0.2s ease;
-    width: 100%;
+    /* width: 100%; Removed to fit content */
+    min-width: 180px; 
+    /* added min-width to ensure it's not too small but still compact */
     height: 42px;
     /* Match height */
 }
