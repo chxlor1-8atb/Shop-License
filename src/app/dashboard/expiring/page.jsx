@@ -234,8 +234,7 @@ export default function ExpiringPage() {
     };
 
     const skeletonColumns = [
-        { width: '10%' },
-        { width: '20%' },
+        { width: '25%' },
         { width: '15%' },
         { width: '15%' },
         { width: '15%', center: true },
@@ -360,7 +359,6 @@ export default function ExpiringPage() {
                         <table className="excel-table">
                             <thead>
                                 <tr>
-                                    <th>รหัสร้านค้า</th>
                                     <th>ชื่อร้านค้า</th>
                                     <th>ประเภท</th>
                                     <th>เลขที่</th>
@@ -374,7 +372,7 @@ export default function ExpiringPage() {
                                     <TableSkeleton rows={5} columns={skeletonColumns} />
                                 ) : currentData.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="text-center">ไม่พบข้อมูล</td>
+                                        <td colSpan="6" className="text-center">ไม่พบข้อมูล</td>
                                     </tr>
                                 ) : (
                                     currentData.map(license => (
@@ -480,7 +478,6 @@ function ExpiringLicenseRow({ license, onDelete }) {
 
     return (
         <tr>
-            <td><strong>{license.shop_code || '-'}</strong></td>
             <td>{license.shop_name}</td>
             <td>{license.type_name}</td>
             <td>{license.license_number}</td>
