@@ -17,14 +17,14 @@ const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
           <thead>
             <tr>
               {["ชื่อประเภท", "คำอธิบาย", "อายุ (วัน)", "ใบอนุญาต"].map((h, i) => (
-                <th key={i}><div className="th-content">{h}</div></th>
+                <th key={i} style={{ textAlign: "center" }}><div className="th-content" style={{ justifyContent: "center" }}>{h}</div></th>
               ))}
             </tr>
           </thead>
           <tbody>
             <TableSkeleton rows={5} columns={[
-              { width: "80%" },
-              { width: "90%" },
+              { width: "80%", center: true },
+              { width: "90%", center: true },
               { width: "50%", center: true },
               { width: "40%", center: true },
             ]} />
@@ -37,9 +37,9 @@ const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
 
 // Constants
 const STANDARD_COLUMNS = [
-  { id: "name", name: "ชื่อประเภท", width: 250, align: "left" },
+  { id: "name", name: "ชื่อประเภท", width: 250, align: "center" },
 // Price column removed as requested
-  { id: "description", name: "ข้อมูลอื่นๆ", width: 420, align: "left" },
+  { id: "description", name: "ข้อมูลอื่นๆ", width: 420, align: "center" },
   {
     id: "validity_days",
     name: "อายุ (วัน)",
@@ -160,7 +160,7 @@ export default function LicenseTypesPage() {
             customCols.push({
               ...col,
               width: 150,
-              align: "left",
+              align: "center",
             });
           }
         });
@@ -518,14 +518,14 @@ export default function LicenseTypesPage() {
                   <thead>
                     <tr>
                       {["ชื่อประเภท", "คำอธิบาย", "อายุ (วัน)", "ใบอนุญาต"].map((h, i) => (
-                        <th key={i}><div className="th-content">{h}</div></th>
+                        <th key={i} style={{ textAlign: "center" }}><div className="th-content" style={{ justifyContent: "center" }}>{h}</div></th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     <TableSkeleton rows={5} columns={[
-                      { width: "80%" },
-                      { width: "90%" },
+                      { width: "80%", center: true },
+                      { width: "90%", center: true },
                       { width: "50%", center: true },
                       { width: "40%", center: true },
                     ]} />

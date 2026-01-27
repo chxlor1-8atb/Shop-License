@@ -97,6 +97,7 @@ function LicensesPageContent() {
         type: "select",
         options: enhancedShopOptions,
         display_order: 1,
+        align: "center",
       },
       {
         id: "license_type_id",
@@ -105,12 +106,14 @@ function LicensesPageContent() {
         type: "select",
         options: typeOptions,
         display_order: 2,
+        align: "center",
       },
       { 
         id: "license_number", 
         name: "เลขที่ใบอนุญาต", 
         width: 200,
         display_order: 5,
+        align: "center",
       },
       {
         id: "issue_date",
@@ -143,6 +146,7 @@ function LicensesPageContent() {
         name: "หมายเหตุ", 
         width: 200,
         display_order: 100, 
+        align: "center",
       },
     ];
 
@@ -679,9 +683,9 @@ function LicensesPageContent() {
                       ? columns.map((col) => (
                           <th
                             key={col.id}
-                            style={{ width: col.width, minWidth: col.width }}
+                            style={{ width: col.width, minWidth: col.width, textAlign: "center" }}
                           >
-                            <div className="th-content">{col.name}</div>
+                            <div className="th-content" style={{ justifyContent: "center" }}>{col.name}</div>
                           </th>
                         ))
                       : [
@@ -697,8 +701,8 @@ function LicensesPageContent() {
                           "สถานะ",
                           "หมายเหตุ",
                         ].map((header, i) => (
-                          <th key={i} style={{ minWidth: "120px" }}>
-                            <div className="th-content">{header}</div>
+                          <th key={i} style={{ minWidth: "120px", textAlign: "center" }}>
+                            <div className="th-content" style={{ justifyContent: "center" }}>{header}</div>
                           </th>
                         ))}
                   </tr>
@@ -707,17 +711,17 @@ function LicensesPageContent() {
                   <TableSkeleton
                     rows={10}
                     columns={[
-                      { width: "180px" }, // Shop
-                      { width: "150px" }, // Type
-                      { width: "150px" }, // Location
-                      { width: "100px" }, // Amount
-                      { width: "150px" }, // License No
+                      { width: "180px", center: true }, // Shop
+                      { width: "150px", center: true }, // Type
+                      { width: "150px", center: true }, // Location
+                      { width: "100px", center: true }, // Amount
+                      { width: "150px", center: true }, // License No
                       { width: "120px", center: true }, // Issue Date
                       { width: "120px", center: true }, // Expiry
-                      { width: "100px" }, // Area Sqm
-                      { width: "100px" }, // Area HP
+                      { width: "100px", center: true }, // Area Sqm
+                      { width: "100px", center: true }, // Area HP
                       { width: "120px", center: true, rounded: true }, // Status
-                      { width: "200px" }, // Notes
+                      { width: "200px", center: true }, // Notes
                     ]}
                   />
                 </tbody>
