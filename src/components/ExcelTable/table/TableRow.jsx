@@ -30,7 +30,7 @@ export function TableRow({
         title={onRowClick ? "คลิกเพื่อดูรายละเอียด" : undefined}
       >
         {onRowClick ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
             {rowIndex + 1}
             <i className="fas fa-external-link-alt" style={{ fontSize: '0.65rem', opacity: 0.5 }}></i>
           </span>
