@@ -29,18 +29,18 @@ const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
           <thead>
             <tr>
               {["ชื่อร้านค้า", "ชื่อเจ้าของ", "เบอร์โทรศัพท์", "ที่อยู่", "อีเมล", "หมายเหตุ", "จำนวนใบอนุญาต"].map((h, i) => (
-                <th key={i} style={{ minWidth: "120px" }}><div className="th-content">{h}</div></th>
+                <th key={i} style={{ minWidth: "120px", textAlign: "center" }}><div className="th-content" style={{ justifyContent: "center" }}>{h}</div></th>
               ))}
             </tr>
           </thead>
           <tbody>
             <TableSkeleton rows={10} columns={[
-              { width: "90%" },
-              { width: "80%" },
-              { width: "70%" },
-              { width: "85%" },
-              { width: "70%" },
-              { width: "60%" },
+              { width: "90%", center: true },
+              { width: "80%", center: true },
+              { width: "70%", center: true },
+              { width: "85%", center: true },
+              { width: "70%", center: true },
+              { width: "60%", center: true },
               { width: "40%", center: true },
             ]} />
           </tbody>
@@ -52,12 +52,12 @@ const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
 
 // Default column definition
 const STANDARD_COLUMNS = [
-  { id: "shop_name", name: "ชื่อร้านค้า", width: 250, align: "left" },
-  { id: "owner_name", name: "ชื่อเจ้าของ", width: 200, align: "left" },
-  { id: "phone", name: "เบอร์โทรศัพท์", width: 150, align: "left" },
-  { id: "address", name: "ที่อยู่", width: 300, align: "left" }, // Added address as it was in form
-  { id: "email", name: "อีเมล", width: 200, align: "left" }, // Added email
-  { id: "notes", name: "หมายเหตุ", width: 200, align: "left" }, // Added notes
+  { id: "shop_name", name: "ชื่อร้านค้า", width: 250, align: "center" },
+  { id: "owner_name", name: "ชื่อเจ้าของ", width: 200, align: "center" },
+  { id: "phone", name: "เบอร์โทรศัพท์", width: 150, align: "center" },
+  { id: "address", name: "ที่อยู่", width: 300, align: "center" }, // Added address as it was in form
+  { id: "email", name: "อีเมล", width: 200, align: "center" }, // Added email
+  { id: "notes", name: "หมายเหตุ", width: 200, align: "center" }, // Added notes
   {
     id: "license_count",
     name: "จำนวนใบอนุญาต",
@@ -588,9 +588,9 @@ export default function ShopsPage() {
                     {columns.map((col) => (
                       <th
                         key={col.id}
-                        style={{ width: col.width, minWidth: col.width }}
+                        style={{ width: col.width, minWidth: col.width, textAlign: "center" }}
                       >
-                        <div className="th-content">{col.name}</div>
+                        <div className="th-content" style={{ justifyContent: "center" }}>{col.name}</div>
                       </th>
                     ))}
                   </tr>
@@ -599,12 +599,12 @@ export default function ShopsPage() {
                   <TableSkeleton
                     rows={pagination.limit}
                     columns={[
-                      { width: "90%" },
-                      { width: "80%" },
-                      { width: "70%" },
-                      { width: "85%" },
-                      { width: "70%" },
-                      { width: "60%" },
+                      { width: "90%", center: true },
+                      { width: "80%", center: true },
+                      { width: "70%", center: true },
+                      { width: "85%", center: true },
+                      { width: "70%", center: true },
+                      { width: "60%", center: true },
                       { width: "40%", center: true },
                     ]}
                   />
