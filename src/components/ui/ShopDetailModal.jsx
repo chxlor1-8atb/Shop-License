@@ -21,13 +21,18 @@ export default function ShopDetailModal({
   const [licenses, setLicenses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddLicense, setShowAddLicense] = useState(false);
-  const [newLicense, setNewLicense] = useState({
-    license_type_id: "",
-    license_number: "",
-    issue_date: new Date().toISOString().split("T")[0],
-    expiry_date: "",
-    status: "active",
-    notes: "",
+  const [newLicense, setNewLicense] = useState(() => {
+    const today = new Date();
+    const nextYear = new Date(today);
+    nextYear.setFullYear(today.getFullYear() + 1);
+    return {
+      license_type_id: "",
+      license_number: "",
+      issue_date: today.toISOString().split("T")[0],
+      expiry_date: nextYear.toISOString().split("T")[0],
+      status: "active",
+      notes: "",
+    };
   });
 
   useEffect(() => {
@@ -72,11 +77,15 @@ export default function ShopDetailModal({
       if (data.success) {
         showSuccess("สร้างใบอนุญาตเรียบร้อย");
         setShowAddLicense(false);
+        const today = new Date();
+        const nextYear = new Date(today);
+        nextYear.setFullYear(today.getFullYear() + 1);
+
         setNewLicense({
           license_type_id: "",
           license_number: "",
-          issue_date: new Date().toISOString().split("T")[0],
-          expiry_date: "",
+          issue_date: today.toISOString().split("T")[0],
+          expiry_date: nextYear.toISOString().split("T")[0],
           status: "active",
           notes: "",
         });
@@ -206,9 +215,24 @@ export default function ShopDetailModal({
                     <label className="form-label">วันที่ออก</label>
                     <DatePicker
                       value={newLicense.issue_date}
-                      onChange={(e) =>
-                        setNewLicense((prev) => ({ ...prev, issue_date: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        const newIssueDate = e.target.value;
+                        setNewLicense((prev) => {
+                          let newExpiryDate = prev.expiry_date;
+                          if (newIssueDate) {
+                            const date = new Date(newIssueDate);
+                            if (!isNaN(date.getTime())) {
+                              date.setFullYear(date.getFullYear() + 1);
+                              newExpiryDate = date.toISOString().split("T")[0];
+                            }
+                          }
+                          return {
+                            ...prev,
+                            issue_date: newIssueDate,
+                            expiry_date: newExpiryDate,
+                          };
+                        });
+                      }}
                       placeholder="เลือกวันที่ออก"
                     />
                   </div>

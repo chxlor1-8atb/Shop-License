@@ -52,12 +52,16 @@ export default function QuickAddModal({
           ...prefillData,
         });
       } else if (type === "license") {
+        const today = new Date();
+        const nextYear = new Date(today);
+        nextYear.setFullYear(today.getFullYear() + 1);
+        
         setFormData({
           shop_id: "",
           license_type_id: "",
           license_number: "",
-          issue_date: new Date().toISOString().split("T")[0],
-          expiry_date: "",
+          issue_date: today.toISOString().split("T")[0],
+          expiry_date: nextYear.toISOString().split("T")[0],
           status: "active",
           notes: "",
           ...prefillData,
@@ -238,7 +242,24 @@ export default function QuickAddModal({
                 <label className="form-label">วันที่ออก</label>
                 <DatePicker
                   value={formData.issue_date || ""}
-                  onChange={(e) => handleChange("issue_date", e.target.value)}
+                  onChange={(e) => {
+                    const newIssueDate = e.target.value;
+                    setFormData((prev) => {
+                      let newExpiryDate = prev.expiry_date;
+                      if (newIssueDate) {
+                        const date = new Date(newIssueDate);
+                        if (!isNaN(date.getTime())) {
+                          date.setFullYear(date.getFullYear() + 1);
+                          newExpiryDate = date.toISOString().split("T")[0];
+                        }
+                      }
+                      return {
+                        ...prev,
+                        issue_date: newIssueDate,
+                        expiry_date: newExpiryDate,
+                      };
+                    });
+                  }}
                   placeholder="เลือกวันที่ออก"
                 />
               </div>
