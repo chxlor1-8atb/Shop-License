@@ -492,14 +492,14 @@ function ExpiringLicenseRow({ license, onDelete }) {
             </td>
             <td className="row-actions">
                 <button 
-                    className="header-btn danger"
+                    className="row-action-btn"
                     onClick={(e) => {
                         e.stopPropagation();
                         onDelete();
                     }}
                     title="ลบรายการ"
                 >
-                    <i className="fas fa-trash-alt"></i>
+                    <i className="fas fa-trash"></i>
                 </button>
             </td>
         </tr>
