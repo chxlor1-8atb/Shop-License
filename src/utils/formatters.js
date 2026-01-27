@@ -12,6 +12,7 @@ export const formatThaiDate = (dateString) => {
     if (!dateString) return '-';
 
     return new Date(dateString).toLocaleDateString('th-TH', {
+        timeZone: 'Asia/Bangkok',
         year: 'numeric',
         month: 'short',
         day: 'numeric'
@@ -27,6 +28,7 @@ export const formatThaiDateShort = (dateString) => {
     if (!dateString) return '-';
 
     return new Date(dateString).toLocaleDateString('th-TH', {
+        timeZone: 'Asia/Bangkok',
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
@@ -42,6 +44,7 @@ export const formatThaiDateFull = (dateString) => {
     if (!dateString) return '-';
 
     return new Date(dateString).toLocaleDateString('th-TH', {
+        timeZone: 'Asia/Bangkok',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -57,6 +60,7 @@ export const formatThaiDateTime = (dateString) => {
     if (!dateString) return '-';
 
     return new Date(dateString).toLocaleString('th-TH', {
+        timeZone: 'Asia/Bangkok',
         year: 'numeric',
         month: 'short',
         day: 'numeric',

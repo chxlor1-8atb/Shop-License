@@ -492,7 +492,7 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
         footer: () => ({
             columns: [
                 { text: 'ระบบจัดการใบอนุญาต', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
@@ -552,7 +552,7 @@ export async function exportShopsToPDF(shops) {
         footer: () => ({
             columns: [
                 { text: 'ระบบจัดการใบอนุญาต', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
@@ -614,7 +614,7 @@ export async function exportUsersToPDF(users) {
         footer: () => ({
             columns: [
                 { text: 'ระบบจัดการใบอนุญาต', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
@@ -772,7 +772,7 @@ export async function exportActivityLogsToPDF(logs, filters = {}) {
         footer: () => ({
             columns: [
                 { text: 'ระบบจัดการใบอนุญาต', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),

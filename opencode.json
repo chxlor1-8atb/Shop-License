@@ -1,0 +1,11 @@
+{
+  "mcp": {
+    "neon": {
+      "type": "local",
+      "command": [
+        "node",
+        "node_modules/@neondatabase/mcp-server-neon/dist/index.js"
+      ]
+    }
+  }
+}

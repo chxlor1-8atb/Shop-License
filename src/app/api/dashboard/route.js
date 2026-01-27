@@ -3,10 +3,10 @@ import { getIronSession } from 'iron-session';
 import { fetchAll } from '@/lib/db';
 import { sessionOptions } from '@/lib/session';
 import { NextResponse } from 'next/server';
-import { 
-    getCachedDashboardStats, 
-    getCachedLicenseBreakdown, 
-    getCachedExpiringCount 
+import {
+    getCachedDashboardStats,
+    getCachedLicenseBreakdown,
+    getCachedExpiringCount
 } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
@@ -35,7 +35,7 @@ export async function GET(request) {
             case 'license_breakdown':
                 return await getLicenseBreakdown();
             case 'recent_activity':
-                return await getRecentActivity(session);
+                return await getRecentActivity(session, searchParams);
             default:
                 return await getStats();
         }
@@ -82,28 +82,36 @@ async function getLicenseBreakdown() {
 async function getExpiringCount() {
     // ===== Using Data Cache =====
     const count = await getCachedExpiringCount();
-    
+
     return NextResponse.json({
         success: true,
         count
     });
 }
 
-async function getRecentActivity(session) {
+async function getRecentActivity(session, searchParams) {
     // Security check: Only admins can see activity logs
-    // Note: Activity logs are NOT cached (real-time data)
     if (session.role !== 'admin') {
         return NextResponse.json({ success: true, activities: [] });
+    }
+
+    const type = searchParams.get('type') || 'ALL';
+    let whereClause = "a.action IN ('CREATE', 'UPDATE', 'DELETE')";
+    const params = [];
+
+    if (type !== 'ALL' && ['CREATE', 'UPDATE', 'DELETE'].includes(type)) {
+        whereClause = `a.action = $1`;
+        params.push(type);
     }
 
     const activities = await fetchAll(`
         SELECT a.*, COALESCE(u.full_name, 'System') as user_name 
         FROM audit_logs a
         LEFT JOIN users u ON a.user_id = u.id
-        WHERE a.action IN ('CREATE', 'UPDATE', 'DELETE')
+        WHERE ${whereClause}
         ORDER BY a.created_at DESC 
         LIMIT 20
-    `);
+    `, params);
     return NextResponse.json({ success: true, activities });
 }
 

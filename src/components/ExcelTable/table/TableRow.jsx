@@ -106,6 +106,7 @@ export function TableRow({
                     col.render(row[col.id], row)
                   ) : col.type === "date" && row[col.id]
                     ? new Date(row[col.id]).toLocaleDateString("th-TH", {
+                        timeZone: "Asia/Bangkok",
                         year: "numeric",
                         month: "short",
                         day: "numeric",

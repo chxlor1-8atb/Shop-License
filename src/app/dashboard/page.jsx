@@ -28,12 +28,20 @@ const ACTION_BADGE_MAP = {
     'UPDATE': 'badge-warning'
 };
 
+const ACTION_LABEL_MAP = {
+    'LOGIN': 'เข้าสู่ระบบ',
+    'DELETE': 'ลบข้อมูล',
+    'CREATE': 'สร้างใหม่',
+    'UPDATE': 'แก้ไข'
+};
+
 /**
  * DashboardPage Component
  */
 export default function DashboardPage() {
     const [stats, setStats] = useState(null);
     const [recentActivity, setRecentActivity] = useState([]);
+    const [activeFilter, setActiveFilter] = useState('ALL');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -65,7 +73,7 @@ export default function DashboardPage() {
         try {
             const [statsRes, recentRes] = await Promise.all([
                 fetch(API_ENDPOINTS.DASHBOARD_STATS),
-                fetch(API_ENDPOINTS.DASHBOARD_ACTIVITY)
+                fetch(`${API_ENDPOINTS.DASHBOARD_ACTIVITY}&type=${activeFilter}`)
             ]);
 
             const statsData = await statsRes.json();
@@ -80,7 +88,25 @@ export default function DashboardPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [activeFilter]);
+
+    // Refetch activity when filter changes
+    useEffect(() => {
+        if (!initialized[0]) return; // Skip on first render as fetchDashboardData calls it
+        
+        const fetchActivity = async () => {
+            try {
+                const res = await fetch(`${API_ENDPOINTS.DASHBOARD_ACTIVITY}&type=${activeFilter}`);
+                const data = await safeParseJson(res);
+                if (data?.success) {
+                    setRecentActivity(data.activities || []);
+                }
+            } catch (error) {
+                console.error("Failed to fetch activity:", error);
+            }
+        };
+        fetchActivity();
+    }, [activeFilter]);
 
     if (loading) return <DashboardSkeleton />;
     if (error) return <div className="error-message">{error}</div>;
@@ -90,7 +116,13 @@ export default function DashboardPage() {
         <div>
             <StatsGrid stats={stats} />
 
-            {user?.role === 'admin' && <RecentActivityCard activities={recentActivity} />}
+            {user?.role === 'admin' && (
+                <RecentActivityCard 
+                    activities={recentActivity} 
+                    filter={activeFilter}
+                    onFilterChange={setActiveFilter}
+                />
+            )}
         </div>
     );
 }
@@ -222,16 +254,13 @@ function StatCard({ value, label, icon, variant }) {
 /**
  * RecentActivityCard Component
  */
-function RecentActivityCard({ activities }) {
+function RecentActivityCard({ activities, filter, onFilterChange }) {
     const [selectedLog, setSelectedLog] = useState(null);
-    const [filter, setFilter] = useState('ALL');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    const filteredActivities = activities.filter(log => {
-        if (filter === 'ALL') return true;
-        return log.action === filter;
-    });
+    // Server-side filtered already
+    const filteredActivities = activities;
 
     // Reset to first page when filter changes
     useEffect(() => {
@@ -259,7 +288,7 @@ function RecentActivityCard({ activities }) {
                     </h3>
                     <div className="card-actions activity-filter-actions">
                         <button 
-                            onClick={() => setFilter('ALL')}
+                            onClick={() => onFilterChange('ALL')}
                             className="btn btn-sm"
                             style={{ 
                                 borderRadius: '20px',
@@ -269,10 +298,10 @@ function RecentActivityCard({ activities }) {
                                 border: '1px solid ' + (filter === 'ALL' ? '#d1d5db' : 'transparent')
                             }}
                         >
-                            All
+                            ทั้งหมด
                         </button>
                         <button 
-                            onClick={() => setFilter('CREATE')}
+                            onClick={() => onFilterChange('CREATE')}
                             className="btn btn-sm"
                             style={{ 
                                 borderRadius: '20px',
@@ -283,10 +312,10 @@ function RecentActivityCard({ activities }) {
                                 boxShadow: filter === 'CREATE' ? '0 2px 4px rgba(59, 130, 246, 0.3)' : 'none'
                             }}
                         >
-                            CREATE
+                            สร้าง
                         </button>
                         <button 
-                            onClick={() => setFilter('UPDATE')}
+                            onClick={() => onFilterChange('UPDATE')}
                             className="btn btn-sm"
                             style={{ 
                                 borderRadius: '20px',
@@ -297,10 +326,10 @@ function RecentActivityCard({ activities }) {
                                 boxShadow: filter === 'UPDATE' ? '0 2px 4px rgba(245, 158, 11, 0.3)' : 'none'
                             }}
                         >
-                            UPDATE
+                            แก้ไข
                         </button>
                         <button 
-                            onClick={() => setFilter('DELETE')}
+                            onClick={() => onFilterChange('DELETE')}
                             className="btn btn-sm"
                             style={{ 
                                 borderRadius: '20px',
@@ -311,7 +340,7 @@ function RecentActivityCard({ activities }) {
                                 boxShadow: filter === 'DELETE' ? '0 2px 4px rgba(239, 68, 68, 0.3)' : 'none'
                             }}
                         >
-                            DELETE
+                            ลบ
                         </button>
                     </div>
                 </div>
@@ -407,7 +436,7 @@ function RecentActivityCard({ activities }) {
                         <div className="form-group">
                             <label className="text-muted mb-1">รายละเอียด</label>
                             <div className="p-2 bg-light rounded text-break">
-                                {selectedLog.entity_type} {selectedLog.entity_id ? `#${selectedLog.entity_id}` : ''}
+                                {selectedLog.details || `${selectedLog.entity_type} #${selectedLog.entity_id}`}
                                 {selectedLog.details && (
                                     <div className="mt-2 text-muted small">
                                         {selectedLog.details}
@@ -455,7 +484,9 @@ function ActivityRow({ log, onClick }) {
             </td>
             <td>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                    <span className={`badge ${badgeClass}`}>{log.action}</span>
+                    <span className={`badge ${badgeClass}`}>
+                        {ACTION_LABEL_MAP[log.action] || log.action}
+                    </span>
                 </div>
             </td>
             <td className="hide-on-mobile">
@@ -472,7 +503,7 @@ function ActivityRow({ log, onClick }) {
                         overflow: 'hidden', 
                         textOverflow: 'ellipsis'
                     }}>
-                        {log.entity_type} {log.entity_id ? `#${log.entity_id}` : ''}
+                        {log.details || `${log.entity_type} #${log.entity_id}`}
                     </span>
                 </div>
             </td>

@@ -62,7 +62,7 @@ export default function DashboardLayout({ children }) {
 
   const updateDateTime = () => {
     const d = new Date();
-    const weekday = d.toLocaleDateString("th-TH", { weekday: "long" });
+    const weekday = d.toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", weekday: "long" });
     setCurrentDate(`${weekday} ${formatThaiDateFull(d)}`);
   };
 
@@ -123,7 +123,7 @@ export default function DashboardLayout({ children }) {
               className={`nav-link ${isActive("/dashboard") ? "active" : ""}`}
             >
               <i className="fas fa-chart-pie"></i>
-              <span>Dashboard</span>
+              <span>แดชบอร์ด</span>
             </Link>
             <Link
               href="/dashboard/expiring"
@@ -298,7 +298,7 @@ export default function DashboardLayout({ children }) {
             >
               <i className={`fas ${sidebarOpen ? "fa-times" : "fa-bars"}`}></i>
             </button>
-            <h1 id="pageTitle">Dashboard</h1>
+            <h1 id="pageTitle">แดชบอร์ด</h1>
           </div>
           <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <VersionBadge onClick={() => setShowPatchNotes(true)} />
