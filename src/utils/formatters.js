@@ -8,10 +8,30 @@
  * @param {string} dateString - ISO date string or any valid date
  * @returns {string} Formatted date (e.g., "3 ม.ค. 2026")
  */
+/**
+ * Fixes date string interpretation by assuming UTC if no timezone is provided
+ * This handles cases where DB returns UTC strings without 'Z'
+ */
+const toDate = (date) => {
+    if (!date) return null;
+    let d = date;
+    if (typeof d === 'string' && d.includes('T') && !d.endsWith('Z') && !d.includes('+')) {
+        d += 'Z';
+    }
+    return new Date(d);
+};
+
+/**
+ * Formats a date string to Thai locale format
+ * @param {string} dateString - ISO date string or any valid date
+ * @returns {string} Formatted date (e.g., "3 ม.ค. 2026")
+ */
 export const formatThaiDate = (dateString) => {
     if (!dateString) return '-';
+    const date = toDate(dateString);
+    if (!date || isNaN(date.getTime())) return '-';
 
-    return new Date(dateString).toLocaleDateString('th-TH', {
+    return date.toLocaleDateString('th-TH', {
         timeZone: 'Asia/Bangkok',
         year: 'numeric',
         month: 'short',
@@ -26,8 +46,10 @@ export const formatThaiDate = (dateString) => {
  */
 export const formatThaiDateShort = (dateString) => {
     if (!dateString) return '-';
+    const date = toDate(dateString);
+    if (!date || isNaN(date.getTime())) return '-';
 
-    return new Date(dateString).toLocaleDateString('th-TH', {
+    return date.toLocaleDateString('th-TH', {
         timeZone: 'Asia/Bangkok',
         day: '2-digit',
         month: '2-digit',
@@ -42,8 +64,10 @@ export const formatThaiDateShort = (dateString) => {
  */
 export const formatThaiDateFull = (dateString) => {
     if (!dateString) return '-';
+    const date = toDate(dateString);
+    if (!date || isNaN(date.getTime())) return '-';
 
-    return new Date(dateString).toLocaleDateString('th-TH', {
+    return date.toLocaleDateString('th-TH', {
         timeZone: 'Asia/Bangkok',
         year: 'numeric',
         month: 'long',
@@ -58,14 +82,17 @@ export const formatThaiDateFull = (dateString) => {
  */
 export const formatThaiDateTime = (dateString) => {
     if (!dateString) return '-';
+    const date = toDate(dateString);
+    if (!date || isNaN(date.getTime())) return '-';
 
-    return new Date(dateString).toLocaleString('th-TH', {
+    return date.toLocaleString('th-TH', {
         timeZone: 'Asia/Bangkok',
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        hour12: false
     });
 };
 

@@ -1,5 +1,6 @@
 import CustomSelect from "../../ui/CustomSelect";
 import DatePicker from "../../ui/DatePicker";
+import { formatThaiDate } from "@/utils/formatters";
 
 export function TableRow({
   row,
@@ -104,14 +105,9 @@ export function TableRow({
                 <span className="cell-text" style={{ flex: "0 1 auto" }}>
                   {col.render ? (
                     col.render(row[col.id], row)
-                  ) : col.type === "date" && row[col.id]
-                    ? new Date(row[col.id]).toLocaleDateString("th-TH", {
-                        timeZone: "Asia/Bangkok",
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })
-                  : col.type === "select" && col.options ? (
+                  ) : col.type === "date" && row[col.id] ? (
+                    formatThaiDate(row[col.id])
+                  ) : col.type === "select" && col.options ? (
                     col.isBadge ? (
                       <span
                         className={`badge badge-${row[col.id]}`}
