@@ -234,9 +234,9 @@ export default function ExpiringPage() {
     };
 
     const skeletonColumns = [
-        { width: '25%' },
-        { width: '15%' },
-        { width: '15%' },
+        { width: '25%', center: true },
+        { width: '15%', center: true },
+        { width: '15%', center: true },
         { width: '15%', center: true },
         { width: '20%', center: true }
     ];
@@ -359,12 +359,12 @@ export default function ExpiringPage() {
                         <table className="excel-table">
                             <thead>
                                 <tr>
-                                    <th>ชื่อร้านค้า</th>
-                                    <th>ประเภท</th>
-                                    <th>เลขที่</th>
+                                    <th className="text-center">ชื่อร้านค้า</th>
+                                    <th className="text-center">ประเภท</th>
+                                    <th className="text-center">เลขที่</th>
                                     <th className="text-center">หมดอายุ</th>
                                     <th className="text-center">สถานะ</th>
-                                    <th className="row-actions">ลบ</th>
+                                    <th className="row-actions text-center">ลบ</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -478,16 +478,16 @@ function ExpiringLicenseRow({ license, onDelete }) {
 
     return (
         <tr>
-            <td>{license.shop_name}</td>
-            <td>{license.type_name}</td>
-            <td>{license.license_number}</td>
+            <td className="text-center">{license.shop_name}</td>
+            <td className="text-center">{license.type_name}</td>
+            <td className="text-center">{license.license_number}</td>
             <td className="text-center">{formatThaiDate(license.expiry_date)}</td>
             <td className="text-center">
                 <span className={`badge ${expiryStatus.badgeClass}`}>
                     <i className={expiryStatus.icon}></i> {expiryStatus.text}
                 </span>
             </td>
-            <td className="row-actions">
+            <td className="row-actions text-center">
                 <button 
                     className="row-action-btn"
                     onClick={(e) => {
