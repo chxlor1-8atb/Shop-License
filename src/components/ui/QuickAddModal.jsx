@@ -33,12 +33,41 @@ export default function QuickAddModal({
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [customFields, setCustomFields] = useState([]);
+  const [loadingFields, setLoadingFields] = useState(false);
+
+  // Fetch custom fields when modal opens
+  useEffect(() => {
+    if (isOpen && type === "shop") {
+      fetchCustomFields();
+    }
+  }, [isOpen, type]);
+
+  const fetchCustomFields = async () => {
+    setLoadingFields(true);
+    try {
+      const res = await fetch(`/api/custom-fields?entity_type=shops&t=${Date.now()}`);
+      const data = await res.json();
+      if (data.success) {
+        // Filter only fields that should show in form and are not standard fields
+        const standardFields = ['shop_name', 'owner_name', 'phone', 'address', 'email', 'notes', 'license_count'];
+        const fields = (data.fields || []).filter(
+          f => f.show_in_form && !standardFields.includes(f.field_name)
+        );
+        setCustomFields(fields);
+      }
+    } catch (err) {
+      console.error('Error fetching custom fields:', err);
+    } finally {
+      setLoadingFields(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
       // Initialize form data based on type
       if (type === "shop") {
-        setFormData({
+        const initialData = {
           shop_name: "",
           owner_name: "",
           phone: "",
@@ -50,7 +79,16 @@ export default function QuickAddModal({
           license_type_id: "",
           license_number: "",
           ...prefillData,
+        };
+        
+        // Initialize custom fields with empty values
+        customFields.forEach(field => {
+          if (!(field.field_name in initialData)) {
+            initialData[field.field_name] = "";
+          }
         });
+        
+        setFormData(initialData);
       } else if (type === "license") {
         const today = new Date();
         const nextYear = new Date(today);
@@ -69,7 +107,7 @@ export default function QuickAddModal({
       }
       setError("");
     }
-  }, [isOpen, type, prefillData]);
+  }, [isOpen, type, prefillData, customFields]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -81,7 +119,37 @@ export default function QuickAddModal({
     setError("");
 
     try {
-      await onSubmit(formData);
+      // For shop type, separate standard fields from custom fields
+      if (type === "shop") {
+        const standardFields = ['shop_name', 'owner_name', 'phone', 'address', 'email', 'notes', 'create_license', 'license_type_id', 'license_number'];
+        const customFieldsData = {};
+        
+        // Extract custom field values
+        Object.keys(formData).forEach(key => {
+          if (!standardFields.includes(key)) {
+            customFieldsData[key] = formData[key];
+          }
+        });
+        
+        // Create payload with custom_fields
+        const payload = {
+          shop_name: formData.shop_name,
+          owner_name: formData.owner_name,
+          phone: formData.phone,
+          address: formData.address,
+          email: formData.email,
+          notes: formData.notes,
+          create_license: formData.create_license,
+          license_type_id: formData.license_type_id,
+          license_number: formData.license_number,
+          custom_fields: customFieldsData,
+        };
+        
+        await onSubmit(payload);
+      } else {
+        await onSubmit(formData);
+      }
+      
       onClose();
     } catch (err) {
       setError(err.message || "เกิดข้อผิดพลาด");
@@ -160,6 +228,83 @@ export default function QuickAddModal({
                 rows={2}
               />
             </div>
+
+            {/* Custom Fields Section */}
+            {customFields.length > 0 && (
+              <>
+                <div className="form-divider" style={{ margin: '1.5rem 0 1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                  <label style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                    <i className="fas fa-sliders-h" style={{ marginRight: '0.5rem' }}></i>
+                    ข้อมูลเพิ่มเติม (Custom Fields)
+                  </label>
+                </div>
+                
+                {customFields.map((field) => {
+                  const fieldValue = formData[field.field_name] || "";
+                  
+                  return (
+                    <div key={field.id} className="form-group">
+                      <label className={`form-label ${field.is_required ? 'required' : ''}`}>
+                        {field.field_label}
+                      </label>
+                      
+                      {field.field_type === 'textarea' ? (
+                        <textarea
+                          className="form-input"
+                          value={fieldValue}
+                          onChange={(e) => handleChange(field.field_name, e.target.value)}
+                          placeholder={`กรอก${field.field_label}`}
+                          required={field.is_required}
+                          rows={3}
+                        />
+                      ) : field.field_type === 'number' ? (
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={fieldValue}
+                          onChange={(e) => handleChange(field.field_name, e.target.value)}
+                          placeholder={`กรอก${field.field_label}`}
+                          required={field.is_required}
+                        />
+                      ) : field.field_type === 'date' ? (
+                        <DatePicker
+                          value={fieldValue}
+                          onChange={(e) => handleChange(field.field_name, e.target.value)}
+                          placeholder={`เลือก${field.field_label}`}
+                          required={field.is_required}
+                        />
+                      ) : field.field_type === 'select' && field.field_options ? (
+                        <CustomSelect
+                          value={fieldValue}
+                          onChange={(e) => handleChange(field.field_name, e.target.value)}
+                          options={[
+                            { value: "", label: `-- เลือก${field.field_label} --` },
+                            ...(Array.isArray(field.field_options) 
+                              ? field.field_options.map(opt => ({ 
+                                  value: typeof opt === 'string' ? opt : opt.value, 
+                                  label: typeof opt === 'string' ? opt : opt.label 
+                                }))
+                              : []
+                            )
+                          ]}
+                          searchable={true}
+                          searchPlaceholder={`🔍 ค้นหา${field.field_label}...`}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={fieldValue}
+                          onChange={(e) => handleChange(field.field_name, e.target.value)}
+                          placeholder={`กรอก${field.field_label}`}
+                          required={field.is_required}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
 
             <div className="form-divider">
               <label className="checkbox-label">
