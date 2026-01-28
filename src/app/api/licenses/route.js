@@ -34,7 +34,21 @@ export async function GET(request) {
         let paramIndex = 1;
 
         if (search) {
-            whereClauses.push(`(s.shop_name ILIKE $${paramIndex} OR l.license_number ILIKE $${paramIndex})`);
+            // ค้นหาในทุกฟิลด์หลัก รวมถึง custom_fields
+            whereClauses.push(`(
+                s.shop_name ILIKE $${paramIndex} OR 
+                l.license_number ILIKE $${paramIndex} OR 
+                lt.name ILIKE $${paramIndex} OR 
+                l.status ILIKE $${paramIndex} OR 
+                l.notes ILIKE $${paramIndex} OR
+                l.issue_date::text ILIKE $${paramIndex} OR
+                l.expiry_date::text ILIKE $${paramIndex} OR
+                EXISTS (
+                    SELECT 1 FROM custom_field_values cfv2
+                    WHERE cfv2.entity_id = l.id 
+                    AND cfv2.field_value ILIKE $${paramIndex}
+                )
+            )`);
             params.push(`%${search}%`);
             paramIndex++;
         }
@@ -63,6 +77,7 @@ export async function GET(request) {
             SELECT COUNT(*) as total 
             FROM licenses l
             LEFT JOIN shops s ON l.shop_id = s.id
+            LEFT JOIN license_types lt ON l.license_type_id = lt.id
             ${whereSQL}
         `;
 
@@ -76,7 +91,7 @@ export async function GET(request) {
             FROM licenses l
             LEFT JOIN shops s ON l.shop_id = s.id
             LEFT JOIN license_types lt ON l.license_type_id = lt.id
-            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id
+            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
             LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
             ${whereSQL}
             GROUP BY l.id, s.shop_name, lt.name
@@ -155,11 +170,11 @@ export async function POST(request) {
                 const fieldId = fieldMap[fieldName];
                 if (fieldId && value !== undefined && value !== null) {
                     await executeQuery(`
-                        INSERT INTO custom_field_values (custom_field_id, entity_id, field_value)
-                        VALUES ($1, $2, $3)
+                        INSERT INTO custom_field_values (custom_field_id, entity_type, entity_id, field_value)
+                        VALUES ($1, $2, $3, $4)
                         ON CONFLICT (custom_field_id, entity_id) 
                         DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = NOW()
-                    `, [fieldId, licenseId, value?.toString() || '']);
+                    `, [fieldId, 'licenses', licenseId, value?.toString() || '']);
                 }
             }
         }
@@ -222,11 +237,11 @@ export async function PUT(request) {
                     if (value !== undefined && value !== null && value !== '') {
                         // Insert or update the value
                         await executeQuery(`
-                            INSERT INTO custom_field_values (custom_field_id, entity_id, field_value)
-                            VALUES ($1, $2, $3)
+                            INSERT INTO custom_field_values (custom_field_id, entity_type, entity_id, field_value)
+                            VALUES ($1, $2, $3, $4)
                             ON CONFLICT (custom_field_id, entity_id) 
                             DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = NOW()
-                        `, [fieldId, id, value?.toString() || '']);
+                        `, [fieldId, 'licenses', id, value?.toString() || '']);
                     } else {
                         // Delete the value if it's empty/null
                         await executeQuery(

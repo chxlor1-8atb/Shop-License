@@ -75,11 +75,17 @@ export async function GET(request) {
                     l.expiry_date, 
                     l.status,
                     l.notes,
-                    l.custom_fields
+                    COALESCE(
+                        json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
+                        '{}'::json
+                    ) as custom_fields
                 FROM licenses l
                 LEFT JOIN shops s ON l.shop_id = s.id
                 LEFT JOIN license_types lt ON l.license_type_id = lt.id
+                LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id
+                LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
                 ${whereSQL}
+                GROUP BY l.id, l.license_number, s.shop_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
                 ORDER BY l.id DESC
             `;
             data = await fetchAll(query, params);

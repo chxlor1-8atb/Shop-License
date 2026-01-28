@@ -557,6 +557,7 @@ function LicensesPageContent() {
       expiry_date: formData.expiry_date,
       status: formData.status || "active",
       notes: formData.notes,
+      custom_fields: formData.custom_fields || {}, // Include custom fields
     };
 
     const res = await fetch(API_ENDPOINTS.LICENSES, {
@@ -617,7 +618,7 @@ function LicensesPageContent() {
                 setSearch(val);
                 pagination.resetPage();
               }}
-              placeholder="เลขที่ใบอนุญาต..."
+              placeholder="เลขที่ใบอนุญาต, ร้านค้า, ประเภท, สถานะ..."
             />
           </div>
           <div className="filter-group">

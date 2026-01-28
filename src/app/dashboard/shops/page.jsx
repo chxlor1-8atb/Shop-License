@@ -557,7 +557,7 @@ export default function ShopsPage() {
                 setSearch(val);
                 pagination.resetPage();
               }}
-              placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร..."
+              placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร, ที่อยู่, อีเมล..."
             />
           </div>
         </div>

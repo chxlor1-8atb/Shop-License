@@ -30,7 +30,15 @@ export async function GET(request) {
         let params = [];
 
         if (search) {
-            whereClause = `WHERE shop_name ILIKE $1 OR owner_name ILIKE $1 OR phone ILIKE $1`;
+            // ค้นหาในทุกฟิลด์หลัก และใน custom_fields (JSONB)
+            whereClause = `WHERE 
+                shop_name ILIKE $1 OR 
+                owner_name ILIKE $1 OR 
+                phone ILIKE $1 OR 
+                address ILIKE $1 OR 
+                email ILIKE $1 OR 
+                notes ILIKE $1 OR
+                custom_fields::text ILIKE $1`;
             params.push(`%${search}%`);
         }
 
