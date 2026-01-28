@@ -29,6 +29,8 @@ export default function CustomFieldsSettingsPage() {
     // Modal
     const [showModal, setShowModal] = useState(false);
     const [isEdit, setIsEdit] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState({});
     const [formData, setFormData] = useState({
         id: '',
         entity_type: 'licenses',
@@ -67,9 +69,48 @@ export default function CustomFieldsSettingsPage() {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+        // Clear error for this field when user types
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        // ตรวจสอบชื่อ Field ซ้ำ (เฉพาะเมื่อเพิ่มใหม่)
+        if (!isEdit) {
+            const isDuplicate = fields.some(
+                f => f.field_name.toLowerCase() === formData.field_name.toLowerCase()
+            );
+            if (isDuplicate) {
+                newErrors.field_name = 'ชื่อ Field นี้มีอยู่แล้ว';
+            }
+        }
+
+        // ตรวจสอบ field_name format
+        if (formData.field_name && !/^[a-z0-9_]+$/.test(formData.field_name)) {
+            newErrors.field_name = 'ชื่อ Field ต้องเป็นตัวอักษรภาษาอังกฤษพิมพ์เล็ก ตัวเลข และ _ เท่านั้น';
+        }
+
+        // ตรวจสอบ options สำหรับ select type
+        if (formData.field_type === 'select') {
+            const optionsArray = formData.field_options
+                .split('\n')
+                .map(o => o.trim())
+                .filter(o => o.length > 0);
+            
+            if (optionsArray.length === 0) {
+                newErrors.field_options = 'กรุณาระบุตัวเลือกอย่างน้อย 1 รายการ';
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const openModal = (field = null) => {
+        setErrors({}); // Reset errors
         if (field) {
             setIsEdit(true);
             setFormData({
@@ -105,6 +146,13 @@ export default function CustomFieldsSettingsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Validate form
+        if (!validateForm()) {
+            return;
+        }
+
+        setIsSubmitting(true);
+
         // Prepare options array from newline-separated text
         const optionsArray = formData.field_options
             .split('\n')
@@ -126,6 +174,17 @@ export default function CustomFieldsSettingsPage() {
             });
             const data = await res.json();
 
+            if (!res.ok) {
+                // Handle HTTP errors
+                if (res.status === 409) {
+                    throw new Error('ชื่อ Field นี้มีอยู่แล้ว');
+                } else if (res.status === 500) {
+                    throw new Error('เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง');
+                } else if (res.status === 400) {
+                    throw new Error(data.message || 'ข้อมูลไม่ถูกต้อง');
+                }
+            }
+
             if (data.success) {
                 Swal.fire({
                     title: 'สำเร็จ!',
@@ -140,7 +199,14 @@ export default function CustomFieldsSettingsPage() {
                 Swal.fire('ผิดพลาด', data.message, 'error');
             }
         } catch (error) {
-            Swal.fire('ผิดพลาด', error.message, 'error');
+            console.error('Submit error:', error);
+            Swal.fire({
+                title: 'ผิดพลาด',
+                text: error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+                icon: 'error'
+            });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 

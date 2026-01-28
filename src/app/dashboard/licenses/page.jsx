@@ -270,6 +270,17 @@ function LicensesPageContent() {
 
     const isNew = updatedRow.id.toString().startsWith("id_");
 
+    // Define standard columns (base columns that are not custom fields)
+    const STANDARD_COLUMNS_IDS = [
+      "shop_id",
+      "license_type_id", 
+      "license_number",
+      "issue_date",
+      "expiry_date",
+      "status",
+      "notes",
+    ];
+
     const standardData = {
       shop_id: updatedRow.shop_id,
       license_type_id: updatedRow.license_type_id,
@@ -280,26 +291,19 @@ function LicensesPageContent() {
       notes: updatedRow.notes,
     };
 
-    // Extract custom fields
-    // Simplistic check
-    const knownKeys = [
-      "id",
-      "shop_id",
-      "license_type_id",
-      "license_number",
-      "issue_date",
-      "expiry_date",
-      "status",
-      "notes",
-      "custom_fields",
-      "created_at",
-      "updated_at",
-      "shop_name",
-      "type_name",
-    ];
+    // Extract custom fields - use same pattern as shops page
+    // Everything in updatedRow that is NOT a standard field and NOT id/created_at/etc.
     const customValues = {};
     Object.keys(updatedRow).forEach((key) => {
-      if (!knownKeys.includes(key) && !key.startsWith("custom_")) {
+      if (
+        !STANDARD_COLUMNS_IDS.includes(key) &&
+        key !== "id" &&
+        key !== "custom_fields" &&
+        key !== "created_at" &&
+        key !== "updated_at" &&
+        key !== "shop_name" &&
+        key !== "type_name"
+      ) {
         customValues[key] = updatedRow[key];
       }
     });

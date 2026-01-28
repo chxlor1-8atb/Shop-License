@@ -429,16 +429,57 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
         'Other': licenses.filter(l => !['active', 'expired'].includes(l.status)).length
     };
 
-    // Prepare table data
-    const headers = ['License No.', 'Shop Name', 'Type', 'Issue Date', 'Expiry Date', 'Status'];
-    const data = licenses.map(l => [
-        l.license_number || '-',
-        l.shop_name || '-',
-        l.type_name || '-',
-        formatThaiDate(l.issue_date),
-        formatThaiDate(l.expiry_date),
-        STATUS_CONFIG[l.status?.toLowerCase()]?.label || l.status || '-'
-    ]);
+    // Fetch custom field definitions for licenses
+    let customFieldDefs = [];
+    try {
+        const response = await fetch('/api/custom-fields?entity_type=licenses&show_in_table=true');
+        const data = await response.json();
+        if (data.success) {
+            customFieldDefs = (data.fields || []).filter(f => f.show_in_table);
+        }
+    } catch (error) {
+        console.warn('Failed to fetch custom fields for licenses:', error);
+    }
+
+    // Build headers dynamically
+    const baseHeaders = ['License No.', 'Shop Name', 'Type', 'Issue Date', 'Expiry Date', 'Status'];
+    const customHeaders = customFieldDefs.map(cf => cf.field_label);
+    const headers = [...baseHeaders, ...customHeaders];
+
+    // Build data rows dynamically
+    const data = licenses.map(l => {
+        const baseData = [
+            l.license_number || '-',
+            l.shop_name || '-',
+            l.type_name || '-',
+            formatThaiDate(l.issue_date),
+            formatThaiDate(l.expiry_date),
+            STATUS_CONFIG[l.status?.toLowerCase()]?.label || l.status || '-'
+        ];
+
+        // Add custom field values
+        const customFieldsData = l.custom_fields || {};
+        const customData = customFieldDefs.map(cf => {
+            const value = customFieldsData[cf.field_name];
+            if (value === null || value === undefined) return '-';
+
+            // Format based on field type
+            if (cf.field_type === 'date' && value) {
+                return formatThaiDate(value);
+            }
+
+            const stringVal = String(value);
+            // Truncate long text
+            return stringVal.length > 30 ? stringVal.substring(0, 30) + '...' : stringVal;
+        });
+
+        return [...baseData, ...customData];
+    });
+
+    // Calculate column widths dynamically
+    const baseWidths = ['auto', '*', 'auto', 'auto', 'auto', 'auto'];
+    const customWidths = customFieldDefs.map(() => 'auto');
+    const columnWidths = [...baseWidths, ...customWidths];
 
     // Build document
     const docDefinition = {
@@ -466,9 +507,14 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
             createHeader(title),
             createSummaryBox(stats),
             filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
+            customFieldDefs.length > 0 ? {
+                text: `Custom Fields: ${customFieldDefs.map(cf => cf.field_label).join(', ')}`,
+                style: 'filterText',
+                margin: [0, 0, 0, 10]
+            } : null,
             createDataTable(headers, data, {
-                columnWidths: ['auto', '*', 'auto', 'auto', 'auto', 'auto'],
-                colorColumn: 5
+                columnWidths: columnWidths,
+                colorColumn: 5 // Status column index
             })
         ].filter(Boolean),
 
@@ -491,19 +537,61 @@ export async function exportShopsToPDF(shops) {
         'Total Shops': shops.length
     };
 
-    const headers = ['Shop Name', 'Owner', 'Phone', 'Email', 'Address', 'Created'];
-    const data = shops.map(s => [
-        s.shop_name || '-',
-        s.owner_name || '-',
-        s.phone || '-',
-        s.email || '-',
-        s.address?.substring(0, 30) + (s.address?.length > 30 ? '...' : '') || '-',
-        formatThaiDate(s.created_at)
-    ]);
+    // Fetch custom field definitions for shops
+    let customFieldDefs = [];
+    try {
+        const response = await fetch('/api/custom-fields?entity_type=shops&show_in_table=true');
+        const data = await response.json();
+        if (data.success) {
+            customFieldDefs = (data.fields || []).filter(f => f.show_in_table);
+        }
+    } catch (error) {
+        console.warn('Failed to fetch custom fields for shops:', error);
+    }
+
+    // Build headers dynamically
+    const baseHeaders = ['Shop Name', 'Owner', 'Phone', 'Email', 'Address', 'Created'];
+    const customHeaders = customFieldDefs.map(cf => cf.field_label);
+    const headers = [...baseHeaders, ...customHeaders];
+
+    // Build data rows dynamically
+    const data = shops.map(s => {
+        const baseData = [
+            s.shop_name || '-',
+            s.owner_name || '-',
+            s.phone || '-',
+            s.email || '-',
+            s.address?.substring(0, 30) + (s.address?.length > 30 ? '...' : '') || '-',
+            formatThaiDate(s.created_at)
+        ];
+
+        // Add custom field values
+        const customFieldsData = s.custom_fields || {};
+        const customData = customFieldDefs.map(cf => {
+            const value = customFieldsData[cf.field_name];
+            if (value === null || value === undefined) return '-';
+
+            // Format based on field type
+            if (cf.field_type === 'date' && value) {
+                return formatThaiDate(value);
+            }
+
+            const stringVal = String(value);
+            // Truncate long text
+            return stringVal.length > 30 ? stringVal.substring(0, 30) + '...' : stringVal;
+        });
+
+        return [...baseData, ...customData];
+    });
+
+    // Calculate column widths dynamically
+    const baseWidths = ['*', 'auto', 'auto', 'auto', '*', 'auto'];
+    const customWidths = customFieldDefs.map(() => 'auto');
+    const columnWidths = [...baseWidths, ...customWidths];
 
     const docDefinition = {
         pageSize: 'A4',
-        pageOrientation: 'landscape',
+        pageOrientation: customFieldDefs.length > 2 ? 'landscape' : 'landscape', // Always landscape for shops
         pageMargins: [40, 40, 40, 60],
         defaultStyle: { font: 'THSarabunNew' },
 
@@ -525,10 +613,15 @@ export async function exportShopsToPDF(shops) {
         content: [
             createHeader(title),
             createSummaryBox(stats),
+            customFieldDefs.length > 0 ? {
+                text: `Custom Fields: ${customFieldDefs.map(cf => cf.field_label).join(', ')}`,
+                style: 'filterText',
+                margin: [0, 0, 0, 10]
+            } : null,
             createDataTable(headers, data, {
-                columnWidths: ['*', 'auto', 'auto', 'auto', '*', 'auto']
+                columnWidths: columnWidths
             })
-        ],
+        ].filter(Boolean),
 
         styles: getStyles()
     };

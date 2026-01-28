@@ -23,6 +23,19 @@ export async function GET(request) {
         let data = [];
         let filename = `export_${type}_${new Date().toISOString().split('T')[0]}.csv`;
         let columns = [];
+        let customFieldDefs = [];
+
+        // Fetch custom field definitions for the entity type
+        if (type === 'shops' || type === 'licenses') {
+            const entityType = type; // 'shops' or 'licenses'
+            customFieldDefs = await fetchAll(
+                `SELECT field_name, field_label, field_type, show_in_table 
+                 FROM custom_fields 
+                 WHERE entity_type = $1 AND show_in_table = true 
+                 ORDER BY display_order ASC`,
+                [entityType]
+            );
+        }
 
         if (type === 'licenses') {
             const license_type = searchParams.get('license_type');
@@ -61,7 +74,8 @@ export async function GET(request) {
                     l.issue_date, 
                     l.expiry_date, 
                     l.status,
-                    l.notes
+                    l.notes,
+                    l.custom_fields
                 FROM licenses l
                 LEFT JOIN shops s ON l.shop_id = s.id
                 LEFT JOIN license_types lt ON l.license_type_id = lt.id
@@ -69,19 +83,21 @@ export async function GET(request) {
                 ORDER BY l.id DESC
             `;
             data = await fetchAll(query, params);
+
+            // Base columns for licenses
             columns = ['เลขที่ใบอนุญาต', 'ชื่อร้าน', 'ประเภท', 'วันออกใบอนุญาต', 'วันหมดอายุ', 'สถานะ', 'หมายเหตุ'];
 
         } else if (type === 'shops') {
-            // Check admin logic if needed, but for now allow
             data = await fetchAll(`
-                SELECT shop_name, owner_name, phone, email, address, notes, created_at
+                SELECT shop_name, owner_name, phone, email, address, notes, custom_fields, created_at
                 FROM shops
                 ORDER BY id DESC
             `);
-            columns = ['ชื่อร้าน', 'ชื่อเจ้าของ', 'โทรศัพท์', 'อีเมล', 'ที่อยู่', 'หมายเหตุ', 'วันที่สร้าง'];
+
+            // Base columns for shops
+            columns = ['ชื่อร้าน', 'ชื่อเจ้าของ', 'โทรศัพท์', 'อีเมล', 'ที่อยู่', 'หมายเหตุ'];
 
         } else if (type === 'users') {
-            // RESTRICT TO ADMIN logic needed? Assuming dashboard access implies admin for this system
             data = await fetchAll(`
                 SELECT username, created_at
                 FROM users
@@ -90,6 +106,15 @@ export async function GET(request) {
             columns = ['ชื่อผู้ใช้', 'วันที่สร้าง'];
         } else {
             return NextResponse.json({ success: false, message: 'Invalid export type' }, { status: 400 });
+        }
+
+        // Add custom field columns
+        const customFieldColumns = customFieldDefs.map(cf => cf.field_label);
+        const allColumns = [...columns, ...customFieldColumns];
+
+        // Add "วันที่สร้าง" column for shops at the end
+        if (type === 'shops') {
+            allColumns.push('วันที่สร้าง');
         }
 
         // Status translation map
@@ -101,23 +126,29 @@ export async function GET(request) {
             'revoked': 'ถูกเพิกถอน'
         };
 
-        // Define column keys mapping to ensure correct order
-        const columnKeys = {
+        // Define base column keys mapping
+        const baseColumnKeys = {
             licenses: ['license_number', 'shop_name', 'type_name', 'issue_date', 'expiry_date', 'status', 'notes'],
-            shops: ['shop_name', 'owner_name', 'phone', 'email', 'address', 'notes', 'created_at'],
+            shops: ['shop_name', 'owner_name', 'phone', 'email', 'address', 'notes'],
             users: ['username', 'created_at']
         };
 
         // Convert to CSV with explicit column order
         const csvRows = [];
-        csvRows.push(columns.join(',')); // Header
+        csvRows.push(allColumns.join(',')); // Header with custom fields
 
-        const keys = columnKeys[type] || Object.keys(data[0] || {});
+        const baseKeys = baseColumnKeys[type] || Object.keys(data[0] || {});
 
         for (const row of data) {
-            const values = keys.map(key => {
+            const values = [];
+
+            // Add base field values
+            for (const key of baseKeys) {
                 let val = row[key];
-                if (val === null || val === undefined) return '';
+                if (val === null || val === undefined) {
+                    values.push('');
+                    continue;
+                }
 
                 let stringVal = String(val);
 
@@ -128,10 +159,46 @@ export async function GET(request) {
 
                 // Escape quotes and wrap in quotes if contains comma or quote
                 if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
-                    return `"${stringVal.replace(/"/g, '""')}"`;
+                    values.push(`"${stringVal.replace(/"/g, '""')}"`);
+                } else {
+                    values.push(stringVal);
                 }
-                return stringVal;
-            });
+            }
+
+            // Add custom field values
+            const customFieldsData = row.custom_fields || {};
+            for (const cf of customFieldDefs) {
+                let cfValue = customFieldsData[cf.field_name];
+
+                if (cfValue === null || cfValue === undefined) {
+                    values.push('');
+                } else {
+                    let stringVal = String(cfValue);
+
+                    // Escape quotes and wrap in quotes if contains comma or quote
+                    if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
+                        values.push(`"${stringVal.replace(/"/g, '""')}"`);
+                    } else {
+                        values.push(stringVal);
+                    }
+                }
+            }
+
+            // Add created_at for shops at the end
+            if (type === 'shops') {
+                let createdAt = row.created_at || '';
+                if (createdAt) {
+                    let stringVal = String(createdAt);
+                    if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
+                        values.push(`"${stringVal.replace(/"/g, '""')}"`);
+                    } else {
+                        values.push(stringVal);
+                    }
+                } else {
+                    values.push('');
+                }
+            }
+
             csvRows.push(values.join(','));
         }
 
@@ -144,7 +211,7 @@ export async function GET(request) {
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.EXPORT,
             entityType: ENTITY_TYPES.LICENSE, // Using LICENSE as generic entity for exports
-            details: `ส่งออกข้อมูล${typeNames[type] || type} จำนวน ${data.length} รายการ`
+            details: `ส่งออกข้อมูล${typeNames[type] || type} จำนวน ${data.length} รายการ${customFieldDefs.length > 0 ? ` (รวม Custom Fields ${customFieldDefs.length} ฟิลด์)` : ''}`
         });
 
         return new NextResponse(csvContent, {
