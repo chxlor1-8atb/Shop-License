@@ -8,7 +8,7 @@ import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
 // Lazy load PDF exports to reduce initial bundle size
 
 const exportUserCredentialsPDF = async (...args) => {
-  const { exportUserCredentialsPDF: exportFn } = await import("@/lib/pdfExport");
+  const { exportUserCredentialsPDF: exportFn } = await import("@/lib/pdfExportSafe");
   return exportFn(...args);
 };
 import Swal from "sweetalert2";

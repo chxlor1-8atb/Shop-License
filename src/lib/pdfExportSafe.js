@@ -419,14 +419,14 @@ function getStyles() {
 export async function exportLicensesToPDF(licenses, filters = {}) {
     const pdfMake = await getPdfMake();
 
-    const title = 'License Report';
+    const title = 'รายงานใบอนุญาต';
 
     // Calculate statistics
     const stats = {
-        'Total': licenses.length,
-        'Active': licenses.filter(l => l.status === 'active').length,
-        'Expired': licenses.filter(l => l.status === 'expired').length,
-        'Other': licenses.filter(l => !['active', 'expired'].includes(l.status)).length
+        'ทั้งหมด': licenses.length,
+        'ใช้งานปกติ': licenses.filter(l => l.status === 'active').length,
+        'หมดอายุ': licenses.filter(l => l.status === 'expired').length,
+        'อื่นๆ': licenses.filter(l => !['active', 'expired'].includes(l.status)).length
     };
 
     // Fetch custom field definitions for licenses
@@ -442,7 +442,7 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
     }
 
     // Build headers dynamically
-    const baseHeaders = ['License No.', 'Shop Name', 'Type', 'Issue Date', 'Expiry Date', 'Status'];
+    const baseHeaders = ['เลขที่ใบอนุญาต', 'ชื่อร้านค้า', 'ประเภท', 'วันที่ออก', 'วันหมดอายุ', 'สถานะ'];
     const customHeaders = customFieldDefs.map(cf => cf.field_label);
     const headers = [...baseHeaders, ...customHeaders];
 
@@ -531,10 +531,10 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
 export async function exportShopsToPDF(shops) {
     const pdfMake = await getPdfMake();
 
-    const title = 'Shop Report';
+    const title = 'รายงานร้านค้า';
 
     const stats = {
-        'Total Shops': shops.length
+        'ร้านค้าทั้งหมด': shops.length
     };
 
     // Fetch custom field definitions for shops
@@ -550,7 +550,7 @@ export async function exportShopsToPDF(shops) {
     }
 
     // Build headers dynamically
-    const baseHeaders = ['Shop Name', 'Owner', 'Phone', 'Email', 'Address', 'Created'];
+    const baseHeaders = ['ชื่อร้านค้า', 'เจ้าของ', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่', 'วันที่สร้าง'];
     const customHeaders = customFieldDefs.map(cf => cf.field_label);
     const headers = [...baseHeaders, ...customHeaders];
 
@@ -635,16 +635,20 @@ export async function exportShopsToPDF(shops) {
 export async function exportUsersToPDF(users) {
     const pdfMake = await getPdfMake();
 
-    const title = 'User Report';
+    const title = 'รายงานข้อมูลผู้ใช้งาน';
 
     const stats = {
-        'Total Users': users.length
+        'ผู้ใช้งานทั้งหมด': users.length,
+        'แอดมิน': users.filter(u => u.role === 'admin').length,
+        'ผู้ใช้ทั่วไป': users.filter(u => u.role === 'user').length
     };
 
-    const headers = ['No.', 'Username', 'Created'];
+    const headers = ['ลำดับ', 'ชื่อผู้ใช้งาน', 'ชื่อ-นามสกุล', 'สิทธิ์การใช้งาน', 'วันที่สร้าง'];
     const data = users.map((u, index) => [
         (index + 1).toString(),
         u.username || '-',
+        u.full_name || '-',
+        u.role === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป',
         formatThaiDate(u.created_at)
     ]);
 
@@ -686,5 +690,193 @@ export async function exportUsersToPDF(users) {
 export default {
     exportLicensesToPDF,
     exportShopsToPDF,
-    exportUsersToPDF
+    exportUsersToPDF,
+    exportUserCredentialsPDF,
+    exportActivityLogsToPDF
 };
+
+/**
+ * Export Single User Credentials to PDF
+ */
+export async function exportUserCredentialsPDF(userData) {
+    const pdfMake = await getPdfMake();
+
+    const docDefinition = {
+        pageSize: 'A5',
+        pageOrientation: 'landscape',
+        pageMargins: [30, 30, 30, 30],
+        defaultStyle: { font: 'THSarabunNew' },
+
+        content: [
+            {
+                text: 'User Credentials',
+                style: 'headerTitle',
+                alignment: 'center',
+                color: COLORS.primaryDark,
+                margin: [0, 0, 0, 20]
+            },
+            {
+                text: 'ข้อมูลเข้าใช้งานระบบ - กรุณาเก็บรักษาเป็นความลับ',
+                alignment: 'center',
+                color: COLORS.danger,
+                fontSize: 12,
+                bold: true,
+                margin: [0, 0, 0, 20]
+            },
+            {
+                table: {
+                    widths: ['30%', '70%'],
+                    body: [
+                        [
+                            { text: 'ชื่อ-นามสกุล', style: 'labelCell' },
+                            { text: userData.full_name || '-', style: 'valueCell' }
+                        ],
+                        [
+                            { text: 'สิทธิ์การใช้งาน', style: 'labelCell' },
+                            { text: userData.role === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป', style: 'valueCell' }
+                        ],
+                        [
+                            { text: 'ชื่อผู้ใช้', style: 'labelCell' },
+                            { text: userData.username, style: 'valueCellBold' }
+                        ],
+                        [
+                            { text: 'รหัสผ่าน', style: 'labelCell' },
+                            { text: userData.password, style: 'valueCellBold', color: COLORS.primary }
+                        ],
+                        [
+                            { text: 'วันที่สร้าง', style: 'labelCell' },
+                            { text: getCurrentThaiDate(), style: 'valueCell' }
+                        ]
+                    ]
+                },
+                layout: {
+                    hLineWidth: () => 1,
+                    vLineWidth: () => 1,
+                    hLineColor: () => COLORS.border,
+                    vLineColor: () => COLORS.border,
+                    paddingTop: () => 10,
+                    paddingBottom: () => 10,
+                    paddingLeft: () => 10,
+                    paddingRight: () => 10
+                }
+            },
+            {
+                text: 'ผู้ดูแลระบบ',
+                alignment: 'right',
+                fontSize: 12,
+                color: COLORS.muted,
+                margin: [0, 30, 0, 0]
+            }
+        ],
+
+        styles: {
+            headerTitle: {
+                fontSize: 22,
+                bold: true
+            },
+            labelCell: {
+                fontSize: 14,
+                color: COLORS.secondary,
+                bold: true
+            },
+            valueCell: {
+                fontSize: 14,
+                color: COLORS.dark
+            },
+            valueCellBold: {
+                fontSize: 16,
+                bold: true,
+                color: COLORS.dark
+            }
+        }
+    };
+
+    pdfMake.createPdf(docDefinition).download(`credential_${userData.username}.pdf`);
+}
+
+/**
+ * Export Activity Logs to PDF
+ */
+export async function exportActivityLogsToPDF(logs, filters = {}) {
+    const pdfMake = await getPdfMake();
+
+    const title = 'รายงานประวัติกิจกรรม';
+
+    const stats = {
+        'จำนวนรายการ': logs.length,
+        'เข้าสู่ระบบ': logs.filter(l => l.action === 'LOGIN').length,
+        'ดูข้อมูล': logs.filter(l => l.action === 'VIEW').length
+    };
+
+    const ACTION_LABELS = {
+        LOGIN: 'เข้าสู่ระบบ',
+        LOGOUT: 'ออกจากระบบ',
+        CREATE: 'สร้าง',
+        UPDATE: 'แก้ไข',
+        DELETE: 'ลบ',
+        EXPORT: 'ส่งออก',
+        VIEW: 'ดู'
+    };
+
+    const headers = ['เวลา', 'ผู้ใช้งาน', 'กิจกรรม', 'หมวดหมู่', 'รายละเอียด', 'IP'];
+
+    // Helper to format datetime
+    function formatThaiDateTime(dateStr) {
+        if (!dateStr) return '-';
+        try {
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear() + 543;
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        } catch {
+            return dateStr;
+        }
+    }
+
+    const data = logs.map(l => [
+        formatThaiDateTime(l.created_at),
+        l.user_name || l.username || '-',
+        ACTION_LABELS[l.action] || l.action || '-',
+        l.entity_type || '-',
+        l.details || '-',
+        l.ip_address || '-'
+    ]);
+
+    const docDefinition = {
+        pageSize: 'A4',
+        pageOrientation: 'landscape',
+        pageMargins: [40, 40, 40, 60],
+        defaultStyle: { font: 'THSarabunNew' },
+
+        header: (currentPage, pageCount) => ({
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
+            alignment: 'right',
+            margin: [0, 15, 40, 0],
+            style: 'pageNumber'
+        }),
+
+        footer: () => ({
+            columns: [
+                { text: 'ระบบจัดการใบอนุญาต', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+            ],
+            margin: [0, 20, 0, 0]
+        }),
+
+        content: [
+            createHeader(title),
+            createSummaryBox(stats),
+            filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
+            createDataTable(headers, data, {
+                columnWidths: ['auto', 'auto', 'auto', 'auto', '*', 'auto']
+            })
+        ],
+
+        styles: getStyles()
+    };
+
+    pdfMake.createPdf(docDefinition).download(`activity_logs_${new Date().toISOString().split('T')[0]}.pdf`);
+}

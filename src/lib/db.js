@@ -1,8 +1,7 @@
 import { neon, neonConfig } from '@neondatabase/serverless';
 
-// ===== Neon Performance Optimization =====
 // Enable connection caching for faster subsequent queries
-neonConfig.fetchConnectionCache = true;
+// neonConfig.fetchConnectionCache = true; // Deprecated: now always true
 
 // Create Neon SQL client
 let sql;

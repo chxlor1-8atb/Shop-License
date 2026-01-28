@@ -36,6 +36,7 @@ export default function ExportPage() {
   const handleExportCSV = () => {
     const params = new URLSearchParams();
     params.append("type", type);
+    params.append("format", "csv");
 
     if (type === "licenses") {
       if (licenseType) params.append("license_type", licenseType);
@@ -45,12 +46,19 @@ export default function ExportPage() {
     }
 
     const url = `/api/export?${params.toString()}`;
-    window.open(url, "_blank");
+    
+    // Create hidden link to force download
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `export_${type}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
     Swal.fire({
       title: "กำลังดาวน์โหลด...",
       text: "ไฟล์ CSV กำลังถูกสร้างและดาวน์โหลด",
-      icon: "info",
+      icon: "success",
       timer: 2000,
       showConfirmButton: false,
     });

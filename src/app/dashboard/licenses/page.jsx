@@ -14,8 +14,9 @@ import QuickAddModal from "@/components/ui/QuickAddModal";
 import { mutate } from "swr"; // Import mutate
 
 // Lazy load PDF export to reduce initial bundle size
+// Lazy load PDF export to reduce initial bundle size
 const exportLicensesToPDF = async (...args) => {
-  const { exportLicensesToPDF: exportFn } = await import("@/lib/pdfExport");
+  const { exportLicensesToPDF: exportFn } = await import("@/lib/pdfExportSafe");
   return exportFn(...args);
 };
 

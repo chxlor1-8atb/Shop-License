@@ -15,7 +15,7 @@ import { mutate } from "swr"; // Import mutate
 
 // Lazy load PDF export to reduce initial bundle size
 const exportShopsToPDF = async (...args) => {
-  const { exportShopsToPDF: exportFn } = await import("@/lib/pdfExport");
+  const { exportShopsToPDF: exportFn } = await import("@/lib/pdfExportSafe");
   return exportFn(...args);
 };
 
