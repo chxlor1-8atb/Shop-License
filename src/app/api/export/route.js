@@ -3,6 +3,7 @@ import { fetchAll } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAuth, getCurrentUser } from '@/lib/api-helpers';
+import { generatePdf } from '@/lib/serverPdfGenerator';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,14 +17,15 @@ export async function GET(request) {
         const type = searchParams.get('type');
         const format = searchParams.get('format') || 'csv';
 
-        if (format !== 'csv') {
-            return NextResponse.json({ success: false, message: 'Only CSV format is supported' }, { status: 400 });
+        if (format !== 'csv' && format !== 'pdf') {
+            return NextResponse.json({ success: false, message: 'Only CSV and PDF formats are supported' }, { status: 400 });
         }
 
         let data = [];
-        let filename = `export_${type}_${new Date().toISOString().split('T')[0]}.csv`;
+        let filename = `export_${type}_${new Date().toISOString().split('T')[0]}.${format}`;
         let columns = [];
         let customFieldDefs = [];
+        let filters = {};
 
         // Fetch custom field definitions for the entity type
         if (type === 'shops' || type === 'licenses') {
@@ -50,18 +52,22 @@ export async function GET(request) {
             if (license_type) {
                 whereClauses.push(`l.license_type_id = $${paramIndex++}`);
                 params.push(license_type);
+                filters['License Type ID'] = license_type;
             }
             if (status) {
                 whereClauses.push(`l.status = $${paramIndex++}`);
                 params.push(status);
+                filters['Status'] = status;
             }
             if (expiry_from) {
                 whereClauses.push(`l.expiry_date >= $${paramIndex++}`);
                 params.push(expiry_from);
+                filters['Expiry From'] = expiry_from;
             }
             if (expiry_to) {
                 whereClauses.push(`l.expiry_date <= $${paramIndex++}`);
                 params.push(expiry_to);
+                filters['Expiry To'] = expiry_to;
             }
 
             const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
@@ -105,14 +111,39 @@ export async function GET(request) {
 
         } else if (type === 'users') {
             data = await fetchAll(`
-                SELECT username, created_at
+                SELECT username, full_name, role, created_at
                 FROM users
                 ORDER BY id ASC
             `);
-            columns = ['ชื่อผู้ใช้', 'วันที่สร้าง'];
+            // Note: Added full_name and role to selection for PDF/CSV consistency
+            columns = ['ชื่อผู้ใช้', 'ชื่อ-นามสกุล', 'สิทธิ์การใช้งาน', 'วันที่สร้าง'];
         } else {
             return NextResponse.json({ success: false, message: 'Invalid export type' }, { status: 400 });
         }
+
+        // Log activity
+        const currentUser = await getCurrentUser();
+        const typeNames = { licenses: 'ใบอนุญาต', shops: 'ร้านค้า', users: 'ผู้ใช้' };
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.EXPORT,
+            entityType: ENTITY_TYPES.LICENSE, // Using LICENSE as generic entity for exports
+            details: `ส่งออกข้อมูล${typeNames[type] || type} (${format.toUpperCase()}) จำนวน ${data.length} รายการ`
+        });
+
+        // HANDLE PDF EXPORT
+        if (format === 'pdf') {
+            const pdfBuffer = await generatePdf(type, data, customFieldDefs, filters);
+            return new NextResponse(pdfBuffer, {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/pdf',
+                    'Content-Disposition': `attachment; filename="${filename}"`
+                }
+            });
+        }
+
+        // HANDLE CSV EXPORT
 
         // Add custom field columns
         const customFieldColumns = customFieldDefs.map(cf => cf.field_label);
@@ -133,13 +164,15 @@ export async function GET(request) {
         };
 
         // Define base column keys mapping
+        // Note: Check users keys carefully. Original code had ['username', 'created_at']. 
+        // I added full_name and role in query. 
+        // I should update baseColumnKeys for user to match columns: ['ชื่อผู้ใช้', 'ชื่อ-นามสกุล', 'สิทธิ์การใช้งาน', 'วันที่สร้าง']
         const baseColumnKeys = {
             licenses: ['license_number', 'shop_name', 'type_name', 'issue_date', 'expiry_date', 'status', 'notes'],
             shops: ['shop_name', 'owner_name', 'phone', 'email', 'address', 'notes'],
-            users: ['username', 'created_at']
+            users: ['username', 'full_name', 'role', 'created_at'] // Updated
         };
 
-        // Convert to CSV with explicit column order
         const csvRows = [];
         csvRows.push(allColumns.join(',')); // Header with custom fields
 
@@ -161,6 +194,11 @@ export async function GET(request) {
                 // Translate status values to Thai
                 if (key === 'status' && statusMap[stringVal.toLowerCase()]) {
                     stringVal = statusMap[stringVal.toLowerCase()];
+                }
+
+                // Translate Role
+                if (key === 'role') {
+                    stringVal = stringVal === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป';
                 }
 
                 // Escape quotes and wrap in quotes if contains comma or quote
@@ -210,16 +248,6 @@ export async function GET(request) {
 
         const csvContent = '\uFEFF' + csvRows.join('\n'); // Add BOM for Excel UTF-8 support
 
-        // Log activity
-        const currentUser = await getCurrentUser();
-        const typeNames = { licenses: 'ใบอนุญาต', shops: 'ร้านค้า', users: 'ผู้ใช้' };
-        await logActivity({
-            userId: currentUser?.id || null,
-            action: ACTIVITY_ACTIONS.EXPORT,
-            entityType: ENTITY_TYPES.LICENSE, // Using LICENSE as generic entity for exports
-            details: `ส่งออกข้อมูล${typeNames[type] || type} จำนวน ${data.length} รายการ${customFieldDefs.length > 0 ? ` (รวม Custom Fields ${customFieldDefs.length} ฟิลด์)` : ''}`
-        });
-
         return new NextResponse(csvContent, {
             status: 200,
             headers: {
@@ -229,6 +257,7 @@ export async function GET(request) {
         });
 
     } catch (err) {
+        console.error('Export Error:', err);
         return NextResponse.json({ success: false, message: err.message }, { status: 500 });
     }
 }

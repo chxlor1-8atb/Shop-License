@@ -64,105 +64,35 @@ export default function ExportPage() {
     });
   };
 
-  const handleExportPDF = async () => {
-    setIsExporting(true);
+  const handleExportPDF = () => {
+    const params = new URLSearchParams();
+    params.append("type", type);
+    params.append("format", "pdf");
 
-    try {
-      // Dynamically import PDF export utilities (client-side only)
-      const { exportLicensesToPDF, exportShopsToPDF, exportUsersToPDF } =
-        await import("@/lib/pdfExportSafe");
-
-      // Fetch data based on type
-      let data = [];
-      let fetchUrl = "";
-
-      if (type === "licenses") {
-        const params = new URLSearchParams();
-        if (licenseType) params.append("license_type", licenseType);
-        if (status) params.append("status", status);
-        if (expiryFrom) params.append("expiry_from", expiryFrom);
-        if (expiryTo) params.append("expiry_to", expiryTo);
-
-        fetchUrl = `/api/licenses?${params.toString()}&limit=9999`;
-      } else if (type === "shops") {
-        fetchUrl = "/api/shops?limit=9999";
-      } else if (type === "users") {
-        fetchUrl = "/api/users";
-      }
-
-      const res = await fetch(fetchUrl);
-      const result = await res.json();
-
-      if (!result.success) {
-        throw new Error(result.message || "ไม่สามารถดึงข้อมูลได้");
-      }
-
-      // Get data array based on response structure
-      if (type === "licenses") {
-        data = result.licenses || [];
-      } else if (type === "shops") {
-        data = result.shops || [];
-      } else if (type === "users") {
-        data = result.users || [];
-      }
-
-      if (data.length === 0) {
-        Swal.fire({
-          title: "ไม่มีข้อมูล",
-          text: "ไม่พบข้อมูลที่ตรงกับเงื่อนไขที่เลือก",
-          icon: "warning",
-        });
-        setIsExporting(false);
-        return;
-      }
-
-      // Build filters object for display in PDF
-      const filters = {};
-      if (type === "licenses") {
-        if (licenseType) {
-          const typeObj = typesList.find((t) => t.id == licenseType);
-          filters["ประเภท"] = typeObj?.name || licenseType;
-        }
-        if (status) {
-          const statusLabels = {
-            active: "ปกติ",
-            expired: "หมดอายุ",
-            pending: "กำลังดำเนินการ",
-            suspended: "ถูกพักใช้",
-            revoked: "ถูกเพิกถอน",
-          };
-          filters["สถานะ"] = statusLabels[status] || status;
-        }
-        if (expiryFrom) filters["หมดอายุจาก"] = expiryFrom;
-        if (expiryTo) filters["หมดอายุถึง"] = expiryTo;
-      }
-
-      // Generate PDF based on type
-      if (type === "licenses") {
-        await exportLicensesToPDF(data, filters);
-      } else if (type === "shops") {
-        await exportShopsToPDF(data);
-      } else if (type === "users") {
-        await exportUsersToPDF(data);
-      }
-
-      Swal.fire({
-        title: "สำเร็จ!",
-        text: "ไฟล์ PDF ถูกสร้างและดาวน์โหลดแล้ว",
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: false,
-      });
-    } catch (error) {
-      console.error("PDF Export Error:", error);
-      Swal.fire({
-        title: "เกิดข้อผิดพลาด",
-        text: error.message || "ไม่สามารถสร้างไฟล์ PDF ได้",
-        icon: "error",
-      });
-    } finally {
-      setIsExporting(false);
+    if (type === "licenses") {
+      if (licenseType) params.append("license_type", licenseType);
+      if (status) params.append("status", status);
+      if (expiryFrom) params.append("expiry_from", expiryFrom);
+      if (expiryTo) params.append("expiry_to", expiryTo);
     }
+
+    const url = `/api/export?${params.toString()}`;
+    
+    // Create hidden link to force download
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `export_${type}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    Swal.fire({
+      title: "กำลังดาวน์โหลด...",
+      text: "ไฟล์ PDF กำลังถูกสร้างและดาวน์โหลด",
+      icon: "success",
+      timer: 2000,
+      showConfirmButton: false,
+    });
   };
 
   const handleExport = () => {

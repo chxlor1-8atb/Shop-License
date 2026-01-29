@@ -59,10 +59,6 @@ async function loadFont(url) {
 /**
  * Initialize pdfMake with fonts (including Thai)
  */
-// Cache the vfs to prevent reloading
-// Cache the vfs to prevent reloading
-// Cache the vfs to prevent reloading
-// Cache the vfs to prevent reloading
 let cachedVfs = null;
 
 async function getPdfMake() {
@@ -70,91 +66,92 @@ async function getPdfMake() {
         const pdfMakeModule = await import('pdfmake/build/pdfmake');
         const pdfMake = pdfMakeModule.default || pdfMakeModule;
 
-        if (!pdfMake) {
-            throw new Error('Failed to load pdfMake module');
-        }
+        if (!pdfMake) throw new Error('Failed to load pdfMake module');
 
-        if (typeof window !== 'undefined') {
-            window.pdfMake = pdfMake;
-        }
+        // Ensure global access and VFS init
+        if (typeof window !== 'undefined') window.pdfMake = pdfMake;
+        if (!pdfMake.vfs) pdfMake.vfs = {};
 
-        // Initialize VFS
-        if (!pdfMake.vfs) {
-            pdfMake.vfs = {};
-        }
-
-        // Load Default Fonts (Roboto) if available
+        // 1. Try to load default Roboto fonts from package
         try {
             const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
             const pdfFonts = pdfFontsModule.default || pdfFontsModule;
-            if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
+            if (pdfFonts?.pdfMake?.vfs) {
                 pdfMake.vfs = { ...pdfMake.vfs, ...pdfFonts.pdfMake.vfs };
             }
         } catch (e) {
             console.warn('Could not load default vfs_fonts:', e);
         }
 
+        // 2. Define Thai Fonts
         const FILE_REGULAR = 'THSarabunNew.ttf';
         const FILE_BOLD = 'THSarabunNew-Bold.ttf';
-        const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
-        // Helper: Check if key exists
-        const hasKey = (key) => !!pdfMake.vfs[key];
+        // 3. Load missing Thai fonts
+        const missingRegular = !pdfMake.vfs[FILE_REGULAR];
+        const missingBold = !pdfMake.vfs[FILE_BOLD];
 
-        // 1. Try to load Thai fonts if missing
-        const tasks = [];
-        if (!hasKey(FILE_REGULAR)) {
-            tasks.push(loadFont(`${baseUrl}/fonts/${FILE_REGULAR}`).then(data => {
-                if (data) pdfMake.vfs[FILE_REGULAR] = data;
-            }));
-        }
-        if (!hasKey(FILE_BOLD)) {
-            tasks.push(loadFont(`${baseUrl}/fonts/${FILE_BOLD}`).then(data => {
-                if (data) pdfMake.vfs[FILE_BOLD] = data;
-            }));
-        }
+        if (missingRegular || missingBold) {
+            console.log('PDF Export: Loading Thai fonts...');
+            const tasks = [];
 
-        if (tasks.length > 0) {
+            if (missingRegular) {
+                tasks.push(
+                    loadFont('/fonts/' + FILE_REGULAR)
+                        .then(data => {
+                            if (data) pdfMake.vfs[FILE_REGULAR] = data;
+                            else console.warn('Failed to load ' + FILE_REGULAR);
+                        })
+                );
+            }
+
+            if (missingBold) {
+                tasks.push(
+                    loadFont('/fonts/' + FILE_BOLD)
+                        .then(data => {
+                            if (data) pdfMake.vfs[FILE_BOLD] = data;
+                            else console.warn('Failed to load ' + FILE_BOLD);
+                        })
+                );
+            }
+
             await Promise.all(tasks);
         }
 
-        // 2. SAFETY NET: If fonts are still missing, fill the keys with Fallback Data (Roboto)
-        // This trick ensures 'File not found' NEVER happens, even if the font looks wrong (it will be Roboto)
-        const fallbackData = pdfMake.vfs['Roboto-Regular.ttf'] ||
-            pdfMake.vfs['Roboto-Medium.ttf'] ||
-            Object.values(pdfMake.vfs)[0]; // Grab ANY valid font data
+        // 4. Verification & Fallback Strategy
+        const vfsKeys = Object.keys(pdfMake.vfs);
+        console.log('PDF Export VFS Keys:', vfsKeys);
 
-        if (fallbackData) {
-            if (!hasKey(FILE_REGULAR)) {
-                console.warn('[PdfExport] Missing THSarabunNew.ttf, using fallback data.');
-                pdfMake.vfs[FILE_REGULAR] = fallbackData;
-            }
+        const hasRegular = vfsKeys.includes(FILE_REGULAR);
+        const hasBold = vfsKeys.includes(FILE_BOLD);
 
-            // If Bold is missing, but Regular exists (real or fallback), use Regular for Bold
-            // Otherwise use fallback data
-            if (!hasKey(FILE_BOLD)) {
-                console.warn('[PdfExport] Missing THSarabunNew-Bold.ttf, using fallback data.');
-                pdfMake.vfs[FILE_BOLD] = pdfMake.vfs[FILE_REGULAR] || fallbackData;
-            }
-        } else {
-            console.error('[PdfExport] CRITICAL: No fonts available in VFS at all.');
+        // Find a fallback font (Roboto or whatever exists) to prevent crash
+        const safeFallback = vfsKeys.find(k => k.includes('Roboto-Regular')) || vfsKeys[0];
+
+        if (!hasRegular && !hasBold && !safeFallback) {
+            alert('ไม่สามารถโหลดฟอนต์ได้ (VFS Empty) - กรุณารีเฟรชหน้าจอ');
+            throw new Error('Critical: No fonts available in VFS');
         }
 
-        console.log(`[PdfExport] VFS Check - Regular: ${hasKey(FILE_REGULAR)}, Bold: ${hasKey(FILE_BOLD)}`);
+        // 5. Construct Safe Font Config
+        // We ONLY assign keys that definitely exist in VFS
+        const regularFont = hasRegular ? FILE_REGULAR : (hasBold ? FILE_BOLD : safeFallback);
+        const boldFont = hasBold ? FILE_BOLD : (hasRegular ? FILE_REGULAR : safeFallback);
 
-        // 3. Configure to ALWAYS use the Thai keys (because we guaranteed they exist now)
+        console.log(`PDF Font Config: Regular=${regularFont}, Bold=${boldFont}`);
+
         pdfMake.fonts = {
             Roboto: {
-                normal: 'Roboto-Regular.ttf',
+                normal: safeFallback || 'Roboto-Regular.ttf',
                 bold: 'Roboto-Medium.ttf',
                 italics: 'Roboto-Italic.ttf',
                 bolditalics: 'Roboto-MediumItalic.ttf'
             },
             THSarabunNew: {
-                normal: FILE_REGULAR,
-                bold: FILE_BOLD,
-                italics: FILE_REGULAR,
-                bolditalics: FILE_BOLD
+                normal: regularFont,
+                bold: boldFont,
+                italics: regularFont,
+                bolditalics: boldFont
             }
         };
 
@@ -409,27 +406,7 @@ function getStyles() {
     };
 }
 
-/**
- * Helper to download PDF blob manually for better reliability
- */
-function downloadPdfBlob(pdfMakeInstance, docDefinition, fileName) {
-    pdfMakeInstance.createPdf(docDefinition).getBlob((blob) => {
-        try {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName; // Ensure filename is strictly respected
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        } catch (e) {
-            console.error('Error downloading PDF blob:', e);
-            // Fallback to default download if blob fails
-            pdfMakeInstance.createPdf(docDefinition).download(fileName);
-        }
-    });
-}
+
 
 /**
  * Export Licenses to PDF
@@ -540,7 +517,12 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
     };
 
     // Generate and download PDF
-    downloadPdfBlob(pdfMake, docDefinition, `licenses_${new Date().toISOString().split('T')[0]}.pdf`);
+    try {
+        downloadPdfBlob(pdfMake, docDefinition, `licenses_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (e) {
+        console.error('PDF Download Error:', e);
+        alert('เกิดข้อผิดพลาดในการดาวน์โหลด PDF');
+    }
 }
 
 /**
@@ -897,4 +879,34 @@ export async function exportActivityLogsToPDF(logs, filters = {}) {
     };
 
     downloadPdfBlob(pdfMake, docDefinition, `activity_logs_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+/**
+ * Helper to download PDF as Blob with correct type
+ * Ensures the file is treated as PDF by the browser
+ */
+function downloadPdfBlob(pdfMake, docDefinition, filename) {
+    try {
+        const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+        pdfDocGenerator.getBlob((blob) => {
+            // Create a new Blob with explicit PDF MIME type
+            const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+            const url = URL.createObjectURL(pdfBlob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Clean up
+            setTimeout(() => {
+                URL.revokeObjectURL(url);
+            }, 100);
+        });
+    } catch (e) {
+        console.error('Download Error:', e);
+        alert('เกิดข้อผิดพลาดในการดาวน์โหลด: ' + e.message);
+    }
 }
