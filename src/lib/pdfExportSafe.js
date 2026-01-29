@@ -21,11 +21,11 @@ const COLORS = {
 
 // Status colors and labels
 const STATUS_CONFIG = {
-    active: { color: COLORS.success, label: 'Active' },
-    expired: { color: COLORS.danger, label: 'Expired' },
-    pending: { color: COLORS.warning, label: 'Pending' },
-    suspended: { color: '#f97316', label: 'Suspended' },
-    revoked: { color: COLORS.danger, label: 'Revoked' }
+    active: { color: COLORS.success, label: 'ใช้งานปกติ' },
+    expired: { color: COLORS.danger, label: 'หมดอายุ' },
+    pending: { color: COLORS.warning, label: 'รออนุมัติ' },
+    suspended: { color: '#f97316', label: 'ถูกระงับ' },
+    revoked: { color: COLORS.danger, label: 'ถูกเพิกถอน' }
 };
 
 /**
@@ -59,94 +59,90 @@ async function loadFont(url) {
 /**
  * Initialize pdfMake with fonts (including Thai)
  */
+// Cache the vfs to prevent reloading
+// Cache the vfs to prevent reloading
+// Cache the vfs to prevent reloading
+// Cache the vfs to prevent reloading
+let cachedVfs = null;
+
 async function getPdfMake() {
     try {
         const pdfMakeModule = await import('pdfmake/build/pdfmake');
         const pdfMake = pdfMakeModule.default || pdfMakeModule;
 
         if (!pdfMake) {
-            console.error('Failed to load pdfMake module');
             throw new Error('Failed to load pdfMake module');
         }
 
-        // Fix for vfs_fonts: It expects a global pdfMake object to exist
         if (typeof window !== 'undefined') {
             window.pdfMake = pdfMake;
         }
 
-        // Initialize vfs immediately to prevent "read of undefined" errors
+        // Initialize VFS
         if (!pdfMake.vfs) {
             pdfMake.vfs = {};
         }
 
-        // Try to load vfs_fonts safely
+        // Load Default Fonts (Roboto) if available
         try {
             const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
             const pdfFonts = pdfFontsModule.default || pdfFontsModule;
-
-            // Robust vfs assignment
-            let vfs = null;
-            if (pdfFonts) {
-                if (pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
-                    vfs = pdfFonts.pdfMake.vfs;
-                } else if (pdfFonts.vfs) {
-                    vfs = pdfFonts.vfs;
-                } else if (window.pdfMake && window.pdfMake.vfs) {
-                    vfs = window.pdfMake.vfs;
-                }
+            if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
+                pdfMake.vfs = { ...pdfMake.vfs, ...pdfFonts.pdfMake.vfs };
             }
-
-            if (vfs) {
-                pdfMake.vfs = { ...pdfMake.vfs, ...vfs };
-            }
-        } catch (fontError) {
-            console.warn('Failed to load vfs_fonts:', fontError);
-            // vfs is already initialized to {} above, so we are safe
+        } catch (e) {
+            console.warn('Could not load default vfs_fonts:', e);
         }
 
-        // Load Thai fonts
+        const FILE_REGULAR = 'THSarabunNew.ttf';
+        const FILE_BOLD = 'THSarabunNew-Bold.ttf';
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-        const fontTasks = [];
-        const requiredFonts = [
-            { name: 'THSarabunNew.ttf', url: `${baseUrl}/fonts/THSarabunNew.ttf` },
-            { name: 'THSarabunNew-Bold.ttf', url: `${baseUrl}/fonts/THSarabunNew-Bold.ttf` }
-        ];
 
-        requiredFonts.forEach(font => {
-            if (!pdfMake.vfs[font.name]) {
-                fontTasks.push(
-                    loadFont(font.url).then(base64 => {
-                        if (base64) {
-                            pdfMake.vfs[font.name] = base64;
-                        }
-                    }).catch(err => {
-                        console.warn(`Failed to load font ${font.name}:`, err);
-                    })
-                );
+        // Helper: Check if key exists
+        const hasKey = (key) => !!pdfMake.vfs[key];
+
+        // 1. Try to load Thai fonts if missing
+        const tasks = [];
+        if (!hasKey(FILE_REGULAR)) {
+            tasks.push(loadFont(`${baseUrl}/fonts/${FILE_REGULAR}`).then(data => {
+                if (data) pdfMake.vfs[FILE_REGULAR] = data;
+            }));
+        }
+        if (!hasKey(FILE_BOLD)) {
+            tasks.push(loadFont(`${baseUrl}/fonts/${FILE_BOLD}`).then(data => {
+                if (data) pdfMake.vfs[FILE_BOLD] = data;
+            }));
+        }
+
+        if (tasks.length > 0) {
+            await Promise.all(tasks);
+        }
+
+        // 2. SAFETY NET: If fonts are still missing, fill the keys with Fallback Data (Roboto)
+        // This trick ensures 'File not found' NEVER happens, even if the font looks wrong (it will be Roboto)
+        const fallbackData = pdfMake.vfs['Roboto-Regular.ttf'] ||
+            pdfMake.vfs['Roboto-Medium.ttf'] ||
+            Object.values(pdfMake.vfs)[0]; // Grab ANY valid font data
+
+        if (fallbackData) {
+            if (!hasKey(FILE_REGULAR)) {
+                console.warn('[PdfExport] Missing THSarabunNew.ttf, using fallback data.');
+                pdfMake.vfs[FILE_REGULAR] = fallbackData;
             }
-        });
 
-        if (fontTasks.length > 0) {
-            await Promise.all(fontTasks);
+            // If Bold is missing, but Regular exists (real or fallback), use Regular for Bold
+            // Otherwise use fallback data
+            if (!hasKey(FILE_BOLD)) {
+                console.warn('[PdfExport] Missing THSarabunNew-Bold.ttf, using fallback data.');
+                pdfMake.vfs[FILE_BOLD] = pdfMake.vfs[FILE_REGULAR] || fallbackData;
+            }
+        } else {
+            console.error('[PdfExport] CRITICAL: No fonts available in VFS at all.');
         }
 
-        // Check if Thai fonts are available
-        const hasThaiRegular = typeof pdfMake.vfs['THSarabunNew.ttf'] === 'string';
-        const hasThaiBold = typeof pdfMake.vfs['THSarabunNew-Bold.ttf'] === 'string';
+        console.log(`[PdfExport] VFS Check - Regular: ${hasKey(FILE_REGULAR)}, Bold: ${hasKey(FILE_BOLD)}`);
 
-        // Fallback if one is missing
-        if (hasThaiRegular && !hasThaiBold) {
-            pdfMake.vfs['THSarabunNew-Bold.ttf'] = pdfMake.vfs['THSarabunNew.ttf'];
-        }
-        if (!hasThaiRegular && hasThaiBold) {
-            pdfMake.vfs['THSarabunNew.ttf'] = pdfMake.vfs['THSarabunNew-Bold.ttf'];
-        }
-
-        // Determine which fonts to use
-        const finalRegular = hasThaiRegular || hasThaiBold ? 'THSarabunNew.ttf' : 'Roboto-Regular.ttf';
-        const finalBold = hasThaiRegular || hasThaiBold ? 'THSarabunNew-Bold.ttf' : 'Roboto-Medium.ttf';
-
-        // Assign fonts map with Thai support
+        // 3. Configure to ALWAYS use the Thai keys (because we guaranteed they exist now)
         pdfMake.fonts = {
             Roboto: {
                 normal: 'Roboto-Regular.ttf',
@@ -155,10 +151,10 @@ async function getPdfMake() {
                 bolditalics: 'Roboto-MediumItalic.ttf'
             },
             THSarabunNew: {
-                normal: finalRegular,
-                bold: finalBold,
-                italics: finalRegular,
-                bolditalics: finalBold
+                normal: FILE_REGULAR,
+                bold: FILE_BOLD,
+                italics: FILE_REGULAR,
+                bolditalics: FILE_BOLD
             }
         };
 
@@ -414,6 +410,28 @@ function getStyles() {
 }
 
 /**
+ * Helper to download PDF blob manually for better reliability
+ */
+function downloadPdfBlob(pdfMakeInstance, docDefinition, fileName) {
+    pdfMakeInstance.createPdf(docDefinition).getBlob((blob) => {
+        try {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName; // Ensure filename is strictly respected
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error('Error downloading PDF blob:', e);
+            // Fallback to default download if blob fails
+            pdfMakeInstance.createPdf(docDefinition).download(fileName);
+        }
+    });
+}
+
+/**
  * Export Licenses to PDF
  */
 export async function exportLicensesToPDF(licenses, filters = {}) {
@@ -522,7 +540,7 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
     };
 
     // Generate and download PDF
-    pdfMake.createPdf(docDefinition).download(`licenses_${new Date().toISOString().split('T')[0]}.pdf`);
+    downloadPdfBlob(pdfMake, docDefinition, `licenses_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 /**
@@ -626,7 +644,7 @@ export async function exportShopsToPDF(shops) {
         styles: getStyles()
     };
 
-    pdfMake.createPdf(docDefinition).download(`shops_${new Date().toISOString().split('T')[0]}.pdf`);
+    downloadPdfBlob(pdfMake, docDefinition, `shops_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 /**
@@ -668,7 +686,7 @@ export async function exportUsersToPDF(users) {
         footer: () => ({
             columns: [
                 { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangk ok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
@@ -677,14 +695,14 @@ export async function exportUsersToPDF(users) {
             createHeader(title),
             createSummaryBox(stats),
             createDataTable(headers, data, {
-                columnWidths: [50, '*', 100]
+                columnWidths: [50, '*', '*', 'auto', 'auto']
             })
         ],
 
         styles: getStyles()
     };
 
-    pdfMake.createPdf(docDefinition).download(`users_${new Date().toISOString().split('T')[0]}.pdf`);
+    downloadPdfBlob(pdfMake, docDefinition, `users_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 export default {
@@ -709,7 +727,7 @@ export async function exportUserCredentialsPDF(userData) {
 
         content: [
             {
-                text: 'User Credentials',
+                text: 'ข้อมูลบัญชีผู้ใช้งาน',
                 style: 'headerTitle',
                 alignment: 'center',
                 color: COLORS.primaryDark,
@@ -791,7 +809,7 @@ export async function exportUserCredentialsPDF(userData) {
         }
     };
 
-    pdfMake.createPdf(docDefinition).download(`credential_${userData.username}.pdf`);
+    downloadPdfBlob(pdfMake, docDefinition, `credential_${userData.username}.pdf`);
 }
 
 /**
@@ -878,5 +896,5 @@ export async function exportActivityLogsToPDF(logs, filters = {}) {
         styles: getStyles()
     };
 
-    pdfMake.createPdf(docDefinition).download(`activity_logs_${new Date().toISOString().split('T')[0]}.pdf`);
+    downloadPdfBlob(pdfMake, docDefinition, `activity_logs_${new Date().toISOString().split('T')[0]}.pdf`);
 }
