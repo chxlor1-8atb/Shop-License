@@ -326,23 +326,70 @@ export default function ExportPage() {
               </div>
             </div>
 
-            {/* Column Selection */}
+            {/* Column Selection (Minimal Design) */}
             {customFields.length > 0 && (
-              <div className="form-group" style={{ marginTop: "1.5rem" }}>
-                 <label style={{ fontWeight: 600, display: "block", marginBottom: "0.5rem" }}>
-                    เลือกคอลัมน์ที่ต้องการแสดง (Custom Fields)
-                 </label>
-                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
-                    {customFields.map(field => (
-                        <label key={field.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '4px', background: 'var(--white)' }}>
-                            <input 
-                                type="checkbox"
-                                checked={selectedFields.includes(field.field_name)}
-                                onChange={() => handleToggleField(field.field_name)}
-                            />
-                            <span style={{ fontSize: '0.9rem' }}>{field.field_label}</span>
-                        </label>
-                    ))}
+              <div className="form-group" style={{ 
+                  marginTop: "1.5rem", 
+                  padding: "1.25rem", 
+                  background: "var(--bg-secondary)", 
+                  borderRadius: "12px",
+                  border: "1px solid var(--border-color)"
+              }}>
+                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <label style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                        <i className="fas fa-sliders-h" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}></i>
+                        ปรับแต่งคอลัมน์ (Custom Fields)
+                    </label>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: '10px' }}>
+                        แสดง {selectedFields.length}/{customFields.length}
+                    </span>
+                 </div>
+                 
+                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {customFields.map(field => {
+                        const isSelected = selectedFields.includes(field.field_name);
+                        return (
+                            <div 
+                                key={field.id}
+                                onClick={() => handleToggleField(field.field_name)}
+                                style={{
+                                    padding: '0.4rem 0.85rem',
+                                    borderRadius: '50px',
+                                    border: isSelected ? '1px solid var(--primary)' : '1px solid transparent',
+                                    background: isSelected ? 'rgba(99, 102, 241, 0.1)' : 'var(--white)',
+                                    color: isSelected ? 'var(--primary)' : 'var(--text-secondary)',
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.4rem',
+                                    fontWeight: isSelected ? 500 : 400,
+                                    userSelect: 'none',
+                                    boxShadow: isSelected ? '0 2px 4px rgba(99, 102, 241, 0.1)' : '0 1px 2px rgba(0,0,0,0.03)'
+                                }}
+                            >
+                                <div style={{
+                                    width: '14px',
+                                    height: '14px',
+                                    borderRadius: '50%',
+                                    border: isSelected ? 'none' : '1px solid #cbd5e1',
+                                    background: isSelected ? 'var(--primary)' : 'transparent',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s'
+                                }}>
+                                    {isSelected && <i className="fas fa-check" style={{ fontSize: '8px', color: 'white' }}></i>}
+                                </div>
+                                {field.field_label}
+                            </div>
+                        );
+                    })}
+                 </div>
+                 <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <i className="fas fa-info-circle" style={{ marginRight: '4px' }}></i>
+                    คลิกเพื่อแสดง/ซ่อนข้อมูลในไฟล์ PDF และ CSV
                  </div>
               </div>
             )}
