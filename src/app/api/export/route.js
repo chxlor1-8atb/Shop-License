@@ -38,6 +38,14 @@ export async function GET(request) {
                  ORDER BY display_order ASC`,
                 [entityType]
             );
+
+            // Filter columns if requested
+            const fieldsParam = searchParams.get('fields');
+            if (fieldsParam) {
+                const selectedFields = fieldsParam.split(',');
+                // Keep only fields that are in the selected list
+                customFieldDefs = customFieldDefs.filter(cf => selectedFields.includes(cf.field_name));
+            }
         }
 
         if (type === 'licenses') {

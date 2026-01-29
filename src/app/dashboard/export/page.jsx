@@ -11,6 +11,10 @@ export default function ExportPage() {
   const [typesList, setTypesList] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
 
+  // Custom Fields Selection
+  const [customFields, setCustomFields] = useState([]);
+  const [selectedFields, setSelectedFields] = useState([]);
+
   // License filters
   const [licenseType, setLicenseType] = useState("");
   const [status, setStatus] = useState("");
@@ -20,6 +24,39 @@ export default function ExportPage() {
   useEffect(() => {
     loadDropdowns();
   }, []);
+
+  // Fetch custom fields when type changes
+  useEffect(() => {
+    if (type === 'licenses' || type === 'shops') {
+        fetchCustomFields(type);
+    } else {
+        setCustomFields([]);
+        setSelectedFields([]);
+    }
+  }, [type]);
+
+  const fetchCustomFields = async (entityType) => {
+      try {
+          const res = await fetch(`/api/custom-fields?entity_type=${entityType}`);
+          const data = await res.json();
+          if (data.success) {
+              const fields = data.fields || [];
+              setCustomFields(fields);
+              // Default select all
+              setSelectedFields(fields.map(f => f.field_name));
+          }
+      } catch (e) {
+          console.error("Error fetching custom fields:", e);
+      }
+  };
+
+  const handleToggleField = (fieldName) => {
+      if (selectedFields.includes(fieldName)) {
+          setSelectedFields(selectedFields.filter(f => f !== fieldName));
+      } else {
+          setSelectedFields([...selectedFields, fieldName]);
+      }
+  };
 
   const loadDropdowns = async () => {
     try {
@@ -37,6 +74,11 @@ export default function ExportPage() {
     const params = new URLSearchParams();
     params.append("type", type);
     params.append("format", "csv");
+    
+    // Append selected fields
+    if (selectedFields.length > 0) {
+        params.append("fields", selectedFields.join(','));
+    }
 
     if (type === "licenses") {
       if (licenseType) params.append("license_type", licenseType);
@@ -70,6 +112,11 @@ export default function ExportPage() {
     const params = new URLSearchParams();
     params.append("type", type);
     params.append("format", "pdf");
+
+    // Append selected fields
+    if (selectedFields.length > 0) {
+        params.append("fields", selectedFields.join(','));
+    }
 
     if (type === "licenses") {
       if (licenseType) params.append("license_type", licenseType);
@@ -278,6 +325,27 @@ export default function ExportPage() {
                 </label>
               </div>
             </div>
+
+            {/* Column Selection */}
+            {customFields.length > 0 && (
+              <div className="form-group" style={{ marginTop: "1.5rem" }}>
+                 <label style={{ fontWeight: 600, display: "block", marginBottom: "0.5rem" }}>
+                    เลือกคอลัมน์ที่ต้องการแสดง (Custom Fields)
+                 </label>
+                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
+                    {customFields.map(field => (
+                        <label key={field.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '4px', background: 'var(--white)' }}>
+                            <input 
+                                type="checkbox"
+                                checked={selectedFields.includes(field.field_name)}
+                                onChange={() => handleToggleField(field.field_name)}
+                            />
+                            <span style={{ fontSize: '0.9rem' }}>{field.field_label}</span>
+                        </label>
+                    ))}
+                 </div>
+              </div>
+            )}
 
             {/* License Filters */}
             {type === "licenses" && (
