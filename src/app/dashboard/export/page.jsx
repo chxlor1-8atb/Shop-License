@@ -64,7 +64,9 @@ export default function ExportPage() {
     });
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    setIsExporting(true); // Start loading state
+    
     const params = new URLSearchParams();
     params.append("type", type);
     params.append("format", "pdf");
@@ -77,22 +79,56 @@ export default function ExportPage() {
     }
 
     const url = `/api/export?${params.toString()}`;
-    
-    // Create hidden link to force download
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `export_${type}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const filename = `export_${type}_${new Date().toISOString().split('T')[0]}.pdf`;
 
-    Swal.fire({
-      title: "กำลังดาวน์โหลด...",
-      text: "ไฟล์ PDF กำลังถูกสร้างและดาวน์โหลด",
-      icon: "success",
-      timer: 2000,
-      showConfirmButton: false,
-    });
+    try {
+        Swal.fire({
+            title: "กำลังสร้างไฟล์ PDF...",
+            text: "กรุณารอสักครู่ ระบบกำลังประมวลผล",
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Export failed');
+        }
+
+        const blob = await response.blob();
+        
+        // Force PDF type to ensure browser handles it correctly
+        const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+        const downloadUrl = window.URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+
+        Swal.fire({
+            title: "สำเร็จ!",
+            text: "ดาวน์โหลดไฟล์เรียบร้อยแล้ว",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+        });
+
+    } catch (error) {
+        console.error('Export Error:', error);
+        Swal.fire({
+            title: "เกิดข้อผิดพลาด",
+            text: "ไม่สามารถส่งออกข้อมูลได้ กรุณาลองใหม่อีกครั้ง",
+            icon: "error"
+        });
+    } finally {
+        setIsExporting(false); // Stop loading state
+    }
   };
 
   const handleExport = () => {

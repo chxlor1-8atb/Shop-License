@@ -1,25 +1,28 @@
-
-import PdfPrinter from 'pdfmake';
+const PdfPrinterModule = require('pdfmake/js/Printer');
+const PdfPrinter = PdfPrinterModule.default || PdfPrinterModule;
 import path from 'path';
+import fs from 'fs';
 
-// Define fonts
-const FONTS_DIR = path.join(process.cwd(), 'public', 'fonts');
-
-const fonts = {
-    THSarabunNew: {
-        normal: path.join(FONTS_DIR, 'THSarabunNew.ttf'),
-        bold: path.join(FONTS_DIR, 'THSarabunNew-Bold.ttf'),
-        italics: path.join(FONTS_DIR, 'THSarabunNew.ttf'),
-        bolditalics: path.join(FONTS_DIR, 'THSarabunNew-Bold.ttf')
-    },
-    // Required fallback for pdfmake
-    Roboto: {
-        normal: path.join(FONTS_DIR, 'THSarabunNew.ttf'),
-        bold: path.join(FONTS_DIR, 'THSarabunNew-Bold.ttf'),
-        italics: path.join(FONTS_DIR, 'THSarabunNew.ttf'),
-        bolditalics: path.join(FONTS_DIR, 'THSarabunNew-Bold.ttf')
+// Define fonts helper
+const getFontContent = (filename) => {
+    try {
+        const filePath = path.join(process.cwd(), 'public', 'fonts', filename);
+        // console.log(`Attempting to load font: ${filePath}`);
+        if (fs.existsSync(filePath)) {
+            return fs.readFileSync(filePath);
+        }
+        console.warn(`Font file not found: ${filePath}`);
+        return null;
+    } catch (error) {
+        console.error(`Error loading font ${filename}:`, error);
+        return null;
     }
 };
+
+// Font definition will be created inside generatePdf
+let fonts = null;
+
+
 
 // Colors
 const COLORS = {
@@ -423,7 +426,52 @@ function createUsersDocDef(users) {
 
 // Main Export Function
 export async function generatePdf(type, data, customFieldDefs = [], filters = {}) {
-    const printer = new PdfPrinter(fonts);
+    // Initialize fonts if not loaded
+    if (!fonts) {
+        console.log('Initializing fonts for PDF Generator...');
+        try {
+            const thSarabunRegular = getFontContent('THSarabunNew.ttf');
+            const thSarabunBold = getFontContent('THSarabunNew-Bold.ttf');
+
+            fonts = {
+                THSarabunNew: {
+                    normal: thSarabunRegular,
+                    bold: thSarabunBold,
+                    italics: thSarabunRegular, // Fallback
+                    bolditalics: thSarabunBold // Fallback
+                },
+                Roboto: {
+                    normal: 'Helvetica',
+                    bold: 'Helvetica-Bold',
+                    italics: 'Helvetica-Oblique',
+                    bolditalics: 'Helvetica-BoldOblique'
+                }
+            };
+
+            // Check if font loaded
+            if (!fonts.THSarabunNew.normal) {
+                console.warn('THSarabunNew.ttf not found. Using Helvetica fallback.');
+                fonts.THSarabunNew = fonts.Roboto;
+            } else {
+                console.log('Fonts loaded successfully.');
+            }
+        } catch (fontError) {
+            console.error('Error constructing font object:', fontError);
+            // Fallback to avoid crash
+            fonts = {
+                THSarabunNew: { normal: 'Helvetica', bold: 'Helvetica-Bold', italics: 'Helvetica-Oblique', bolditalics: 'Helvetica-BoldOblique' },
+                Roboto: { normal: 'Helvetica', bold: 'Helvetica-Bold', italics: 'Helvetica-Oblique', bolditalics: 'Helvetica-BoldOblique' }
+            };
+        }
+    }
+
+    let printer;
+    try {
+        printer = new PdfPrinter(fonts);
+    } catch (printerError) {
+        console.error('Failed to initialize PdfPrinter:', printerError);
+        throw new Error('PDF Printer Initialization Failed: ' + printerError.message);
+    }
 
     let docDefinition;
 
@@ -437,10 +485,18 @@ export async function generatePdf(type, data, customFieldDefs = [], filters = {}
         throw new Error('Invalid export type for PDF');
     }
 
+    // Must await the document processing since createPdfKitDocument is async
+    let doc;
+    try {
+        doc = await printer.createPdfKitDocument(docDefinition);
+    } catch (docError) {
+        console.error('Error creating PDF document:', docError);
+        throw docError;
+    }
+
     return new Promise((resolve, reject) => {
         try {
             const chunks = [];
-            const doc = printer.createPdfKitDocument(docDefinition);
             doc.on('data', chunk => chunks.push(chunk));
             doc.on('end', () => resolve(Buffer.concat(chunks)));
             doc.on('error', reject);

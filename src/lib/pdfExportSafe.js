@@ -900,10 +900,10 @@ function downloadPdfBlob(pdfMake, docDefinition, filename) {
             link.click();
             document.body.removeChild(link);
 
-            // Clean up
+            // Clean up - increase timeout to prevent "Site - Failed - Network" error
             setTimeout(() => {
                 URL.revokeObjectURL(url);
-            }, 100);
+            }, 60000);
         });
     } catch (e) {
         console.error('Download Error:', e);
