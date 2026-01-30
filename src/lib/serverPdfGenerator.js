@@ -83,9 +83,9 @@ function createHeader(title, subtitle) {
                     columns: [
                         {
                             stack: [
-                                { text: 'LICENSE MANAGEMENT SYSTEM', style: 'brandName' },
-                                { text: 'ระบบจัดการใบอนุญาตดิจิทัล', style: 'brandSub' },
-                                { text: 'สำนักงานใหญ่: 123 BANGKOK, THAILAND', style: 'brandAddress' }
+                                { text: 'สำนักงานเทศบาลเมืองนางรอง', style: 'brandName' },
+                                { text: 'ระบบจัดการใบอนุญาตประกอบกิจการ', style: 'brandSub' },
+                                { text: '906 ถนนโชคชัย-เดชอุดม ตำบลนางรอง อำเภอนางรอง จังหวัดบุรีรัมย์ 31110', style: 'brandAddress' }
                             ],
                             alignment: 'left'
                         },
@@ -397,7 +397,7 @@ function createShopsDocDef(shops, customFieldDefs, activeBaseFields = null) {
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
-        watermark: { text: 'ข้อมูลร้านค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
+        watermark: { text: 'ใบอนุญาตประกอบการค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
         header: (currentPage, pageCount) => ({
             text: `หน้า ${currentPage} จาก ${pageCount}`,
@@ -476,7 +476,7 @@ function createUsersDocDef(users, activeBaseFields = null) {
         pageSize: 'A4',
         pageOrientation: 'portrait',
         pageMargins: [40, 40, 40, 60],
-        watermark: { text: 'เอกสารอิเล็กทรอนิกส์', color: 'gray', opacity: 0.08, bold: true, italics: false },
+        watermark: { text: 'ใบอนุญาตประกอบการค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
         header: (currentPage, pageCount) => ({
             text: `หน้า ${currentPage} จาก ${pageCount}`,
