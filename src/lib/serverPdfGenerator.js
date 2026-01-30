@@ -187,12 +187,37 @@ function createDataTable(headers, data, options = {}) {
     };
 }
 
+const FILTER_LABELS = {
+    'License Type ID': 'ประเภทใบอนุญาต',
+    'Status': 'สถานะ',
+    'Expiry From': 'วันหมดอายุ (เริ่มต้น)',
+    'Expiry To': 'วันหมดอายุ (สิ้นสุด)'
+};
+
 function createFilterInfo(filters) {
     if (!filters || Object.keys(filters).length === 0) return null;
 
     const filterTexts = Object.entries(filters)
         .filter(([_, value]) => value)
-        .map(([key, value]) => `${key}: ${value}`);
+        .map(([key, value]) => {
+            const label = FILTER_LABELS[key] || key;
+            let displayValue = value;
+
+            // Format Status
+            if (key === 'Status') {
+                const statusKey = Object.keys(STATUS_CONFIG).find(k => k === value?.toLowerCase());
+                if (statusKey) {
+                    displayValue = STATUS_CONFIG[statusKey].label;
+                }
+            }
+
+            // Format Dates
+            if (key.includes('Expiry') && value) {
+                displayValue = formatThaiDate(value);
+            }
+
+            return `${label}: ${displayValue}`;
+        });
 
     if (filterTexts.length === 0) return null;
 
@@ -201,7 +226,7 @@ function createFilterInfo(filters) {
             widths: ['*'],
             body: [[{
                 stack: [
-                    { text: 'Filters Applied', style: 'filterTitle' },
+                    { text: 'เงื่อนไขการกรองข้อมูล', style: 'filterTitle' },
                     { text: filterTexts.join(' | '), style: 'filterText' }
                 ],
                 margin: [10, 8, 10, 8]
