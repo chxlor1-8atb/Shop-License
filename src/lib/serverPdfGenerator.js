@@ -80,31 +80,33 @@ function createHeader(title, subtitle) {
             widths: ['*'],
             body: [
                 [{
-                    stack: [
+                    columns: [
                         {
-                            text: 'License Management System',
-                            style: 'headerTitle',
-                            alignment: 'center'
+                            stack: [
+                                { text: 'LICENSE MANAGEMENT SYSTEM', style: 'brandName' },
+                                { text: 'ระบบจัดการใบอนุญาตดิจิทัล', style: 'brandSub' },
+                                { text: 'สำนักงานใหญ่: 123 BANGKOK, THAILAND', style: 'brandAddress' }
+                            ],
+                            alignment: 'left'
                         },
                         {
-                            text: title,
-                            style: 'headerSubtitle',
-                            alignment: 'center',
-                            margin: [0, 5, 0, 0]
-                        },
-                        {
-                            text: subtitle || `Document Date: ${getCurrentThaiDate()}`,
-                            style: 'headerDate',
-                            alignment: 'center',
-                            margin: [0, 5, 0, 0]
+                            stack: [
+                                { text: 'ต้นฉบับ / ORIGINAL', style: 'officialTag', alignment: 'right' },
+                                { text: title, style: 'docTitle', alignment: 'right' },
+                                { text: subtitle || `วันที่: ${formatThaiDate(new Date().toISOString())}`, style: 'docDate', alignment: 'right' }
+                            ],
+                            alignment: 'right'
                         }
                     ],
-                    fillColor: COLORS.primary,
-                    margin: [20, 15, 20, 15]
+                    margin: [0, 5, 0, 15]
                 }]
             ]
         },
-        layout: 'noBorders',
+        layout: {
+            hLineWidth: (i) => i === 1 ? 2 : 0,
+            vLineWidth: () => 0,
+            hLineColor: () => '#1e293b'
+        },
         margin: [0, 0, 0, 20]
     };
 }
@@ -245,15 +247,19 @@ function createFilterInfo(filters) {
 
 function getStyles() {
     return {
-        headerTitle: { fontSize: 18, bold: true, color: COLORS.white },
-        headerSubtitle: { fontSize: 14, color: COLORS.white },
-        headerDate: { fontSize: 10, color: 'rgba(255,255,255,0.8)' },
+        brandName: { fontSize: 16, bold: true, color: COLORS.dark },
+        brandSub: { fontSize: 12, color: COLORS.secondary },
+        brandAddress: { fontSize: 9, color: COLORS.muted, margin: [0, 2, 0, 0] },
+        docTitle: { fontSize: 22, bold: true, color: COLORS.primaryDark },
+        officialTag: { fontSize: 8, color: COLORS.muted, bold: true, margin: [0, 0, 0, 2] },
+        docDate: { fontSize: 10, color: COLORS.dark },
+
         statValue: { fontSize: 20, bold: true, color: COLORS.primary },
         statLabel: { fontSize: 9, color: COLORS.secondary },
         tableHeader: { fontSize: 10, bold: true },
         tableCell: { fontSize: 9 },
-        filterTitle: { fontSize: 9, bold: true, color: COLORS.warning },
-        filterText: { fontSize: 8, color: COLORS.secondary },
+        filterTitle: { fontSize: 10, bold: true, color: '#92400e' }, // dark orange
+        filterText: { fontSize: 9, color: '#b45309' },
         pageNumber: { fontSize: 8, color: COLORS.muted },
         footer: { fontSize: 8, color: COLORS.muted }
     };
@@ -316,17 +322,18 @@ function createLicensesDocDef(licenses, customFieldDefs, filters, activeBaseFiel
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
+        watermark: { text: 'ใบอนุญาตประกอบการค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
         header: (currentPage, pageCount) => ({
-            text: `Page ${currentPage} of ${pageCount}`,
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
             alignment: 'right',
             margin: [0, 15, 40, 0],
             style: 'pageNumber'
         }),
         footer: () => ({
             columns: [
-                { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: 'เอกสารนี้จัดทำโดยระบบคอมพิวเตอร์ (License Management System)', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
@@ -390,17 +397,18 @@ function createShopsDocDef(shops, customFieldDefs, activeBaseFields = null) {
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
+        watermark: { text: 'ข้อมูลร้านค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
         header: (currentPage, pageCount) => ({
-            text: `Page ${currentPage} of ${pageCount}`,
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
             alignment: 'right',
             margin: [0, 15, 40, 0],
             style: 'pageNumber'
         }),
         footer: () => ({
             columns: [
-                { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: 'เอกสารนี้จัดทำโดยระบบคอมพิวเตอร์ (License Management System)', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
@@ -468,17 +476,18 @@ function createUsersDocDef(users, activeBaseFields = null) {
         pageSize: 'A4',
         pageOrientation: 'portrait',
         pageMargins: [40, 40, 40, 60],
+        watermark: { text: 'เอกสารอิเล็กทรอนิกส์', color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
         header: (currentPage, pageCount) => ({
-            text: `Page ${currentPage} of ${pageCount}`,
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
             alignment: 'right',
             margin: [0, 15, 40, 0],
             style: 'pageNumber'
         }),
         footer: () => ({
             columns: [
-                { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: 'เอกสารนี้จัดทำโดยระบบคอมพิวเตอร์ (License Management System)', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
