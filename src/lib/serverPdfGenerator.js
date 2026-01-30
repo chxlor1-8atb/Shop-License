@@ -173,7 +173,7 @@ function createDataTable(headers, data, options = {}) {
     return {
         table: {
             headerRows: 1,
-            widths: columnWidths || Array(headers.length).fill('*'),
+            widths: columnWidths || Array(headers.length).fill('auto'),
             body: [headerRow, ...dataRows]
         },
         layout: {
@@ -235,7 +235,7 @@ function getStyles() {
 }
 
 // DocDef Creators
-function createLicensesDocDef(licenses, customFieldDefs, filters) {
+function createLicensesDocDef(licenses, customFieldDefs, filters, activeBaseFields = null) {
     const title = 'รายงานใบอนุญาต';
     const stats = {
         'ทั้งหมด': licenses.length,
@@ -244,19 +244,34 @@ function createLicensesDocDef(licenses, customFieldDefs, filters) {
         'อื่นๆ': licenses.filter(l => !['active', 'expired'].includes(l.status)).length
     };
 
-    const baseHeaders = ['เลขที่ใบอนุญาต', 'ชื่อร้านค้า', 'ประเภท', 'วันที่ออก', 'วันหมดอายุ', 'สถานะ'];
+    // Default base header definitions (Fallback)
+    const defaultBaseFields = [
+        { key: 'license_number', dataKey: 'license_number', label: 'เลขที่ใบอนุญาต' },
+        { key: 'shop_id', dataKey: 'shop_name', label: 'ชื่อร้านค้า' },
+        { key: 'license_type_id', dataKey: 'type_name', label: 'ประเภท' },
+        { key: 'issue_date', dataKey: 'issue_date', label: 'วันที่ออก' },
+        { key: 'expiry_date', dataKey: 'expiry_date', label: 'วันหมดอายุ' },
+        { key: 'status', dataKey: 'status', label: 'สถานะ' }
+    ];
+
+    const baseFields = activeBaseFields || defaultBaseFields;
+
+    // Construct headers
+    const baseHeaders = baseFields.map(f => f.label);
     const customHeaders = customFieldDefs.map(cf => cf.field_label);
     const headers = [...baseHeaders, ...customHeaders];
 
     const data = licenses.map(l => {
-        const baseData = [
-            l.license_number || '-',
-            l.shop_name || '-',
-            l.type_name || '-',
-            formatThaiDate(l.issue_date),
-            formatThaiDate(l.expiry_date),
-            STATUS_CONFIG[l.status?.toLowerCase()]?.label || l.status || '-'
-        ];
+        const baseData = baseFields.map(f => {
+            const val = l[f.dataKey];
+            if (f.dataKey === 'issue_date' || f.dataKey === 'expiry_date') {
+                return formatThaiDate(val);
+            }
+            if (f.dataKey === 'status') {
+                return STATUS_CONFIG[val?.toLowerCase()]?.label || val || '-';
+            }
+            return val || '-';
+        });
 
         const customFieldsData = l.custom_fields || {};
         const customData = customFieldDefs.map(cf => {
@@ -270,9 +285,7 @@ function createLicensesDocDef(licenses, customFieldDefs, filters) {
         return [...baseData, ...customData];
     });
 
-    const baseWidths = ['auto', '*', 'auto', 'auto', 'auto', 'auto'];
-    const customWidths = customFieldDefs.map(() => 'auto');
-    const columnWidths = [...baseWidths, ...customWidths];
+    const columnWidths = Array(headers.length).fill('auto');
 
     return {
         pageSize: 'A4',
@@ -296,39 +309,43 @@ function createLicensesDocDef(licenses, customFieldDefs, filters) {
             createHeader(title),
             createSummaryBox(stats),
             filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
-            customFieldDefs.length > 0 ? {
-                text: `Custom Fields: ${customFieldDefs.map(cf => cf.field_label).join(', ')}`,
-                style: 'filterText',
-                margin: [0, 0, 0, 10]
-            } : null,
             createDataTable(headers, data, {
-                columnWidths: columnWidths,
-                colorColumn: 5
+                columnWidths: columnWidths // Use auto-calculated widths based on header count
             })
         ].filter(Boolean),
         styles: getStyles()
     };
 }
 
-function createShopsDocDef(shops, customFieldDefs) {
+function createShopsDocDef(shops, customFieldDefs, activeBaseFields = null) {
     const title = 'รายงานร้านค้า';
     const stats = {
         'ร้านค้าทั้งหมด': shops.length
     };
 
-    const baseHeaders = ['ชื่อร้านค้า', 'เจ้าของ', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่', 'วันที่สร้าง'];
+    // Default Fallback
+    const defaultBaseFields = [
+        { key: 'shop_name', dataKey: 'shop_name', label: 'ชื่อร้านค้า' },
+        { key: 'owner_name', dataKey: 'owner_name', label: 'เจ้าของ' },
+        { key: 'phone', dataKey: 'phone', label: 'เบอร์โทรศัพท์' },
+        { key: 'email', dataKey: 'email', label: 'อีเมล' },
+        { key: 'address', dataKey: 'address', label: 'ที่อยู่' },
+        { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง' }
+    ];
+
+    const baseFields = activeBaseFields || defaultBaseFields;
+
+    const baseHeaders = baseFields.map(f => f.label);
     const customHeaders = customFieldDefs.map(cf => cf.field_label);
     const headers = [...baseHeaders, ...customHeaders];
 
     const data = shops.map(s => {
-        const baseData = [
-            s.shop_name || '-',
-            s.owner_name || '-',
-            s.phone || '-',
-            s.email || '-',
-            s.address?.substring(0, 30) + (s.address?.length > 30 ? '...' : '') || '-',
-            formatThaiDate(s.created_at)
-        ];
+        const baseData = baseFields.map(f => {
+            const val = s[f.dataKey];
+            if (f.dataKey === 'created_at') return formatThaiDate(val);
+            if (f.dataKey === 'address') return ((val || '') + '').substring(0, 30) + (val?.length > 30 ? '...' : '') || '-';
+            return val || '-';
+        });
 
         const customFieldsData = s.custom_fields || {};
         const customData = customFieldDefs.map(cf => {
@@ -342,9 +359,7 @@ function createShopsDocDef(shops, customFieldDefs) {
         return [...baseData, ...customData];
     });
 
-    const baseWidths = ['*', 'auto', 'auto', 'auto', '*', 'auto'];
-    const customWidths = customFieldDefs.map(() => 'auto');
-    const columnWidths = [...baseWidths, ...customWidths];
+    const columnWidths = Array(headers.length).fill('auto');
 
     return {
         pageSize: 'A4',
@@ -378,7 +393,7 @@ function createShopsDocDef(shops, customFieldDefs) {
     };
 }
 
-function createUsersDocDef(users) {
+function createUsersDocDef(users, activeBaseFields = null) {
     const title = 'รายงานข้อมูลผู้ใช้งาน';
     const stats = {
         'ผู้ใช้งานทั้งหมด': users.length,
@@ -386,14 +401,43 @@ function createUsersDocDef(users) {
         'ผู้ใช้ทั่วไป': users.filter(u => u.role === 'user').length
     };
 
-    const headers = ['ลำดับ', 'ชื่อผู้ใช้งาน', 'ชื่อ-นามสกุล', 'สิทธิ์การใช้งาน', 'วันที่สร้าง'];
-    const data = users.map((u, index) => [
-        (index + 1).toString(),
-        u.username || '-',
-        u.full_name || '-',
-        u.role === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป',
-        formatThaiDate(u.created_at)
-    ]);
+    const defaultBaseFields = [
+        { key: 'username', dataKey: 'username', label: 'ชื่อผู้ใช้' },
+        //        { key: 'full_name', dataKey: 'full_name', label: 'ชื่อ-นามสกุล' },
+        { key: 'role', dataKey: 'role', label: 'สิทธิ์การใช้งาน' },
+        { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง' }
+    ];
+    // Add full_name back if it exists in API def, just mirroring default structural idea
+    // Checking API def again: { key: 'username', ... }, { key: 'full_name', ... }, { key: 'role', ... }, { key: 'created_at', ... }
+
+    // Re-defining default to match API exactly just in case activeBaseFields is null
+    const defaultBaseFieldsFull = [
+        { key: 'username', dataKey: 'username', label: 'ชื่อผู้ใช้' },
+        { key: 'full_name', dataKey: 'full_name', label: 'ชื่อ-นามสกุล' },
+        { key: 'role', dataKey: 'role', label: 'สิทธิ์การใช้งาน' },
+        { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง' }
+    ];
+
+    const baseFields = activeBaseFields || defaultBaseFieldsFull;
+    const headers = baseFields.map(f => f.label);
+
+    const data = users.map((u, index) => {
+        // Note: index + 1 (Order) is not in baseFieldsDefinition, so we might lose "No." column if we purely use activeBaseFields.
+        // But usually "No." is a display thing.
+        // If we want to strictly follow "Only selected fields", we should just show selected fields.
+        // However, standard reports often have a running number.
+        // Currently, other reports don't seem to have a running number column in their definitions?
+        // Let's stick to the activeBaseFields to be consistent with the "what you see is what you get" philosophy.
+
+        return baseFields.map(f => {
+            const val = u[f.dataKey];
+            if (f.dataKey === 'created_at') return formatThaiDate(val);
+            if (f.dataKey === 'role') return val === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป';
+            return val || '-';
+        });
+    });
+
+    const columnWidths = Array(headers.length).fill('*');
 
     return {
         pageSize: 'A4',
@@ -417,7 +461,7 @@ function createUsersDocDef(users) {
             createHeader(title),
             createSummaryBox(stats),
             createDataTable(headers, data, {
-                columnWidths: [50, '*', '*', 'auto', 'auto']
+                columnWidths: columnWidths
             })
         ],
         styles: getStyles()
@@ -425,7 +469,7 @@ function createUsersDocDef(users) {
 }
 
 // Main Export Function
-export async function generatePdf(type, data, customFieldDefs = [], filters = {}) {
+export async function generatePdf(type, data, customFieldDefs = [], filters = {}, activeBaseFields = null) {
     // Initialize fonts if not loaded
     if (!fonts) {
         console.log('Initializing fonts for PDF Generator...');
@@ -476,11 +520,11 @@ export async function generatePdf(type, data, customFieldDefs = [], filters = {}
     let docDefinition;
 
     if (type === 'licenses') {
-        docDefinition = createLicensesDocDef(data, customFieldDefs, filters);
+        docDefinition = createLicensesDocDef(data, customFieldDefs, filters, activeBaseFields);
     } else if (type === 'shops') {
-        docDefinition = createShopsDocDef(data, customFieldDefs);
+        docDefinition = createShopsDocDef(data, customFieldDefs, activeBaseFields);
     } else if (type === 'users') {
-        docDefinition = createUsersDocDef(data);
+        docDefinition = createUsersDocDef(data, activeBaseFields);
     } else {
         throw new Error('Invalid export type for PDF');
     }
