@@ -27,22 +27,22 @@ export async function GET(request) {
         let filename = `export_${type}_${new Date().toISOString().split('T')[0]}.${format}`;
 
         // Define Base Columns Mapping
+        // Updated to match custom_fields keys and labels EXACTLY
         const baseFieldsDefinitions = {
             shops: [
-                { key: 'shop_name', dataKey: 'shop_name', label: 'ชื่อร้าน' },
+                { key: 'shop_name', dataKey: 'shop_name', label: 'ชื่อร้านค้า' },
                 { key: 'owner_name', dataKey: 'owner_name', label: 'ชื่อเจ้าของ' },
-                { key: 'phone', dataKey: 'phone', label: 'โทรศัพท์' },
+                { key: 'phone', dataKey: 'phone', label: 'เบอร์โทรศัพท์' },
                 { key: 'email', dataKey: 'email', label: 'อีเมล' },
                 { key: 'address', dataKey: 'address', label: 'ที่อยู่' },
                 { key: 'notes', dataKey: 'notes', label: 'หมายเหตุ' },
-                { key: 'license_count', dataKey: 'license_count', label: 'จำนวนใบอนุญาต' },
-                { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง' }
+                { key: 'license_count', dataKey: 'license_count', label: 'จำนวนใบอนุญาต' }
             ],
             licenses: [
                 { key: 'license_number', dataKey: 'license_number', label: 'เลขที่ใบอนุญาต' },
-                { key: 'shop_id', dataKey: 'shop_name', label: 'ชื่อร้าน' },
-                { key: 'license_type_id', dataKey: 'type_name', label: 'ประเภท' },
-                { key: 'issue_date', dataKey: 'issue_date', label: 'วันออกใบอนุญาต' },
+                { key: 'shop_id', dataKey: 'shop_name', label: 'ร้านค้า' },
+                { key: 'license_type_id', dataKey: 'type_name', label: 'ประเภทใบอนุญาต' },
+                { key: 'issue_date', dataKey: 'issue_date', label: 'วันที่ออก' },
                 { key: 'expiry_date', dataKey: 'expiry_date', label: 'วันหมดอายุ' },
                 { key: 'status', dataKey: 'status', label: 'สถานะ' },
                 { key: 'notes', dataKey: 'notes', label: 'หมายเหตุ' }
@@ -60,9 +60,7 @@ export async function GET(request) {
         let customFieldDefs = [];
         let filters = {};
 
-        // 1. Fetch Custom Field Definitions (Allows all types in definition list)
-        // Check if type exists in definitions to determine if we should look for custom fields
-        // Assuming 'users' might be added to custom_fields table in future, we now query for any entityType
+        // 1. Fetch Custom Field Definitions
         if (availableBaseFields.length > 0) {
             const entityType = type;
             customFieldDefs = await fetchAll(
@@ -73,29 +71,16 @@ export async function GET(request) {
                 [entityType]
             );
 
-            // 2. Determine Active Base Fields based on:
-            //    - Does it exist in Custom Fields table? (If yes, it's filterable)
-            //    - Is it selected in fieldsParam? (If filterable, must be selected)
+            // 2. Determine Active Base Fields
             const customFieldNames = new Set(customFieldDefs.map(cf => cf.field_name));
 
             if (fieldsParam) {
                 const selectedKeys = fieldsParam.split(',');
 
                 activeBaseFields = availableBaseFields.filter(f => {
-                    // IF field is managed by Custom Fields table (filterable via UI)
                     if (customFieldNames.has(f.key)) {
                         return selectedKeys.includes(f.key);
                     }
-                    // IF not managed by Custom Fields (e.g. system fixed columns not in UI config),
-                    // allow them if explicit 'fields' param is NOT empty, or logic could be:
-                    // If the UI sends 'all' columns, we trust it.
-                    // For now, if it's NOT in customFields list but we have a fieldsParam, 
-                    // we should probably check if the UI sent it?
-                    // BUT, typically the UI only sends what's in 'custom_fields' config.
-                    // If a base column is NOT in custom_fields table, it implies it's "Always On" or "Not Configurable".
-                    // However, to make it fully consistent, base columns often SHOULD be in custom_fields table 
-                    // if they are to be toggleable.
-                    // Current Logic: If NOT in custom field definitions, keep it (Always On).
                     return true;
                 });
 
@@ -159,7 +144,7 @@ export async function GET(request) {
                 LEFT JOIN shops s ON l.shop_id = s.id
                 LEFT JOIN license_types lt ON l.license_type_id = lt.id
                 LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
-                LEFT JOIN custom_field_values cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
+                LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
                 ${whereSQL}
                 GROUP BY l.id, l.license_number, s.shop_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
                 ORDER BY l.id DESC
@@ -182,10 +167,6 @@ export async function GET(request) {
                 ORDER BY s.id DESC
             `);
         } else if (type === 'users') {
-            // Updated to check for custom fields if supported in future, 
-            // but currently just standard select.
-            // If users have custom_fields JSON in DB, we should fetch it.
-            // Assuming minimal structure for now but keeping consistent flow.
             data = await fetchAll(`
                 SELECT username, full_name, role, created_at
                 FROM users
