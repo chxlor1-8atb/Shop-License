@@ -307,7 +307,7 @@ function createLicensesDocDef(licenses, customFieldDefs, filters, activeBaseFiel
         }),
         content: [
             createHeader(title),
-            createSummaryBox(stats),
+            // createSummaryBox(stats),
             filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
             createDataTable(headers, data, {
                 columnWidths: columnWidths // Use auto-calculated widths based on header count
@@ -381,7 +381,7 @@ function createShopsDocDef(shops, customFieldDefs, activeBaseFields = null) {
         }),
         content: [
             createHeader(title),
-            createSummaryBox(stats),
+            // createSummaryBox(stats),
             customFieldDefs.length > 0 ? {
                 text: `Custom Fields: ${customFieldDefs.map(cf => cf.field_label).join(', ')}`,
                 style: 'filterText',
@@ -459,7 +459,7 @@ function createUsersDocDef(users, activeBaseFields = null) {
         }),
         content: [
             createHeader(title),
-            createSummaryBox(stats),
+            // createSummaryBox(stats),
             createDataTable(headers, data, {
                 columnWidths: columnWidths
             })
