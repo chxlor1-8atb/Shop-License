@@ -117,9 +117,16 @@ export async function GET(request) {
                 params.push(`%${search}%`);
                 paramIndex++;
             }
+            // Filter by computed status
             if (status) {
-                whereClauses.push(`l.status = $${paramIndex++}`);
-                params.push(status);
+                if (status === 'active') {
+                    whereClauses.push(`(l.expiry_date >= CURRENT_DATE AND l.status NOT IN ('suspended', 'revoked'))`);
+                } else if (status === 'expired') {
+                    whereClauses.push(`(l.expiry_date < CURRENT_DATE AND l.status NOT IN ('suspended', 'revoked'))`);
+                } else {
+                    whereClauses.push(`l.status = $${paramIndex++}`);
+                    params.push(status);
+                }
             }
             if (expiry_from) {
                 whereClauses.push(`l.expiry_date >= $${paramIndex++}`);
@@ -144,6 +151,7 @@ export async function GET(request) {
             const totalCount = parseInt(countResult[0]?.total || 0);
 
             // Fetch data with limit
+            // Computed status: คำนวณสถานะอัตโนมัติจากวันหมดอายุ
             const query = `
                 SELECT 
                     l.license_number, 
@@ -151,7 +159,11 @@ export async function GET(request) {
                     lt.name as type_name, 
                     l.issue_date, 
                     l.expiry_date, 
-                    l.status,
+                    CASE 
+                        WHEN l.status IN ('suspended', 'revoked') THEN l.status
+                        WHEN l.expiry_date < CURRENT_DATE THEN 'expired'
+                        ELSE 'active'
+                    END AS status,
                     l.notes,
                     COALESCE(
                         json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),

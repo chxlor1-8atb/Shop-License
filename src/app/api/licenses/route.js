@@ -65,10 +65,20 @@ export async function GET(request) {
             paramIndex++;
         }
 
+        // Filter by computed status
         if (status) {
-            whereClauses.push(`l.status = $${paramIndex}`);
-            params.push(status);
-            paramIndex++;
+            if (status === 'active') {
+                // Active = expiry_date >= today AND not suspended/revoked
+                whereClauses.push(`(l.expiry_date >= CURRENT_DATE AND l.status NOT IN ('suspended', 'revoked'))`);
+            } else if (status === 'expired') {
+                // Expired = expiry_date < today AND not suspended/revoked
+                whereClauses.push(`(l.expiry_date < CURRENT_DATE AND l.status NOT IN ('suspended', 'revoked'))`);
+            } else {
+                // For suspended/revoked, use the stored status
+                whereClauses.push(`l.status = $${paramIndex}`);
+                params.push(status);
+                paramIndex++;
+            }
         }
 
         let whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
@@ -82,8 +92,15 @@ export async function GET(request) {
         `;
 
         // Parallelize Count and Data Fetch
+        // Computed status: ถ้า expiry_date < วันนี้ = expired, ถ้า suspended/revoked ใช้ค่าเดิม, อื่นๆ = active
         const query = `
             SELECT l.*, s.shop_name, lt.name as type_name,
+                   CASE 
+                       WHEN l.status IN ('suspended', 'revoked') THEN l.status
+                       WHEN l.expiry_date < CURRENT_DATE THEN 'expired'
+                       ELSE 'active'
+                   END AS status,
+                   l.status AS original_status,
                    COALESCE(
                        json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
                        '{}'::json

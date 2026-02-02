@@ -38,7 +38,7 @@ export const getCachedLicenseTypes = unstable_cache(
         return await fetchAll(query);
     },
     ['license-types-all'],
-    { 
+    {
         revalidate: CACHE_DURATION.LONG,
         tags: [CACHE_TAGS.LICENSE_TYPES]
     }
@@ -52,7 +52,7 @@ export const getCachedLicenseType = unstable_cache(
         return await fetchOne('SELECT * FROM license_types WHERE id = $1', [id]);
     },
     ['license-type-single'],
-    { 
+    {
         revalidate: CACHE_DURATION.LONG,
         tags: [CACHE_TAGS.LICENSE_TYPES]
     }
@@ -66,7 +66,7 @@ export const getCachedShops = unstable_cache(
         return await fetchAll('SELECT id, shop_name, owner_name, phone FROM shops ORDER BY shop_name ASC');
     },
     ['shops-all'],
-    { 
+    {
         revalidate: CACHE_DURATION.MEDIUM,
         tags: [CACHE_TAGS.SHOPS]
     }
@@ -77,19 +77,20 @@ export const getCachedShops = unstable_cache(
  */
 export const getCachedDashboardStats = unstable_cache(
     async () => {
+        // Dashboard stats: ใช้ computed status จาก expiry_date
         const query = `
             SELECT 
                 (SELECT COUNT(*) FROM shops) as total_shops,
                 (SELECT COUNT(*) FROM licenses) as total_licenses,
-                (SELECT COUNT(*) FROM licenses WHERE status = 'active' AND expiry_date >= CURRENT_DATE) as active_licenses,
-                (SELECT COUNT(*) FROM licenses WHERE status = 'expired' OR expiry_date < CURRENT_DATE) as expired_licenses,
-                (SELECT COUNT(*) FROM licenses WHERE status = 'active' AND expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days') as expiring_soon,
+                (SELECT COUNT(*) FROM licenses WHERE expiry_date >= CURRENT_DATE AND status NOT IN ('suspended', 'revoked')) as active_licenses,
+                (SELECT COUNT(*) FROM licenses WHERE expiry_date < CURRENT_DATE AND status NOT IN ('suspended', 'revoked')) as expired_licenses,
+                (SELECT COUNT(*) FROM licenses WHERE expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days' AND status NOT IN ('suspended', 'revoked')) as expiring_soon,
                 (SELECT COUNT(*) FROM users) as total_users
         `;
         return await fetchOne(query);
     },
     ['dashboard-stats'],
-    { 
+    {
         revalidate: CACHE_DURATION.SHORT,
         tags: [CACHE_TAGS.DASHBOARD_STATS]
     }
@@ -100,14 +101,15 @@ export const getCachedDashboardStats = unstable_cache(
  */
 export const getCachedLicenseBreakdown = unstable_cache(
     async () => {
+        // License breakdown: ใช้ computed status จาก expiry_date
         const query = `
             SELECT 
                 lt.id,
                 lt.name as type_name,
                 COUNT(l.id) as total_count,
-                SUM(CASE WHEN l.status = 'active' AND l.expiry_date >= CURRENT_DATE THEN 1 ELSE 0 END) as active_count,
-                SUM(CASE WHEN l.status = 'active' AND l.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days' THEN 1 ELSE 0 END) as expiring_count,
-                SUM(CASE WHEN l.status = 'expired' OR l.expiry_date < CURRENT_DATE THEN 1 ELSE 0 END) as expired_count
+                SUM(CASE WHEN l.expiry_date >= CURRENT_DATE AND l.status NOT IN ('suspended', 'revoked') THEN 1 ELSE 0 END) as active_count,
+                SUM(CASE WHEN l.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days' AND l.status NOT IN ('suspended', 'revoked') THEN 1 ELSE 0 END) as expiring_count,
+                SUM(CASE WHEN l.expiry_date < CURRENT_DATE AND l.status NOT IN ('suspended', 'revoked') THEN 1 ELSE 0 END) as expired_count
             FROM license_types lt
             LEFT JOIN licenses l ON lt.id = l.license_type_id
             GROUP BY lt.id, lt.name
@@ -116,7 +118,7 @@ export const getCachedLicenseBreakdown = unstable_cache(
         return await fetchAll(query);
     },
     ['license-breakdown'],
-    { 
+    {
         revalidate: CACHE_DURATION.SHORT,
         tags: [CACHE_TAGS.DASHBOARD_STATS, CACHE_TAGS.LICENSES]
     }
@@ -127,13 +129,14 @@ export const getCachedLicenseBreakdown = unstable_cache(
  */
 export const getCachedExpiringCount = unstable_cache(
     async () => {
+        // Expiring count: นับจาก expiry_date โดยตัดสถานะ suspended/revoked ออก
         const result = await fetchOne(
-            "SELECT COUNT(*) as count FROM licenses WHERE status = 'active' AND expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'"
+            "SELECT COUNT(*) as count FROM licenses WHERE expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days' AND status NOT IN ('suspended', 'revoked')"
         );
         return parseInt(result?.count || 0);
     },
     ['expiring-count'],
-    { 
+    {
         revalidate: CACHE_DURATION.SHORT,
         tags: [CACHE_TAGS.LICENSES]
     }
