@@ -19,11 +19,18 @@ export default function PatchNotesModal({ isOpen, onClose }) {
     }, [isOpen]);
 
     // Prevent body scroll when modal is open
+    // Prevent body scroll when modal is open
     useEffect(() => {
         if (isOpen) {
+            const originalStyle = window.getComputedStyle(document.body).overflow;
+            const originalHtmlStyle = window.getComputedStyle(document.documentElement).overflow;
+            
             document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+            
             return () => {
-                document.body.style.overflow = 'unset';
+                document.body.style.overflow = originalStyle;
+                document.documentElement.style.overflow = originalHtmlStyle;
             };
         }
     }, [isOpen]);
