@@ -7464,9 +7464,9 @@ img {
     transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0.25rem;
     position: relative;
-    /* overflow: hidden; Removed to prevent text clipping */
+    overflow: hidden;
     height: auto;
     min-height: min-content;
 }

@@ -137,7 +137,8 @@ export default function PatchNotesModal({ isOpen, onClose }) {
                                                     gap: '0.35rem',
                                                     fontSize: '0.75rem',
                                                     whiteSpace: 'nowrap',
-                                                    padding: '0.35rem 0.75rem'
+                                                    padding: '0.35rem 0.75rem',
+                                                    flexShrink: 0
                                                 }}>
                                                     <i className={badge.icon}></i>
                                                     {badge.label}
