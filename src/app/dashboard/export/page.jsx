@@ -4,11 +4,13 @@ import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import CustomSelect from "@/components/ui/CustomSelect";
 import DatePicker from "@/components/ui/DatePicker";
+import { SearchInput } from "@/components/ui/FilterRow";
 
 export default function ExportPage() {
   const [type, setType] = useState("licenses");
   const [format, setFormat] = useState("csv");
   const [typesList, setTypesList] = useState([]);
+  const [shopOptions, setShopOptions] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
 
   // Custom Fields Selection
@@ -20,6 +22,8 @@ export default function ExportPage() {
   const [status, setStatus] = useState("");
   const [expiryFrom, setExpiryFrom] = useState("");
   const [expiryTo, setExpiryTo] = useState("");
+  const [search, setSearch] = useState("");
+  const [filterShop, setFilterShop] = useState("");
 
   useEffect(() => {
     loadDropdowns();
@@ -60,10 +64,19 @@ export default function ExportPage() {
 
   const loadDropdowns = async () => {
     try {
-      const res = await fetch("/api/license-types");
-      const data = await res.json();
-      if (data.success) {
-        setTypesList(data.types || []);
+      const [typeRes, shopRes] = await Promise.all([
+        fetch("/api/license-types"),
+        fetch("/api/shops?limit=1000")
+      ]);
+      
+      const typeData = await typeRes.json();
+      if (typeData.success) {
+        setTypesList(typeData.types || []);
+      }
+
+      const shopData = await shopRes.json();
+      if (shopData.success) {
+        setShopOptions(shopData.shops.map(s => ({ value: s.id, label: s.shop_name })) || []);
       }
     } catch (error) {
       console.error(error);
@@ -85,6 +98,8 @@ export default function ExportPage() {
       if (status) params.append("status", status);
       if (expiryFrom) params.append("expiry_from", expiryFrom);
       if (expiryTo) params.append("expiry_to", expiryTo);
+      if (search) params.append("search", search);
+      if (filterShop) params.append("shop_id", filterShop);
     }
 
     const url = `/api/export?${params.toString()}`;
@@ -123,6 +138,8 @@ export default function ExportPage() {
       if (status) params.append("status", status);
       if (expiryFrom) params.append("expiry_from", expiryFrom);
       if (expiryTo) params.append("expiry_to", expiryTo);
+      if (search) params.append("search", search);
+      if (filterShop) params.append("shop_id", filterShop);
     }
 
     const url = `/api/export?${params.toString()}`;
@@ -421,6 +438,40 @@ export default function ExportPage() {
                     gap: "1rem",
                   }}
                 >
+                  <div>
+                    <label
+                      style={{
+                        fontSize: "0.875rem",
+                        marginBottom: "0.5rem",
+                        display: "block",
+                      }}
+                    >
+                      ค้นหา
+                    </label>
+                    <SearchInput
+                      value={search}
+                      onChange={setSearch}
+                      placeholder="ระบุคำค้นหา..."
+                    />
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        fontSize: "0.875rem",
+                        marginBottom: "0.5rem",
+                        display: "block",
+                      }}
+                    >
+                      ร้านค้า
+                    </label>
+                     <CustomSelect
+                      value={filterShop}
+                      onChange={(e) => setFilterShop(e.target.value)}
+                      options={[{ value: "", label: "ทุกร้านค้า" }, ...shopOptions]}
+                      placeholder="เลือกร้านค้า..."
+                      isSearchable={true}
+                    />
+                  </div>
                   <div>
                     <label
                       style={{

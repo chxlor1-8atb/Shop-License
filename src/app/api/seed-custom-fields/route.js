@@ -6,28 +6,28 @@ export const dynamic = 'force-dynamic';
 // Custom Field Definitions ที่จะสร้าง (ถ้ายังไม่มี)
 const mockCustomFieldDefinitions = [
     {
-        entity_type: 'license',
+        entity_type: 'licenses',
         field_name: 'สถานที่จำหน่าย',
         field_label: 'สถานที่จำหน่าย',
         field_type: 'text',
         display_order: 1
     },
     {
-        entity_type: 'license',
+        entity_type: 'licenses',
         field_name: 'จำนวนเงิน',
         field_label: 'จำนวนเงิน',
         field_type: 'number',
         display_order: 2
     },
     {
-        entity_type: 'license',
+        entity_type: 'licenses',
         field_name: 'พื้นที่ (ตารางเมตร)',
         field_label: 'พื้นที่ (ตารางเมตร)',
         field_type: 'text',
         display_order: 3
     },
     {
-        entity_type: 'license',
+        entity_type: 'licenses',
         field_name: 'พื้นที่(แรงม้า)',
         field_label: 'พื้นที่(แรงม้า)',
         field_type: 'text',
@@ -108,7 +108,7 @@ export async function POST(request) {
         // ขั้นตอนที่ 2: ดึง custom fields สำหรับ license
         const customFields = await fetchAll(
             'SELECT id, field_name FROM custom_fields WHERE entity_type = $1 AND is_active = true',
-            ['license']
+            ['licenses']
         );
 
         if (customFields.length === 0) {
@@ -191,7 +191,7 @@ export async function GET() {
         // ดึง custom fields สำหรับ license
         const customFields = await fetchAll(
             'SELECT id, field_name, field_label, field_type FROM custom_fields WHERE entity_type = $1 AND is_active = true',
-            ['license']
+            ['licenses']
         );
 
         // ดึงจำนวนใบอนุญาต

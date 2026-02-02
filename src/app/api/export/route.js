@@ -66,7 +66,7 @@ export async function GET(request) {
             customFieldDefs = await fetchAll(
                 `SELECT field_name, field_label, field_type, show_in_table 
                  FROM custom_fields 
-                 WHERE entity_type = $1 AND show_in_table = true 
+                 WHERE entity_type = $1 AND is_active = true 
                  ORDER BY display_order ASC`,
                 [entityType]
             );
@@ -97,6 +97,8 @@ export async function GET(request) {
         if (type === 'licenses') {
             const license_type = searchParams.get('license_type');
             const status = searchParams.get('status');
+            const shop_id = searchParams.get('shop_id');
+            const search = searchParams.get('search');
             const expiry_from = searchParams.get('expiry_from');
             const expiry_to = searchParams.get('expiry_to');
 
@@ -108,6 +110,30 @@ export async function GET(request) {
                 whereClauses.push(`l.license_type_id = $${paramIndex++}`);
                 params.push(license_type);
                 filters['License Type ID'] = license_type;
+            }
+            if (shop_id) {
+                whereClauses.push(`l.shop_id = $${paramIndex++}`);
+                params.push(shop_id);
+                // We might want to look up shop name for the filter label if possible, or just show ID
+            }
+            if (search) {
+                whereClauses.push(`(
+                    s.shop_name ILIKE $${paramIndex} OR 
+                    l.license_number ILIKE $${paramIndex} OR 
+                    lt.name ILIKE $${paramIndex} OR 
+                    l.status ILIKE $${paramIndex} OR 
+                    l.notes ILIKE $${paramIndex} OR
+                    l.issue_date::text ILIKE $${paramIndex} OR
+                    l.expiry_date::text ILIKE $${paramIndex} OR
+                    EXISTS (
+                        SELECT 1 FROM custom_field_values cfv2
+                        WHERE cfv2.entity_id = l.id 
+                        AND cfv2.field_value ILIKE $${paramIndex}
+                    )
+                )`);
+                params.push(`%${search}%`);
+                paramIndex++;
+                filters['Search'] = search;
             }
             if (status) {
                 whereClauses.push(`l.status = $${paramIndex++}`);
@@ -143,7 +169,7 @@ export async function GET(request) {
                 FROM licenses l
                 LEFT JOIN shops s ON l.shop_id = s.id
                 LEFT JOIN license_types lt ON l.license_type_id = lt.id
-                LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
+                LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id
                 LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
                 ${whereSQL}
                 GROUP BY l.id, l.license_number, s.shop_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes

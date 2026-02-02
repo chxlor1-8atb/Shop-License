@@ -170,11 +170,11 @@ export async function POST(request) {
                 const fieldId = fieldMap[fieldName];
                 if (fieldId && value !== undefined && value !== null) {
                     await executeQuery(`
-                        INSERT INTO custom_field_values (custom_field_id, entity_type, entity_id, field_value)
-                        VALUES ($1, $2, $3, $4)
+                        INSERT INTO custom_field_values (custom_field_id, entity_id, field_value, entity_type)
+                        VALUES ($1, $2, $3, 'licenses')
                         ON CONFLICT (custom_field_id, entity_id) 
                         DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = NOW()
-                    `, [fieldId, 'licenses', licenseId, value?.toString() || '']);
+                    `, [fieldId, licenseId, value?.toString() || '']);
                 }
             }
         }
@@ -237,11 +237,11 @@ export async function PUT(request) {
                     if (value !== undefined && value !== null && value !== '') {
                         // Insert or update the value
                         await executeQuery(`
-                            INSERT INTO custom_field_values (custom_field_id, entity_type, entity_id, field_value)
-                            VALUES ($1, $2, $3, $4)
+                            INSERT INTO custom_field_values (custom_field_id, entity_id, field_value, entity_type)
+                            VALUES ($1, $2, $3, 'licenses')
                             ON CONFLICT (custom_field_id, entity_id) 
                             DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = NOW()
-                        `, [fieldId, 'licenses', id, value?.toString() || '']);
+                        `, [fieldId, id, value?.toString() || '']);
                     } else {
                         // Delete the value if it's empty/null
                         await executeQuery(
