@@ -2,7 +2,7 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
-import { requireAuth, getCurrentUser } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, getCurrentUser } from '@/lib/api-helpers';
 import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
@@ -310,8 +310,8 @@ export async function PUT(request) {
 }
 
 export async function DELETE(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {

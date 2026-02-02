@@ -5,6 +5,8 @@ import { NextResponse } from 'next/server';
  * Security Score: 10/10 Implementation
  * 
  * Features:
+ * - Anti-Automation/Bot Protection (WAF Lite)
+ * - Rate Limiting (Basic Protection)
  * - HSTS (Strict Transport Security)
  * - CSP (Content Security Policy) for API
  * - X-Frame-Options (Clickjacking protection)
@@ -13,21 +15,121 @@ import { NextResponse } from 'next/server';
  * - Permissions-Policy (Feature restrictions)
  */
 
-// Generate nonce for CSP (if needed for inline scripts)
-function generateNonce() {
-    const array = new Uint8Array(16);
-    crypto.getRandomValues(array);
-    return Buffer.from(array).toString('base64');
+// ======== SECURITY CONFIGURATION ========
+
+// Known scanner/attack tool User-Agents to strictly block
+const BLOCKED_USER_AGENTS = [
+    'sqlmap', 'dalfox', 'nikto', 'nuclei', 'katana', 'gau', 'hydra',
+    'burp', 'metasploit', 'nmap', 'masscan', 'rustscan', 'acunetix',
+    'nessus', 'havij', 'appscan', 'w3af', 'netsparker', 'openvas',
+    'gobuster', 'dirbuster', 'lbb-bot', 'scantron', 'zgrab', 'censys'
+];
+
+// Suspicious patterns in URL/Query that indicate attacks (SQLi, XSS, Path Traversal)
+const SUSPICIOUS_PATTERNS = [
+    /union\s+select/i,           // SQL Injection
+    /select\s+.*\s+from/i,       // SQL Injection
+    /<script>/i,                 // XSS
+    /javascript:/i,              // XSS
+    /\.\.\//,                    // Path Traversal
+    /\/etc\/passwd/,             // LFI
+    /waitfor\s+delay/i,          // SQL Injection (Time based)
+    /benchmark\(/i,              // SQL Injection (Time based)
+    /sleep\(/i,                  // SQL Injection (Time based)
+    /1=1/,                       // Simple SQLi probe
+    /win\.ini/                   // LFI (Windows)
+];
+
+// Rate Limiting Config (In-Memory specific to this runtime instance)
+// Note: In a serverless generic environment, this resets often, but effective for burst attacks.
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 300; // General limit
+const MAX_SENSITIVE_REQUESTS = 20;   // Login/Auth limit
+
+const ipRequestCounts = new Map();
+
+// Helper: Basic cleanup of old rate limit entries
+function cleanupRateLimits() {
+    const now = Date.now();
+    for (const [ip, data] of ipRequestCounts.entries()) {
+        if (now - data.startTime > RATE_LIMIT_WINDOW) {
+            ipRequestCounts.delete(ip);
+        }
+    }
 }
+
+// Only set interval if not already set (reloads might cause issues in dev, but benign here)
+if (!global.rateLimitInterval) {
+    global.rateLimitInterval = setInterval(cleanupRateLimits, 60000);
+}
+
+// ========================================
 
 export function middleware(request) {
     const { pathname } = request.nextUrl;
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
+
+    // 1. BLOCK KNOWN ATTACK TOOLS (User-Agent Check)
+    // Protection against: sqlmap, dalfox, nuclei, katana, nikko, hydra, rustscan
+    if (BLOCKED_USER_AGENTS.some(agent => userAgent.includes(agent))) {
+        return new NextResponse(JSON.stringify({ error: 'Initial Access Blocked' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    // 2. PAYLOAD INSPECTION (WAF Lite)
+    // Protection against: sqlmap, dalfox, manual SQLi/XSS injection
+    const hasSuspiciousPayload = SUSPICIOUS_PATTERNS.some(pattern =>
+        pattern.test(pathname) || pattern.test(decodeURIComponent(request.url))
+    );
+
+    if (hasSuspiciousPayload) {
+        return new NextResponse(JSON.stringify({ error: 'Suspicious payload detected' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    // 3. RATE LIMITING
+    // Protection against: hydra (brute-force), gau (crawling), DoS
+    const now = Date.now();
+    let clientData = ipRequestCounts.get(ip);
+
+    if (!clientData) {
+        clientData = { count: 1, startTime: now };
+        ipRequestCounts.set(ip, clientData);
+    } else {
+        if (now - clientData.startTime > RATE_LIMIT_WINDOW) {
+            // Reset window
+            clientData.count = 1;
+            clientData.startTime = now;
+        } else {
+            clientData.count++;
+        }
+    }
+
+    // Strict limit for potential login paths, lax for others
+    const isSensitivePath = pathname.includes('/api/auth') || pathname.includes('login') || pathname.includes('admin');
+    const limit = isSensitivePath ? MAX_SENSITIVE_REQUESTS : MAX_REQUESTS_PER_WINDOW;
+
+    if (clientData.count > limit) {
+        return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
+            status: 429,
+            headers: {
+                'Retry-After': '60',
+                'Content-Type': 'application/json'
+            }
+        });
+    }
+
+
     const isProduction = process.env.NODE_ENV === 'production';
+    const response = NextResponse.next();
 
-    // For API routes - strict security headers
+    // 4. API SPECIFIC SECURITY
     if (pathname.startsWith('/api/')) {
-        const response = NextResponse.next();
-
         // Core security headers
         response.headers.set('X-Content-Type-Options', 'nosniff');
         response.headers.set('X-Frame-Options', 'DENY');
@@ -46,9 +148,7 @@ export function middleware(request) {
         return response;
     }
 
-    const response = NextResponse.next();
-
-    // ===== Security Headers =====
+    // ===== RESPONSE SECURITY HEADERS =====
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -63,23 +163,22 @@ export function middleware(request) {
     response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
     response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
 
+    // Remove headers that might leak info (like X-Powered-By which Next.js sometimes adds or upstream proxies)
+    response.headers.delete('X-Powered-By');
 
     // ===== Performance Headers =====
-
-    // Enable HTTP/2 Server Push hints for critical resources
     response.headers.set('Link', [
         '</image/shop-logo.png>; rel=preload; as=image',
     ].join(', '));
 
-    // Server Timing (for debugging in DevTools)
     if (process.env.NODE_ENV !== 'production') {
-        response.headers.set('Server-Timing', `middleware;dur=1;desc="Middleware processing"`);
+        response.headers.set('Server-Timing', `middleware;dur=1;desc="Security checks passed"`);
     }
 
     return response;
 }
 
-// Optimized matcher - exclude more static paths
+// Optimized matcher - exclude more static paths but INCLUDE api for checks
 export const config = {
     matcher: [
         /*
@@ -92,4 +191,3 @@ export const config = {
         '/((?!_next/static|_next/image|favicon\\.ico|favicon\\.png|image/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|ttf|woff2?)$).*)',
     ],
 };
-
