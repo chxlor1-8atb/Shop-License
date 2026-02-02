@@ -262,7 +262,7 @@ export default function ShopDetailModal({
               <div className="empty-state">
                 <i className="fas fa-file-alt"></i>
                 <p>ยังไม่มีใบอนุญาต</p>
-                <small>คลิก "เพิ่มใบอนุญาต" เพื่อสร้างใบอนุญาตใหม่</small>
+                <small>คลิก &quot;เพิ่มใบอนุญาต&quot; เพื่อสร้างใบอนุญาตใหม่</small>
               </div>
             ) : (
               <div className="licenses-list">

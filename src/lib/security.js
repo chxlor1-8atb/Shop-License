@@ -189,21 +189,62 @@ export function isRateLimited(key, maxRequests = 100, windowMs = 60000) {
 // ========================================
 
 /**
- * Validate password strength
+ * Validate password strength (Strong Password Policy)
+ * Requirements:
+ * - Minimum 8 characters
+ * - At least 1 uppercase letter
+ * - At least 1 lowercase letter
+ * - At least 1 number
+ * - At least 1 special character (optional but recommended)
+ * 
  * @param {string} password - Password to validate
- * @returns {{ valid: boolean, message: string }}
+ * @returns {{ valid: boolean, message: string, strength: 'weak'|'medium'|'strong' }}
  */
 export function validatePassword(password) {
-    if (!password || password.length < 8) {
-        return { valid: false, message: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร' };
+    if (!password) {
+        return { valid: false, message: 'กรุณากรอกรหัสผ่าน', strength: 'weak' };
     }
-    if (!/[a-zA-Z]/.test(password)) {
-        return { valid: false, message: 'รหัสผ่านต้องมีตัวอักษรอย่างน้อย 1 ตัว' };
+
+    if (password.length < 8) {
+        return { valid: false, message: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร', strength: 'weak' };
     }
-    if (!/[0-9]/.test(password)) {
-        return { valid: false, message: 'รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว' };
+
+    if (password.length > 128) {
+        return { valid: false, message: 'รหัสผ่านต้องไม่เกิน 128 ตัวอักษร', strength: 'weak' };
     }
-    return { valid: true, message: '' };
+
+    // Check for common weak passwords
+    const commonPasswords = ['password', '12345678', 'qwerty123', 'admin123', 'letmein'];
+    if (commonPasswords.includes(password.toLowerCase())) {
+        return { valid: false, message: 'รหัสผ่านนี้ง่ายเกินไป กรุณาใช้รหัสผ่านที่ปลอดภัยกว่านี้', strength: 'weak' };
+    }
+
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+    if (!hasUppercase) {
+        return { valid: false, message: 'รหัสผ่านต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว (A-Z)', strength: 'weak' };
+    }
+
+    if (!hasLowercase) {
+        return { valid: false, message: 'รหัสผ่านต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว (a-z)', strength: 'weak' };
+    }
+
+    if (!hasNumber) {
+        return { valid: false, message: 'รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว (0-9)', strength: 'medium' };
+    }
+
+    // Calculate strength
+    let strength = 'medium';
+    if (hasSpecial && password.length >= 12) {
+        strength = 'strong';
+    } else if (hasSpecial || password.length >= 10) {
+        strength = 'medium';
+    }
+
+    return { valid: true, message: '', strength };
 }
 
 /**

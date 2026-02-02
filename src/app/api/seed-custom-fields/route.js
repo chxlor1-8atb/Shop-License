@@ -1,7 +1,19 @@
 import { executeQuery, fetchOne, fetchAll } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
+
+// Security: Block seed routes in production
+function isProductionBlocked() {
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED !== 'true') {
+        return NextResponse.json(
+            { success: false, message: 'Seed routes are disabled in production' },
+            { status: 403 }
+        );
+    }
+    return null;
+}
 
 // Custom Field Definitions ที่จะสร้าง (ถ้ายังไม่มี)
 const mockCustomFieldDefinitions = [
@@ -59,6 +71,14 @@ const mockCustomFieldValues = {
 };
 
 export async function POST(request) {
+    // Security: Require admin authentication
+    const authError = await requireAdmin();
+    if (authError) return authError;
+
+    // Security: Block in production unless explicitly allowed
+    const prodBlock = isProductionBlocked();
+    if (prodBlock) return prodBlock;
+
     try {
         let fieldDefCount = 0;
         let valueCount = 0;
@@ -187,6 +207,14 @@ export async function POST(request) {
 }
 
 export async function GET() {
+    // Security: Require admin authentication  
+    const authError = await requireAdmin();
+    if (authError) return authError;
+
+    // Security: Block in production unless explicitly allowed
+    const prodBlock = isProductionBlocked();
+    if (prodBlock) return prodBlock;
+
     try {
         // ดึง custom fields สำหรับ license
         const customFields = await fetchAll(

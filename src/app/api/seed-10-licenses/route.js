@@ -1,8 +1,19 @@
-
 import { executeQuery, fetchOne, fetchAll } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
+
+// Security: Block seed routes in production
+function isProductionBlocked() {
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED !== 'true') {
+        return NextResponse.json(
+            { success: false, message: 'Seed routes are disabled in production' },
+            { status: 403 }
+        );
+    }
+    return null;
+}
 
 // Mock data pools
 const MOCK_DATA = {
@@ -20,6 +31,14 @@ const MOCK_DATA = {
 };
 
 export async function GET() {
+    // Security: Require admin authentication
+    const authError = await requireAdmin();
+    if (authError) return authError;
+
+    // Security: Block in production unless explicitly allowed
+    const prodBlock = isProductionBlocked();
+    if (prodBlock) return prodBlock;
+
     try {
         // 1. Get existing data and metadata
         const shops = await fetchAll('SELECT id, shop_name FROM shops');

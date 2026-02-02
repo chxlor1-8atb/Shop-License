@@ -1,7 +1,19 @@
 import { executeQuery, fetchOne, fetchAll } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
+
+// Security: Block seed routes in production
+function isProductionBlocked() {
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED !== 'true') {
+        return NextResponse.json(
+            { success: false, message: 'Seed routes are disabled in production' },
+            { status: 403 }
+        );
+    }
+    return null;
+}
 
 // ข้อมูลจำลองสำหรับ Custom Fields (สำหรับใบอนุญาต)
 const mockCustomFieldValues = {
@@ -151,6 +163,14 @@ function getDateString(daysFromNow) {
 }
 
 export async function POST(request) {
+    // Security: Require admin authentication
+    const authError = await requireAdmin();
+    if (authError) return authError;
+
+    // Security: Block in production unless explicitly allowed
+    const prodBlock = isProductionBlocked();
+    if (prodBlock) return prodBlock;
+
     try {
         const shopResults = [];
         const typeResults = [];
@@ -372,6 +392,14 @@ export async function POST(request) {
 
 // GET สำหรับดูข้อมูลจำลองที่จะถูกเพิ่ม
 export async function GET() {
+    // Security: Require admin authentication
+    const authError = await requireAdmin();
+    if (authError) return authError;
+
+    // Security: Block in production unless explicitly allowed
+    const prodBlock = isProductionBlocked();
+    if (prodBlock) return prodBlock;
+
     return NextResponse.json({
         success: true,
         message: 'ข้อมูลจำลอง: ร้านค้า 10 รายการ, ประเภทใบอนุญาต 4 ประเภท, ใบอนุญาต 20 ใบ (ร้านละ 2 ใบ), และ Custom Fields - ส่ง POST request เพื่อเพิ่มข้อมูล',

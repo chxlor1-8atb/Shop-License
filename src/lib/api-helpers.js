@@ -19,11 +19,11 @@ export async function getSession() {
     try {
         const cookieStore = await cookies();
         const session = await getIronSession(cookieStore, sessionOptions);
-        
+
         if (!session.userId) {
             return null;
         }
-        
+
         return {
             id: session.userId,
             username: session.username,
@@ -43,14 +43,14 @@ export async function getSession() {
  */
 export async function requireAuth() {
     const session = await getSession();
-    
+
     if (!session) {
         return NextResponse.json(
             { success: false, message: 'กรุณาเข้าสู่ระบบก่อน' },
             { status: 401 }
         );
     }
-    
+
     return null; // Authenticated
 }
 
@@ -60,21 +60,21 @@ export async function requireAuth() {
  */
 export async function requireAdmin() {
     const session = await getSession();
-    
+
     if (!session) {
         return NextResponse.json(
             { success: false, message: 'กรุณาเข้าสู่ระบบก่อน' },
             { status: 401 }
         );
     }
-    
+
     if (session.role !== 'admin') {
         return NextResponse.json(
             { success: false, message: 'ต้องการสิทธิ์ผู้ดูแลระบบ' },
             { status: 403 }
         );
     }
-    
+
     return null; // Authorized
 }
 
@@ -181,7 +181,7 @@ function pick(obj, fields) {
 export function paginateResults(items, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
     const paginatedItems = items.slice(offset, offset + limit);
-    
+
     return {
         items: paginatedItems,
         pagination: {
@@ -210,26 +210,106 @@ export function validateRequired(body, requiredFields) {
 }
 
 /**
- * Rate limiting helper (simple in-memory)
+ * Enhanced Rate Limiting with Sliding Window Algorithm
+ * Features:
+ * - Sliding window for accurate rate limiting
+ * - Automatic memory cleanup
+ * - IP validation and normalization
+ * - Configurable penalties for repeated violations
  */
 const rateLimitMap = new Map();
+const violationMap = new Map(); // Track repeated violators
+let lastCleanup = Date.now();
+const CLEANUP_INTERVAL = 60000; // Cleanup every minute
+
+/**
+ * Normalize and validate IP address
+ */
+function normalizeIP(ip) {
+    if (!ip || typeof ip !== 'string') return 'unknown';
+    // Remove port if present
+    const normalized = ip.split(',')[0].trim().split(':')[0];
+    // Basic validation
+    if (normalized.length > 45) return 'invalid'; // Max IPv6 length
+    return normalized;
+}
+
+/**
+ * Cleanup expired entries to prevent memory leaks
+ */
+function cleanupExpiredEntries() {
+    const now = Date.now();
+    if (now - lastCleanup < CLEANUP_INTERVAL) return;
+
+    lastCleanup = now;
+    const maxAge = 300000; // 5 minutes
+
+    for (const [key, timestamps] of rateLimitMap) {
+        const recent = timestamps.filter(time => time > now - maxAge);
+        if (recent.length === 0) {
+            rateLimitMap.delete(key);
+        } else {
+            rateLimitMap.set(key, recent);
+        }
+    }
+
+    // Cleanup violation map
+    for (const [key, data] of violationMap) {
+        if (now > data.expiresAt) {
+            violationMap.delete(key);
+        }
+    }
+}
 
 export function checkRateLimit(key, limit = 100, windowMs = 60000) {
     const now = Date.now();
     const windowStart = now - windowMs;
-    
-    // Clean old entries
-    const current = rateLimitMap.get(key) || [];
-    const recent = current.filter(time => time > windowStart);
-    
-    if (recent.length >= limit) {
-        return { allowed: false, remaining: 0 };
+    const normalizedKey = normalizeIP(key);
+
+    // Periodic cleanup
+    cleanupExpiredEntries();
+
+    // Check if IP is in penalty box (repeated violator)
+    const violation = violationMap.get(normalizedKey);
+    if (violation && now < violation.expiresAt) {
+        return {
+            allowed: false,
+            remaining: 0,
+            retryAfter: Math.ceil((violation.expiresAt - now) / 1000),
+            penalty: true
+        };
     }
-    
+
+    // Get current timestamps, filter to window
+    const current = rateLimitMap.get(normalizedKey) || [];
+    const recent = current.filter(time => time > windowStart);
+
+    if (recent.length >= limit) {
+        // Track violation for progressive penalties
+        const violationCount = (violation?.count || 0) + 1;
+        const penaltyDuration = Math.min(violationCount * windowMs, 300000); // Max 5 min penalty
+
+        violationMap.set(normalizedKey, {
+            count: violationCount,
+            expiresAt: now + penaltyDuration
+        });
+
+        return {
+            allowed: false,
+            remaining: 0,
+            retryAfter: Math.ceil(windowMs / 1000)
+        };
+    }
+
     recent.push(now);
-    rateLimitMap.set(key, recent);
-    
-    return { allowed: true, remaining: limit - recent.length };
+    rateLimitMap.set(normalizedKey, recent);
+
+    return {
+        allowed: true,
+        remaining: limit - recent.length,
+        limit,
+        resetAt: now + windowMs
+    };
 }
 
 /**
@@ -238,7 +318,7 @@ export function checkRateLimit(key, limit = 100, windowMs = 60000) {
 export function logRequest(req, startTime) {
     const duration = Date.now() - startTime;
     const url = new URL(req.url);
-    
+
     if (duration > 500) {
         console.warn(`[SLOW REQUEST] ${req.method} ${url.pathname}: ${duration}ms`);
     }

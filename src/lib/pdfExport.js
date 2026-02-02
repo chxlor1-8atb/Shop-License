@@ -39,6 +39,16 @@ const ACTION_LABELS = {
 };
 
 /**
+ * Mask password for display - shows first 2 chars + asterisks
+ * Security: Never export full passwords in plaintext
+ */
+function maskPassword(password) {
+    if (!password) return '********';
+    if (password.length <= 4) return '*'.repeat(password.length);
+    return password.substring(0, 2) + '*'.repeat(Math.min(password.length - 2, 6));
+}
+
+/**
  * Helper to load font file as base64
  */
 async function loadFont(url) {
@@ -679,7 +689,7 @@ export async function exportUserCredentialsPDF(userData) {
                         ],
                         [
                             { text: 'รหัสผ่าน', style: 'labelCell' },
-                            { text: userData.password, style: 'valueCellBold', color: COLORS.primary }
+                            { text: maskPassword(userData.password), style: 'valueCellBold', color: COLORS.primary }
                         ],
                         [
                             { text: 'วันที่สร้าง', style: 'labelCell' },
