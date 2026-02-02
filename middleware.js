@@ -8,10 +8,13 @@ import { NextResponse } from 'next/server';
 export function middleware(request) {
     const { pathname } = request.nextUrl;
 
-    // Skip middleware for API routes with their own caching
-    // This reduces middleware overhead for API calls
+    // For API routes - add minimal security headers
     if (pathname.startsWith('/api/')) {
-        return NextResponse.next();
+        const response = NextResponse.next();
+        response.headers.set('X-Content-Type-Options', 'nosniff');
+        response.headers.set('X-Frame-Options', 'DENY');
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        return response;
     }
 
     const response = NextResponse.next();

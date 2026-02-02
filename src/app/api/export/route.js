@@ -8,10 +8,9 @@ import { generatePdf } from '@/lib/serverPdfGenerator';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-    // Check authentication
-    // const authError = await requireAuth();
-    // if (authError) return authError;
-    console.log('Skipping auth for debug purposes');
+    // Check authentication - REQUIRED for security
+    const authError = await requireAuth();
+    if (authError) return authError;
 
     try {
         const { searchParams } = new URL(request.url);

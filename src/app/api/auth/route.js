@@ -49,6 +49,21 @@ export async function GET(request) {
 
 async function handleLogin(request) {
     try {
+        // Rate limiting to prevent brute-force attacks
+        const clientIP = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+            request.headers.get('x-real-ip') ||
+            'unknown';
+
+        const { checkRateLimit } = await import('@/lib/api-helpers');
+        const { allowed, remaining } = checkRateLimit(`login:${clientIP}`, 5, 60000); // 5 attempts per minute
+
+        if (!allowed) {
+            return NextResponse.json(
+                { success: false, message: 'พยายามเข้าสู่ระบบมากเกินไป กรุณารอ 1 นาทีแล้วลองใหม่' },
+                { status: 429 }
+            );
+        }
+
         const data = await request.json();
         const username = (data.username || '').trim();
         const password = data.password || '';
@@ -103,7 +118,7 @@ async function handleCheckAuth() {
     // or I can move it to auth-service as getSessionUser() and return user or null.
     // But checkAuth returns a Response object in the original code? 
     // No, original checkAuth returned NextResponse.
-    
+
     const cookieStore = await cookies();
     const session = await getIronSession(cookieStore, sessionOptions);
 

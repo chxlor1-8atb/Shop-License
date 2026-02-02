@@ -147,11 +147,11 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        console.log('[POST /api/licenses] Body:', body);
+
 
         const { shop_id, license_type_id, license_number, issue_date, expiry_date, status, notes, custom_fields } = body;
 
-        console.log('[POST /api/licenses] Extracted:', { shop_id, license_type_id, license_number });
+
 
         if (!shop_id || !license_type_id || !license_number) {
             console.error('[POST /api/licenses] Missing required fields');
@@ -166,7 +166,7 @@ export async function POST(request) {
 
         const licenseId = result?.rows?.[0]?.id || result?.[0]?.id; // Handle both neon formats
 
-        console.log('[POST /api/licenses] Created ID:', licenseId);
+
 
         // Save custom fields if provided
         if (custom_fields && licenseId && Object.keys(custom_fields).length > 0) {

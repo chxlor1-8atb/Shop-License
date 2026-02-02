@@ -1,10 +1,15 @@
 
 import { fetchAll } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+    // Check authentication - REQUIRED for security
+    const authError = await requireAuth();
+    if (authError) return authError;
+
     try {
         const { searchParams } = new URL(request.url);
         const type = searchParams.get('type');
