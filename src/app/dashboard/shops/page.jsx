@@ -104,7 +104,7 @@ export default function ShopsPage() {
   }, [search]);
 
   // Shared fetch function that takes search as parameter to avoid stale closures
-  const performFetchShops = async (searchValue) => {
+  const performFetchShops = useCallback(async (searchValue) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -133,27 +133,31 @@ export default function ShopsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.limit, pagination.updateFromResponse]);
 
+  // Initial parallel data fetch for faster loading
   // Initial parallel data fetch for faster loading
   useEffect(() => {
     const loadInitialData = async () => {
       await Promise.all([fetchCustomColumns(), performFetchShops("")]);
     };
     loadInitialData();
-  }, []);
+  }, [performFetchShops]);
 
   // Refetch shops when filters change - use debouncedSearch directly
+  // Refetch shops when filters change - use debouncedSearch directly
   useEffect(() => {
+    // Only fetch if columns are loaded (to avoid double fetch on init if possible, or ensure table renders right)
     if (columns.length > 0) {
       performFetchShops(debouncedSearch);
     }
-  }, [pagination.page, pagination.limit, debouncedSearch]);
+  }, [performFetchShops, debouncedSearch, columns.length]);
 
+  // Keep fetchShops for external use (e.g., after updates)
   // Keep fetchShops for external use (e.g., after updates)
   const fetchShops = useCallback(async () => {
     await performFetchShops(debouncedSearch);
-  }, [debouncedSearch]);
+  }, [performFetchShops, debouncedSearch]);
 
   // --- Row Handlers ---
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import dynamic from "next/dynamic";
 import { formatThaiDateFull } from "@/utils/formatters";
 import { logout, checkAuth as checkAuthUtil } from "@/utils/auth";
@@ -33,22 +34,7 @@ export default function DashboardLayout({ children }) {
   const [expiringCount, setExpiringCount] = useState(0);
   const [showPatchNotes, setShowPatchNotes] = useState(false);
 
-  useEffect(() => {
-    const init = async () => {
-      // Parallelize initial data fetching to improve FCP
-      const [authResult] = await Promise.all([
-        checkAuth(),
-        fetchExpiringCount()
-      ]);
-      // Note: checkAuth itself handles the redirect if not authenticated
-    };
-    init();
-    updateDateTime();
-    const timer = setInterval(updateDateTime, 60000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const fetchExpiringCount = async () => {
+  const fetchExpiringCount = useCallback(async () => {
     try {
       const res = await fetch("/api/dashboard?action=expiring_count");
       const data = await res.json();
@@ -58,15 +44,15 @@ export default function DashboardLayout({ children }) {
     } catch (error) {
       console.error("Failed to fetch stats", error);
     }
-  };
+  }, []);
 
-  const updateDateTime = () => {
+  const updateDateTime = useCallback(() => {
     const d = new Date();
     const weekday = d.toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", weekday: "long" });
     setCurrentDate(`${weekday} ${formatThaiDateFull(d)}`);
-  };
+  }, []);
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const { authenticated, user: authUser } = await checkAuthUtil();
       if (!authenticated) {
@@ -81,7 +67,22 @@ export default function DashboardLayout({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    const init = async () => {
+      // Parallelize initial data fetching to improve FCP
+      await Promise.all([
+        checkAuth(),
+        fetchExpiringCount()
+      ]);
+      // Note: checkAuth itself handles the redirect if not authenticated
+    };
+    init();
+    updateDateTime();
+    const timer = setInterval(updateDateTime, 60000);
+    return () => clearInterval(timer);
+  }, [checkAuth, fetchExpiringCount, updateDateTime]);
 
   // Use centralized logout function
   const handleLogout = () => logout();
@@ -106,11 +107,13 @@ export default function DashboardLayout({ children }) {
       <aside className={`sidebar ${sidebarOpen ? "show" : ""}`} id="sidebar">
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <img
+            <Image
               src="/image/shop-logo.png"
               alt="Shop License"
-              style={{ width: "40px", height: "40px", borderRadius: "12px" }}
-              loading="eager"
+              width={40}
+              height={40}
+              style={{ borderRadius: "12px" }}
+              priority
             />
             <span>Shop License</span>
           </div>
@@ -241,6 +244,7 @@ export default function DashboardLayout({ children }) {
                 border: "none",
               }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={
                   user.role === "admin" ? "/image/admin.png" : "/image/user.png"

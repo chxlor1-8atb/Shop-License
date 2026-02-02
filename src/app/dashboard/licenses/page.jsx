@@ -215,18 +215,6 @@ function LicensesPageContent() {
     fetchCustomColumns();
   }, [fetchCustomColumns]);
 
-  // Initial license data fetch
-  useEffect(() => {
-    fetchLicenses();
-  }, []);
-
-  // Refetch licenses when filters change
-  useEffect(() => {
-    if (columns.length > 0) {
-      fetchLicenses();
-    }
-  }, [pagination.page, pagination.limit, search, filterType, filterStatus, filterShop]);
-
   const fetchLicenses = useCallback(async () => {
     setLoading(true);
     try {
@@ -243,7 +231,7 @@ function LicensesPageContent() {
       const data = await response.json();
 
       if (data.success) {
-        // Flatten custom fields
+        // Flatten custom_fields
         const formattedLicenses = data.licenses.map((l) => ({
           ...l,
           ...(l.custom_fields || {}),
@@ -257,7 +245,16 @@ function LicensesPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, search, filterType, filterStatus, filterShop]);
+  }, [pagination.page, pagination.limit, search, filterType, filterStatus, filterShop, pagination.updateFromResponse]);
+
+  // Initial license data fetch and refetch when filters change
+  useEffect(() => {
+    if (columns.length > 0) {
+      fetchLicenses();
+    }
+  }, [fetchLicenses, columns.length]);
+
+
 
   // --- Row Handlers ---
 

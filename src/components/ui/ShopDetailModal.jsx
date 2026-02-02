@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { API_ENDPOINTS, STATUS_OPTIONS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
@@ -40,9 +40,9 @@ export default function ShopDetailModal({
       fetchShopLicenses();
       setShowAddLicense(false);
     }
-  }, [isOpen, shop?.id]);
+  }, [isOpen, shop?.id, fetchShopLicenses]);
 
-  const fetchShopLicenses = async () => {
+  const fetchShopLicenses = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API_ENDPOINTS.LICENSES}?shop_id=${shop.id}&limit=100`);
@@ -55,7 +55,7 @@ export default function ShopDetailModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [shop?.id]);
 
   const handleAddLicense = async (e) => {
     e.preventDefault();
