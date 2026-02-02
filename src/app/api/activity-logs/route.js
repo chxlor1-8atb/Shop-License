@@ -3,6 +3,7 @@ import { getIronSession } from 'iron-session';
 import { fetchAll, fetchOne } from '@/lib/db';
 import { sessionOptions } from '@/lib/session';
 import { NextResponse } from 'next/server';
+import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,25 +81,37 @@ export async function DELETE(request) {
  * Get paginated activity logs with filters
  */
 async function getActivityLogs(searchParams) {
-    const page = parseInt(searchParams.get('page'), 10) || 1;
-    const limit = parseInt(searchParams.get('limit'), 10) || 20;
+    // Security: Sanitize pagination parameters
+    const page = sanitizeInt(searchParams.get('page'), 1, 1, 1000);
+    const limit = sanitizeInt(searchParams.get('limit'), 20, 1, 100);
     const offset = (page - 1) * limit;
 
     // Filters
     const userId = searchParams.get('user_id');
-    const action = searchParams.get('action_type');
-    const entityType = searchParams.get('entity_type');
+    const action = validateEnum(
+        searchParams.get('action_type'),
+        ['LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'DELETE', 'EXPORT', 'VIEW'],
+        ''
+    );
+    const entityType = validateEnum(
+        searchParams.get('entity_type'),
+        ['AUTH', 'USER', 'SHOP', 'LICENSE', 'LICENSE_TYPE', 'CUSTOM_FIELD', 'ENTITY'],
+        ''
+    );
     const dateFrom = searchParams.get('date_from');
     const dateTo = searchParams.get('date_to');
-    const search = searchParams.get('search');
+    const search = sanitizeString(searchParams.get('search') || '', 100);
 
     let whereClauses = [];
     let params = [];
     let paramIndex = 1;
 
     if (userId) {
-        whereClauses.push(`a.user_id = $${paramIndex++}`);
-        params.push(userId);
+        const safeUserId = sanitizeInt(userId, 0, 1);
+        if (safeUserId > 0) {
+            whereClauses.push(`a.user_id = $${paramIndex++}`);
+            params.push(safeUserId);
+        }
     }
 
     if (action) {
@@ -137,6 +150,10 @@ async function getActivityLogs(searchParams) {
         ${whereSQL}
     `;
 
+    // Security: Use parameterized queries for LIMIT/OFFSET
+    const limitParamIndex = paramIndex;
+    const offsetParamIndex = paramIndex + 1;
+
     // Data query with full details
     const dataQuery = `
         SELECT 
@@ -156,12 +173,12 @@ async function getActivityLogs(searchParams) {
         LEFT JOIN users u ON a.user_id = u.id
         ${whereSQL}
         ORDER BY a.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
+        LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}
     `;
 
     const [countResult, activities] = await Promise.all([
         fetchOne(countQuery, params),
-        fetchAll(dataQuery, params)
+        fetchAll(dataQuery, [...params, limit, offset])
     ]);
 
     const total = parseInt(countResult?.total || 0, 10);

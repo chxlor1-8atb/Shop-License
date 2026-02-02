@@ -3,6 +3,7 @@ import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAuth, getCurrentUser } from '@/lib/api-helpers';
+import { sanitizeInt, sanitizeString } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,20 +15,27 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
-        const search = searchParams.get('search') || '';
-        const page = parseInt(searchParams.get('page'), 10) || 1;
-        const limit = parseInt(searchParams.get('limit'), 10) || 20;
+        const search = sanitizeString(searchParams.get('search') || '', 100);
+
+        // Security: Sanitize pagination parameters
+        const page = sanitizeInt(searchParams.get('page'), 1, 1, 1000);
+        const limit = sanitizeInt(searchParams.get('limit'), 20, 1, 100);
         const offset = (page - 1) * limit;
 
         // Get Single Shop
         if (id) {
-            const shop = await fetchOne('SELECT * FROM shops WHERE id = $1', [id]);
+            const safeId = sanitizeInt(id, 0, 1);
+            if (safeId < 1) {
+                return NextResponse.json({ success: false, message: 'Invalid shop ID' }, { status: 400 });
+            }
+            const shop = await fetchOne('SELECT * FROM shops WHERE id = $1', [safeId]);
             return NextResponse.json({ success: true, shop });
         }
 
         // List Shops
         let whereClause = '';
         let params = [];
+        let paramIndex = 1;
 
         if (search) {
             // ค้นหาในทุกฟิลด์หลัก และใน custom_fields (JSONB)
@@ -40,21 +48,27 @@ export async function GET(request) {
                 notes ILIKE $1 OR
                 custom_fields::text ILIKE $1`;
             params.push(`%${search}%`);
+            paramIndex++;
         }
 
         const countQuery = `SELECT COUNT(*) as total FROM shops ${whereClause}`;
+
+        // Security: Use parameterized queries for LIMIT/OFFSET
+        const limitParamIndex = paramIndex;
+        const offsetParamIndex = paramIndex + 1;
+
         const query = `
             SELECT s.*, 
             (SELECT COUNT(*) FROM licenses l WHERE l.shop_id = s.id AND l.status = 'active') as license_count
             FROM shops s
             ${whereClause}
             ORDER BY s.id DESC
-            LIMIT ${limit} OFFSET ${offset}
+            LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}
         `;
 
         const [countResult, shops] = await Promise.all([
             fetchOne(countQuery, params),
-            fetchAll(query, params)
+            fetchAll(query, [...params, limit, offset])
         ]);
 
         const total = parseInt(countResult?.total || 0, 10);

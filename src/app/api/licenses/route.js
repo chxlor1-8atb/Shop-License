@@ -3,6 +3,7 @@ import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAuth, getCurrentUser } from '@/lib/api-helpers';
+import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,16 +16,28 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
         const shop_id = searchParams.get('shop_id') || '';
-        const search = searchParams.get('search') || '';
+        const search = sanitizeString(searchParams.get('search') || '', 100);
         const license_type = searchParams.get('license_type') || '';
-        const status = searchParams.get('status') || '';
-        const page = parseInt(searchParams.get('page'), 10) || 1;
-        const limit = parseInt(searchParams.get('limit'), 10) || 20;
+
+        // Security: Validate status against whitelist
+        const status = validateEnum(
+            searchParams.get('status'),
+            ['active', 'expired', 'pending', 'suspended', 'revoked'],
+            ''
+        );
+
+        // Security: Sanitize pagination parameters
+        const page = sanitizeInt(searchParams.get('page'), 1, 1, 1000);
+        const limit = sanitizeInt(searchParams.get('limit'), 20, 1, 100);
         const offset = (page - 1) * limit;
 
         // Get Single License
         if (id) {
-            const license = await fetchOne('SELECT * FROM licenses WHERE id = $1', [id]);
+            const safeId = sanitizeInt(id, 0, 1);
+            if (safeId < 1) {
+                return NextResponse.json({ success: false, message: 'Invalid license ID' }, { status: 400 });
+            }
+            const license = await fetchOne('SELECT * FROM licenses WHERE id = $1', [safeId]);
             return NextResponse.json({ success: true, license });
         }
 
@@ -54,15 +67,21 @@ export async function GET(request) {
         }
 
         if (shop_id) {
-            whereClauses.push(`l.shop_id = $${paramIndex}`);
-            params.push(shop_id);
-            paramIndex++;
+            const safeShopId = sanitizeInt(shop_id, 0, 1);
+            if (safeShopId > 0) {
+                whereClauses.push(`l.shop_id = $${paramIndex}`);
+                params.push(safeShopId);
+                paramIndex++;
+            }
         }
 
         if (license_type) {
-            whereClauses.push(`l.license_type_id = $${paramIndex}`);
-            params.push(license_type);
-            paramIndex++;
+            const safeLicenseType = sanitizeInt(license_type, 0, 1);
+            if (safeLicenseType > 0) {
+                whereClauses.push(`l.license_type_id = $${paramIndex}`);
+                params.push(safeLicenseType);
+                paramIndex++;
+            }
         }
 
         // Filter by computed status
@@ -91,6 +110,10 @@ export async function GET(request) {
             ${whereSQL}
         `;
 
+        // Security: Use parameterized queries for LIMIT/OFFSET
+        const limitParamIndex = paramIndex;
+        const offsetParamIndex = paramIndex + 1;
+
         // Parallelize Count and Data Fetch
         // Computed status: ถ้า expiry_date < วันนี้ = expired, ถ้า suspended/revoked ใช้ค่าเดิม, อื่นๆ = active
         const query = `
@@ -113,12 +136,12 @@ export async function GET(request) {
             ${whereSQL}
             GROUP BY l.id, s.shop_name, lt.name
             ORDER BY l.id DESC
-            LIMIT ${limit} OFFSET ${offset}
+            LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}
         `;
 
         const [countResult, licenses] = await Promise.all([
             fetchOne(countQuery, params),
-            fetchAll(query, params)
+            fetchAll(query, [...params, limit, offset])
         ]);
 
         const total = parseInt(countResult?.total || 0, 10);

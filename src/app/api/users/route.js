@@ -4,8 +4,12 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAdmin, getCurrentUser } from '@/lib/api-helpers';
+import { validatePassword, sanitizeInt } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
+
+// Security: bcrypt cost factor (12+ recommended for production)
+const BCRYPT_ROUNDS = 12;
 
 export async function GET(request) {
     // Require admin access for user management
@@ -16,15 +20,19 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
-        // Check authentication/authorization here (omitted for brevity, assumption: middleare or session check done)
-
         if (id) {
-            const user = await fetchOne('SELECT id, username, full_name, role, created_at FROM users WHERE id = $1', [id]);
+            // Security: Validate ID is a positive integer
+            const safeId = sanitizeInt(id, 0, 1);
+            if (safeId < 1) {
+                return NextResponse.json({ success: false, message: 'Invalid user ID' }, { status: 400 });
+            }
+            const user = await fetchOne('SELECT id, username, full_name, role, created_at FROM users WHERE id = $1', [safeId]);
             return NextResponse.json({ success: true, user });
         }
 
-        const page = parseInt(searchParams.get('page'), 10) || 1;
-        const limit = parseInt(searchParams.get('limit'), 10) || 20;
+        // Security: Sanitize pagination parameters
+        const page = sanitizeInt(searchParams.get('page'), 1, 1, 1000);
+        const limit = sanitizeInt(searchParams.get('limit'), 20, 1, 100);
         const offset = (page - 1) * limit;
 
         const statsResult = await fetchOne(`
@@ -44,12 +52,13 @@ export async function GET(request) {
 
         const totalPages = Math.ceil(total / limit);
 
+        // Security: Use parameterized query for LIMIT/OFFSET to prevent SQL injection
         const users = await fetchAll(`
             SELECT id, username, full_name, role, created_at 
             FROM users 
             ORDER BY id ASC
-            LIMIT ${limit} OFFSET ${offset}
-        `);
+            LIMIT $1 OFFSET $2
+        `, [limit, offset]);
 
         return NextResponse.json({
             success: true,
@@ -80,8 +89,16 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
         }
 
-        if (password.length < 6) {
-            return NextResponse.json({ success: false, message: 'Password must be at least 6 characters' }, { status: 400 });
+        // Security: Strong password validation
+        const passwordCheck = validatePassword(password);
+        if (!passwordCheck.valid) {
+            return NextResponse.json({ success: false, message: passwordCheck.message }, { status: 400 });
+        }
+
+        // Security: Validate role against whitelist
+        const allowedRoles = ['admin', 'user'];
+        if (!allowedRoles.includes(role)) {
+            return NextResponse.json({ success: false, message: 'Invalid role' }, { status: 400 });
         }
 
         // Check if username exists
@@ -90,7 +107,8 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: 'Username already exists' }, { status: 400 });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Security: Use higher bcrypt rounds for better protection
+        const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
         const result = await executeQuery(
             `INSERT INTO users (username, full_name, password, role) VALUES ($1, $2, $3, $4) RETURNING id`,
@@ -122,29 +140,42 @@ export async function PUT(request) {
         const body = await request.json();
         const { id, full_name, password, role } = body;
 
-        if (!id) {
-            return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 });
+        // Security: Validate ID
+        const safeId = sanitizeInt(id, 0, 1);
+        if (safeId < 1) {
+            return NextResponse.json({ success: false, message: 'Invalid user ID' }, { status: 400 });
+        }
+
+        // Security: Validate role against whitelist
+        const allowedRoles = ['admin', 'user'];
+        if (role && !allowedRoles.includes(role)) {
+            return NextResponse.json({ success: false, message: 'Invalid role' }, { status: 400 });
         }
 
         // Get user info for logging
-        const targetUser = await fetchOne('SELECT username FROM users WHERE id = $1', [id]);
+        const targetUser = await fetchOne('SELECT username FROM users WHERE id = $1', [safeId]);
+        if (!targetUser) {
+            return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+        }
 
         let query = 'UPDATE users SET full_name = $1, role = $2';
         let params = [full_name || '', role];
         let paramIndex = 3;
 
         if (password) {
-            if (password.length < 6) {
-                return NextResponse.json({ success: false, message: 'Password must be at least 6 characters' }, { status: 400 });
+            // Security: Strong password validation
+            const passwordCheck = validatePassword(password);
+            if (!passwordCheck.valid) {
+                return NextResponse.json({ success: false, message: passwordCheck.message }, { status: 400 });
             }
-            const hashedPassword = await bcrypt.hash(password, 10);
+            const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
             query += `, password = $${paramIndex}`;
             params.push(hashedPassword);
             paramIndex++;
         }
 
         query += ` WHERE id = $${paramIndex}`;
-        params.push(id);
+        params.push(safeId);
 
         await executeQuery(query, params);
 
@@ -173,28 +204,33 @@ export async function DELETE(request) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
-        if (!id) {
-            return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 });
+        // Security: Validate ID
+        const safeId = sanitizeInt(id, 0, 1);
+        if (safeId < 1) {
+            return NextResponse.json({ success: false, message: 'Invalid user ID' }, { status: 400 });
         }
 
         // Get user info for logging
-        const targetUser = await fetchOne('SELECT username FROM users WHERE id = $1', [id]);
+        const targetUser = await fetchOne('SELECT username FROM users WHERE id = $1', [safeId]);
+        if (!targetUser) {
+            return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+        }
 
         // Prevent deleting self
         const currentUser = await getCurrentUser();
-        if (currentUser?.id === parseInt(id)) {
+        if (currentUser?.id === safeId) {
             return NextResponse.json({ success: false, message: 'ไม่สามารถลบบัญชีตัวเองได้' }, { status: 400 });
         }
 
-        await executeQuery('DELETE FROM users WHERE id = $1', [id]);
+        await executeQuery('DELETE FROM users WHERE id = $1', [safeId]);
 
         // Log activity
         await logActivity({
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.DELETE,
             entityType: ENTITY_TYPES.USER,
-            entityId: parseInt(id),
-            details: `ลบผู้ใช้: ${targetUser?.username || id}`
+            entityId: safeId,
+            details: `ลบผู้ใช้: ${targetUser.username}`
         });
 
         return NextResponse.json({ success: true, message: 'User deleted successfully' });
