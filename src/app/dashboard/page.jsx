@@ -60,7 +60,7 @@ export default function DashboardPage() {
 
     const checkAuth = async () => {
         try {
-            const res = await fetch(API_ENDPOINTS.AUTH + '?action=check');
+            const res = await fetch(API_ENDPOINTS.AUTH + '?action=check', { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
                 setUser(data.user);
@@ -73,8 +73,8 @@ export default function DashboardPage() {
     const fetchDashboardData = useCallback(async () => {
         try {
             const [statsRes, recentRes] = await Promise.all([
-                fetch(API_ENDPOINTS.DASHBOARD_STATS),
-                fetch(`${API_ENDPOINTS.DASHBOARD_ACTIVITY}&type=${activeFilter}`)
+                fetch(API_ENDPOINTS.DASHBOARD_STATS, { credentials: 'include' }),
+                fetch(`${API_ENDPOINTS.DASHBOARD_ACTIVITY}&type=${activeFilter}`, { credentials: 'include' })
             ]);
 
             const statsData = await statsRes.json();
@@ -97,7 +97,7 @@ export default function DashboardPage() {
         
         const fetchActivity = async () => {
             try {
-                const res = await fetch(`${API_ENDPOINTS.DASHBOARD_ACTIVITY}&type=${activeFilter}`);
+                const res = await fetch(`${API_ENDPOINTS.DASHBOARD_ACTIVITY}&type=${activeFilter}`, { credentials: 'include' });
                 const data = await safeParseJson(res);
                 if (data?.success) {
                     setRecentActivity(data.activities || []);

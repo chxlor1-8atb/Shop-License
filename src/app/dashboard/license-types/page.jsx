@@ -89,9 +89,9 @@ export default function LicenseTypesPage() {
       
       // Parallel fetch all data at once - significantly faster than sequential
       const [typesRes, fieldsRes, valuesRes] = await Promise.all([
-        fetch(`${API_ENDPOINTS.LICENSE_TYPES}?t=${timestamp}`),
-        fetch(`/api/custom-fields?entity_type=license_types&t=${timestamp}`),
-        fetch(`/api/custom-field-values?entity_type=license_types&t=${timestamp}`)
+        fetch(`${API_ENDPOINTS.LICENSE_TYPES}?t=${timestamp}`, { credentials: "include" }),
+        fetch(`/api/custom-fields?entity_type=license_types&t=${timestamp}`, { credentials: "include" }),
+        fetch(`/api/custom-field-values?entity_type=license_types&t=${timestamp}`, { credentials: "include" })
       ]);
       
       const [typesData, fieldsData, valuesData] = await Promise.all([
@@ -217,6 +217,7 @@ export default function LicenseTypesPage() {
       const res = await fetch("/api/custom-fields", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -264,6 +265,7 @@ export default function LicenseTypesPage() {
       const res = await fetch("/api/custom-fields", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -305,6 +307,7 @@ export default function LicenseTypesPage() {
     try {
       const res = await fetch(`/api/custom-fields?id=${col.db_id}`, {
         method: "DELETE",
+        credentials: "include",
       });
       const data = await res.json();
 
@@ -354,6 +357,7 @@ export default function LicenseTypesPage() {
         const res = await fetch(API_ENDPOINTS.LICENSE_TYPES, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(standardData),
         });
         const data = await res.json();
@@ -383,6 +387,7 @@ export default function LicenseTypesPage() {
             await fetch("/api/custom-field-values", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
+              credentials: "include",
               body: JSON.stringify(valuesPayload),
             });
           }
@@ -397,6 +402,7 @@ export default function LicenseTypesPage() {
         const res = await fetch(API_ENDPOINTS.LICENSE_TYPES, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(updatePayload),
         });
         const data = await res.json();
@@ -414,6 +420,7 @@ export default function LicenseTypesPage() {
         const valRes = await fetch("/api/custom-field-values", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(valuesPayload),
         });
         const valData = await valRes.json();
@@ -449,6 +456,7 @@ export default function LicenseTypesPage() {
     try {
       const response = await fetch(`${API_ENDPOINTS.LICENSE_TYPES}?id=${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
       const data = await response.json();
       if (!data.success) {

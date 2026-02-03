@@ -36,6 +36,16 @@ export function sanitizeString(str, maxLength = 255) {
 }
 
 /**
+ * Sanitize value for HTTP header to prevent HTTP Injection (CRLF Injection)
+ * @param {string} val - Header value
+ * @returns {string} Safe header value without newlines
+ */
+export function sanitizeHeaderValue(val) {
+    if (typeof val !== 'string') return '';
+    return val.replace(/[\r\n]/g, '').trim();
+}
+
+/**
  * Validate email format
  * @param {string} email - Email to validate
  * @returns {boolean} Is valid email

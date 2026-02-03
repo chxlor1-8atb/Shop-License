@@ -104,7 +104,7 @@ export default function UsersPage() {
         limit: limit,
       });
 
-      const response = await fetch(`${API_ENDPOINTS.USERS}?${params}`);
+      const response = await fetch(`${API_ENDPOINTS.USERS}?${params}`, { credentials: "include" });
       const data = await response.json();
 
       if (data.success) {
@@ -148,6 +148,7 @@ export default function UsersPage() {
       const response = await fetch(API_ENDPOINTS.USERS, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(updateData),
       });
       const data = await response.json();
@@ -181,6 +182,7 @@ export default function UsersPage() {
         try {
           const response = await fetch(`${API_ENDPOINTS.USERS}?id=${id}`, {
             method: "DELETE",
+            credentials: "include",
           });
           const data = await response.json();
 
@@ -238,6 +240,7 @@ export default function UsersPage() {
         response = await fetch(API_ENDPOINTS.USERS, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify(updatePayload),
         });
 
@@ -251,6 +254,7 @@ export default function UsersPage() {
         response = await fetch(API_ENDPOINTS.USERS, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify(formData),
         });
       }

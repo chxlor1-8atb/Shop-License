@@ -29,7 +29,7 @@ export default function EntitiesSettingsPage() {
     const loadEntities = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/entities');
+            const res = await fetch('/api/entities', { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
                 setEntities(data.entities || []);
@@ -76,6 +76,7 @@ export default function EntitiesSettingsPage() {
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(formData)
             });
             const data = await res.json();
@@ -111,7 +112,7 @@ export default function EntitiesSettingsPage() {
 
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`/api/entities?id=${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/entities?id=${id}`, { method: 'DELETE', credentials: 'include' });
                 const data = await res.json();
                 if (data.success) {
                     loadEntities();

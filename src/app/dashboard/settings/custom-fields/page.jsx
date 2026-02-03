@@ -52,7 +52,7 @@ export default function CustomFieldsSettingsPage() {
     const loadFields = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/custom-fields?entity_type=${selectedEntity}`);
+            const res = await fetch(`/api/custom-fields?entity_type=${selectedEntity}`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
                 setFields(data.fields || []);
@@ -171,6 +171,7 @@ export default function CustomFieldsSettingsPage() {
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
@@ -225,7 +226,7 @@ export default function CustomFieldsSettingsPage() {
 
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`/api/custom-fields?id=${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/custom-fields?id=${id}`, { method: 'DELETE', credentials: 'include' });
                 const data = await res.json();
                 if (data.success) {
                     Swal.fire({

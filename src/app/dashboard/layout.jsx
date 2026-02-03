@@ -36,7 +36,7 @@ export default function DashboardLayout({ children }) {
 
   const fetchExpiringCount = useCallback(async () => {
     try {
-      const res = await fetch("/api/dashboard?action=expiring_count");
+      const res = await fetch("/api/dashboard?action=expiring_count", { credentials: "include" });
       const data = await res.json();
       if (data.success) {
         setExpiringCount(data.count || 0);

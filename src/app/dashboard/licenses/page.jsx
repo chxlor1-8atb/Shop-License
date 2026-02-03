@@ -162,7 +162,8 @@ function LicensesPageContent() {
 
     try {
       const res = await fetch(
-        `/api/custom-fields?entity_type=licenses&t=${Date.now()}`
+        `/api/custom-fields?entity_type=licenses&t=${Date.now()}`,
+        { credentials: "include" }
       );
       const data = await res.json();
       if (data.success) {
@@ -242,7 +243,7 @@ function LicensesPageContent() {
         shop_id: filterShop,
       });
 
-      const response = await fetch(`${API_ENDPOINTS.LICENSES}?${params}`);
+      const response = await fetch(`${API_ENDPOINTS.LICENSES}?${params}`, { credentials: "include" });
       const data = await response.json();
 
       if (data.success) {
@@ -335,6 +336,7 @@ function LicensesPageContent() {
         const res = await fetch(API_ENDPOINTS.LICENSES, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(payload),
         });
         const data = await res.json();
@@ -355,6 +357,7 @@ function LicensesPageContent() {
         const res = await fetch(API_ENDPOINTS.LICENSES, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(payload),
         });
         const data = await res.json();
@@ -378,6 +381,7 @@ function LicensesPageContent() {
     try {
       const res = await fetch(`${API_ENDPOINTS.LICENSES}?id=${rowId}`, {
         method: "DELETE",
+        credentials: "include",
       });
       const data = await res.json();
       if (data.success) {
@@ -412,6 +416,7 @@ function LicensesPageContent() {
       const res = await fetch("/api/custom-fields", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -446,6 +451,7 @@ function LicensesPageContent() {
         const res = await fetch("/api/custom-fields", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(payload),
         });
         const data = await res.json();
@@ -474,6 +480,7 @@ function LicensesPageContent() {
       const res = await fetch("/api/custom-fields", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -503,6 +510,7 @@ function LicensesPageContent() {
     try {
       const res = await fetch(`/api/custom-fields?id=${col.db_id}`, {
         method: "DELETE",
+        credentials: "include",
       });
       const data = await res.json();
 
@@ -544,6 +552,7 @@ function LicensesPageContent() {
     const res = await fetch(API_ENDPOINTS.SHOPS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(shopPayload),
     });
     const data = await res.json();
@@ -574,6 +583,7 @@ function LicensesPageContent() {
     const res = await fetch(API_ENDPOINTS.LICENSES, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(payload),
     });
     const data = await res.json();

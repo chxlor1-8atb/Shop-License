@@ -48,7 +48,7 @@ export default function QuickAddModal({
     setLoadingFields(true);
     try {
       const entityType = type === "shop" ? "shops" : "licenses";
-      const res = await fetch(`/api/custom-fields?entity_type=${entityType}&t=${Date.now()}`);
+      const res = await fetch(`/api/custom-fields?entity_type=${entityType}&t=${Date.now()}`, { credentials: "include" });
       const data = await res.json();
       if (data.success) {
         // Filter only fields that should show in form and are not standard fields

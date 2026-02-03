@@ -51,7 +51,7 @@ export default function ExpiringPage() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await fetch('/api/licenses/expiring');
+            const response = await fetch('/api/licenses/expiring', { credentials: 'include' });
             const data = await response.json();
 
             if (data.success) {
@@ -178,7 +178,7 @@ export default function ExpiringPage() {
             itemName: `ใบอนุญาต ${license.license_number}`,
             onDelete: async () => {
                 try {
-                    const res = await fetch(`/api/licenses?id=${license.id}`, { method: 'DELETE' });
+                    const res = await fetch(`/api/licenses?id=${license.id}`, { method: 'DELETE', credentials: 'include' });
                     const data = await res.json();
                     if (data.success) {
                         // Success - item implied deleted
@@ -215,7 +215,7 @@ export default function ExpiringPage() {
             try {
                 // Delete all expired licenses
                 const deletePromises = expiredLicenses.map(l => 
-                    fetch(`/api/licenses?id=${l.id}`, { method: 'DELETE' }).then(r => r.json())
+                    fetch(`/api/licenses?id=${l.id}`, { method: 'DELETE', credentials: 'include' }).then(r => r.json())
                 );
                 
                 await Promise.all(deletePromises);

@@ -113,7 +113,7 @@ export default function ShopsPage() {
         search: searchValue,
       });
 
-      const response = await fetch(`${API_ENDPOINTS.SHOPS}?${params}`);
+      const response = await fetch(`${API_ENDPOINTS.SHOPS}?${params}`, { credentials: "include" });
       const data = await response.json();
 
       if (data.success) {
@@ -142,7 +142,8 @@ export default function ShopsPage() {
   const fetchCustomColumns = useCallback(async () => {
     try {
       const res = await fetch(
-        `/api/custom-fields?entity_type=shops&t=${Date.now()}`
+        `/api/custom-fields?entity_type=shops&t=${Date.now()}`,
+        { credentials: "include" }
       );
       const data = await res.json();
       if (data.success) {
@@ -242,6 +243,7 @@ export default function ShopsPage() {
         const res = await fetch(API_ENDPOINTS.SHOPS, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(payload),
         });
         const data = await res.json();
@@ -263,6 +265,7 @@ export default function ShopsPage() {
         const res = await fetch(API_ENDPOINTS.SHOPS, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(payload),
         });
         const data = await res.json();
@@ -288,6 +291,7 @@ export default function ShopsPage() {
     try {
       const res = await fetch(`${API_ENDPOINTS.SHOPS}?id=${rowId}`, {
         method: "DELETE",
+        credentials: "include",
       });
       const data = await res.json();
       if (data.success) {
@@ -334,6 +338,7 @@ export default function ShopsPage() {
       const res = await fetch("/api/custom-fields", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -369,6 +374,7 @@ export default function ShopsPage() {
         const res = await fetch("/api/custom-fields", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(payload),
         });
         const data = await res.json();
@@ -394,6 +400,7 @@ export default function ShopsPage() {
       const res = await fetch("/api/custom-fields", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -423,6 +430,7 @@ export default function ShopsPage() {
     try {
       const res = await fetch(`/api/custom-fields?id=${col.db_id}`, {
         method: "DELETE",
+        credentials: "include",
       });
       const data = await res.json();
 
@@ -472,6 +480,7 @@ export default function ShopsPage() {
     const shopRes = await fetch(API_ENDPOINTS.SHOPS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(shopPayload),
     });
     const shopData = await shopRes.json();
@@ -483,7 +492,7 @@ export default function ShopsPage() {
     // If user wants to create license too
     if (formData.create_license && formData.license_type_id && formData.license_number) {
       // Need to get the new shop ID - fetch shops again
-      const shopsRes = await fetch(`${API_ENDPOINTS.SHOPS}?search=${encodeURIComponent(formData.shop_name)}&limit=1`);
+      const shopsRes = await fetch(`${API_ENDPOINTS.SHOPS}?search=${encodeURIComponent(formData.shop_name)}&limit=1`, { credentials: "include" });
       const shopsData = await shopsRes.json();
       const newShop = shopsData.shops?.[0];
 
@@ -491,6 +500,7 @@ export default function ShopsPage() {
         const licenseRes = await fetch(API_ENDPOINTS.LICENSES, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             shop_id: newShop.id,
             license_type_id: formData.license_type_id,

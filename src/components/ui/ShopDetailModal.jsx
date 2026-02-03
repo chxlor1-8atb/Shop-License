@@ -39,7 +39,7 @@ export default function ShopDetailModal({
   const fetchShopLicenses = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_ENDPOINTS.LICENSES}?shop_id=${shop.id}&limit=100`);
+      const res = await fetch(`${API_ENDPOINTS.LICENSES}?shop_id=${shop.id}&limit=100`, { credentials: "include" });
       const data = await res.json();
       if (data.success) {
         setLicenses(data.licenses || []);
@@ -69,6 +69,7 @@ export default function ShopDetailModal({
       const res = await fetch(API_ENDPOINTS.LICENSES, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           shop_id: shop.id,
           ...newLicense,

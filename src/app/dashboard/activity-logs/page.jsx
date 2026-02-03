@@ -64,7 +64,7 @@ export default function ActivityLogsPage() {
 
   const checkAdminAuth = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth?action=check");
+      const res = await fetch("/api/auth?action=check", { credentials: "include" });
       const data = await res.json();
 
       if (!data.success || data.user?.role !== "admin") {
@@ -89,7 +89,7 @@ export default function ActivityLogsPage() {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/activity-logs?action=stats");
+      const response = await fetch("/api/activity-logs?action=stats", { credentials: "include" });
       const data = await response.json();
       if (data.success && data.recentIPs) {
         setRecentIPs(data.recentIPs);
@@ -109,6 +109,7 @@ export default function ActivityLogsPage() {
     try {
       const res = await fetch("/api/activity-logs", {
         method: "DELETE",
+        credentials: "include",
       });
       const data = await res.json();
       if (data.success) {

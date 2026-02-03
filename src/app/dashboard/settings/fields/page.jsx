@@ -53,7 +53,7 @@ function FieldsContent() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/entities?id=${entityId}`);
+            const res = await fetch(`/api/entities?id=${entityId}`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
                 setEntity(data.entity);
@@ -122,6 +122,7 @@ function FieldsContent() {
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
@@ -157,7 +158,7 @@ function FieldsContent() {
 
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`/api/entity-fields?id=${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/entity-fields?id=${id}`, { method: 'DELETE', credentials: 'include' });
                 const data = await res.json();
                 if (data.success) {
                     loadData();

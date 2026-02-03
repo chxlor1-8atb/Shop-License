@@ -19,6 +19,7 @@ const mutationFetcher = async (url, { arg }) => {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        credentials: 'include',
     });
     if (!res.ok) {
         const error = new Error('An error occurred');
