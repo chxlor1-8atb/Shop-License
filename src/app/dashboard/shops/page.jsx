@@ -133,7 +133,7 @@ export default function ShopsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.updateFromResponse]);
+  }, [pagination.updateFromResponse, pagination.page, pagination.limit]);
 
   // Track if columns have been fetched to prevent infinite loop
   const columnsLoadedRef = useRef(false);
@@ -193,7 +193,7 @@ export default function ShopsPage() {
   // Fetch shops when search changes
   useEffect(() => {
     performFetchShops(debouncedSearch);
-  }, [debouncedSearch, pagination.page, pagination.limit]);
+  }, [performFetchShops, debouncedSearch, pagination.page, pagination.limit]);
 
   // Keep fetchShops for external use (e.g., after updates)
   const fetchShops = useCallback(async () => {

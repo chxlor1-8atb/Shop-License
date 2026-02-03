@@ -74,7 +74,15 @@ const USER_COLUMNS = [
  * UsersPage Component
  */
 export default function UsersPage() {
-  const pagination = usePagination(10);
+  const { 
+    page, 
+    limit, 
+    total, 
+    totalPages, 
+    setPage, 
+    setLimit, 
+    updateFromResponse 
+  } = usePagination(10);
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,8 +100,8 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        page: pagination.page,
-        limit: pagination.limit,
+        page: page,
+        limit: limit,
       });
 
       const response = await fetch(`${API_ENDPOINTS.USERS}?${params}`);
@@ -107,7 +115,7 @@ export default function UsersPage() {
         }));
         
         setUsers(formattedUsers);
-        pagination.updateFromResponse(data.pagination);
+        updateFromResponse(data.pagination);
         if (data.stats) {
           setStats(data.stats);
         }
@@ -117,7 +125,7 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, pagination.updateFromResponse]);
+  }, [page, limit, updateFromResponse]);
 
   useEffect(() => {
     fetchUsers();
@@ -387,12 +395,12 @@ export default function UsersPage() {
           )}
 
           <Pagination
-            currentPage={pagination.page}
-            totalPages={pagination.totalPages}
-            totalItems={pagination.total}
-            itemsPerPage={pagination.limit}
-            onPageChange={pagination.setPage}
-            onItemsPerPageChange={pagination.setLimit}
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={total}
+            itemsPerPage={limit}
+            onPageChange={setPage}
+            onItemsPerPageChange={setLimit}
             showItemsPerPage
             showPageJump
             showTotalInfo
