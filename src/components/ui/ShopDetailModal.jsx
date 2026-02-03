@@ -35,13 +35,7 @@ export default function ShopDetailModal({
     };
   });
 
-  useEffect(() => {
-    if (isOpen && shop?.id) {
-      fetchShopLicenses();
-      setShowAddLicense(false);
-    }
-  }, [isOpen, shop?.id, fetchShopLicenses]);
-
+  // Define fetchShopLicenses before useEffect that uses it
   const fetchShopLicenses = useCallback(async () => {
     setLoading(true);
     try {
@@ -56,6 +50,13 @@ export default function ShopDetailModal({
       setLoading(false);
     }
   }, [shop?.id]);
+
+  useEffect(() => {
+    if (isOpen && shop?.id) {
+      fetchShopLicenses();
+      setShowAddLicense(false);
+    }
+  }, [isOpen, shop?.id, fetchShopLicenses]);
 
   const handleAddLicense = async (e) => {
     e.preventDefault();

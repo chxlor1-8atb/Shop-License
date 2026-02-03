@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { API_ENDPOINTS } from '@/constants';
 import { formatThaiDateTime, getInitial } from '@/utils/formatters';
@@ -47,16 +47,16 @@ export default function DashboardPage() {
 
     const [user, setUser] = useState(null);
 
-    const initialized = useState(false);
+    const initializedRef = useRef(false);
 
     useEffect(() => {
-        if (!initialized[0]) {
-            initialized[1](true);
+        if (!initializedRef.current) {
+            initializedRef.current = true;
             checkAuth();
             fetchDashboardData();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialized]);
+    }, []);
 
     const checkAuth = async () => {
         try {
@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
     // Refetch activity when filter changes
     useEffect(() => {
-        if (!initialized[0]) return; // Skip on first render as fetchDashboardData calls it
+        if (!initializedRef.current) return; // Skip on first render as fetchDashboardData calls it
         
         const fetchActivity = async () => {
             try {
@@ -107,7 +107,7 @@ export default function DashboardPage() {
             }
         };
         fetchActivity();
-    }, [activeFilter, initialized]);
+    }, [activeFilter]);
 
     if (loading) return <DashboardSkeleton />;
     if (error) return <div className="error-message">{error}</div>;

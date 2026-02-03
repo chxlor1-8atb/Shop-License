@@ -88,10 +88,6 @@ export default function UsersPage() {
     totalRegularUsers: 0
   });
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
@@ -121,7 +117,11 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination]);
+  }, [pagination.page, pagination.limit, pagination.updateFromResponse]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleRowUpdate = async (updatedRow) => {
     const user = users.find((u) => u.id === updatedRow.id);

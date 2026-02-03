@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData } from "@/hooks";
@@ -70,6 +70,7 @@ function LicensesPageContent() {
   
   // Initialize from URL params
   const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [filterType, setFilterType] = useState(searchParams.get("license_type") || "");
   const [filterStatus, setFilterStatus] = useState(searchParams.get("status") || "");
   const [filterShop, setFilterShop] = useState(searchParams.get("shop_id") || "");
@@ -78,6 +79,14 @@ function LicensesPageContent() {
   const [showQuickAddShop, setShowQuickAddShop] = useState(false);
   // Modal for quick adding license
   const [showQuickAddLicense, setShowQuickAddLicense] = useState(false);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Enhanced shop options with "Create New" option
   const enhancedShopOptions = useMemo(() => [
@@ -210,9 +219,15 @@ function LicensesPageContent() {
     }
   }, [enhancedShopOptions, typeOptions]);
 
+  // Track if columns have been fetched to prevent infinite loop
+  const columnsLoadedRef = useRef(false);
+
   // Reload columns when options change (fixes missing labels in table)
   useEffect(() => {
-    fetchCustomColumns();
+    if (!columnsLoadedRef.current) {
+      fetchCustomColumns();
+      columnsLoadedRef.current = true;
+    }
   }, [fetchCustomColumns]);
 
   const fetchLicenses = useCallback(async () => {
@@ -221,7 +236,7 @@ function LicensesPageContent() {
       const params = new URLSearchParams({
         page: pagination.page,
         limit: pagination.limit,
-        search,
+        search: debouncedSearch,
         license_type: filterType,
         status: filterStatus,
         shop_id: filterShop,
@@ -245,14 +260,12 @@ function LicensesPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [pagination, search, filterType, filterStatus, filterShop]);
+  }, [pagination.updateFromResponse, debouncedSearch, filterType, filterStatus, filterShop]);
 
   // Initial license data fetch and refetch when filters change
   useEffect(() => {
-    if (columns.length > 0) {
-      fetchLicenses();
-    }
-  }, [fetchLicenses, columns.length]);
+    fetchLicenses();
+  }, [pagination.page, pagination.limit, debouncedSearch, filterType, filterStatus, filterShop]);
 
 
 

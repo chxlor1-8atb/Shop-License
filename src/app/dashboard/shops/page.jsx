@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePagination, useDropdownData } from "@/hooks";
@@ -133,27 +133,68 @@ export default function ShopsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination]);
+  }, [pagination.updateFromResponse]);
 
-  // Initial parallel data fetch for faster loading
-  // Initial parallel data fetch for faster loading
-  useEffect(() => {
-    const loadInitialData = async () => {
-      await Promise.all([fetchCustomColumns(), performFetchShops("")]);
-    };
-    loadInitialData();
-  }, [performFetchShops]);
+  // Track if columns have been fetched to prevent infinite loop
+  const columnsLoadedRef = useRef(false);
 
-  // Refetch shops when filters change - use debouncedSearch directly
-  // Refetch shops when filters change - use debouncedSearch directly
-  useEffect(() => {
-    // Only fetch if columns are loaded (to avoid double fetch on init if possible, or ensure table renders right)
-    if (columns.length > 0) {
-      performFetchShops(debouncedSearch);
+  // Define fetchCustomColumns before useEffect that uses it
+  const fetchCustomColumns = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `/api/custom-fields?entity_type=shops&t=${Date.now()}`
+      );
+      const data = await res.json();
+      if (data.success) {
+        const apiFields = data.fields || [];
+
+        // Map standard columns to db fields if they exist
+        const updatedStandardCols = STANDARD_COLUMNS.map((col) => {
+          const match = apiFields.find((f) => f.field_name === col.id);
+          if (match) {
+            return {
+              ...col,
+              name: match.field_label,
+              db_id: match.id,
+              isSystem: true,
+            };
+          }
+          return col;
+        });
+
+        // Pure custom columns
+        const customCols = apiFields
+          .filter((f) => !STANDARD_COLUMNS.find((sc) => sc.id === f.field_name))
+          .map((f) => ({
+            id: f.field_name,
+            name: f.field_label,
+            type: f.field_type || "text",
+            width: 150,
+            isCustom: true,
+            db_id: f.id,
+          }));
+
+        // Merge with standard
+        setColumns([...updatedStandardCols, ...customCols]);
+      }
+    } catch (e) {
+      console.error(e);
     }
-  }, [performFetchShops, debouncedSearch, columns.length]);
+  }, []);
 
-  // Keep fetchShops for external use (e.g., after updates)
+  // Fetch custom columns only once on mount
+  useEffect(() => {
+    if (!columnsLoadedRef.current) {
+      fetchCustomColumns();
+      columnsLoadedRef.current = true;
+    }
+  }, [fetchCustomColumns]);
+
+  // Fetch shops when search changes
+  useEffect(() => {
+    performFetchShops(debouncedSearch);
+  }, [debouncedSearch, pagination.page, pagination.limit]);
+
   // Keep fetchShops for external use (e.g., after updates)
   const fetchShops = useCallback(async () => {
     await performFetchShops(debouncedSearch);
@@ -397,50 +438,7 @@ export default function ShopsPage() {
     }
   };
 
-  // Custom columns are now fetched in parallel above
 
-  const fetchCustomColumns = async () => {
-    try {
-      const res = await fetch(
-        `/api/custom-fields?entity_type=shops&t=${Date.now()}`
-      );
-      const data = await res.json();
-      if (data.success) {
-        const apiFields = data.fields || [];
-
-        // Map standard columns to db fields if they exist
-        const updatedStandardCols = STANDARD_COLUMNS.map((col) => {
-          const match = apiFields.find((f) => f.field_name === col.id);
-          if (match) {
-            return {
-              ...col,
-              name: match.field_label,
-              db_id: match.id,
-              isSystem: true,
-            };
-          }
-          return col;
-        });
-
-        // Pure custom columns
-        const customCols = apiFields
-          .filter((f) => !STANDARD_COLUMNS.find((sc) => sc.id === f.field_name))
-          .map((f) => ({
-            id: f.field_name,
-            name: f.field_label,
-            type: f.field_type || "text",
-            width: 150,
-            isCustom: true,
-            db_id: f.id,
-          }));
-
-        // Merge with standard
-        setColumns([...updatedStandardCols, ...customCols]);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const handleExport = async () => {
     try {

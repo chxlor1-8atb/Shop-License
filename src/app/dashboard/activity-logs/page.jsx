@@ -62,11 +62,6 @@ export default function ActivityLogsPage() {
   const [recentIPs, setRecentIPs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Check admin authorization on mount
-  useEffect(() => {
-    checkAdminAuth();
-  }, [checkAdminAuth]);
-
   const checkAdminAuth = useCallback(async () => {
     try {
       const res = await fetch("/api/auth?action=check");
@@ -85,6 +80,11 @@ export default function ActivityLogsPage() {
       setAuthLoading(false);
     }
   }, [router]);
+
+  // Check admin authorization on mount
+  useEffect(() => {
+    checkAdminAuth();
+  }, [checkAdminAuth]);
 
   const fetchStats = async () => {
     setLoading(true);
