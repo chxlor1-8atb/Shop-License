@@ -802,10 +802,13 @@ export async function exportActivityLogsToPDF(logs, filters = {}) {
     pdfMake.createPdf(docDefinition).download(`activity_logs_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-export default {
+
+const pdfExportFunctions = {
     exportLicensesToPDF,
     exportShopsToPDF,
     exportUsersToPDF,
     exportUserCredentialsPDF,
     exportActivityLogsToPDF
 };
+
+export default pdfExportFunctions;

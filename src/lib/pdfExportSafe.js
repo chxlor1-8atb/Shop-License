@@ -697,13 +697,16 @@ export async function exportUsersToPDF(users) {
     downloadPdfBlob(pdfMake, docDefinition, `users_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-export default {
+
+const pdfExportSafeFunctions = {
     exportLicensesToPDF,
     exportShopsToPDF,
     exportUsersToPDF,
     exportUserCredentialsPDF,
     exportActivityLogsToPDF
 };
+
+export default pdfExportSafeFunctions;
 
 /**
  * Export Single User Credentials to PDF

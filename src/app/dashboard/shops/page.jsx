@@ -133,7 +133,7 @@ export default function ShopsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, pagination.updateFromResponse]);
+  }, [pagination]);
 
   // Initial parallel data fetch for faster loading
   // Initial parallel data fetch for faster loading

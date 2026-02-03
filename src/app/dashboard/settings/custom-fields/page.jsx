@@ -46,6 +46,7 @@ export default function CustomFieldsSettingsPage() {
 
     useEffect(() => {
         loadFields();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedEntity]);
 
     const loadFields = async () => {

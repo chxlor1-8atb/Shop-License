@@ -47,6 +47,7 @@ function FieldsContent() {
             return;
         }
         loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [entityId]);
 
     const loadData = async () => {

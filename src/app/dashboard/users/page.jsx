@@ -121,7 +121,7 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, pagination.updateFromResponse]);
+  }, [pagination]);
 
   const handleRowUpdate = async (updatedRow) => {
     const user = users.find((u) => u.id === updatedRow.id);

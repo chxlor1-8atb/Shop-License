@@ -79,7 +79,8 @@ export default function LicenseTypesPage() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);

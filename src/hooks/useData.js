@@ -121,8 +121,9 @@ export function useDropdownData() {
         CONFIG.static
     );
 
-    const shops = shopsData?.shops || [];
-    const licenseTypes = typesData?.types || typesData?.licenseTypes || [];
+    // Wrap in useMemo to prevent dependency changes on every render
+    const shops = useMemo(() => shopsData?.shops || [], [shopsData?.shops]);
+    const licenseTypes = useMemo(() => typesData?.types || typesData?.licenseTypes || [], [typesData?.types, typesData?.licenseTypes]);
 
     // Pre-formatted options for CustomSelect
     const shopOptions = useMemo(() => shops.map(s => ({

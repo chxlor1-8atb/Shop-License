@@ -56,6 +56,7 @@ export function useAuthLogin() {
     // Clear error on input
     useEffect(() => {
         if (error) setError('');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [username, password]);
 
     const saveCredentials = (shouldRemember, user) => {

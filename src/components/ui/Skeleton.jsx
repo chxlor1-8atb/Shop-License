@@ -195,7 +195,7 @@ export const skeletonStyles = `
 `;
 
 // Default export
-export default {
+const SkeletonComponents = {
     Skeleton,
     CardSkeleton,
     TableSkeleton,
@@ -205,3 +205,5 @@ export default {
     ListSkeleton,
     PageSkeleton,
 };
+
+export default SkeletonComponents;

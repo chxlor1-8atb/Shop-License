@@ -245,7 +245,7 @@ function LicensesPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, search, filterType, filterStatus, filterShop, pagination.updateFromResponse]);
+  }, [pagination, search, filterType, filterStatus, filterShop]);
 
   // Initial license data fetch and refetch when filters change
   useEffect(() => {

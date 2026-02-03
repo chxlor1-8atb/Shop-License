@@ -55,7 +55,8 @@ export default function DashboardPage() {
             checkAuth();
             fetchDashboardData();
         }
-    }, [initialized, fetchDashboardData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialized]);
 
     const checkAuth = async () => {
         try {

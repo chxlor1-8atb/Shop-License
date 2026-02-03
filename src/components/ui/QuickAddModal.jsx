@@ -41,6 +41,7 @@ export default function QuickAddModal({
     if (isOpen) {
       fetchCustomFields();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, type]);
 
   const fetchCustomFields = async () => {
