@@ -1,4 +1,4 @@
-import { executeQuery, fetchOne, fetchAll } from '@/lib/db';
+// Search placeholder
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api-helpers';
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/Loading";
 import "./activity-logs.css";
@@ -65,9 +65,9 @@ export default function ActivityLogsPage() {
   // Check admin authorization on mount
   useEffect(() => {
     checkAdminAuth();
-  }, []);
+  }, [checkAdminAuth]);
 
-  const checkAdminAuth = async () => {
+  const checkAdminAuth = useCallback(async () => {
     try {
       const res = await fetch("/api/auth?action=check");
       const data = await res.json();
@@ -84,7 +84,7 @@ export default function ActivityLogsPage() {
     } finally {
       setAuthLoading(false);
     }
-  };
+  }, [router]);
 
   const fetchStats = async () => {
     setLoading(true);

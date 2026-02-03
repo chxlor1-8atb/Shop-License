@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import Loading from '@/components/Loading';
@@ -26,18 +26,12 @@ export default function DynamicDataPage({ params }) {
 
     useEffect(() => {
         loadEntityAndData();
-    }, [entitySlug]);
+    }, [loadEntityAndData]);
 
-    const loadEntityAndData = async () => {
+    const loadEntityAndData = useCallback(async () => {
         setLoading(true);
         try {
             // 1. Get Entity Definition
-            const entRes = await fetch(`/api/entities?slug=${entitySlug}`); // Wait, my API uses ID or List. Let me check api/entities/route.js
-            // My GET /api/entities doesn't support slug search yet directly, but I can fetch all and find? No, that's inefficient.
-            // Let's assume I fix the API or I use a workaround. 
-            // Wait, I fetch all active entities usually for sidebar.
-            // Let's try to fetch list and find matching slug first.
-
             const listRes = await fetch('/api/entities');
             const listData = await listRes.json();
             const matchedEntity = listData.entities?.find(e => e.slug === entitySlug);
@@ -70,7 +64,7 @@ export default function DynamicDataPage({ params }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [entitySlug, router]);
 
     const openModal = (record = null) => {
         const initialData = {};

@@ -79,7 +79,7 @@ export default function LicenseTypesPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);

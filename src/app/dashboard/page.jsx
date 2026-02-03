@@ -55,7 +55,7 @@ export default function DashboardPage() {
             checkAuth();
             fetchDashboardData();
         }
-    }, []);
+    }, [initialized, fetchDashboardData]);
 
     const checkAuth = async () => {
         try {
@@ -106,7 +106,7 @@ export default function DashboardPage() {
             }
         };
         fetchActivity();
-    }, [activeFilter]);
+    }, [activeFilter, initialized]);
 
     if (loading) return <DashboardSkeleton />;
     if (error) return <div className="error-message">{error}</div>;

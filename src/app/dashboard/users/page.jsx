@@ -90,7 +90,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.page, pagination.limit]);
+  }, [fetchUsers]);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -121,7 +121,7 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit, pagination.updateFromResponse]);
 
   const handleRowUpdate = async (updatedRow) => {
     const user = users.find((u) => u.id === updatedRow.id);
