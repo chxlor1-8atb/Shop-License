@@ -124,6 +124,7 @@ async function handleCheckAuth() {
 
     if (session.userId) {
         return NextResponse.json({
+            authenticated: true,
             success: true,
             message: 'Authenticated',
             user: {
@@ -135,8 +136,11 @@ async function handleCheckAuth() {
         });
     }
 
-    return NextResponse.json(
-        { success: false, message: 'Not authenticated' },
-        { status: 401 }
-    );
+    // Return 200 instead of 401 to prevent console errors
+    // The client checks success: false to determine authentication status
+    return NextResponse.json({
+        authenticated: false,
+        success: false,
+        message: 'Not authenticated'
+    });
 }
