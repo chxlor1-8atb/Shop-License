@@ -211,8 +211,10 @@ export default function QuickAddModal({
           // Shop Form
           <>
             <div className="form-group">
-              <label className="form-label required">ชื่อร้านค้า</label>
+              <label htmlFor="shop_name" className="form-label required">ชื่อร้านค้า</label>
               <input
+                id="shop_name"
+                name="shop_name"
                 type="text"
                 className="form-input"
                 value={formData.shop_name || ""}
@@ -225,8 +227,10 @@ export default function QuickAddModal({
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">ชื่อเจ้าของ</label>
+                <label htmlFor="owner_name" className="form-label">ชื่อเจ้าของ</label>
                 <input
+                  id="owner_name"
+                  name="owner_name"
                   type="text"
                   className="form-input"
                   value={formData.owner_name || ""}
@@ -235,8 +239,10 @@ export default function QuickAddModal({
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">เบอร์โทรศัพท์</label>
+                <label htmlFor="phone" className="form-label">เบอร์โทรศัพท์</label>
                 <input
+                  id="phone"
+                  name="phone"
                   type="text"
                   className="form-input"
                   value={formData.phone || ""}
@@ -247,8 +253,10 @@ export default function QuickAddModal({
             </div>
 
             <div className="form-group">
-              <label className="form-label">ที่อยู่</label>
+              <label htmlFor="address" className="form-label">ที่อยู่</label>
               <textarea
+                id="address"
+                name="address"
                 className="form-input"
                 value={formData.address || ""}
                 onChange={(e) => handleChange("address", e.target.value)}
@@ -272,12 +280,14 @@ export default function QuickAddModal({
                   
                   return (
                     <div key={field.id} className="form-group">
-                      <label className={`form-label ${field.is_required ? 'required' : ''}`}>
+                      <label htmlFor={field.field_name} className={`form-label ${field.is_required ? 'required' : ''}`}>
                         {field.field_label}
                       </label>
                       
                       {field.field_type === 'textarea' ? (
                         <textarea
+                          id={field.field_name}
+                          name={field.field_name}
                           className="form-input"
                           value={fieldValue}
                           onChange={(e) => handleChange(field.field_name, e.target.value)}
@@ -287,6 +297,8 @@ export default function QuickAddModal({
                         />
                       ) : field.field_type === 'number' ? (
                         <input
+                          id={field.field_name}
+                          name={field.field_name}
                           type="number"
                           className="form-input"
                           value={fieldValue}
@@ -296,6 +308,7 @@ export default function QuickAddModal({
                         />
                       ) : field.field_type === 'date' ? (
                         <DatePicker
+                          id={field.field_name}
                           value={fieldValue}
                           onChange={(e) => handleChange(field.field_name, e.target.value)}
                           placeholder={`เลือก${field.field_label}`}
@@ -303,6 +316,7 @@ export default function QuickAddModal({
                         />
                       ) : field.field_type === 'select' && field.field_options ? (
                         <CustomSelect
+                          id={field.field_name}
                           value={fieldValue}
                           onChange={(e) => handleChange(field.field_name, e.target.value)}
                           options={[
@@ -320,6 +334,8 @@ export default function QuickAddModal({
                         />
                       ) : (
                         <input
+                          id={field.field_name}
+                          name={field.field_name}
                           type="text"
                           className="form-input"
                           value={fieldValue}
@@ -335,8 +351,10 @@ export default function QuickAddModal({
             )}
 
             <div className="form-divider">
-              <label className="checkbox-label">
+              <label className="checkbox-label" htmlFor="create_license">
                 <input
+                  id="create_license"
+                  name="create_license"
                   type="checkbox"
                   checked={formData.create_license || false}
                   onChange={(e) => handleChange("create_license", e.target.checked)}
@@ -349,8 +367,9 @@ export default function QuickAddModal({
               <div className="nested-form">
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label required">ประเภทใบอนุญาต</label>
+                    <label htmlFor="license_type_id_shop" className="form-label required">ประเภทใบอนุญาต</label>
                     <CustomSelect
+                      id="license_type_id_shop"
                       value={formData.license_type_id || ""}
                       onChange={(e) => handleChange("license_type_id", e.target.value)}
                       options={[{ value: "", label: "-- เลือกประเภท --" }, ...typeOptions]}
@@ -359,8 +378,10 @@ export default function QuickAddModal({
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label required">เลขที่ใบอนุญาต</label>
+                    <label htmlFor="license_number_shop" className="form-label required">เลขที่ใบอนุญาต</label>
                     <input
+                      id="license_number_shop"
+                      name="license_number"
                       type="text"
                       className="form-input"
                       value={formData.license_number || ""}
@@ -376,8 +397,9 @@ export default function QuickAddModal({
           // License Form
           <>
             <div className="form-group">
-              <label className="form-label required">ร้านค้า</label>
+              <label htmlFor="shop_id" className="form-label required">ร้านค้า</label>
               <CustomSelect
+                id="shop_id"
                 value={formData.shop_id || ""}
                 onChange={(e) => handleChange("shop_id", e.target.value)}
                 options={[{ value: "", label: "-- เลือกร้านค้า --" }, ...shopOptions]}
@@ -388,8 +410,9 @@ export default function QuickAddModal({
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label required">ประเภทใบอนุญาต</label>
+                <label htmlFor="license_type_id" className="form-label required">ประเภทใบอนุญาต</label>
                 <CustomSelect
+                  id="license_type_id"
                   value={formData.license_type_id || ""}
                   onChange={(e) => handleChange("license_type_id", e.target.value)}
                   options={[{ value: "", label: "-- เลือกประเภท --" }, ...typeOptions]}
@@ -398,8 +421,10 @@ export default function QuickAddModal({
                 />
               </div>
               <div className="form-group">
-                <label className="form-label required">เลขที่ใบอนุญาต</label>
+                <label htmlFor="license_number" className="form-label required">เลขที่ใบอนุญาต</label>
                 <input
+                  id="license_number"
+                  name="license_number"
                   type="text"
                   className="form-input"
                   value={formData.license_number || ""}
@@ -412,8 +437,9 @@ export default function QuickAddModal({
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">วันที่ออก</label>
+                <label htmlFor="issue_date" className="form-label">วันที่ออก</label>
                 <DatePicker
+                  id="issue_date"
                   value={formData.issue_date || ""}
                   onChange={(e) => {
                     const newIssueDate = e.target.value;
@@ -437,8 +463,9 @@ export default function QuickAddModal({
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">วันหมดอายุ</label>
+                <label htmlFor="expiry_date" className="form-label">วันหมดอายุ</label>
                 <DatePicker
+                  id="expiry_date"
                   value={formData.expiry_date || ""}
                   onChange={(e) => handleChange("expiry_date", e.target.value)}
                   placeholder="เลือกวันหมดอายุ"
@@ -447,8 +474,10 @@ export default function QuickAddModal({
             </div>
 
             <div className="form-group">
-              <label className="form-label">หมายเหตุ</label>
+              <label htmlFor="notes" className="form-label">หมายเหตุ</label>
               <textarea
+                id="notes"
+                name="notes"
                 className="form-input"
                 value={formData.notes || ""}
                 onChange={(e) => handleChange("notes", e.target.value)}

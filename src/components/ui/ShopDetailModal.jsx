@@ -188,8 +188,9 @@ export default function ShopDetailModal({
               <form className="add-license-form" onSubmit={handleAddLicense}>
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label required">ประเภท</label>
+                    <label htmlFor="shop_detail_license_type" className="form-label required">ประเภท</label>
                     <CustomSelect
+                      id="shop_detail_license_type"
                       value={newLicense.license_type_id}
                       onChange={(e) =>
                         setNewLicense((prev) => ({ ...prev, license_type_id: e.target.value }))
@@ -199,8 +200,10 @@ export default function ShopDetailModal({
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label required">เลขที่ใบอนุญาต</label>
+                    <label htmlFor="shop_detail_license_number" className="form-label required">เลขที่ใบอนุญาต</label>
                     <input
+                      id="shop_detail_license_number"
+                      name="license_number"
                       type="text"
                       className="form-input"
                       value={newLicense.license_number}
@@ -214,8 +217,9 @@ export default function ShopDetailModal({
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">วันที่ออก</label>
+                    <label htmlFor="shop_detail_issue_date" className="form-label">วันที่ออก</label>
                     <DatePicker
+                      id="shop_detail_issue_date"
                       value={newLicense.issue_date}
                       onChange={(e) => {
                         const newIssueDate = e.target.value;
@@ -239,8 +243,9 @@ export default function ShopDetailModal({
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">วันหมดอายุ</label>
+                    <label htmlFor="shop_detail_expiry_date" className="form-label">วันหมดอายุ</label>
                     <DatePicker
+                      id="shop_detail_expiry_date"
                       value={newLicense.expiry_date}
                       onChange={(e) =>
                         setNewLicense((prev) => ({ ...prev, expiry_date: e.target.value }))

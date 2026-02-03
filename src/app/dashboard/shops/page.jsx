@@ -83,6 +83,7 @@ const STANDARD_COLUMNS = [
 
 export default function ShopsPage() {
   const pagination = usePagination(10);
+  const { page, limit, updateFromResponse } = pagination;
   const { typeOptions } = useDropdownData();
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -108,8 +109,8 @@ export default function ShopsPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        page: pagination.page,
-        limit: pagination.limit,
+        page: page,
+        limit: limit,
         search: searchValue,
       });
 
@@ -125,7 +126,7 @@ export default function ShopsPage() {
         }));
 
         setShops(formattedShops);
-        pagination.updateFromResponse(data.pagination);
+        updateFromResponse(data.pagination);
       }
     } catch (error) {
       console.error("Failed to fetch shops:", error);
@@ -133,7 +134,7 @@ export default function ShopsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.updateFromResponse, pagination.page, pagination.limit]);
+  }, [updateFromResponse, page, limit]);
 
   // Track if columns have been fetched to prevent infinite loop
   const columnsLoadedRef = useRef(false);
@@ -194,7 +195,7 @@ export default function ShopsPage() {
   // Fetch shops when search changes
   useEffect(() => {
     performFetchShops(debouncedSearch);
-  }, [performFetchShops, debouncedSearch, pagination.page, pagination.limit]);
+  }, [performFetchShops, debouncedSearch, page, limit]);
 
   // Keep fetchShops for external use (e.g., after updates)
   const fetchShops = useCallback(async () => {

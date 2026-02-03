@@ -39,8 +39,10 @@ export function SearchInput({
     return (
         <input
             id={id}
+            name="search"
             type="text"
             placeholder={placeholder}
+            aria-label={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             className={className}

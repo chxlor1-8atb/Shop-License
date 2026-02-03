@@ -250,8 +250,9 @@ function FieldsContent() {
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
                             <div className="form-group">
-                                <label>Field Name (ภาษาอังกฤษ) *</label>
+                                <label htmlFor="field_name">Field Name (ภาษาอังกฤษ) *</label>
                                 <input
+                                    id="field_name"
                                     type="text"
                                     name="field_name"
                                     value={formData.field_name}
@@ -263,8 +264,9 @@ function FieldsContent() {
                                 />
                             </div>
                             <div className="form-group">
-                                <label>Label (ชื่อแสดงผล) *</label>
+                                <label htmlFor="field_label">Label (ชื่อแสดงผล) *</label>
                                 <input
+                                    id="field_label"
                                     type="text"
                                     name="field_label"
                                     value={formData.field_label}
@@ -273,8 +275,9 @@ function FieldsContent() {
                                 />
                             </div>
                             <div className="form-group">
-                                <label>ประเภท *</label>
+                                <label htmlFor="field_type">ประเภท *</label>
                                 <CustomSelect
+                                    id="field_type"
                                     name="field_type"
                                     value={formData.field_type}
                                     onChange={handleChange}
@@ -284,8 +287,9 @@ function FieldsContent() {
 
                             {formData.field_type === 'select' && (
                                 <div className="form-group">
-                                    <label>ตัวเลือก (บรรทัดละ 1 ตัวเลือก)</label>
+                                    <label htmlFor="field_options">ตัวเลือก (บรรทัดละ 1 ตัวเลือก)</label>
                                     <textarea
+                                        id="field_options"
                                         name="field_options"
                                         value={formData.field_options}
                                         onChange={handleChange}
@@ -296,8 +300,9 @@ function FieldsContent() {
                             )}
 
                             <div className="form-group">
-                                <label>ค่าเริ่มต้น</label>
+                                <label htmlFor="default_value">ค่าเริ่มต้น</label>
                                 <input
+                                    id="default_value"
                                     type="text"
                                     name="default_value"
                                     value={formData.default_value}
@@ -306,8 +311,9 @@ function FieldsContent() {
                             </div>
 
                             <div className="form-group">
-                                <label>ลำดับ</label>
+                                <label htmlFor="display_order">ลำดับ</label>
                                 <input
+                                    id="display_order"
                                     type="number"
                                     name="display_order"
                                     value={formData.display_order}

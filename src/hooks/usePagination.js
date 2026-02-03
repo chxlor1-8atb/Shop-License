@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { PAGINATION_DEFAULTS } from '@/constants';
 
 /**
@@ -68,14 +68,16 @@ export function usePagination(initialLimit = PAGINATION_DEFAULTS.LIMIT) {
         setPagination(prev => ({ ...prev, page: 1 }));
     }, []);
 
-    return {
+    const paginationResult = useMemo(() => ({
         ...pagination,
         setPage,
         setLimit,
         reset,
         resetPage,
         updateFromResponse
-    };
+    }), [pagination, setPage, setLimit, reset, resetPage, updateFromResponse]);
+
+    return paginationResult;
 }
 
 export default usePagination;

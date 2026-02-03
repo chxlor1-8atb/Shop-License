@@ -16,7 +16,8 @@ export default function DatePicker({
     lang = 'th', // 'th' or 'en'
     className = '',
     onBlur,
-    autoFocus = false
+    autoFocus = false,
+    id
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(value ? new Date(value) : new Date());
@@ -169,6 +170,7 @@ export default function DatePicker({
         >
             {/* Input Trigger */}
             <div
+                id={id}
                 className={`datepicker-trigger ${isOpen ? 'open' : ''}`}
                 onClick={() => !disabled && setIsOpen(!isOpen)}
             >

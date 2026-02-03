@@ -89,7 +89,7 @@ export const LoginForm = () => {
         />
 
         <div className="remember-me">
-          <label className="remember-me__label">
+          <label htmlFor="rememberMe" className="remember-me__label">
             <input
               type="checkbox"
               id="rememberMe"

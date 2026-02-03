@@ -64,6 +64,7 @@ function LicensesPageContent() {
   const searchParams = useSearchParams();
   const { shopOptions, typeOptions, shops } = useDropdownData(); // Use hook for dropdown data
   const pagination = usePagination();
+  const { page, limit, updateFromResponse } = pagination;
 
   const [licenses, setLicenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -235,8 +236,8 @@ function LicensesPageContent() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        page: pagination.page,
-        limit: pagination.limit,
+        page: page,
+        limit: limit,
         search: debouncedSearch,
         license_type: filterType,
         status: filterStatus,
@@ -253,7 +254,7 @@ function LicensesPageContent() {
           ...(l.custom_fields || {}),
         }));
         setLicenses(formattedLicenses);
-        pagination.updateFromResponse(data.pagination);
+        updateFromResponse(data.pagination);
       }
     } catch (error) {
       console.error("Failed to fetch licenses:", error);
@@ -261,12 +262,12 @@ function LicensesPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.updateFromResponse, pagination.page, pagination.limit, debouncedSearch, filterType, filterStatus, filterShop]);
+  }, [updateFromResponse, page, limit, debouncedSearch, filterType, filterStatus, filterShop]);
 
   // Initial license data fetch and refetch when filters change
   useEffect(() => {
     fetchLicenses();
-  }, [fetchLicenses, pagination.page, pagination.limit, debouncedSearch, filterType, filterStatus, filterShop]);
+  }, [fetchLicenses, page, limit, debouncedSearch, filterType, filterStatus, filterShop]);
 
 
 
