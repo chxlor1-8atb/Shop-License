@@ -82,10 +82,10 @@ async function handleLogin(request) {
             },
         });
     } catch (error) {
-        return NextResponse.json({
-            success: false,
-            message: error.message || 'เข้าสู่ระบบไม่สำเร็จ'
-        });
+        return NextResponse.json(
+            { success: false, message: error.message || 'เข้าสู่ระบบไม่สำเร็จ' },
+            { status: 401 }
+        );
     }
 }
 

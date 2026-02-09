@@ -39,6 +39,7 @@ export const InputGroup = ({
         type="button"
         className="password-toggle"
         onClick={togglePassword}
+        aria-label={isPasswordVisible ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
       >
         {isPasswordVisible ? <FaEyeSlash /> : <FaEye />}
       </button>

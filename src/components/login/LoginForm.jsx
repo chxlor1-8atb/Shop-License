@@ -19,6 +19,7 @@ export const LoginForm = () => {
     loading,
     error,
     unlocked,
+    checkingAuth,
     submitLogin,
   } = useAuthLogin();
 
@@ -35,7 +36,8 @@ export const LoginForm = () => {
     if (error) {
       slider.resetSlider();
     }
-  }, [error, slider]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error, slider.resetSlider]);
 
   // Only keep the success animation logic
   useEffect(() => {
@@ -52,6 +54,14 @@ export const LoginForm = () => {
     slider.maximizeSlider();
     await onUnlock();
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="login-form-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
 
   return (
     <div className="login-form-content">

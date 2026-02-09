@@ -227,8 +227,12 @@ const CLEANUP_INTERVAL = 60000; // Cleanup every minute
  */
 function normalizeIP(ip) {
     if (!ip || typeof ip !== 'string') return 'unknown';
-    // Remove port if present
-    const normalized = ip.split(',')[0].trim().split(':')[0];
+    // Take first IP if comma-separated (X-Forwarded-For)
+    const first = ip.split(',')[0].trim();
+    // Only strip port from IPv4 (e.g. "127.0.0.1:3000"), leave IPv6 intact
+    const normalized = first.includes('.') && first.includes(':')
+        ? first.replace(/:\d+$/, '')
+        : first;
     // Basic validation
     if (normalized.length > 45) return 'invalid'; // Max IPv6 length
     return normalized;
