@@ -16,14 +16,7 @@ function getSessionSecret() {
 
     if (process.env.NODE_ENV === 'production') {
         if (!secret) {
-            // Allow build to pass by generating a fallback secret if missing
-            // WARNING: This is using a hardcoded fallback to prevent session invalidation on serverless cold starts (Vercel)
-            // Ideally, you must set SESSION_SECRET in your Vercel Project Settings.
-            if (typeof window === 'undefined') {
-                console.error('⚠️ CRITICAL SECURITY WARNING: SESSION_SECRET is missing in production. Using a fallback static secret. PLEASE SET SESSION_SECRET IN VERCEL SETTINGS.');
-            }
-            // Use a static fallback instead of randomBytes to ensure sessions persist across cold starts
-            return 'fallback_fixed_production_secret_do_not_use_in_real_app_set_env_var';
+            throw new Error('SECURITY ERROR: SESSION_SECRET environment variable is required in production. Set it in your Vercel/hosting provider settings.');
         }
         if (secret.length < 32) {
             throw new Error('SECURITY ERROR: SESSION_SECRET must be at least 32 characters in production');

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { checkAuth } from '@/utils/auth';
 
@@ -13,6 +13,7 @@ export function useAuthLogin() {
     const [unlocked, setUnlocked] = useState(false);
     const [loginSuccess, setLoginSuccess] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
+    const isSubmittingRef = useRef(false);
 
     // Initial auth check
     useEffect(() => {
@@ -41,7 +42,7 @@ export function useAuthLogin() {
         const savedData = localStorage.getItem('rememberMe');
         if (savedData) {
             try {
-                const data = JSON.parse(atob(savedData));
+                const data = JSON.parse(savedData);
                 // Only restore username, never password
                 if (data.username) {
                     setUsername(data.username);
@@ -62,19 +63,21 @@ export function useAuthLogin() {
     const saveCredentials = (shouldRemember, user) => {
         if (shouldRemember) {
             // SECURITY: Never store passwords in localStorage, even encoded
-            const savedData = { username: user };
-            localStorage.setItem('rememberMe', btoa(JSON.stringify(savedData)));
+            localStorage.setItem('rememberMe', JSON.stringify({ username: user }));
         } else {
             localStorage.removeItem('rememberMe');
         }
     };
 
     const submitLogin = async () => {
+        if (isSubmittingRef.current) return false;
+
         if (!username || !password) {
             setError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
             return false;
         }
 
+        isSubmittingRef.current = true;
         setLoading(true);
 
         try {
@@ -108,6 +111,7 @@ export function useAuthLogin() {
             return false;
         } finally {
             setLoading(false);
+            isSubmittingRef.current = false;
         }
     };
 

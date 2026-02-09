@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useCallback } from "react";
 import Image from "next/image";
 import { FeatureTag } from "@/components/login/FeatureTag";
 import { LoginForm } from "@/components/login/LoginForm";
@@ -18,6 +18,14 @@ import "../styles/login-slide.css";
 // for now Page just structures the layout.
 
 export default function LoginPage() {
+  const cardRef = useRef(null);
+
+  const handleLoginSuccess = useCallback(() => {
+    if (cardRef.current) {
+      cardRef.current.classList.add("success-exit");
+    }
+  }, []);
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -43,7 +51,7 @@ export default function LoginPage() {
         <Particles />
 
         <div className="login-container">
-          <div className="login-card">
+          <div className="login-card" ref={cardRef}>
             {/* Left Side: Brand & Info */}
             <div className="card-left">
               <div className="card-left__content">
@@ -55,7 +63,7 @@ export default function LoginPage() {
 
             {/* Right Side: Login Form */}
             <div className="card-right">
-              <LoginForm />
+              <LoginForm onSuccess={handleLoginSuccess} />
             </div>
           </div>
         </div>

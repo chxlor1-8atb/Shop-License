@@ -44,7 +44,8 @@ const SUSPICIOUS_PATTERNS = [
 // Note: In a serverless generic environment, this resets often, but effective for burst attacks.
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 300; // General limit
-const MAX_SENSITIVE_REQUESTS = 20;   // Login/Auth limit
+const MAX_LOGIN_REQUESTS = 10;       // Login attempt limit (POST /api/auth?action=login)
+const MAX_SENSITIVE_REQUESTS = 60;   // Auth check/other sensitive paths limit
 
 const ipRequestCounts = new Map();
 
@@ -110,9 +111,10 @@ export function middleware(request) {
         }
     }
 
-    // Strict limit for potential login paths, lax for others
-    const isSensitivePath = pathname.includes('/api/auth') || pathname.includes('login') || pathname.includes('admin');
-    const limit = isSensitivePath ? MAX_SENSITIVE_REQUESTS : MAX_REQUESTS_PER_WINDOW;
+    // Strict limit for login attempts, moderate for other sensitive paths, lax for others
+    const isLoginAttempt = pathname === '/api/auth' && request.method === 'POST';
+    const isSensitivePath = pathname.includes('/api/auth') || pathname.includes('admin');
+    const limit = isLoginAttempt ? MAX_LOGIN_REQUESTS : isSensitivePath ? MAX_SENSITIVE_REQUESTS : MAX_REQUESTS_PER_WINDOW;
 
     if (clientData.count > limit) {
         return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {

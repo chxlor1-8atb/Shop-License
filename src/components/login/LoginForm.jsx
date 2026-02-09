@@ -6,7 +6,7 @@ import { InputGroup } from "./InputGroup";
 import { LoginSlider } from "./LoginSlider";
 import { WaveDivider } from "./WaveDivider";
 
-export const LoginForm = () => {
+export const LoginForm = ({ onSuccess }) => {
   const {
     username,
     setUsername,
@@ -41,14 +41,10 @@ export const LoginForm = () => {
 
   // Only keep the success animation logic
   useEffect(() => {
-    if (unlocked) {
-      // Card Exit Animation
-      const card = document.querySelector(".login-card");
-      if (card) {
-        card.classList.add("success-exit");
-      }
+    if (unlocked && onSuccess) {
+      onSuccess();
     }
-  }, [unlocked]);
+  }, [unlocked, onSuccess]);
 
   const handleManualSubmit = async () => {
     slider.maximizeSlider();

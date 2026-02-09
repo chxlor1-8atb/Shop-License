@@ -7,6 +7,7 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
     const sliderBtnRef = useRef(null);
     const slideContainerRef = useRef(null);
     const startXRef = useRef(0);
+    const slideProgressRef = useRef(0);
 
     // Stable callback wrapper
     const onUnlockRef = useRef(onUnlock);
@@ -37,6 +38,7 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
             // Constrain movement
             // Add 4px (initial left) to moveX so it starts moving immediately
             let newLeft = Math.max(4, Math.min(4 + moveX, maxMove));
+            slideProgressRef.current = newLeft;
             setSlideProgress(newLeft);
         }
     }, [isDragging]);
@@ -51,7 +53,7 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
             const maxMove = containerWidth - btnWidth - 6;
 
             // Threshold: 80% to unlock
-            if (slideProgress > maxMove * 0.8) {
+            if (slideProgressRef.current > maxMove * 0.8) {
                 if (onUnlockRef.current) {
                     await onUnlockRef.current();
                 }
@@ -59,7 +61,7 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
                 setSlideProgress(0); // Snap back if not reached
             }
         }
-    }, [isDragging, slideProgress]);
+    }, [isDragging]);
 
     // Global event listeners for drag interactions
     useEffect(() => {
@@ -83,7 +85,10 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
         }
     }, []);
 
-    const resetSlider = useCallback(() => setSlideProgress(0), []);
+    const resetSlider = useCallback(() => {
+        slideProgressRef.current = 0;
+        setSlideProgress(0);
+    }, []);
 
     return {
         slideProgress,
