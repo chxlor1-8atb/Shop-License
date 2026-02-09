@@ -76,5 +76,5 @@ export async function logoutUser() {
         });
     }
 
-    session.destroy();
+    await session.destroy();
 }

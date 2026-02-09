@@ -13,6 +13,7 @@ export function useAuthLogin() {
     const [unlocked, setUnlocked] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
     const isSubmittingRef = useRef(false);
+    const unlockedRef = useRef(false);
     const usernameRef = useRef(username);
     const passwordRef = useRef(password);
     const rememberMeRef = useRef(rememberMe);
@@ -76,7 +77,7 @@ export function useAuthLogin() {
     };
 
     const submitLogin = useCallback(async () => {
-        if (isSubmittingRef.current) return false;
+        if (isSubmittingRef.current || unlockedRef.current) return false;
 
         const currentUsername = usernameRef.current;
         const currentPassword = passwordRef.current;
@@ -101,6 +102,7 @@ export function useAuthLogin() {
             const data = await res.json();
 
             if (data.success) {
+                unlockedRef.current = true;
                 setUnlocked(true);
                 saveCredentials(currentRememberMe, currentUsername);
 

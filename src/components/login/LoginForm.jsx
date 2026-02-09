@@ -47,6 +47,7 @@ export const LoginForm = ({ onSuccess }) => {
   }, [unlocked, onSuccess]);
 
   const handleManualSubmit = async () => {
+    if (loading || unlocked) return;
     slider.maximizeSlider();
     await onUnlock();
   };
