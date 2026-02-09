@@ -103,6 +103,24 @@ export default function RootLayout({ children }) {
 
             </head>
             <body suppressHydrationWarning>
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                            '@context': 'https://schema.org',
+                            '@type': 'SoftwareApplication',
+                            name: 'Shop License System',
+                            applicationCategory: 'BusinessApplication',
+                            operatingSystem: 'Web',
+                            offers: {
+                                '@type': 'Offer',
+                                price: '0',
+                                priceCurrency: 'THB'
+                            },
+                            description: 'ระบบจัดการใบอนุญาตร้านค้าช่วยให้คุณจัดการข้อมูลและต่ออายุใบอนุญาตได้อย่างมีประสิทธิภาพ'
+                        })
+                    }}
+                />
                 {children}
                 <SpeedInsights debug={false} />
                 <Analytics debug={false} />

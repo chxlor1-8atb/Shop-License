@@ -96,7 +96,8 @@ export function middleware(request) {
     // 3. RATE LIMITING
     // Protection against: hydra (brute-force), gau (crawling), DoS
     const now = Date.now();
-    const isLoginAttempt = pathname === '/api/auth' && request.method === 'POST';
+    const authAction = request.nextUrl.searchParams.get('action');
+    const isLoginAttempt = pathname === '/api/auth' && request.method === 'POST' && authAction === 'login';
     const isSensitivePath = pathname.includes('/api/auth') || pathname.includes('admin');
 
     // Use separate keys per request type so counters don't interfere

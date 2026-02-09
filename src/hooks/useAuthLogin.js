@@ -11,7 +11,6 @@ export function useAuthLogin() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [unlocked, setUnlocked] = useState(false);
-    const [loginSuccess, setLoginSuccess] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
     const isSubmittingRef = useRef(false);
     const usernameRef = useRef(username);
@@ -103,7 +102,6 @@ export function useAuthLogin() {
 
             if (data.success) {
                 setUnlocked(true);
-                setLoginSuccess(true);
                 saveCredentials(currentRememberMe, currentUsername);
 
                 setTimeout(() => {
@@ -131,7 +129,6 @@ export function useAuthLogin() {
         loading,
         error,
         unlocked,
-        loginSuccess,
         checkingAuth,
         submitLogin
     };

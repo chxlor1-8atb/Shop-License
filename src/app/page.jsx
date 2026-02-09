@@ -26,27 +26,8 @@ export default function LoginPage() {
     }
   }, []);
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    name: 'Shop License System',
-    applicationCategory: 'BusinessApplication',
-    operatingSystem: 'Web',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'THB'
-    },
-    description: 'ระบบจัดการใบอนุญาตร้านค้าช่วยให้คุณจัดการข้อมูลและต่ออายุใบอนุญาตได้อย่างมีประสิทธิภาพ'
-  };
-
   return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <main className="login-body">
+    <main className="login-body">
         <BackgroundShapes />
         <Particles />
 
@@ -67,8 +48,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-      </main>
-    </>
+    </main>
   );
 }
 

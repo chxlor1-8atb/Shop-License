@@ -27,6 +27,9 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
     const handleDrag = useCallback((e) => {
         if (!isDragging) return;
 
+        // Prevent page scrolling on mobile while dragging
+        if (e.cancelable) e.preventDefault();
+
         const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
         const moveX = clientX - startXRef.current;
 
@@ -66,15 +69,17 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
     // Global event listeners for drag interactions
     useEffect(() => {
         if (isDragging) {
-            const events = [
-                ['mousemove', handleDrag],
-                ['mouseup', handleEndDrag],
-                ['touchmove', handleDrag],
-                ['touchend', handleEndDrag]
-            ];
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', handleEndDrag);
+            document.addEventListener('touchmove', handleDrag, { passive: false });
+            document.addEventListener('touchend', handleEndDrag);
 
-            events.forEach(([event, handler]) => document.addEventListener(event, handler));
-            return () => events.forEach(([event, handler]) => document.removeEventListener(event, handler));
+            return () => {
+                document.removeEventListener('mousemove', handleDrag);
+                document.removeEventListener('mouseup', handleEndDrag);
+                document.removeEventListener('touchmove', handleDrag);
+                document.removeEventListener('touchend', handleEndDrag);
+            };
         }
     }, [isDragging, handleDrag, handleEndDrag]);
 

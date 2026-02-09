@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { authenticateUser, createSession, logoutUser } from '@/lib/auth-service';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
-import { sessionOptions } from '@/lib/session';
+import { sessionOptions, isSessionValid } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -108,7 +108,7 @@ async function handleCheckAuth() {
     const cookieStore = await cookies();
     const session = await getIronSession(cookieStore, sessionOptions);
 
-    if (session.userId) {
+    if (isSessionValid(session)) {
         return NextResponse.json({
             authenticated: true,
             success: true,
@@ -120,6 +120,11 @@ async function handleCheckAuth() {
                 role: session.role,
             },
         });
+    }
+
+    // If session exists but is expired, destroy it
+    if (session.userId) {
+        session.destroy();
     }
 
     // Return 200 instead of 401 to prevent console errors
