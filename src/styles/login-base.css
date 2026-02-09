@@ -874,6 +874,13 @@ html {
     display: contents;
 }
 
+.login-form-content--loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+}
+
 /* ====================================
    10. FORM HEADER
    ==================================== */

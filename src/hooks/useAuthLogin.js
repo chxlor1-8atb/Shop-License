@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { checkAuth } from '@/utils/auth';
 
@@ -14,6 +14,13 @@ export function useAuthLogin() {
     const [loginSuccess, setLoginSuccess] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
     const isSubmittingRef = useRef(false);
+    const usernameRef = useRef(username);
+    const passwordRef = useRef(password);
+    const rememberMeRef = useRef(rememberMe);
+
+    useEffect(() => { usernameRef.current = username; }, [username]);
+    useEffect(() => { passwordRef.current = password; }, [password]);
+    useEffect(() => { rememberMeRef.current = rememberMe; }, [rememberMe]);
 
     // Initial auth check
     useEffect(() => {
@@ -69,10 +76,14 @@ export function useAuthLogin() {
         }
     };
 
-    const submitLogin = async () => {
+    const submitLogin = useCallback(async () => {
         if (isSubmittingRef.current) return false;
 
-        if (!username || !password) {
+        const currentUsername = usernameRef.current;
+        const currentPassword = passwordRef.current;
+        const currentRememberMe = rememberMeRef.current;
+
+        if (!currentUsername || !currentPassword) {
             setError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
             return false;
         }
@@ -85,7 +96,7 @@ export function useAuthLogin() {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username: currentUsername, password: currentPassword })
             });
 
             const data = await res.json();
@@ -93,10 +104,7 @@ export function useAuthLogin() {
             if (data.success) {
                 setUnlocked(true);
                 setLoginSuccess(true);
-                saveCredentials(rememberMe, username);
-
-                // Prefetch dashboard for instant navigation
-                router.prefetch('/dashboard');
+                saveCredentials(currentRememberMe, currentUsername);
 
                 setTimeout(() => {
                     router.push('/dashboard');
@@ -113,7 +121,7 @@ export function useAuthLogin() {
             setLoading(false);
             isSubmittingRef.current = false;
         }
-    };
+    }, [router]);
 
     return {
         username, setUsername,

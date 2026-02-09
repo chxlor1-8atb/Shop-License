@@ -14,13 +14,15 @@ import { neon, neonConfig } from '@neondatabase/serverless';
 let sql;
 try {
     if (!process.env.DATABASE_URL) {
-        console.warn('Warning: DATABASE_URL is not defined');
+        console.error('CRITICAL: DATABASE_URL is not defined. Database queries will fail.');
     }
     // Initialize with optimized settings
-    sql = neon(process.env.DATABASE_URL || 'postgres://user:pass@host/db');
+    sql = process.env.DATABASE_URL
+        ? neon(process.env.DATABASE_URL)
+        : async () => { throw new Error('DATABASE_URL is not configured'); };
 } catch (e) {
     console.error('Failed to initialize Neon client:', e);
-    sql = async () => []; // No-op fallback
+    sql = async () => { throw new Error('Database client failed to initialize'); };
 }
 
 // Query timeout in milliseconds (30 seconds)

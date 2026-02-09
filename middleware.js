@@ -96,11 +96,19 @@ export function middleware(request) {
     // 3. RATE LIMITING
     // Protection against: hydra (brute-force), gau (crawling), DoS
     const now = Date.now();
-    let clientData = ipRequestCounts.get(ip);
+    const isLoginAttempt = pathname === '/api/auth' && request.method === 'POST';
+    const isSensitivePath = pathname.includes('/api/auth') || pathname.includes('admin');
+
+    // Use separate keys per request type so counters don't interfere
+    const rateLimitType = isLoginAttempt ? 'login' : isSensitivePath ? 'sensitive' : 'general';
+    const rateLimitKey = `${ip}:${rateLimitType}`;
+    const limit = isLoginAttempt ? MAX_LOGIN_REQUESTS : isSensitivePath ? MAX_SENSITIVE_REQUESTS : MAX_REQUESTS_PER_WINDOW;
+
+    let clientData = ipRequestCounts.get(rateLimitKey);
 
     if (!clientData) {
         clientData = { count: 1, startTime: now };
-        ipRequestCounts.set(ip, clientData);
+        ipRequestCounts.set(rateLimitKey, clientData);
     } else {
         if (now - clientData.startTime > RATE_LIMIT_WINDOW) {
             // Reset window
@@ -110,11 +118,6 @@ export function middleware(request) {
             clientData.count++;
         }
     }
-
-    // Strict limit for login attempts, moderate for other sensitive paths, lax for others
-    const isLoginAttempt = pathname === '/api/auth' && request.method === 'POST';
-    const isSensitivePath = pathname.includes('/api/auth') || pathname.includes('admin');
-    const limit = isLoginAttempt ? MAX_LOGIN_REQUESTS : isSensitivePath ? MAX_SENSITIVE_REQUESTS : MAX_REQUESTS_PER_WINDOW;
 
     if (clientData.count > limit) {
         return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {

@@ -53,7 +53,7 @@ export const LoginForm = ({ onSuccess }) => {
 
   if (checkingAuth) {
     return (
-      <div className="login-form-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
+      <div className="login-form-content login-form-content--loading">
         <div className="loading-spinner" />
       </div>
     );

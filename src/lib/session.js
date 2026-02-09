@@ -16,8 +16,7 @@ function getSessionSecret() {
 
     if (process.env.NODE_ENV === 'production') {
         if (!secret) {
-            console.error('⚠️ CRITICAL: SESSION_SECRET is not set in production! Sessions are insecure. Set SESSION_SECRET in Vercel Project Settings → Environment Variables.');
-            return 'INSECURE_FALLBACK_SET_SESSION_SECRET_IN_VERCEL_ENV_VARS!';
+            throw new Error('SECURITY ERROR: SESSION_SECRET is not set in production! Set SESSION_SECRET in Vercel Project Settings → Environment Variables.');
         }
         if (secret.length < 32) {
             throw new Error('SECURITY ERROR: SESSION_SECRET must be at least 32 characters in production');
