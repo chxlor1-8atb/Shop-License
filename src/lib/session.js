@@ -42,22 +42,41 @@ const SESSION_TTL = {
     REMEMBER_ME: 60 * 60 * 24 * 7, // 7 days for "remember me"
 };
 
+// Lazy-evaluated to avoid calling getSessionSecret() at build time (Vercel)
+function getSessionOptions() {
+    return {
+        password: getSessionSecret(),
+        cookieName: 'shop_license_session',
+        cookieOptions: {
+            // Only send over HTTPS in production
+            secure: process.env.NODE_ENV === 'production',
+            // Prevent JavaScript access - critical for XSS protection
+            httpOnly: true,
+            // Protect against CSRF - 'strict' breaks OAuth flows, 'lax' is safe default
+            sameSite: 'lax',
+            // Session expiration
+            maxAge: SESSION_TTL.DEFAULT,
+            // Explicit path
+            path: '/',
+        },
+        // Time-to-live for the encrypted seal
+        ttl: SESSION_TTL.DEFAULT,
+    };
+}
+
+// Backward-compatible: lazy getter so imports don't break at build time
 const sessionOptions = {
-    password: getSessionSecret(),
+    get password() { return getSessionSecret(); },
     cookieName: 'shop_license_session',
-    cookieOptions: {
-        // Only send over HTTPS in production
-        secure: process.env.NODE_ENV === 'production',
-        // Prevent JavaScript access - critical for XSS protection
-        httpOnly: true,
-        // Protect against CSRF - 'strict' breaks OAuth flows, 'lax' is safe default
-        sameSite: 'lax',
-        // Session expiration
-        maxAge: SESSION_TTL.DEFAULT,
-        // Explicit path
-        path: '/',
+    get cookieOptions() {
+        return {
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: SESSION_TTL.DEFAULT,
+            path: '/',
+        };
     },
-    // Time-to-live for the encrypted seal
     ttl: SESSION_TTL.DEFAULT,
 };
 
@@ -67,7 +86,7 @@ const sessionOptions = {
  * @returns {Promise<object>} Session object
  */
 export async function getSessionFromCookies(cookies) {
-    return getIronSession(cookies, sessionOptions);
+    return getIronSession(cookies, getSessionOptions());
 }
 
 /**
@@ -100,4 +119,4 @@ export function shouldRefreshSession(session) {
     return sessionAge > refreshThreshold;
 }
 
-export { sessionOptions, SESSION_TTL };
+export { sessionOptions, getSessionOptions, SESSION_TTL };
