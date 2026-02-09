@@ -124,18 +124,6 @@
     animation: arrowSlide 0.8s ease infinite;
 }
 
-@keyframes arrowSlide {
-
-    0%,
-    100% {
-        transform: translateX(0);
-    }
-
-    50% {
-        transform: translateX(4px);
-    }
-}
-
 /* Background fill that follows slider */
 .slide-bg {
     position: absolute;
@@ -469,4 +457,48 @@ div:where(.swal2-popup).glass-toast .swal2-html-container {
 /* Hide Default Progress Bar - We use a subtle glow instead */
 div:where(.swal2-popup).glass-toast .swal2-timer-progress-bar-container {
     display: none !important;
+}
+
+/* ====================================
+   LOGIN ERROR MESSAGE
+   ==================================== */
+
+.login-error-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.625rem 1rem;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 12px;
+    color: #DC2626;
+    font-size: 0.85rem;
+    font-weight: 500;
+    animation: errorFadeIn 0.3s ease;
+}
+
+.login-error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    background: #EF4444;
+    color: #FFFFFF;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+@keyframes errorFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

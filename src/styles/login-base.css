@@ -601,26 +601,6 @@ html {
     z-index: 1;
 }
 
-/* ====================================
-   5.5. RIGHT SIDE - FORM
-   ==================================== */
-
-.card-right {
-    flex: 0 0 420px;
-    padding: var(--space-card);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    position: relative;
-    /* Warm cream background that blends with the gold theme */
-    background: linear-gradient(180deg,
-            rgba(255, 251, 245, 0.98) 0%,
-            rgba(255, 249, 240, 0.95) 50%,
-            rgba(254, 243, 224, 0.9) 100%);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
 /* Mobile Stacked Layout - Seamless transition between sections */
 @media (max-width: 899px) {
     .card-left {
@@ -863,6 +843,8 @@ html {
     flex-direction: column;
     justify-content: center;
     background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     position: relative;
     z-index: 2;
     /* Higher than card-left (z-index: 1) so wave-divider can overlap */

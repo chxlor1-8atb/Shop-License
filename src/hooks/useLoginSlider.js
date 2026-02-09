@@ -57,6 +57,8 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
 
             // Threshold: 80% to unlock
             if (slideProgressRef.current > maxMove * 0.8) {
+                slideProgressRef.current = maxMove;
+                setSlideProgress(maxMove);
                 if (onUnlockRef.current) {
                     await onUnlockRef.current();
                 }

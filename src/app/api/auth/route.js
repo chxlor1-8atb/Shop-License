@@ -124,7 +124,7 @@ async function handleCheckAuth() {
 
     // If session exists but is expired, destroy it
     if (session.userId) {
-        session.destroy();
+        await session.destroy();
     }
 
     // Return 200 instead of 401 to prevent console errors

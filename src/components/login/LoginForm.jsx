@@ -115,6 +115,13 @@ export const LoginForm = ({ onSuccess }) => {
           unlocked={unlocked}
           error={error}
         />
+
+        {error && (
+          <div className="login-error-message">
+            <span className="login-error-icon">!</span>
+            <span>{error}</span>
+          </div>
+        )}
       </form>
     </div>
   );

@@ -107,8 +107,8 @@ export async function forceLogout(redirectTo = '/') {
  */
 export function clearClientStorage() {
     try {
-        // Remove remember me data
-        localStorage.removeItem('rememberMe');
+        // Preserve rememberMe data (saved username) across logouts
+        // Only clear it if the user had unchecked "Remember Me"
         
         // Remove any session-related items
         sessionStorage.clear();
