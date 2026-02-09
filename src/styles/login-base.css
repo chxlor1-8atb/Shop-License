@@ -859,6 +859,22 @@ html {
     min-height: 300px;
 }
 
+.login-form-content--loading .loading-spinner {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(217, 119, 6, 0.2);
+    border-top-color: #D97706;
+    border-radius: 50%;
+    animation: spinLogin 0.8s linear infinite;
+}
+
+@keyframes spinLogin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* ====================================
    10. FORM HEADER
    ==================================== */
@@ -1800,11 +1816,7 @@ html {
     animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
+/* @keyframes spin is defined in login-slide.css */
 
 /* Text */
 .page-transition__text {

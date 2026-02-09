@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { fetchOne } from '@/lib/db';
-import { sessionOptions } from '@/lib/session';
+import { sessionOptions, SESSION_TTL } from '@/lib/session';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 
 /**
@@ -38,16 +38,30 @@ export async function authenticateUser(username, password) {
 /**
  * Create a session for the given user.
  * @param {object} user 
+ * @param {object} options
+ * @param {boolean} options.rememberMe - Extend session to 7 days
  */
-export async function createSession(user) {
+export async function createSession(user, options = {}) {
+    const { rememberMe = false } = options;
     const cookieStore = await cookies();
-    const session = await getIronSession(cookieStore, sessionOptions);
+
+    const opts = { ...sessionOptions };
+    if (rememberMe) {
+        opts.ttl = SESSION_TTL.REMEMBER_ME;
+        opts.cookieOptions = {
+            ...sessionOptions.cookieOptions,
+            maxAge: SESSION_TTL.REMEMBER_ME,
+        };
+    }
+
+    const session = await getIronSession(cookieStore, opts);
 
     session.userId = user.id;
     session.username = user.username;
     session.fullName = user.full_name;
     session.role = user.role;
     session.loginTime = Date.now();
+    session.rememberMe = rememberMe;
     await session.save();
 
     await logActivity({

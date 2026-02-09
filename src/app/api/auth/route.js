@@ -53,9 +53,10 @@ async function handleLogin(request) {
         const data = await request.json();
         const username = (data.username || '').trim();
         const password = data.password || '';
+        const rememberMe = data.rememberMe === true;
 
         const user = await authenticateUser(username, password);
-        await createSession(user);
+        await createSession(user, { rememberMe });
 
         return NextResponse.json({
             success: true,

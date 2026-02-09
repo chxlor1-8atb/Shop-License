@@ -1,11 +1,11 @@
 import React from "react";
-import { FaArrowRight, FaCheck, FaSpinner, FaTimes } from "react-icons/fa";
+import { FaArrowRight, FaCheck, FaSpinner, FaXmark } from "react-icons/fa6";
 
 export const LoginSlider = ({ slider, loading, unlocked, error }) => {
   let icon = <FaArrowRight />;
   if (loading) icon = <FaSpinner />;
   else if (unlocked) icon = <FaCheck />;
-  else if (error) icon = <FaTimes />;
+  else if (error) icon = <FaXmark />;
 
   return (
     <div className="btn-wrapper">

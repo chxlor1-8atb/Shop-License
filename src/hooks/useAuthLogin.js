@@ -27,11 +27,11 @@ export function useAuthLogin() {
         router.prefetch('/dashboard');
 
         const verifyAuth = async () => {
-            // ... existing verifyAuth logic
-            // For brevity in this thought, I assume same logic.
-            // But I must write full code.
             try {
-                const { authenticated } = await checkAuth();
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+                );
+                const { authenticated } = await Promise.race([checkAuth(), timeoutPromise]);
                 if (authenticated) {
                     router.replace('/dashboard');
                 } else {
@@ -96,7 +96,7 @@ export function useAuthLogin() {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUsername, password: currentPassword })
+                body: JSON.stringify({ username: currentUsername, password: currentPassword, rememberMe: currentRememberMe })
             });
 
             const data = await res.json();

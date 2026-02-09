@@ -100,7 +100,8 @@ export function isSessionValid(session) {
     // Check if session has login time and is not too old
     if (session.loginTime) {
         const sessionAge = Date.now() - session.loginTime;
-        const maxAge = SESSION_TTL.DEFAULT * 1000; // Convert to ms
+        const ttl = session.rememberMe ? SESSION_TTL.REMEMBER_ME : SESSION_TTL.DEFAULT;
+        const maxAge = ttl * 1000; // Convert to ms
         if (sessionAge > maxAge) return false;
     }
 
