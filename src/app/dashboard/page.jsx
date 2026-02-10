@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import dynamic from 'next/dynamic';
 import { API_ENDPOINTS } from '@/constants';
 import { formatThaiDateTime, getInitial } from '@/utils/formatters';
 import Modal from '@/components/ui/Modal';
@@ -48,12 +47,16 @@ export default function DashboardPage() {
     const [user, setUser] = useState(null);
 
     const initializedRef = useRef(false);
+    const firstRenderRef = useRef(true);
 
     useEffect(() => {
         if (!initializedRef.current) {
             initializedRef.current = true;
-            checkAuth();
-            fetchDashboardData();
+            const init = async () => {
+                await checkAuth();
+                fetchDashboardData();
+            };
+            init();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -93,7 +96,10 @@ export default function DashboardPage() {
 
     // Refetch activity when filter changes
     useEffect(() => {
-        if (!initializedRef.current) return; // Skip on first render as fetchDashboardData calls it
+        if (firstRenderRef.current) {
+            firstRenderRef.current = false;
+            return; // Skip on first render as fetchDashboardData already handles it
+        }
         
         const fetchActivity = async () => {
             try {
@@ -231,23 +237,6 @@ function StatsGrid({ stats }) {
                 .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
                 .stat-icon.info    { background: rgba(79, 70, 229, 0.1); color: #4f46e5; }
             `}</style>
-        </div>
-    );
-}
-
-/**
- * StatCard Component
- */
-function StatCard({ value, label, icon, variant }) {
-    return (
-        <div className="stat-card">
-            <div className={`stat-icon ${variant}`}>
-                <i className={icon}></i>
-            </div>
-            <div className="stat-content">
-                <div className="stat-value">{value}</div>
-                <div className="stat-label">{label}</div>
-            </div>
         </div>
     );
 }
@@ -438,11 +427,6 @@ function RecentActivityCard({ activities, filter, onFilterChange }) {
                             <label className="text-muted mb-1">รายละเอียด</label>
                             <div className="p-2 bg-light rounded text-break">
                                 {selectedLog.details || `${selectedLog.entity_type} #${selectedLog.entity_id}`}
-                                {selectedLog.details && (
-                                    <div className="mt-2 text-muted small">
-                                        {selectedLog.details}
-                                    </div>
-                                )}
                             </div>
                         </div>
                         {selectedLog.ip_address && (

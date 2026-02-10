@@ -3,53 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/Loading";
+import { showSuccess, showError, confirmDelete } from "@/utils/alerts";
 import "./activity-logs.css";
-
-// Constants
-const ACTION_TYPES = [
-  { value: "", label: "ทุกประเภท" },
-  { value: "LOGIN", label: "เข้าสู่ระบบ" },
-  { value: "LOGOUT", label: "ออกจากระบบ" },
-  { value: "CREATE", label: "สร้าง" },
-  { value: "UPDATE", label: "แก้ไข" },
-  { value: "DELETE", label: "ลบ" },
-  { value: "EXPORT", label: "ส่งออก" },
-  { value: "VIEW", label: "ดู" },
-];
-
-const ENTITY_TYPES = [
-  { value: "", label: "ทุกหมวด" },
-  { value: "การเข้าสู่ระบบ", label: "การเข้าสู่ระบบ" },
-  { value: "ผู้ใช้", label: "ผู้ใช้" },
-  { value: "ร้านค้า", label: "ร้านค้า" },
-  { value: "ใบอนุญาต", label: "ใบอนุญาต" },
-  { value: "ประเภทใบอนุญาต", label: "ประเภทใบอนุญาต" },
-  { value: "การตั้งค่า", label: "การตั้งค่า" },
-];
-
-const ACTION_BADGE_MAP = {
-  LOGIN: {
-    class: "badge-success",
-    icon: "fa-sign-in-alt",
-    label: "เข้าสู่ระบบ",
-  },
-  LOGOUT: {
-    class: "badge-secondary",
-    icon: "fa-sign-out-alt",
-    label: "ออกจากระบบ",
-  },
-  CREATE: { class: "badge-info", icon: "fa-plus", label: "สร้าง" },
-  UPDATE: { class: "badge-warning", icon: "fa-edit", label: "แก้ไข" },
-  DELETE: { class: "badge-danger", icon: "fa-trash", label: "ลบ" },
-  EXPORT: { class: "badge-primary", icon: "fa-file-export", label: "ส่งออก" },
-  VIEW: { class: "badge-light", icon: "fa-eye", label: "ดู" },
-};
-
-const DEVICE_ICONS = {
-  Desktop: "fa-desktop",
-  Mobile: "fa-mobile-alt",
-  Tablet: "fa-tablet-alt",
-};
 
 /**
  * ActivityLogsPage Component
@@ -102,9 +57,8 @@ export default function ActivityLogsPage() {
   };
 
   const handleClearLogs = async () => {
-    if (!confirm("คุณแน่ใจหรือไม่ที่จะล้างข้อมูลบันทึกกิจกรรมทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้")) {
-      return;
-    }
+    const confirmed = await confirmDelete("บันทึกกิจกรรมทั้งหมด");
+    if (!confirmed) return;
 
     try {
       const res = await fetch("/api/activity-logs", {
@@ -113,14 +67,14 @@ export default function ActivityLogsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("ล้างข้อมูลเรียบร้อยแล้ว");
+        showSuccess("ล้างข้อมูลเรียบร้อยแล้ว");
         fetchStats();
       } else {
-        alert(data.message || "เกิดข้อผิดพลาดในการล้างข้อมูล");
+        showError(data.message || "เกิดข้อผิดพลาดในการล้างข้อมูล");
       }
     } catch (error) {
       console.error("Failed to clear logs:", error);
-      alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      showError("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     }
   };
 

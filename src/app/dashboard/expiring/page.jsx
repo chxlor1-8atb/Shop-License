@@ -120,9 +120,9 @@ export default function ExpiringPage() {
                 case 'expiry_desc':
                     return new Date(b.expiry_date) - new Date(a.expiry_date);
                 case 'shop_asc':
-                    return a.shop_name.localeCompare(b.shop_name, 'th');
+                    return (a.shop_name || '').localeCompare(b.shop_name || '', 'th');
                 case 'shop_desc':
-                    return b.shop_name.localeCompare(a.shop_name, 'th');
+                    return (b.shop_name || '').localeCompare(a.shop_name || '', 'th');
                 default:
                     return 0;
             }
