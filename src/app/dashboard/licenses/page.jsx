@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, Suspense, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData } from "@/hooks";
-import { API_ENDPOINTS, STATUS_OPTIONS } from "@/constants";
+import { API_ENDPOINTS, STATUS_OPTIONS, STATUS_FILTER_OPTIONS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
@@ -221,15 +221,9 @@ function LicensesPageContent() {
     }
   }, [enhancedShopOptions, typeOptions]);
 
-  // Track if columns have been fetched to prevent infinite loop
-  const columnsLoadedRef = useRef(false);
-
   // Reload columns when options change (fixes missing labels in table)
   useEffect(() => {
-    if (!columnsLoadedRef.current) {
-      fetchCustomColumns();
-      columnsLoadedRef.current = true;
-    }
+    fetchCustomColumns();
   }, [fetchCustomColumns]);
 
   const fetchLicenses = useCallback(async () => {
@@ -267,7 +261,7 @@ function LicensesPageContent() {
   // Initial license data fetch and refetch when filters change
   useEffect(() => {
     fetchLicenses();
-  }, [fetchLicenses, page, limit, debouncedSearch, filterType, filterStatus, filterShop]);
+  }, [fetchLicenses]);
 
 
 
@@ -315,7 +309,8 @@ function LicensesPageContent() {
         key !== "created_at" &&
         key !== "updated_at" &&
         key !== "shop_name" &&
-        key !== "type_name"
+        key !== "type_name" &&
+        key !== "original_status"
       ) {
         customValues[key] = updatedRow[key];
       }
@@ -678,7 +673,7 @@ function LicensesPageContent() {
                 setFilterStatus(e.target.value);
                 pagination.resetPage();
               }}
-              options={STATUS_OPTIONS}
+              options={STATUS_FILTER_OPTIONS}
             />
           </div>
         </div>
