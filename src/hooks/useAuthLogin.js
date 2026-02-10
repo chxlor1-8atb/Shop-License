@@ -54,18 +54,18 @@ export function useAuthLogin() {
 
     // Load credentials - Only username for security
     useEffect(() => {
-        const savedData = localStorage.getItem('rememberMe');
-        if (savedData) {
-            try {
+        try {
+            const savedData = localStorage.getItem('rememberMe');
+            if (savedData) {
                 const data = JSON.parse(savedData);
                 // Only restore username, never password
                 if (data.username) {
                     setUsername(data.username);
                     setRememberMe(true);
                 }
-            } catch (e) {
-                localStorage.removeItem('rememberMe');
             }
+        } catch (e) {
+            try { localStorage.removeItem('rememberMe'); } catch (_) { /* storage unavailable */ }
         }
     }, []);
 
@@ -76,11 +76,15 @@ export function useAuthLogin() {
     }, [username, password]);
 
     const saveCredentials = (shouldRemember, user) => {
-        if (shouldRemember) {
-            // SECURITY: Never store passwords in localStorage, even encoded
-            localStorage.setItem('rememberMe', JSON.stringify({ username: user }));
-        } else {
-            localStorage.removeItem('rememberMe');
+        try {
+            if (shouldRemember) {
+                // SECURITY: Never store passwords in localStorage, even encoded
+                localStorage.setItem('rememberMe', JSON.stringify({ username: user }));
+            } else {
+                localStorage.removeItem('rememberMe');
+            }
+        } catch (e) {
+            // localStorage unavailable (e.g. Safari private mode) - non-critical, skip silently
         }
     };
 
