@@ -3374,8 +3374,10 @@ body:has(.sidebar.show) .mobile-toggle i {
     border: 1.5px solid var(--border-color);
     border-radius: var(--border-radius);
     color: var(--text-primary);
+    font-family: inherit;
     font-size: 0.9375rem;
     font-weight: 500;
+    text-align: left;
     cursor: pointer;
     transition: all var(--transition);
     user-select: none;
@@ -3894,6 +3896,7 @@ body:has(.sidebar.show) .mobile-toggle i {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
     padding: 0.75rem 1rem;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(16px);
@@ -3901,8 +3904,10 @@ body:has(.sidebar.show) .mobile-toggle i {
     border: 1.5px solid rgba(216, 211, 200, 0.5);
     border-radius: var(--border-radius);
     color: var(--text-primary);
+    font-family: inherit;
     font-size: 0.9375rem;
     font-weight: 500;
+    text-align: left;
     cursor: pointer;
     transition: all 0.2s ease;
 }

@@ -119,7 +119,8 @@ export default function CustomSelect({
             style={style}
             onBlur={handleBlur}
         >
-            <div
+            <button
+                type="button"
                 id={id}
                 className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
                 onClick={handleToggle}
@@ -127,7 +128,7 @@ export default function CustomSelect({
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
                 aria-controls={`${id || searchInputId}-list`}
-                tabIndex={disabled ? -1 : 0}
+                disabled={disabled}
                 aria-label={label || placeholder}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -144,7 +145,7 @@ export default function CustomSelect({
                 <div className="arrow-container">
                     <i className="fas fa-chevron-down arrow"></i>
                 </div>
-            </div>
+            </button>
 
             <div 
                 className={`custom-select-options ${isOpen ? 'show' : ''}`}
