@@ -60,23 +60,23 @@ export const ACTIVITY_ACTIONS = {
  * Entity types for activity logging
  */
 export const ENTITY_TYPES = {
-    USER: 'ผู้ใช้',
-    SHOP: 'ร้านค้า',
-    LICENSE: 'ใบอนุญาต',
-    LICENSE_TYPE: 'ประเภทใบอนุญาต',
-    NOTIFICATION: 'การแจ้งเตือน',
-    SETTINGS: 'การตั้งค่า',
-    AUTH: 'การเข้าสู่ระบบ'
+    USER: 'USER',
+    SHOP: 'SHOP',
+    LICENSE: 'LICENSE',
+    LICENSE_TYPE: 'LICENSE_TYPE',
+    NOTIFICATION: 'NOTIFICATION',
+    SETTINGS: 'SETTINGS',
+    AUTH: 'AUTH'
 };
 
 /**
- * Cleanup old logs (older than 7 days)
+ * Cleanup old logs (older than 30 days)
  * This runs with a low probability to avoid performance impact
  */
 async function cleanupOldLogs() {
     try {
-        // Postgres SQL to delete logs older than 7 days
-        await query(`DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '7 days'`);
+        // Postgres SQL to delete logs older than 30 days
+        await query(`DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '30 days'`);
     } catch (error) {
         // Silent fail is acceptable for maintenance tasks
         console.error('Failed to cleanup old audit logs:', error);

@@ -67,7 +67,7 @@ export async function POST(request) {
             details: `เพิ่มประเภทใบอนุญาต: ${name}`
         });
 
-        return NextResponse.json({ success: true, message: 'เพิ่มประเภทใบอนุญาตเรียบร้อยแล้ว' });
+        return NextResponse.json({ success: true, message: 'เพิ่มประเภทใบอนุญาตเรียบร้อยแล้ว', type: { id: newId } });
     } catch (err) {
         console.error('Error in POST /api/license-types:', err);
         return NextResponse.json({ success: false, message: err.message }, { status: 500 });

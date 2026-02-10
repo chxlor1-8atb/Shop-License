@@ -85,14 +85,16 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        await executeQuery(
+        const result = await executeQuery(
             `INSERT INTO custom_fields 
              (entity_type, field_name, field_label, field_type, field_options, is_required, display_order, show_in_table, show_in_form)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
             [entity_type, field_name, field_label, field_type, JSON.stringify(field_options), is_required, display_order, show_in_table, show_in_form]
         );
 
-        return NextResponse.json({ success: true, message: 'สร้าง Custom Field สำเร็จ' });
+        const newId = result?.[0]?.id;
+
+        return NextResponse.json({ success: true, message: 'สร้าง Custom Field สำเร็จ', field: { id: newId } });
     } catch (err) {
         console.error('Error creating custom field:', err);
         return NextResponse.json({ success: false, message: err.message }, { status: 500 });

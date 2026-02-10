@@ -14,7 +14,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const type = searchParams.get('type');
         const fieldsParam = searchParams.get('fields');
-        const limit = parseInt(searchParams.get('limit') || '100'); // Limit preview rows
+        const limit = Math.max(1, parseInt(searchParams.get('limit') || '100') || 100); // Limit preview rows
 
         let data = [];
 

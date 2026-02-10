@@ -23,9 +23,9 @@ export async function GET(request) {
             );
         }
 
-        // Delete audit logs older than 7 days
+        // Delete audit logs older than 30 days (1 month)
         const result = await query(
-            `DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '7 days'`
+            `DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '30 days'`
         );
 
         const deletedCount = result?.length || 0;

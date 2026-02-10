@@ -158,8 +158,6 @@ export default function UsersPage() {
           prev.map((u) => (u.id === updatedRow.id ? { ...u, ...updatedRow } : u))
         );
       } else {
-        // Revert on failure
-        fetchUsers();
         throw new Error(data.message);
       }
     } catch (error) {
@@ -369,14 +367,7 @@ export default function UsersPage() {
                 onRowDelete={handleDelete}
                 onRowClick={(row) => {
                   setSelectedUser(row);
-                  setFormData({
-                    ...row,
-                    password: "", // Keep password blank for security
-                    confirm_password: ""
-                  });
-                  setShowModal(true);
                 }}
-                // No column add/delete for this view
               />
             </div>
           ) : (

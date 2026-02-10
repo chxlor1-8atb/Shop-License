@@ -84,7 +84,7 @@ export default function ExportPage() {
 
       const shopData = await shopRes.json();
       if (shopData.success) {
-        setShopOptions(shopData.shops.map(s => ({ value: s.id, label: s.shop_name })) || []);
+        setShopOptions((shopData.shops || []).map(s => ({ value: s.id, label: s.shop_name })));
       }
     } catch (error) {
       console.error(error);
@@ -149,7 +149,9 @@ export default function ExportPage() {
     }
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+
     const params = new URLSearchParams();
     params.append("type", type);
     params.append("format", "csv");
@@ -169,22 +171,43 @@ export default function ExportPage() {
     }
 
     const url = `/api/export?${params.toString()}`;
-    
-    // Create hidden link to force download
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `export_${type}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const filename = `export_${type}_${new Date().toISOString().split('T')[0]}.csv`;
 
-    Swal.fire({
-      title: "กำลังดาวน์โหลด...",
-      text: "ไฟล์ CSV กำลังถูกสร้างและดาวน์โหลด",
-      icon: "success",
-      timer: 2000,
-      showConfirmButton: false,
-    });
+    try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Export failed');
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+
+        Swal.fire({
+            title: "สำเร็จ!",
+            text: "ดาวน์โหลดไฟล์ CSV เรียบร้อยแล้ว",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+        });
+    } catch (error) {
+        console.error('CSV Export Error:', error);
+        Swal.fire({
+            title: "เกิดข้อผิดพลาด",
+            text: "ไม่สามารถส่งออกข้อมูลได้ กรุณาลองใหม่อีกครั้ง",
+            icon: "error"
+        });
+    } finally {
+        setIsExporting(false);
+    }
   };
 
   const handleExportPDF = async () => {
@@ -535,7 +558,7 @@ export default function ExportPage() {
                       onChange={(e) => setFilterShop(e.target.value)}
                       options={[{ value: "", label: "ทุกร้านค้า" }, ...shopOptions]}
                       placeholder="เลือกร้านค้า..."
-                      isSearchable={true}
+                      searchable={true}
                     />
                   </div>
                   <div>
