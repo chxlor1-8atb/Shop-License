@@ -1,9 +1,9 @@
 # AGENTS.md - AI Vibe Coding Project Rules
 
 > **Project:** Shop License System  
-> **Version:** 1.0.0  
-> **Last Updated:** 2026-01-03  
-> **Package Manager:** pnpm
+> **Version:** 2.0.0  
+> **Last Updated:** 2026-02-10  
+> **Package Manager:** npm
 
 ---
 
@@ -13,13 +13,17 @@
 
 **Core Features:**
 
-- จัดการข้อมูลร้านค้า (CRUD)
-- จัดการใบอนุญาต (CRUD)
-- จัดการประเภทใบอนุญาต
-- Dashboard แสดงสถิติและสถานะ
-- Export ข้อมูลเป็น CSV
-- ระบบ Authentication (Login/Logout)
-- Custom Fields & Entities (Dynamic fields)
+- จัดการข้อมูลร้านค้า (CRUD) พร้อม Excel-like Table
+- จัดการใบอนุญาต (CRUD) พร้อม Custom Fields
+- จัดการประเภทใบอนุญาต (พร้อมราคา)
+- Dashboard แสดงสถิติและสถานะ (Chart.js)
+- Export ข้อมูลเป็น CSV และ PDF
+- ระบบ Authentication (Login/Logout) + Profile management
+- Custom Fields & Dynamic Schema (schema_definitions)
+- Activity Logs (Audit trail)
+- Cron Jobs (Cleanup tasks)
+- Version/Changelog system (PatchNotes)
+- SWR-based data fetching with caching
 
 ---
 
@@ -34,8 +38,14 @@
 | **ORM/Query**      | Raw SQL with `@neondatabase/serverless` |
 | **Auth**           | iron-session (cookie-based)             |
 | **Password Hash**  | bcryptjs                                |
+| **Data Fetching**  | SWR (stale-while-revalidate)            |
 | **Charts**         | Chart.js + react-chartjs-2              |
 | **Alerts/Dialogs** | SweetAlert2                             |
+| **Icons**          | lucide-react, react-icons               |
+| **PDF Export**     | pdfmake                                 |
+| **Class Utils**    | clsx + tailwind-merge                   |
+| **Analytics**      | @vercel/analytics + @vercel/speed-insights |
+| **Fonts**          | next/font/google (Inter, Noto Sans Thai)|
 | **HTTP Client**    | Native fetch API                        |
 
 ---
@@ -49,13 +59,15 @@
 ├── middleware.js                  # 🔒 Security headers middleware (CSP, XSS, etc.)
 ├── next.config.js                 # Next.js configuration
 ├── vercel.json                    # Vercel deployment config
-├── jsconfig.json                  # JS path aliases (@/lib, @/components)
+├── jsconfig.json                  # JS path aliases (@/lib, @/components, @/hooks, etc.)
 ├── package.json                   # Dependencies & scripts
-├── schema.sql                     # 📊 Database schema definition
-├── verify-db.mjs                  # Database verification script
+├── schema.sql                     # 📊 Database schema definition (V2 with custom fields)
 ├── README.md                      # Project documentation
+├── AGENTS.md                      # AI coding rules (this file)
 │
-├── public/                        # Static assets (images, fonts, favicon)
+├── public/                        # Static assets
+│   ├── fonts/                     # Custom fonts
+│   └── image/                     # Images
 │
 ├── scripts/                       # 📜 Database & maintenance scripts
 │   ├── seed-sample.mjs            # Sample data seeder
@@ -63,73 +75,149 @@
 │   ├── reset-db.js                # Reset database tables
 │   ├── reset-password.js          # Reset user password
 │   ├── migrate.mjs                # Database migrations
+│   ├── migrate_schema.mjs         # Schema migrations
 │   ├── migrate-notifications.js   # Notification tables migration
 │   ├── check-user.js              # Check user in database
+│   ├── check-license-type.js      # Check license type
 │   ├── list-tables.js             # List all database tables
 │   ├── verify-db.js               # Verify database connection
-│   └── debug-expiring.js          # Debug expiring licenses
+│   ├── debug-expiring.js          # Debug expiring licenses
+│   ├── generate-secret.js         # Generate session secret
+│   ├── comprehensive-test.js      # Comprehensive test suite
+│   ├── add-sample-custom-fields.mjs # Add sample custom fields
+│   ├── cleanup-fields.mjs         # Cleanup orphaned fields
+│   ├── fix-final-order.mjs        # Fix field display order
+│   ├── set-correct-order.mjs      # Set correct field order
+│   └── update-field-order.mjs     # Update field ordering
 │
 ├── src/
 │   ├── app/                       # Next.js App Router
-│   │   ├── globals.css            # Global CSS imports
-│   │   ├── layout.js              # Root layout (imports styles)
-│   │   ├── page.js                # Home page (redirects to login)
+│   │   ├── globals.css            # Global CSS (base body styles, font vars)
+│   │   ├── layout.js              # Root layout (fonts, metadata, analytics)
+│   │   ├── page.jsx               # 🔐 Login page (root = login)
 │   │   │
 │   │   ├── api/                   # 🔌 Backend API Routes
 │   │   │   ├── auth/route.js              # POST: Login/Logout
 │   │   │   ├── dashboard/route.js         # GET: Dashboard stats
 │   │   │   ├── shops/route.js             # CRUD: Shops
 │   │   │   ├── licenses/route.js          # CRUD: Licenses
-│   │   │   ├── licenses/[id]/route.js     # Single license operations
+│   │   │   ├── licenses/expiring/route.js # GET: Expiring licenses
 │   │   │   ├── license-types/route.js     # CRUD: License types
+│   │   │   ├── license-types-optimized/route.js # GET: Optimized license types
 │   │   │   ├── users/route.js             # CRUD: Users
-│   │   │   ├── notifications/route.js     # Notification settings
+│   │   │   ├── profile/route.js           # GET/PUT: User profile
 │   │   │   ├── export/route.js            # CSV export
+│   │   │   ├── export-preview/route.js    # Export preview
+│   │   │   ├── activity-logs/route.js     # GET: Activity/audit logs
+│   │   │   ├── schema/route.js            # Dynamic schema definitions
 │   │   │   ├── entities/route.js          # Dynamic entities
 │   │   │   ├── entity-fields/route.js     # Entity field definitions
 │   │   │   ├── entity-records/route.js    # Entity records
 │   │   │   ├── custom-fields/route.js     # Custom field definitions
 │   │   │   ├── custom-field-values/route.js # Custom field values
-│   │   │   └── migrate/route.js           # Database migration API
-│   │   │
-│   │   ├── login/                 # 🔐 Login page
-│   │   │   └── page.jsx
+│   │   │   ├── cron/cleanup/route.js      # Cron: Cleanup tasks
+│   │   │   ├── migrate/route.js           # Database migration API
+│   │   │   ├── seed-shops/route.js        # Seed: Sample shops
+│   │   │   ├── seed-custom-fields/route.js # Seed: Custom fields
+│   │   │   └── seed-10-licenses/route.js  # Seed: Test licenses
 │   │   │
 │   │   └── dashboard/             # 🖥 Protected Dashboard Pages
 │   │       ├── layout.jsx         # Dashboard layout (sidebar, header)
 │   │       ├── page.jsx           # Main dashboard (stats, charts)
-│   │       ├── shops/page.jsx     # Shops management
+│   │       ├── shops/page.jsx     # Shops management (Excel-like table)
 │   │       ├── licenses/page.jsx  # Licenses management
-│   │       ├── license-types/page.jsx  # License types
+│   │       ├── license-types/page.jsx  # License types management
 │   │       ├── users/page.jsx     # Users management
 │   │       ├── expiring/page.jsx  # Expiring licenses view
-│   │       ├── notifications/page.jsx  # Notification settings
-│   │       ├── export/page.jsx    # Export data page
-│   │       ├── data/page.jsx      # Data management
-│   │       └── settings/          # System settings
-│   │           └── page.jsx
+│   │       ├── export/page.jsx    # Export data page (CSV/PDF)
+│   │       ├── data/page.jsx      # Data management (dynamic entities)
+│   │       ├── activity-logs/page.jsx  # Activity logs view
+│   │       └── settings/          # ⚙️ System settings
+│   │           ├── custom-fields/page.jsx  # Custom field management
+│   │           ├── entities/page.jsx       # Entity management
+│   │           └── fields/page.jsx         # Field definitions
 │   │
 │   ├── components/                # 🧩 Reusable React Components
 │   │   ├── Loading.jsx            # Loading spinner component
-│   │   └── ui/                    # UI atoms (buttons, inputs)
-│   │       └── ...
+│   │   ├── DashboardCharts.jsx    # Dashboard chart components
+│   │   ├── PatchNotesModal.jsx    # Version changelog modal
+│   │   ├── VersionBadge.jsx       # Version badge display
+│   │   ├── ExcelTable/            # 📊 Excel-like table system
+│   │   │   ├── index.jsx          # Main ExcelTable component
+│   │   │   ├── ExcelTable.css     # Table styles
+│   │   │   └── table/             # Table sub-components
+│   │   │       ├── TableContextMenu.jsx  # Right-click context menu
+│   │   │       ├── TableHeader.jsx       # Column headers
+│   │   │       ├── TableHooks.js         # Table logic hooks
+│   │   │       ├── TableRow.jsx          # Row rendering
+│   │   │       └── TableToolbar.jsx      # Table toolbar
+│   │   ├── login/                 # 🔐 Login components
+│   │   │   ├── FeatureTag.jsx     # Feature tag display
+│   │   │   ├── InputGroup.jsx     # Form input group
+│   │   │   ├── LoginForm.jsx      # Login form component
+│   │   │   ├── LoginSlider.jsx    # Login page slider
+│   │   │   └── WaveDivider.jsx    # Wave divider decoration
+│   │   └── ui/                    # UI atoms
+│   │       ├── CustomSelect.jsx   # Custom dropdown select
+│   │       ├── DatePicker.jsx     # Date picker component
+│   │       ├── EditableCell.jsx   # Inline editable cell
+│   │       ├── EditableHeader.jsx # Editable table header
+│   │       ├── FilterRow.jsx      # Table filter row
+│   │       ├── Modal.jsx          # Modal dialog
+│   │       ├── Pagination.jsx     # Pagination component
+│   │       ├── QuickAddModal.jsx  # Quick add record modal
+│   │       ├── QuickAddModal.css  # Quick add modal styles
+│   │       ├── ShopDetailModal.jsx # Shop detail view modal
+│   │       ├── ShopDetailModal.css # Shop detail styles
+│   │       ├── Skeleton.jsx       # Loading skeleton
+│   │       ├── StatusBadge.jsx    # Status badge component
+│   │       └── TableSkeleton.jsx  # Table loading skeleton
 │   │
-│   ├── lib/                       # 📚 Utility Libraries
+│   ├── hooks/                     # � Custom React Hooks
+│   │   ├── index.js               # Re-exports all hooks
+│   │   ├── useData.js             # SWR-based data hooks (shops, licenses, etc.)
+│   │   ├── useShops.js            # Shop-specific operations
+│   │   ├── useSchema.js           # Dynamic schema management
+│   │   ├── usePagination.js       # Pagination logic
+│   │   ├── useOptimized.js        # Performance hooks (debounce, throttle, etc.)
+│   │   ├── useAuthLogin.js        # Login authentication logic
+│   │   └── useLoginSlider.js      # Login slider animation
+│   │
+│   ├── constants/                 # 📋 Application Constants
+│   │   ├── index.js               # Re-exports all constants
+│   │   ├── api.js                 # API endpoint constants
+│   │   ├── status.js              # Status definitions
+│   │   └── changelog.js           # Version changelog data
+│   │
+│   ├── utils/                     # 🔧 Client-side Utilities
+│   │   ├── index.js               # Re-exports all utils
+│   │   ├── formatters.js          # Data formatting helpers
+│   │   ├── alerts.js              # SweetAlert2 wrapper functions
+│   │   └── auth.js                # Auth utility functions
+│   │
+│   ├── lib/                       # 📚 Server-side Libraries
 │   │   ├── db.js                  # Database connection & query helpers
 │   │   ├── session.js             # iron-session configuration
 │   │   ├── security.js            # Security utilities (validation, sanitize)
 │   │   ├── logger.js              # Logging utilities
 │   │   ├── response.js            # API response helpers
-│   │   ├── telegram.js            # Telegram bot integration
-│   │   └── notification-service.js # Notification service logic
-│   │
-│   ├── scripts/                   # Additional scripts (in src)
+│   │   ├── activityLogger.js      # Audit log writer
+│   │   ├── api-helpers.js         # API route helper functions
+│   │   ├── auth-service.js        # Authentication service logic
+│   │   ├── cache.js               # Server-side caching
+│   │   ├── performance.js         # Performance monitoring utilities
+│   │   ├── swr-config.js          # SWR configuration
+│   │   ├── pdfExport.js           # PDF export logic
+│   │   ├── pdfExportSafe.js       # Safe PDF export (fallback)
+│   │   └── serverPdfGenerator.js  # Server-side PDF generation
 │   │
 │   ├── styles/                    # 🎨 CSS Stylesheets
-│   │   ├── style.css              # Main dashboard styles (107KB)
+│   │   ├── style.css              # Main dashboard styles (~174KB)
 │   │   ├── login-base.css         # Login page base styles
 │   │   ├── login-responsive.css   # Login responsive styles
-│   │   └── login-slide.css        # Login animations
+│   │   ├── login-slide.css        # Login animations
+│   │   ├── sweetalert-custom.css  # SweetAlert2 custom theme
+│   │   └── toast.css              # Toast notification styles
 │   │
 │   └── style-responsive.css       # Responsive utilities
 │
@@ -141,22 +229,26 @@
 
 ### Tables Overview
 
-| Table                  | Description                        |
-| ---------------------- | ---------------------------------- |
-| `users`                | Admin/User accounts                |
-| `shops`                | Shop information                   |
-| `license_types`        | Types of licenses                  |
-| `licenses`             | License records (FK to shops/types)|
-| `notification_settings`| Telegram notification config       |
-| `notification_logs`    | Notification history               |
+| Table                    | Description                              |
+| ------------------------ | ---------------------------------------- |
+| `users`                  | Admin/User accounts                      |
+| `shops`                  | Shop information + custom_fields (JSONB) |
+| `license_types`          | Types of licenses (with price)           |
+| `licenses`               | License records + custom_fields (JSONB)  |
+| `notification_settings`  | Notification config                      |
+| `notification_logs`      | Notification history                     |
+| `audit_logs`             | Activity/audit trail                     |
+| `schema_definitions`     | Dynamic schema column definitions        |
+| `custom_fields`          | Custom field definitions per entity      |
+| `custom_field_values`    | Custom field values per entity record    |
 
 ### Key Relationships
 ```
-
 shops (1) ──────< (N) licenses
 license_types (1) ──────< (N) licenses
-
-````
+users (1) ──────< (N) audit_logs
+custom_fields (1) ──────< (N) custom_field_values
+```
 
 ### Important Columns
 
@@ -167,10 +259,9 @@ username VARCHAR(255) UNIQUE NOT NULL
 password VARCHAR(255) NOT NULL      -- bcrypt hashed
 full_name VARCHAR(255)
 role VARCHAR(50) DEFAULT 'user'     -- 'admin' | 'user'
-````
+```
 
 **shops table:**
-
 ```sql
 id SERIAL PRIMARY KEY
 shop_name VARCHAR(255) NOT NULL
@@ -179,19 +270,67 @@ address TEXT
 phone VARCHAR(50)
 email VARCHAR(255)
 notes TEXT
+custom_fields JSONB DEFAULT '{}'    -- V2: Dynamic custom fields
 ```
 
 **licenses table:**
-
 ```sql
 id SERIAL PRIMARY KEY
 shop_id INTEGER REFERENCES shops(id) ON DELETE CASCADE
-license_type_id INTEGER REFERENCES license_types(id)
+license_type_id INTEGER REFERENCES license_types(id) ON DELETE SET NULL
 license_number VARCHAR(100) NOT NULL
 issue_date DATE
 expiry_date DATE                    -- Used for expiration checks
 status VARCHAR(50) DEFAULT 'active' -- 'active' | 'expired' | 'pending'
 notes TEXT
+custom_fields JSONB DEFAULT '{}'    -- V2: Dynamic custom fields
+```
+
+**license_types table:**
+```sql
+id SERIAL PRIMARY KEY
+name VARCHAR(255) NOT NULL
+description TEXT
+validity_days INTEGER DEFAULT 365
+price NUMERIC DEFAULT 0             -- V2: License type price
+```
+
+**audit_logs table:**
+```sql
+id SERIAL PRIMARY KEY
+user_id INTEGER REFERENCES users(id) ON DELETE SET NULL
+action VARCHAR(50) NOT NULL
+entity_type VARCHAR(100)
+entity_id INTEGER
+details TEXT
+ip_address VARCHAR(45)
+user_agent TEXT
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+```
+
+**custom_fields table:**
+```sql
+id SERIAL PRIMARY KEY
+entity_type VARCHAR(50) NOT NULL    -- 'shops' | 'licenses'
+field_name VARCHAR(100) NOT NULL
+field_label VARCHAR(255) NOT NULL
+field_type VARCHAR(50) DEFAULT 'text'
+field_options JSONB DEFAULT '[]'
+is_required BOOLEAN DEFAULT false
+is_active BOOLEAN DEFAULT true
+display_order INTEGER DEFAULT 0
+show_in_table BOOLEAN DEFAULT true
+show_in_form BOOLEAN DEFAULT true
+UNIQUE(entity_type, field_name)
+```
+
+**custom_field_values table:**
+```sql
+id SERIAL PRIMARY KEY
+custom_field_id INTEGER REFERENCES custom_fields(id) ON DELETE CASCADE
+entity_id INTEGER NOT NULL
+field_value TEXT
+UNIQUE(custom_field_id, entity_id)
 ```
 
 ---
@@ -204,10 +343,6 @@ DATABASE_URL=postgresql://user:pass@host/db?sslmode=require
 
 # Session (Required) - Must be at least 32 characters
 SESSION_SECRET=your_32_character_secret_here
-
-# Telegram Notifications (Optional)
-TELEGRAM_BOT_TOKEN=your_bot_token
-TELEGRAM_CHAT_ID=your_chat_id
 ```
 
 ---
@@ -216,19 +351,19 @@ TELEGRAM_CHAT_ID=your_chat_id
 
 ```bash
 # Install dependencies
-pnpm install
+npm install
 
 # Start development server (http://localhost:3000)
-pnpm dev
+npm run dev
 
 # Build for production
-pnpm build
+npm run build
 
 # Start production server
-pnpm start
+npm start
 
 # Lint code
-pnpm lint
+npm run lint
 
 # Database Scripts
 node scripts/force-reset-all.js    # Reset all tables
@@ -237,6 +372,10 @@ node scripts/reset-password.js     # Reset user password
 node scripts/check-user.js         # Check user exists
 node scripts/list-tables.js        # List all tables
 node scripts/verify-db.js          # Verify DB connection
+node scripts/migrate.mjs           # Run migrations
+node scripts/migrate_schema.mjs    # Run schema migrations
+node scripts/generate-secret.js    # Generate session secret
+node scripts/comprehensive-test.js # Run comprehensive tests
 ```
 
 ---
@@ -493,14 +632,14 @@ if (result.isConfirmed) {
 ## 🔐 Authentication Flow
 
 ```
-1. User visits /login
-2. Submits username + password
+1. User visits / (root page = login page)
+2. Submits username + password via LoginForm component
 3. POST /api/auth validates with bcrypt
 4. On success: Create iron-session cookie (30 min expiry)
 5. Redirect to /dashboard
 6. middleware.js adds security headers to all routes
 7. API routes check session.user for protected endpoints
-8. Logout: Clear session cookie
+8. Logout: Clear session cookie via POST /api/auth
 ```
 
 **Session Cookie Config (from session.js):**
@@ -516,51 +655,66 @@ if (result.isConfirmed) {
 
 ## 📋 API Endpoints Reference
 
-### Authentication
+### Authentication & Profile
 
-| Method | Endpoint    | Description                |
-| ------ | ----------- | -------------------------- |
-| POST   | `/api/auth` | Login (username, password) |
+| Method | Endpoint       | Description                |
+| ------ | -------------- | -------------------------- |
+| POST   | `/api/auth`    | Login/Logout               |
+| GET    | `/api/profile` | Get current user profile   |
+| PUT    | `/api/profile` | Update user profile        |
 
 ### Core Resources
 
-| Method | Endpoint                     | Description                  |
-| ------ | ---------------------------- | ---------------------------- |
-| GET    | `/api/dashboard`             | Get dashboard stats & charts |
-| GET    | `/api/shops`                 | List all shops               |
-| POST   | `/api/shops`                 | Create shop                  |
-| PUT    | `/api/shops`                 | Update shop                  |
-| DELETE | `/api/shops?id={id}`         | Delete shop                  |
-| GET    | `/api/licenses`              | List licenses (with JOINs)   |
-| POST   | `/api/licenses`              | Create license               |
-| PUT    | `/api/licenses`              | Update license               |
-| DELETE | `/api/licenses?id={id}`      | Delete license               |
-| GET    | `/api/license-types`         | List license types           |
-| POST   | `/api/license-types`         | Create license type          |
-| PUT    | `/api/license-types`         | Update license type          |
-| DELETE | `/api/license-types?id={id}` | Delete license type          |
-| GET    | `/api/users`                 | List users                   |
-| POST   | `/api/users`                 | Create user                  |
-| PUT    | `/api/users`                 | Update user                  |
-| DELETE | `/api/users?id={id}`         | Delete user                  |
+| Method | Endpoint                          | Description                    |
+| ------ | --------------------------------- | ------------------------------ |
+| GET    | `/api/dashboard`                  | Get dashboard stats & charts   |
+| GET    | `/api/shops`                      | List all shops                 |
+| POST   | `/api/shops`                      | Create shop                    |
+| PUT    | `/api/shops`                      | Update shop                    |
+| DELETE | `/api/shops?id={id}`              | Delete shop                    |
+| GET    | `/api/licenses`                   | List licenses (with JOINs)     |
+| POST   | `/api/licenses`                   | Create license                 |
+| PUT    | `/api/licenses`                   | Update license                 |
+| DELETE | `/api/licenses?id={id}`           | Delete license                 |
+| GET    | `/api/licenses/expiring`          | Get expiring licenses          |
+| GET    | `/api/license-types`              | List license types             |
+| POST   | `/api/license-types`              | Create license type            |
+| PUT    | `/api/license-types`              | Update license type            |
+| DELETE | `/api/license-types?id={id}`      | Delete license type            |
+| GET    | `/api/license-types-optimized`    | Get license types (optimized)  |
+| GET    | `/api/users`                      | List users                     |
+| POST   | `/api/users`                      | Create user                    |
+| PUT    | `/api/users`                      | Update user                    |
+| DELETE | `/api/users?id={id}`              | Delete user                    |
 
 ### Features
 
-| Method | Endpoint             | Description                |
-| ------ | -------------------- | -------------------------- |
-| GET    | `/api/export`        | Export licenses as CSV     |
-| GET    | `/api/notifications` | Get notification settings  |
-| POST   | `/api/notifications` | Update notification config |
+| Method | Endpoint               | Description                |
+| ------ | ---------------------- | -------------------------- |
+| GET    | `/api/export`          | Export licenses as CSV     |
+| GET    | `/api/export-preview`  | Preview export data        |
+| GET    | `/api/activity-logs`   | Get activity/audit logs    |
+| GET    | `/api/cron/cleanup`    | Trigger cleanup cron job   |
 
-### Dynamic Fields (Advanced)
+### Dynamic Fields & Schema
 
-| Method | Endpoint                   | Description             |
-| ------ | -------------------------- | ----------------------- |
-| GET    | `/api/entities`            | List custom entities    |
-| GET    | `/api/entity-fields`       | List entity fields      |
-| GET    | `/api/entity-records`      | List entity records     |
-| GET    | `/api/custom-fields`       | List custom fields      |
-| GET    | `/api/custom-field-values` | Get custom field values |
+| Method | Endpoint                   | Description                 |
+| ------ | -------------------------- | --------------------------- |
+| GET    | `/api/schema`              | Get dynamic schema defs     |
+| GET    | `/api/entities`            | List custom entities        |
+| GET    | `/api/entity-fields`       | List entity fields          |
+| GET    | `/api/entity-records`      | List entity records         |
+| CRUD   | `/api/custom-fields`       | Custom field definitions    |
+| CRUD   | `/api/custom-field-values` | Custom field values         |
+
+### Seed & Migration (Dev only)
+
+| Method | Endpoint                   | Description                 |
+| ------ | -------------------------- | --------------------------- |
+| POST   | `/api/migrate`             | Run database migrations     |
+| POST   | `/api/seed-shops`          | Seed sample shops           |
+| POST   | `/api/seed-custom-fields`  | Seed custom fields          |
+| POST   | `/api/seed-10-licenses`    | Seed test licenses          |
 
 ---
 
@@ -649,14 +803,22 @@ The project includes these security measures (in `middleware.js` and `lib/securi
 
 _Notes for AI about current work in progress:_
 
-- [x] Database schema configured with Neon PostgreSQL
-- [x] Authentication system with iron-session
-- [x] Dashboard with stats and charts (Chart.js)
+- [x] Database schema configured with Neon PostgreSQL (V2 with custom fields)
+- [x] Authentication system with iron-session + profile management
+- [x] Dashboard with stats and charts (Chart.js + react-chartjs-2)
 - [x] CRUD for shops, licenses, license-types, users
-- [x] Telegram notification integration
-- [x] CSV export functionality
-- [x] Security headers middleware
+- [x] Excel-like table system (ExcelTable component)
+- [x] CSV and PDF export functionality (pdfmake)
+- [x] Security headers middleware (CSP, XSS, etc.)
 - [x] Input validation & sanitization
+- [x] Activity logs / Audit trail system
+- [x] Custom Fields system (dynamic field definitions + values)
+- [x] Dynamic Schema support (schema_definitions)
+- [x] SWR-based data fetching with caching
+- [x] Version/Changelog system (PatchNotesModal)
+- [x] Cron jobs (cleanup tasks)
+- [x] Performance optimization hooks (debounce, throttle, intersection observer)
+- [x] Login page with slider animation
 - [ ] Continue enhancement as requested
 
 ---
@@ -804,20 +966,37 @@ async function handleDelete(id) {
 ```
 layout.js
 ├── imports: globals.css
-│   └── imports: src/styles/style.css
-│   └── imports: src/styles/login-base.css
-│   └── imports: src/styles/login-responsive.css
-│   └── imports: src/styles/login-slide.css
+├── imports: @vercel/speed-insights
+├── imports: @vercel/analytics
+├── imports: next/font/google (Inter, Noto Sans Thai)
+│
+page.jsx (Login)
+├── imports: @/components/login/FeatureTag
+├── imports: @/components/login/LoginForm
+├── imports: src/styles/login-base.css
+├── imports: src/styles/login-responsive.css
+└── imports: src/styles/login-slide.css
+
+dashboard/layout.jsx
+├── imports: src/styles/style.css
+├── imports: src/styles/sweetalert-custom.css
+├── imports: src/styles/toast.css
+└── imports: src/style-responsive.css
 
 API routes
 ├── imports: @/lib/db.js (database operations)
 ├── imports: @/lib/session.js (authentication)
 ├── imports: @/lib/security.js (validation)
+├── imports: @/lib/activityLogger.js (audit logging)
+├── imports: @/lib/api-helpers.js (route helpers)
 └── imports: next/server (NextResponse)
 
 Dashboard pages
-├── imports: react (useState, useEffect)
+├── imports: @/hooks/... (useData, usePagination, useOptimized, etc.)
+├── imports: @/utils/... (alerts, formatters, auth)
+├── imports: @/constants/... (api, status)
+├── imports: @/components/... (ExcelTable, ui/*, etc.)
 ├── imports: sweetalert2 (alerts)
 ├── imports: chart.js (charts)
-└── imports: @/components/... (shared components)
+└── imports: swr (data fetching)
 ```

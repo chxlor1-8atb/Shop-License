@@ -30,7 +30,7 @@ export default function VersionBadge({ onClick }) {
             }}
         >
             <i className="fas fa-code-branch"></i>
-            v{latest?.version || '1.0.0'}
+            v{latest?.version || '2.0.0'}
         </button>
     );
 }
