@@ -4512,9 +4512,13 @@ body:has(.sidebar.show) .mobile-toggle i {
     /* Primary Orange */
     border-radius: 20px;
     /* More rounded */
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    text-align: left;
     cursor: pointer;
     transition: all 0.2s ease;
-    /* width: 100%; Removed to fit content */
+    width: 100%;
     min-width: 180px;
     /* added min-width to ensure it's not too small but still compact */
     height: 42px;

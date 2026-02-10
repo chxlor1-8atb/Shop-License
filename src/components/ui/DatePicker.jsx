@@ -169,17 +169,19 @@ export default function DatePicker({
             style={{ outline: 'none' }} // Remove focus outline
         >
             {/* Input Trigger */}
-            <div
+            <button
+                type="button"
                 id={id}
                 className={`datepicker-trigger ${isOpen ? 'open' : ''}`}
                 onClick={() => !disabled && setIsOpen(!isOpen)}
+                disabled={disabled}
             >
                 <i className="fas fa-calendar-alt"></i>
                 <span className={!value ? 'placeholder' : ''}>
                     {value ? formatDisplayDate(value) : placeholder}
                 </span>
                 <i className={`fas fa-chevron-down arrow ${isOpen ? 'open' : ''}`}></i>
-            </div>
+            </button>
 
             {/* Calendar Dropdown */}
             {isOpen && (

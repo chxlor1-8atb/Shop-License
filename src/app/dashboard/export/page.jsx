@@ -309,8 +309,9 @@ export default function ExportPage() {
           >
             {/* Data Type Selection */}
             <div className="form-group">
-              <label>เลือกประเภทข้อมูล *</label>
+              <label htmlFor="export-data-type">เลือกประเภทข้อมูล *</label>
               <CustomSelect
+                id="export-data-type"
                 value={type}
                 onChange={(e) => setType(e.target.value)}
                 options={[
@@ -324,7 +325,7 @@ export default function ExportPage() {
 
             {/* Format Selection */}
             <div className="form-group" style={{ marginTop: "1rem" }}>
-              <label>รูปแบบไฟล์ *</label>
+              <span className="form-label">รูปแบบไฟล์ *</span>
               <div
                 style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}
               >
@@ -442,10 +443,10 @@ export default function ExportPage() {
                   border: "1px solid var(--border-color)"
               }}>
                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                    <label style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
                         <i className="fas fa-sliders-h" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}></i>
                         ปรับแต่งคอลัมน์ (Custom Fields)
-                    </label>
+                    </span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: '10px' }}>
                         แสดง {selectedFields.length}/{customFields.length}
                     </span>
@@ -511,7 +512,7 @@ export default function ExportPage() {
                   borderRadius: "0.5rem",
                 }}
               >
-                <label
+                <span
                   style={{
                     marginBottom: "1rem",
                     display: "block",
@@ -519,7 +520,7 @@ export default function ExportPage() {
                   }}
                 >
                   ตัวกรองข้อมูล (ใบอนุญาต)
-                </label>
+                </span>
                 <div
                   style={{
                     display: "grid",
@@ -529,6 +530,7 @@ export default function ExportPage() {
                 >
                   <div>
                     <label
+                      htmlFor="export-search"
                       style={{
                         fontSize: "0.875rem",
                         marginBottom: "0.5rem",
@@ -538,6 +540,7 @@ export default function ExportPage() {
                       ค้นหา
                     </label>
                     <SearchInput
+                      id="export-search"
                       value={search}
                       onChange={setSearch}
                       placeholder="ระบุคำค้นหา..."
@@ -545,6 +548,7 @@ export default function ExportPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="export-shop"
                       style={{
                         fontSize: "0.875rem",
                         marginBottom: "0.5rem",
@@ -554,6 +558,7 @@ export default function ExportPage() {
                       ร้านค้า
                     </label>
                      <CustomSelect
+                      id="export-shop"
                       value={filterShop}
                       onChange={(e) => setFilterShop(e.target.value)}
                       options={[{ value: "", label: "ทุกร้านค้า" }, ...shopOptions]}
@@ -563,6 +568,7 @@ export default function ExportPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="export-license-type"
                       style={{
                         fontSize: "0.875rem",
                         marginBottom: "0.5rem",
@@ -572,6 +578,7 @@ export default function ExportPage() {
                       ประเภทใบอนุญาต
                     </label>
                     <CustomSelect
+                      id="export-license-type"
                       value={licenseType}
                       onChange={(e) => setLicenseType(e.target.value)}
                       options={[
@@ -586,6 +593,7 @@ export default function ExportPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="export-status"
                       style={{
                         fontSize: "0.875rem",
                         marginBottom: "0.5rem",
@@ -595,6 +603,7 @@ export default function ExportPage() {
                       สถานะ
                     </label>
                     <CustomSelect
+                      id="export-status"
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
                       options={[
@@ -610,6 +619,7 @@ export default function ExportPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="export-expiry-from"
                       style={{
                         fontSize: "0.875rem",
                         marginBottom: "0.5rem",
@@ -619,6 +629,7 @@ export default function ExportPage() {
                       หมดอายุจาก
                     </label>
                     <DatePicker
+                      id="export-expiry-from"
                       value={expiryFrom}
                       onChange={(e) => setExpiryFrom(e.target.value)}
                       placeholder="เลือกวันที่"
@@ -626,6 +637,7 @@ export default function ExportPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="export-expiry-to"
                       style={{
                         fontSize: "0.875rem",
                         marginBottom: "0.5rem",
@@ -635,6 +647,7 @@ export default function ExportPage() {
                       หมดอายุถึง
                     </label>
                     <DatePicker
+                      id="export-expiry-to"
                       value={expiryTo}
                       onChange={(e) => setExpiryTo(e.target.value)}
                       placeholder="เลือกวันที่"
