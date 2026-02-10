@@ -6,7 +6,8 @@ import { NextResponse } from 'next/server';
 import {
     getCachedDashboardStats,
     getCachedLicenseBreakdown,
-    getCachedExpiringCount
+    getCachedExpiringCount,
+    getWarningDays
 } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
@@ -27,17 +28,20 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const action = searchParams.get('action') || 'stats';
 
+        // Fetch warning days once for all actions
+        const warningDays = await getWarningDays();
+
         switch (action) {
             case 'stats':
-                return await getStats();
+                return await getStats(warningDays);
             case 'expiring_count':
-                return await getExpiringCount();
+                return await getExpiringCount(warningDays);
             case 'license_breakdown':
-                return await getLicenseBreakdown();
+                return await getLicenseBreakdown(warningDays);
             case 'recent_activity':
                 return await getRecentActivity(session, searchParams);
             default:
-                return await getStats();
+                return await getStats(warningDays);
         }
     } catch (err) {
         console.error('Dashboard error:', err);
@@ -48,9 +52,9 @@ export async function GET(request) {
     }
 }
 
-async function getStats() {
+async function getStats(warningDays) {
     // ===== Using Data Cache =====
-    const result = await getCachedDashboardStats();
+    const result = await getCachedDashboardStats(warningDays);
 
     return NextResponse.json({
         success: true,
@@ -62,15 +66,15 @@ async function getStats() {
             expired_licenses: parseInt(result?.expired_licenses || 0),
             expiring_soon: parseInt(result?.expiring_soon || 0),
             total_users: parseInt(result?.total_users || 0),
-            expiry_warning_days: 30
+            expiry_warning_days: warningDays
         },
         expiring: []
     });
 }
 
-async function getLicenseBreakdown() {
+async function getLicenseBreakdown(warningDays) {
     // ===== Using Data Cache =====
-    const breakdown = await getCachedLicenseBreakdown();
+    const breakdown = await getCachedLicenseBreakdown(warningDays);
 
     return NextResponse.json({
         success: true,
@@ -79,9 +83,9 @@ async function getLicenseBreakdown() {
     });
 }
 
-async function getExpiringCount() {
+async function getExpiringCount(warningDays) {
     // ===== Using Data Cache =====
-    const count = await getCachedExpiringCount();
+    const count = await getCachedExpiringCount(warningDays);
 
     return NextResponse.json({
         success: true,

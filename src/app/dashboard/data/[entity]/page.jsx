@@ -24,15 +24,11 @@ export default function DynamicDataPage({ params }) {
     const [isEdit, setIsEdit] = useState(false);
     const [formData, setFormData] = useState({});
 
-    useEffect(() => {
-        loadEntityAndData();
-    }, [loadEntityAndData]);
-
     const loadEntityAndData = useCallback(async () => {
         setLoading(true);
         try {
             // 1. Get Entity Definition
-            const listRes = await fetch('/api/entities');
+            const listRes = await fetch('/api/entities', { credentials: 'include' });
             const listData = await listRes.json();
             const matchedEntity = listData.entities?.find(e => e.slug === entitySlug);
 
@@ -43,7 +39,7 @@ export default function DynamicDataPage({ params }) {
             }
 
             // 2. Get Entity Details (Fields)
-            const detailRes = await fetch(`/api/entities?id=${matchedEntity.id}`);
+            const detailRes = await fetch(`/api/entities?id=${matchedEntity.id}`, { credentials: 'include' });
             const detailData = await detailRes.json();
 
             if (detailData.success && detailData.entity) {
@@ -51,7 +47,7 @@ export default function DynamicDataPage({ params }) {
                 setFields(detailData.entity.fields || []);
 
                 // 3. Get Records
-                const dataRes = await fetch(`/api/entity-records?entity=${entitySlug}`);
+                const dataRes = await fetch(`/api/entity-records?entity=${entitySlug}`, { credentials: 'include' });
                 const dataData = await dataRes.json();
                 if (dataData.success) {
                     setRecords(dataData.data || []);
@@ -65,6 +61,10 @@ export default function DynamicDataPage({ params }) {
             setLoading(false);
         }
     }, [entitySlug, router]);
+
+    useEffect(() => {
+        loadEntityAndData();
+    }, [loadEntityAndData]);
 
     const openModal = (record = null) => {
         const initialData = {};

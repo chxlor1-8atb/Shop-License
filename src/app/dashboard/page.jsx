@@ -54,7 +54,7 @@ export default function DashboardPage() {
             initializedRef.current = true;
             const init = async () => {
                 await checkAuth();
-                fetchDashboardData();
+                await fetchDashboardData();
             };
             init();
         }
