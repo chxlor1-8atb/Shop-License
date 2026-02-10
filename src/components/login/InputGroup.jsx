@@ -27,7 +27,7 @@ export const InputGroup = ({
       placeholder=" "
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      autoComplete={type === "password" ? "current-password" : "username"}
+      autoComplete={id === "password" ? "current-password" : "username"}
       required
     />
     <label htmlFor={id} className="input-label">

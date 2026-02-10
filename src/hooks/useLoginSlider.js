@@ -63,6 +63,7 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
                     await onUnlockRef.current();
                 }
             } else {
+                slideProgressRef.current = 0;
                 setSlideProgress(0); // Snap back if not reached
             }
         }
@@ -75,12 +76,14 @@ export function useLoginSlider(unlocked, loading, onUnlock) {
             document.addEventListener('mouseup', handleEndDrag);
             document.addEventListener('touchmove', handleDrag, { passive: false });
             document.addEventListener('touchend', handleEndDrag);
+            document.addEventListener('touchcancel', handleEndDrag);
 
             return () => {
                 document.removeEventListener('mousemove', handleDrag);
                 document.removeEventListener('mouseup', handleEndDrag);
                 document.removeEventListener('touchmove', handleDrag);
                 document.removeEventListener('touchend', handleEndDrag);
+                document.removeEventListener('touchcancel', handleEndDrag);
             };
         }
     }, [isDragging, handleDrag, handleEndDrag]);

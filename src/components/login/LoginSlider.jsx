@@ -31,9 +31,7 @@ export const LoginSlider = ({ slider, loading, unlocked, error }) => {
           id="sliderBtn"
           ref={slider.sliderBtnRef}
           style={{
-            transform: `translateX(${
-              slider.slideProgress > 4 ? slider.slideProgress - 4 : 0
-            }px)`,
+            '--slide-x': `${slider.slideProgress > 4 ? slider.slideProgress - 4 : 0}px`,
             transition: slider.isDragging
               ? "none"
               : "transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease",

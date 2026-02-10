@@ -116,7 +116,8 @@ export function isSessionValid(session) {
 export function shouldRefreshSession(session) {
     if (!session || !session.loginTime) return false;
     const sessionAge = Date.now() - session.loginTime;
-    const refreshThreshold = SESSION_TTL.DEFAULT * 1000 * 0.75;
+    const ttl = session.rememberMe ? SESSION_TTL.REMEMBER_ME : SESSION_TTL.DEFAULT;
+    const refreshThreshold = ttl * 1000 * 0.75;
     return sessionAge > refreshThreshold;
 }
 

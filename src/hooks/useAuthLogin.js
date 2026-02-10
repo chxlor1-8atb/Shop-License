@@ -14,6 +14,7 @@ export function useAuthLogin() {
     const [checkingAuth, setCheckingAuth] = useState(true);
     const isSubmittingRef = useRef(false);
     const unlockedRef = useRef(false);
+    const redirectTimerRef = useRef(null);
     const usernameRef = useRef(username);
     const passwordRef = useRef(password);
     const rememberMeRef = useRef(rememberMe);
@@ -43,6 +44,13 @@ export function useAuthLogin() {
         };
         verifyAuth();
     }, [router]);
+
+    // Cleanup redirect timer on unmount
+    useEffect(() => {
+        return () => {
+            if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+        };
+    }, []);
 
     // Load credentials - Only username for security
     useEffect(() => {
@@ -106,7 +114,7 @@ export function useAuthLogin() {
                 setUnlocked(true);
                 saveCredentials(currentRememberMe, currentUsername);
 
-                setTimeout(() => {
+                redirectTimerRef.current = setTimeout(() => {
                     router.push('/dashboard');
                 }, 800);
                 return true;

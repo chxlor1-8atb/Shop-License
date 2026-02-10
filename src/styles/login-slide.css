@@ -76,6 +76,7 @@
 
 /* Slider Button (Draggable) - sized to match container */
 .slider-btn {
+    --slide-x: 0px;
     width: 44px;
     /* Proportional to container height */
     height: 44px;
@@ -90,6 +91,7 @@
     justify-content: center;
     font-size: 1rem;
     color: #FFFFFF;
+    transform: translateX(var(--slide-x));
     transition: transform 0.15s ease, background 0.3s ease;
     box-shadow:
         3px 0 15px rgba(0, 0, 0, 0.25),
@@ -102,7 +104,7 @@
 }
 
 .slider-btn:hover {
-    transform: scale(1.08);
+    transform: translateX(var(--slide-x)) scale(1.08);
     background: linear-gradient(145deg, #4a4a4a 0%, #2a2a2a 50%, #1a1a1a 100%);
     box-shadow:
         3px 0 20px rgba(0, 0, 0, 0.3),
@@ -112,7 +114,7 @@
 
 .slider-btn:active {
     cursor: grabbing;
-    transform: scale(0.98);
+    transform: translateX(var(--slide-x)) scale(0.98);
 }
 
 .slider-btn svg {
