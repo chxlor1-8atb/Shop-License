@@ -224,7 +224,7 @@ export default function Pagination({
 
                 {showItemsPerPage && onItemsPerPageChange && (
                     <div className="pagination-per-page">
-                        <label htmlFor="items-per-page-select" className="pagination-per-page-label">แสดง</label>
+                        <span className="pagination-per-page-label">แสดง</span>
                         <CustomSelect
                             id="items-per-page-select"
                             value={itemsPerPage}
