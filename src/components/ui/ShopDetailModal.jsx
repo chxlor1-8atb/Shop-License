@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { API_ENDPOINTS, STATUS_OPTIONS } from "@/constants";
+import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import CustomSelect from "./CustomSelect";
 import DatePicker from "./DatePicker";

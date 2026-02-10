@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePagination, useDropdownData } from "@/hooks";
@@ -84,6 +84,12 @@ const STANDARD_COLUMNS = [
 export default function ShopsPage() {
   const pagination = usePagination(10);
   const { page, limit, updateFromResponse } = pagination;
+
+  // Refs for page/limit to avoid recreating performFetchShops on every page/limit change
+  const pageRef = useRef(page);
+  const limitRef = useRef(limit);
+  useEffect(() => { pageRef.current = page; }, [page]);
+  useEffect(() => { limitRef.current = limit; }, [limit]);
   const { typeOptions } = useDropdownData();
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -105,12 +111,13 @@ export default function ShopsPage() {
   }, [search]);
 
   // Shared fetch function that takes search as parameter to avoid stale closures
+  // Uses refs for page/limit so this callback is stable and doesn't cause re-fetches
   const performFetchShops = useCallback(async (searchValue) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        page: page,
-        limit: limit,
+        page: pageRef.current,
+        limit: limitRef.current,
         search: searchValue,
       });
 
@@ -134,7 +141,7 @@ export default function ShopsPage() {
     } finally {
       setLoading(false);
     }
-  }, [updateFromResponse, page, limit]);
+  }, [updateFromResponse]);
 
   // Track if columns have been fetched to prevent infinite loop
   const columnsLoadedRef = useRef(false);
@@ -192,7 +199,7 @@ export default function ShopsPage() {
     }
   }, [fetchCustomColumns]);
 
-  // Fetch shops when search changes
+  // Fetch shops when search or page/limit changes
   useEffect(() => {
     performFetchShops(debouncedSearch);
   }, [performFetchShops, debouncedSearch, page, limit]);
@@ -289,6 +296,12 @@ export default function ShopsPage() {
   };
 
   const handleRowDelete = async (rowId) => {
+    // Skip API call for unsaved temp rows
+    if (rowId.toString().startsWith("id_")) {
+      setShops((prev) => prev.filter((s) => s.id !== rowId));
+      return;
+    }
+
     try {
       const res = await fetch(`${API_ENDPOINTS.SHOPS}?id=${rowId}`, {
         method: "DELETE",
@@ -298,7 +311,6 @@ export default function ShopsPage() {
       if (data.success) {
         showSuccess("ลบร้านค้าเรียบร้อย");
         setShops((prev) => prev.filter((s) => s.id !== rowId));
-        // Optional: refresh if page empty?
         mutate('/api/shops?limit=1000'); // Update dropdown cache
       } else {
         showError(data.message);
@@ -476,6 +488,7 @@ export default function ShopsPage() {
       address: formData.address,
       email: formData.email,
       notes: formData.notes,
+      custom_fields: formData.custom_fields || {},
     };
 
     const shopRes = await fetch(API_ENDPOINTS.SHOPS, {
@@ -492,18 +505,15 @@ export default function ShopsPage() {
 
     // If user wants to create license too
     if (formData.create_license && formData.license_type_id && formData.license_number) {
-      // Need to get the new shop ID - fetch shops again
-      const shopsRes = await fetch(`${API_ENDPOINTS.SHOPS}?search=${encodeURIComponent(formData.shop_name)}&limit=1`, { credentials: "include" });
-      const shopsData = await shopsRes.json();
-      const newShop = shopsData.shops?.[0];
+      const newShopId = shopData.shop_id;
 
-      if (newShop) {
+      if (newShopId) {
         const licenseRes = await fetch(API_ENDPOINTS.LICENSES, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
-            shop_id: newShop.id,
+            shop_id: newShopId,
             license_type_id: formData.license_type_id,
             license_number: formData.license_number,
             issue_date: new Date().toISOString().split("T")[0],
@@ -517,6 +527,8 @@ export default function ShopsPage() {
         } else {
           showSuccess("สร้างร้านค้าและใบอนุญาตเรียบร้อย");
         }
+      } else {
+        showError("สร้างร้านค้าแล้วแต่ไม่ได้รับ ID กลับมา");
       }
     } else {
       showSuccess("สร้างร้านค้าเรียบร้อย");

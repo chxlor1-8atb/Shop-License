@@ -78,7 +78,6 @@ export default function ExpiringPage() {
             const lowerSearch = search.toLowerCase();
             result = result.filter(l =>
                 (l.shop_name?.toLowerCase().includes(lowerSearch)) ||
-                (l.shop_code?.toLowerCase().includes(lowerSearch)) ||
                 (l.license_number?.toLowerCase().includes(lowerSearch))
             );
         }

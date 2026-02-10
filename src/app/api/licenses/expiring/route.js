@@ -2,6 +2,7 @@
 import { fetchAll } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/api-helpers';
+import { getWarningDays } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,9 +12,7 @@ export async function GET() {
     if (authError) return authError;
 
     try {
-        // Query to get expired licenses OR licenses expiring soon (e.g., next 60 days)
-        // Adjust the interval as needed. The legacy system seemed to load them all via dashboard stats? 
-        // Let's get "Active" ones expiring soon AND "Expired" ones.
+        const warningDays = await getWarningDays();
 
         const query = `
             SELECT 
@@ -25,11 +24,11 @@ export async function GET() {
             LEFT JOIN shops s ON l.shop_id = s.id
             LEFT JOIN license_types lt ON l.license_type_id = lt.id
             WHERE 
-                (l.status = 'active' AND l.expiry_date <= CURRENT_DATE + INTERVAL '60 day')
-                OR 
-                (l.status = 'expired')
-                OR
-                (l.expiry_date < CURRENT_DATE)
+                l.status NOT IN ('suspended', 'revoked')
+                AND (
+                    l.expiry_date <= CURRENT_DATE + INTERVAL '${warningDays} days'
+                    OR l.expiry_date < CURRENT_DATE
+                )
             ORDER BY days_until_expiry ASC
         `;
 

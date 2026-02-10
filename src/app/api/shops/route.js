@@ -119,7 +119,7 @@ export async function POST(request) {
             details: `เพิ่มร้านค้า: ${shop_name}`
         });
 
-        return NextResponse.json({ success: true, message: 'เพิ่มร้านค้าเรียบร้อยแล้ว' });
+        return NextResponse.json({ success: true, message: 'เพิ่มร้านค้าเรียบร้อยแล้ว', shop_id: result?.[0]?.id });
     } catch (err) {
         return NextResponse.json({ success: false, message: err.message }, { status: 500 });
     }
