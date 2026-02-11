@@ -10,7 +10,6 @@ import { formatThaiDate } from '@/utils/formatters';
  */
 export default function DashboardPage() {
     const [stats, setStats] = useState(null);
-    const [breakdown, setBreakdown] = useState([]);
     const [expiring, setExpiring] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -28,18 +27,16 @@ export default function DashboardPage() {
 
     const fetchAll = async () => {
         try {
-            const [authRes, statsRes, breakdownRes, expiringRes] = await Promise.all([
+            const [authRes, statsRes, expiringRes] = await Promise.all([
                 fetch(API_ENDPOINTS.AUTH + '?action=check', { credentials: 'include' }),
                 fetch(API_ENDPOINTS.DASHBOARD_STATS, { credentials: 'include' }),
-                fetch(API_ENDPOINTS.DASHBOARD_BREAKDOWN, { credentials: 'include' }),
                 fetch(API_ENDPOINTS.EXPIRING, { credentials: 'include' }),
             ]);
-            const [authData, statsData, breakdownData, expiringData] = await Promise.all([
-                authRes.json(), statsRes.json(), breakdownRes.json(), expiringRes.json(),
+            const [authData, statsData, expiringData] = await Promise.all([
+                authRes.json(), statsRes.json(), expiringRes.json(),
             ]);
             if (authData.success) setUser(authData.user);
             if (statsData.success) setStats(statsData.stats);
-            if (breakdownData.success) setBreakdown(breakdownData.breakdown || []);
             if (expiringData.success) setExpiring(expiringData.licenses || []);
         } catch (err) {
             setError(err.message);
@@ -135,41 +132,6 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* License Breakdown by Type */}
-                <div className="db-card db-card-narrow">
-                    <div className="db-card-header">
-                        <h3><i className="fas fa-tags" style={{ marginRight: '0.5rem', color: '#4f46e5' }}></i>สรุปตามประเภท</h3>
-                    </div>
-                    <div className="db-card-body">
-                        {breakdown.length === 0 ? (
-                            <div className="db-empty">
-                                <p>ยังไม่มีข้อมูลประเภทใบอนุญาต</p>
-                            </div>
-                        ) : (
-                            <div className="db-breakdown-list">
-                                {breakdown.map((item) => {
-                                    const total = parseInt(item.total_count) || 0;
-                                    const active = parseInt(item.active_count) || 0;
-                                    const expCount = parseInt(item.expiring_count) || 0;
-                                    const expired = parseInt(item.expired_count) || 0;
-                                    return (
-                                        <div key={item.id} className="db-breakdown-item">
-                                            <div className="db-breakdown-name">{item.type_name}</div>
-                                            <div className="db-breakdown-stats">
-                                                <span className="db-breakdown-total">{total} รายการ</span>
-                                                <div className="db-breakdown-tags">
-                                                    {active > 0 && <span className="db-tag success">{active} ใช้งาน</span>}
-                                                    {expCount > 0 && <span className="db-tag warning">{expCount} ใกล้หมด</span>}
-                                                    {expired > 0 && <span className="db-tag danger">{expired} หมดอายุ</span>}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                </div>
             </div>
 
             <style jsx>{`
@@ -248,12 +210,9 @@ export default function DashboardPage() {
                 /* Grid Layout */
                 .db-grid {
                     display: grid;
-                    grid-template-columns: 1fr 1fr;
+                    grid-template-columns: 1fr;
                     gap: 1rem;
                     align-items: start;
-                }
-                @media (max-width: 992px) {
-                    .db-grid { grid-template-columns: 1fr; }
                 }
 
                 /* Card */
@@ -349,47 +308,6 @@ export default function DashboardPage() {
                     color: #d97706;
                 }
 
-                /* Breakdown List */
-                .db-breakdown-list {
-                    padding: 0.25rem 0;
-                }
-                .db-breakdown-item {
-                    padding: 0.75rem 1.25rem;
-                    border-bottom: 1px solid #f3f4f6;
-                }
-                .db-breakdown-item:last-child {
-                    border-bottom: none;
-                }
-                .db-breakdown-name {
-                    font-size: 0.9rem;
-                    font-weight: 500;
-                    color: var(--text-primary, #111827);
-                    margin-bottom: 0.25rem;
-                }
-                .db-breakdown-stats {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    gap: 0.5rem;
-                }
-                .db-breakdown-total {
-                    font-size: 0.8rem;
-                    color: var(--text-muted, #6b7280);
-                }
-                .db-breakdown-tags {
-                    display: flex;
-                    gap: 0.35rem;
-                    flex-wrap: wrap;
-                }
-                .db-tag {
-                    font-size: 0.7rem;
-                    padding: 0.15rem 0.5rem;
-                    border-radius: 4px;
-                    font-weight: 500;
-                }
-                .db-tag.success { background: rgba(16,185,129,0.1); color: #059669; }
-                .db-tag.warning { background: rgba(245,158,11,0.1); color: #d97706; }
-                .db-tag.danger  { background: rgba(239,68,68,0.1); color: #dc2626; }
             `}</style>
         </div>
     );

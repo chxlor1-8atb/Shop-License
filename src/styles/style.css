@@ -1491,6 +1491,18 @@ select option:checked {
     border-radius: 8px;
 }
 
+/* Unique icon colors per page */
+.card-title i.fa-bell          { background: linear-gradient(135deg, #f59e0b, #fbbf24); } /* Expiring - Amber */
+.card-title i.fa-store         { background: linear-gradient(135deg, #3b82f6, #60a5fa); } /* Shops - Blue */
+.card-title i.fa-file-alt      { background: linear-gradient(135deg, #6366f1, #818cf8); } /* Licenses - Indigo */
+.card-title i.fa-users         { background: linear-gradient(135deg, #14b8a6, #2dd4bf); } /* Users - Teal */
+.card-title i.fa-tags          { background: linear-gradient(135deg, #ec4899, #f472b6); } /* License Types - Pink */
+.card-title i.fa-history       { background: linear-gradient(135deg, #10b981, #34d399); } /* Activity Logs - Emerald */
+.card-title i.fa-file-export   { background: linear-gradient(135deg, #8b5cf6, #a78bfa); } /* Export - Purple */
+.card-title i.fa-bolt          { background: linear-gradient(135deg, #f97316, #fb923c); } /* Action Breakdown - Orange */
+.card-title i.fa-database      { background: linear-gradient(135deg, #0ea5e9, #38bdf8); } /* Entity Breakdown - Sky */
+.card-title i.fa-globe         { background: linear-gradient(135deg, #64748b, #94a3b8); } /* IP Stats - Slate */
+
 .card-body {
     padding: 1.5rem;
     overflow: visible;
