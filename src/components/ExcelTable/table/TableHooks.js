@@ -299,7 +299,7 @@ export function useExcelTable({
       id: newColId,
       name: "คอลัมน์ใหม่",
       width: 140,
-      align: "left",
+      align: "center",
     };
 
     setColumns((prev) => {

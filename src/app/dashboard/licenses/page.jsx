@@ -195,6 +195,7 @@ function LicensesPageContent() {
             name: f.field_label,
             type: f.field_type || "text",
             width: 150,
+            align: "center",
             isCustom: true,
             db_id: f.id,
             display_order: f.display_order !== undefined && f.display_order !== null 

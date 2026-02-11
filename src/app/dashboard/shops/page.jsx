@@ -179,6 +179,7 @@ export default function ShopsPage() {
             name: f.field_label,
             type: f.field_type || "text",
             width: 150,
+            align: "center",
             isCustom: true,
             db_id: f.id,
           }));

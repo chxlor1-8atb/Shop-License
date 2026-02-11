@@ -230,7 +230,7 @@ export default function LicenseTypesPage() {
           name: payload.field_label,
           type: payload.field_type,
           width: 150,
-          align: "left",
+          align: "center",
           isCustom: true,
           db_id: data.field?.id || null,
           display_order: maxOrder,
