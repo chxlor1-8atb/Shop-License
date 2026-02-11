@@ -181,43 +181,95 @@ export default function ActivityLogsPage() {
       {statsLoading ? (
         <Loading />
       ) : stats ? (
-        <div className="al-stats-grid">
-          <div className="al-stat-card">
-            <div className="al-stat-icon" style={{ background: "#EBF5FB" }}>
-              <i className="fas fa-list-alt" style={{ color: "#2196F3" }}></i>
-            </div>
-            <div className="al-stat-info">
-              <div className="al-stat-value">{parseInt(stats.today_activities).toLocaleString()}</div>
-              <div className="al-stat-label">กิจกรรมวันนี้</div>
-            </div>
-          </div>
-          <div className="al-stat-card">
-            <div className="al-stat-icon" style={{ background: "#E8F5E9" }}>
-              <i className="fas fa-calendar-week" style={{ color: "#4CAF50" }}></i>
-            </div>
-            <div className="al-stat-info">
-              <div className="al-stat-value">{parseInt(stats.week_activities).toLocaleString()}</div>
-              <div className="al-stat-label">7 วันล่าสุด</div>
-            </div>
-          </div>
-          <div className="al-stat-card">
-            <div className="al-stat-icon" style={{ background: "#FFF3E0" }}>
-              <i className="fas fa-users" style={{ color: "#FF9800" }}></i>
-            </div>
-            <div className="al-stat-info">
-              <div className="al-stat-value">{parseInt(stats.today_active_users).toLocaleString()}</div>
-              <div className="al-stat-label">ผู้ใช้วันนี้</div>
+        <div className="card mb-3" style={{ border: 'none', boxShadow: 'none' }}>
+          <div className="card-body" style={{ padding: '0.5rem' }}>
+            <div className="al-stats-row">
+              {[
+                { icon: 'fas fa-list-alt', value: parseInt(stats.today_activities).toLocaleString(), label: 'กิจกรรมวันนี้', colorClass: 'primary' },
+                { icon: 'fas fa-calendar-week', value: parseInt(stats.week_activities).toLocaleString(), label: '7 วันล่าสุด', colorClass: 'success' },
+                { icon: 'fas fa-users', value: parseInt(stats.today_active_users).toLocaleString(), label: 'ผู้ใช้วันนี้', colorClass: 'warning' },
+                { icon: 'fas fa-sign-in-alt', value: parseInt(stats.today_logins).toLocaleString(), label: 'ล็อกอินวันนี้', colorClass: 'purple' },
+              ].map((card, i) => (
+                <div key={i} className="al-stat-item">
+                  <div className={`al-stat-icon-new ${card.colorClass}`}>
+                    <i className={card.icon}></i>
+                  </div>
+                  <div className="al-stat-content">
+                    <div className="al-stat-value-new">{card.value}</div>
+                    <div className="al-stat-label-new">{card.label}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="al-stat-card">
-            <div className="al-stat-icon" style={{ background: "#F3E5F5" }}>
-              <i className="fas fa-sign-in-alt" style={{ color: "#9C27B0" }}></i>
-            </div>
-            <div className="al-stat-info">
-              <div className="al-stat-value">{parseInt(stats.today_logins).toLocaleString()}</div>
-              <div className="al-stat-label">ล็อกอินวันนี้</div>
-            </div>
-          </div>
+          <style jsx>{`
+            .al-stats-row {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 0.5rem;
+            }
+            @media (max-width: 768px) {
+              .al-stats-row { grid-template-columns: repeat(2, 1fr); }
+            }
+            .al-stat-item {
+              padding: 0.25rem 0.5rem;
+              display: flex;
+              align-items: center;
+              gap: 0.75rem;
+              position: relative;
+            }
+            .al-stat-item:not(:last-child)::after {
+              content: '';
+              position: absolute;
+              right: -0.25rem;
+              top: 20%;
+              height: 60%;
+              width: 1px;
+              background-color: var(--border-color);
+              opacity: 0.5;
+            }
+            @media (max-width: 768px) {
+              .al-stat-item:not(:last-child)::after { display: none; }
+              .al-stat-item {
+                background-color: #f9fafb;
+                border-radius: 6px;
+                padding: 0.75rem;
+              }
+            }
+            .al-stat-icon-new {
+              width: 40px;
+              height: 40px;
+              min-width: 40px;
+              border-radius: 10px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 1.1rem;
+            }
+            .al-stat-icon-new.primary { background: rgba(59,130,246,0.1); color: #3b82f6; }
+            .al-stat-icon-new.success { background: rgba(16,185,129,0.1); color: #10b981; }
+            .al-stat-icon-new.warning { background: rgba(245,158,11,0.1); color: #f59e0b; }
+            .al-stat-icon-new.purple  { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+            .al-stat-content {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              overflow: hidden;
+            }
+            .al-stat-value-new {
+              font-size: 1.125rem;
+              font-weight: 700;
+              line-height: 1.2;
+              color: var(--text-primary);
+            }
+            .al-stat-label-new {
+              font-size: 0.8rem;
+              color: var(--text-muted);
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          `}</style>
         </div>
       ) : null}
 

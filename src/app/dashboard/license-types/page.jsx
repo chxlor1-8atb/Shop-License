@@ -554,23 +554,23 @@ export default function LicenseTypesPage() {
  */
 function StatsSection({ stats }) {
   const statItems = [
-    { label: 'ประเภททั้งหมด', value: stats.totalTypes || 0, icon: 'fas fa-tags', colorClass: 'primary' },
+    { label: 'ประเภททั้งหมด', value: stats.totalTypes || 0, icon: 'fas fa-tags', colorClass: 'indigo' },
     { label: 'ประเภทที่ใช้งาน', value: stats.activeTypes || 0, icon: 'fas fa-check-circle', colorClass: 'success' },
-    { label: 'ใบอนุญาตที่ผูก', value: stats.totalLicenses || 0, icon: 'fas fa-file-contract', colorClass: 'info' }
+    { label: 'ใบอนุญาตที่ผูก', value: stats.totalLicenses || 0, icon: 'fas fa-file-contract', colorClass: 'primary' }
   ];
 
   return (
-    <div className="card mb-3" style={{ border: 'none', boxShadow: 'var(--shadow-sm)' }}>
+    <div className="card mb-3" style={{ border: 'none', boxShadow: 'none' }}>
         <div className="card-body" style={{ padding: '0.5rem' }}>
             <div className="types-stats-row">
                 {statItems.map((item, index) => (
-                    <div key={index} className="stat-item">
-                        <div className={`stat-icon ${item.colorClass}`}>
+                    <div key={index} className="lt-stat-item">
+                        <div className={`lt-stat-icon ${item.colorClass}`}>
                             <i className={item.icon}></i>
                         </div>
-                        <div className="stat-content">
-                            <div className="stat-value text-dark">{item.value}</div>
-                            <div className="stat-label">{item.label}</div>
+                        <div className="lt-stat-content">
+                            <div className="lt-stat-value">{item.value}</div>
+                            <div className="lt-stat-label">{item.label}</div>
                         </div>
                     </div>
                 ))}
@@ -587,14 +587,14 @@ function StatsSection({ stats }) {
                     grid-template-columns: repeat(1, 1fr);
                 }
             }
-            .stat-item {
+            .lt-stat-item {
                 padding: 0.25rem 0.5rem;
                 display: flex;
                 align-items: center;
                 gap: 0.75rem;
                 position: relative;
             }
-            .stat-item:not(:last-child)::after {
+            .lt-stat-item:not(:last-child)::after {
                 content: '';
                 position: absolute;
                 right: -0.25rem;
@@ -605,44 +605,43 @@ function StatsSection({ stats }) {
                 opacity: 0.5;
             }
             @media (max-width: 768px) {
-                .stat-item:not(:last-child)::after {
+                .lt-stat-item:not(:last-child)::after {
                     display: none;
                 }
-                .stat-item {
+                .lt-stat-item {
                     background-color: #f9fafb;
                     border-radius: 6px;
                     padding: 0.75rem;
                 }
             }
-            .stat-icon {
-                width: 36px;
-                height: 36px;
-                min-width: 36px;
-                border-radius: 8px;
+            .lt-stat-icon {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                border-radius: 10px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 1rem;
+                font-size: 1.1rem;
             }
-            /* Icon Colors */
-            .stat-icon.primary { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-            .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-            .stat-icon.info    { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+            .lt-stat-icon.indigo  { background: rgba(79, 70, 229, 0.1); color: #4f46e5; }
+            .lt-stat-icon.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+            .lt-stat-icon.primary { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
 
-            .stat-content {
+            .lt-stat-content {
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 overflow: hidden;
             }
-            .stat-value {
-                font-size: 1rem;
+            .lt-stat-value {
+                font-size: 1.125rem;
                 font-weight: 700;
                 line-height: 1.2;
                 color: var(--text-primary);
             }
-            .stat-label {
-                font-size: 0.75rem;
+            .lt-stat-label {
+                font-size: 0.8rem;
                 color: var(--text-muted);
                 white-space: nowrap;
                 overflow: hidden;

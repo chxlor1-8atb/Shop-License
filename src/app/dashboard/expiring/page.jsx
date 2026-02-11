@@ -578,39 +578,39 @@ function StatsSection({ stats, onFilterClick, currentFilter }) {
     ];
 
     return (
-        <div className="card mb-3" style={{ border: 'none', boxShadow: 'var(--shadow-sm)' }}>
+        <div className="card mb-3" style={{ border: 'none', boxShadow: 'none' }}>
             <div className="card-body" style={{ padding: '0.5rem' }}>
-                <div className="expiring-stats-row">
+                <div className="exp-stats-row">
                     {statCards.map((card, index) => (
                         <div
                             key={card.key}
-                            className={`stat-item ${currentFilter === card.key ? 'active' : ''}`}
+                            className={`exp-stat-item ${currentFilter === card.key ? 'active' : ''}`}
                             onClick={() => onFilterClick(card.key)}
                             style={{ cursor: 'pointer' }}
                         >
-                            <div className={`stat-icon ${card.colorClass}`}>
+                            <div className={`exp-stat-icon ${card.colorClass}`}>
                                 <i className={card.icon}></i>
                             </div>
-                            <div className="stat-content">
-                                <div className="stat-value">{card.value}</div>
-                                <div className="stat-label">{card.label}</div>
+                            <div className="exp-stat-content">
+                                <div className="exp-stat-value">{card.value}</div>
+                                <div className="exp-stat-label">{card.label}</div>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
             <style jsx>{`
-                .expiring-stats-row {
+                .exp-stats-row {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
                     gap: 0.5rem;
                 }
                 @media (max-width: 768px) {
-                    .expiring-stats-row {
+                    .exp-stats-row {
                         grid-template-columns: repeat(2, 1fr);
                     }
                 }
-                .stat-item {
+                .exp-stat-item {
                     padding: 0.25rem 0.5rem;
                     display: flex;
                     align-items: center;
@@ -619,7 +619,7 @@ function StatsSection({ stats, onFilterClick, currentFilter }) {
                     transition: all 0.2s ease;
                     position: relative;
                 }
-                .stat-item:not(:last-child)::after {
+                .exp-stat-item:not(:last-child)::after {
                     content: '';
                     position: absolute;
                     right: -0.25rem;
@@ -630,19 +630,19 @@ function StatsSection({ stats, onFilterClick, currentFilter }) {
                     opacity: 0.5;
                 }
                 @media (max-width: 768px) {
-                    .stat-item:not(:last-child)::after {
+                    .exp-stat-item:not(:last-child)::after {
                         display: none;
                     }
                 }
-                .stat-item:hover {
+                .exp-stat-item:hover {
                     background-color: rgba(0,0,0,0.02);
                 }
-                .stat-item.active {
+                .exp-stat-item.active {
                     background-color: rgba(255, 255, 255, 1);
                     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
                     transform: scale(1.02);
                 }
-                .stat-icon {
+                .exp-stat-icon {
                     width: 40px;
                     height: 40px;
                     min-width: 40px;
@@ -652,35 +652,38 @@ function StatsSection({ stats, onFilterClick, currentFilter }) {
                     justify-content: center;
                     font-size: 1.1rem;
                 }
-                .stat-content {
+                .exp-stat-content {
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
+                    overflow: hidden;
                 }
-                .stat-value {
+                .exp-stat-value {
                     font-size: 1.125rem;
                     font-weight: 700;
                     line-height: 1.2;
                     color: var(--text-primary);
                 }
-                .stat-label {
+                .exp-stat-label {
                     font-size: 0.8rem;
                     color: var(--text-muted);
                     white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
-                .stat-icon.expired {
+                .exp-stat-icon.expired {
                     background: rgba(220, 38, 38, 0.1);
                     color: #dc2626;
                 }
-                .stat-icon.critical {
+                .exp-stat-icon.critical {
                     background: rgba(234, 88, 12, 0.1);
                     color: #ea580c;
                 }
-                .stat-icon.warning {
+                .exp-stat-icon.warning {
                     background: rgba(217, 119, 6, 0.1);
                     color: #d97706;
                 }
-                .stat-icon.info {
+                .exp-stat-icon.info {
                     background: rgba(37, 99, 235, 0.1);
                     color: #2563eb;
                 }

@@ -1489,7 +1489,6 @@ select option:checked {
     color: white;
     font-size: 0.875rem;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(217, 119, 87, 0.3);
 }
 
 .card-body {

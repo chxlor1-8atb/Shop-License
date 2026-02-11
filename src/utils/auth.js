@@ -155,7 +155,7 @@ export async function checkAuth() {
             user: null
         };
     } catch (error) {
-        console.error('Auth check error:', error);
+        console.error('Auth check error:', error?.message || error, error?.stack);
         return {
             authenticated: false,
             user: null

@@ -21,7 +21,7 @@ export const LoginSlider = ({ slider, loading, unlocked, error }) => {
           style={{
             width:
               slider.slideProgress > 0
-                ? `${slider.slideProgress + 25}px`
+                ? `${slider.slideProgress + 48}px`
                 : "0px",
           }}
         ></div>
