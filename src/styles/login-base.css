@@ -859,7 +859,8 @@ html {
     min-height: 300px;
 }
 
-.login-form-content--loading .loading-spinner {
+.login-form-content--loading .loading-spinner,
+.login-form-body--loading .loading-spinner {
     position: relative;
     width: 48px;
     height: 48px;
@@ -867,6 +868,13 @@ html {
     border-top-color: #D97706;
     border-radius: 50%;
     animation: spinLogin 0.8s linear infinite;
+}
+
+.login-form-body--loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
 }
 
 @keyframes spinLogin {

@@ -99,11 +99,9 @@ export default function DashboardLayout({ children }) {
   // Use centralized logout function
   const handleLogout = () => logout();
 
-  if (loading) {
-    return <Loading fullPage={true} message="กำลังโหลด..." />;
-  }
-
-  if (!user) return null;
+  // Don't block children rendering during auth check - let pages start fetching data immediately
+  // This eliminates the waterfall: auth check || page data fetch (parallel instead of sequential)
+  if (!loading && !user) return null; // Only block if auth explicitly failed
 
   // Helper to check active state more accurately
   const isActive = (path) => {
@@ -177,7 +175,7 @@ export default function DashboardLayout({ children }) {
 
           <div className="nav-section">
             <div className="nav-section-title">จัดการระบบ</div>
-            {user.role === "admin" && (
+            {user?.role === "admin" && (
               <>
                 <Link
                   href="/dashboard/users"
@@ -258,9 +256,9 @@ export default function DashboardLayout({ children }) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={
-                  user.role === "admin" ? "/image/admin.png" : "/image/user.png"
+                  user?.role === "admin" ? "/image/admin.png" : "/image/user.png"
                 }
-                alt={user.full_name}
+                alt={user?.full_name || ""}
                 style={{
                   width: "100%",
                   height: "100%",
@@ -271,7 +269,7 @@ export default function DashboardLayout({ children }) {
                   e.target.style.display = "none";
                   e.target.parentElement.style.background = "var(--primary)";
                   e.target.parentElement.textContent =
-                    user.full_name?.charAt(0).toUpperCase() || "U";
+                    user?.full_name?.charAt(0).toUpperCase() || "U";
                   e.target.parentElement.style.display = "flex";
                   e.target.parentElement.style.alignItems = "center";
                   e.target.parentElement.style.justifyContent = "center";
@@ -280,9 +278,9 @@ export default function DashboardLayout({ children }) {
               />
             </div>
             <div className="user-details">
-              <div className="user-name">{user.full_name}</div>
+              <div className="user-name">{user?.full_name || <Skeleton width="80px" height="14px" />}</div>
               <div className="user-role">
-                {user.role === "admin" ? "ผู้ดูแลระบบ" : "เจ้าหน้าที่"}
+                {user ? (user.role === "admin" ? "ผู้ดูแลระบบ" : "เจ้าหน้าที่") : <Skeleton width="60px" height="12px" />}
               </div>
             </div>
             <button

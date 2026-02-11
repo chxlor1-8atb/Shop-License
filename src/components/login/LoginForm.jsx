@@ -52,14 +52,6 @@ export const LoginForm = ({ onSuccess }) => {
     await onUnlock();
   };
 
-  if (checkingAuth) {
-    return (
-      <div className="login-form-content login-form-content--loading">
-        <div className="loading-spinner" />
-      </div>
-    );
-  }
-
   return (
     <div className="login-form-content">
       <WaveDivider />
@@ -68,6 +60,11 @@ export const LoginForm = ({ onSuccess }) => {
         <p className="form-header__subtitle">เข้าสู่ระบบเพื่อดำเนินการต่อ</p>
       </header>
 
+      {checkingAuth ? (
+        <div className="login-form-body--loading">
+          <div className="loading-spinner" />
+        </div>
+      ) : (
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -124,6 +121,7 @@ export const LoginForm = ({ onSuccess }) => {
           </div>
         )}
       </form>
+      )}
     </div>
   );
 };
