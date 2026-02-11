@@ -843,26 +843,24 @@
         padding-top: 1.5rem;
     }
 
-    .brand {
-        margin-bottom: 1rem;
-    }
-
-    .captcha-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 1rem;
-        transform-origin: center;
-        width: 100%;
-        overflow: hidden;
-    }
 }
 
-/* Captcha Scaling for tiny screens */
-@media (max-width: 350px) {
-    .captcha-container {
-        transform: scale(0.85);
-        margin-bottom: 0.5rem;
-    }
+.features {
+display: none;
+/* Hide features to focus on login */
+}
+
+.card-left {
+padding-bottom: 1rem;
+}
+
+.card-right {
+padding-top: 1.5rem;
+}
+
+.brand {
+margin-bottom: 1rem;
+}
 }
 
 /* ====================================
@@ -871,6 +869,20 @@
 /* Fix for "laggy" feel on mobile - reduces GPU load and main thread blocking */
 @media (max-width: 899px) {
 
+/* 1. Disable heavy background animations */
+.login-body::after,
+.login-body .bg-shapes::before,
+.login-body .bg-shapes::after,
+.particle {
+animation: none !important;
+/* Use static positions instead of moving orbs */
+transform: none !important;
+opacity: 0.6;
+/* Slight dim to compensate for lack of movement */
+filter: blur(40px) !important;
+/* Static blur is cheaper */
+transition: none !important;
+}
     /* 1. Disable heavy background animations */
     .login-body::after,
     .login-body .bg-shapes::before,
@@ -909,6 +921,7 @@
     .login-card {
         background: transparent !important;
         box-shadow: 0 5px 20px rgba(0,0,0,0.05) !important;
+        animation: none !important;
     }
 
     .card-left {
@@ -935,14 +948,21 @@
         box-shadow: 0 4px 10px rgba(217, 119, 6, 0.15) !important;
     }
 
-    .btn-submit {
-        box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3) !important;
-    }
-
     /* 6. Hardware acceleration for critical transforming elements */
-    .btn-submit,
     .input-field,
     .brand__logo {
         will-change: transform;
+    }
+
+    /* 7. Remove unnecessary GPU layer promotion for LCP optimization */
+    .login-card {
+        will-change: auto !important;
+        transform: none !important;
+        contain: none !important;
+    }
+
+    .card-left,
+    .card-right {
+        contain: none !important;
     }
 }

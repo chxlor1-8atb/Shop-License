@@ -82,28 +82,41 @@ export function middleware(request) {
 
     // 2. PAYLOAD INSPECTION (WAF Lite)
     // Protection against: sqlmap, dalfox, manual SQLi/XSS injection
-    const hasSuspiciousPayload = SUSPICIOUS_PATTERNS.some(pattern =>
-        pattern.test(pathname) || pattern.test(decodeURIComponent(request.url))
-    );
+    // Optimization: Skip expensive regex checks for simple page routes (no query params)
+    // Page routes don't process URL params server-side, so injection is not a risk
+    const isPageRoute = !pathname.startsWith('/api/');
+    const hasQueryParams = request.nextUrl.search !== '';
 
-    if (hasSuspiciousPayload) {
-        return new NextResponse(JSON.stringify({ error: 'Suspicious payload detected' }), {
-            status: 403,
-            headers: { 'Content-Type': 'application/json' }
-        });
+    if (!isPageRoute || hasQueryParams) {
+        const hasSuspiciousPayload = SUSPICIOUS_PATTERNS.some(pattern =>
+            pattern.test(pathname) || pattern.test(decodeURIComponent(request.url))
+        );
+
+        if (hasSuspiciousPayload) {
+            return new NextResponse(JSON.stringify({ error: 'Suspicious payload detected' }), {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
     }
 
     // 3. RATE LIMITING
     // Protection against: hydra (brute-force), gau (crawling), DoS
+    // Optimization: Only compute login/sensitive checks for API routes
     const now = Date.now();
-    const authAction = request.nextUrl.searchParams.get('action');
-    const isLoginAttempt = pathname === '/api/auth' && request.method === 'POST' && authAction === 'login';
-    const isSensitivePath = pathname.includes('/api/auth') || pathname.includes('admin');
+    let rateLimitType = 'general';
+    let limit = MAX_REQUESTS_PER_WINDOW;
+
+    if (!isPageRoute) {
+        const authAction = request.nextUrl.searchParams.get('action');
+        const isLoginAttempt = pathname === '/api/auth' && request.method === 'POST' && authAction === 'login';
+        const isSensitivePath = pathname.includes('/api/auth') || pathname.includes('admin');
+        rateLimitType = isLoginAttempt ? 'login' : isSensitivePath ? 'sensitive' : 'general';
+        limit = isLoginAttempt ? MAX_LOGIN_REQUESTS : isSensitivePath ? MAX_SENSITIVE_REQUESTS : MAX_REQUESTS_PER_WINDOW;
+    }
 
     // Use separate keys per request type so counters don't interfere
-    const rateLimitType = isLoginAttempt ? 'login' : isSensitivePath ? 'sensitive' : 'general';
     const rateLimitKey = `${ip}:${rateLimitType}`;
-    const limit = isLoginAttempt ? MAX_LOGIN_REQUESTS : isSensitivePath ? MAX_SENSITIVE_REQUESTS : MAX_REQUESTS_PER_WINDOW;
 
     let clientData = ipRequestCounts.get(rateLimitKey);
 

@@ -7,10 +7,6 @@
    SLIDE TO LOGIN STYLES
    ==================================== */
 
-/* Hide the old button */
-.btn-submit {
-    display: none !important;
-}
 
 /* Slide Container - matched to input field height */
 .slide-container {
