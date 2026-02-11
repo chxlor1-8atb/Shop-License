@@ -173,9 +173,10 @@ export function middleware(request) {
     response.headers.delete('X-Powered-By');
 
     // ===== Performance Headers =====
-    response.headers.set('Link', [
-        '</image/shop-logo.png>; rel=preload; as=image',
-    ].join(', '));
+    if (pathname.startsWith('/dashboard')) {
+        // Dashboard pages: preconnect to Font Awesome CDN (loaded async via JS)
+        response.headers.set('Link', '<https://cdnjs.cloudflare.com>; rel=preconnect; crossorigin');
+    }
 
     if (process.env.NODE_ENV !== 'production') {
         response.headers.set('Server-Timing', `middleware;dur=1;desc="Security checks passed"`);

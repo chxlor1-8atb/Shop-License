@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -33,6 +33,18 @@ export default function DashboardLayout({ children }) {
   const [currentDate, setCurrentDate] = useState("");
   const [expiringCount, setExpiringCount] = useState(0);
   const [showPatchNotes, setShowPatchNotes] = useState(false);
+
+  // Load Font Awesome CSS non-blocking (only in dashboard)
+  const faLoadedRef = useRef(false);
+  useEffect(() => {
+    if (faLoadedRef.current) return;
+    faLoadedRef.current = true;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css";
+    link.crossOrigin = "anonymous";
+    document.head.appendChild(link);
+  }, []);
 
   const fetchExpiringCount = useCallback(async () => {
     try {
@@ -113,7 +125,6 @@ export default function DashboardLayout({ children }) {
               width={40}
               height={40}
               style={{ borderRadius: "12px" }}
-              priority
             />
             <span>Shop License</span>
           </div>

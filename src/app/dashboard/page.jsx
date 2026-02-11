@@ -29,11 +29,8 @@ export default function DashboardPage() {
     useEffect(() => {
         if (!initializedRef.current) {
             initializedRef.current = true;
-            const init = async () => {
-                await checkAuth();
-                await fetchDashboardData();
-            };
-            init();
+            // Parallelize API calls to reduce time-to-content
+            Promise.all([checkAuth(), fetchDashboardData()]);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

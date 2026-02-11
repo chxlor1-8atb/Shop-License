@@ -85,23 +85,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
     return (
         <html lang="th" className={`${inter.variable} ${notoSansThai.variable}`} suppressHydrationWarning>
-            <head>
-                {/* DNS Prefetch for faster external resource loading */}
-                <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
-
-                {/* Preconnect for critical resources */}
-                <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossOrigin="anonymous" />
-
-                {/* Google Fonts - Inter and Noto Sans Thai are handled by next/font/google above */}
-
-                {/* Font Awesome - restored to standard loading to ensure icons appear correctly */}
-                <link
-                    rel="stylesheet"
-                    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-                    crossOrigin="anonymous"
-                />
-
-            </head>
+            <head />
             <body suppressHydrationWarning>
                 <script
                     type="application/ld+json"
