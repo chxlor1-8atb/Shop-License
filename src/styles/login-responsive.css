@@ -843,24 +843,9 @@
         padding-top: 1.5rem;
     }
 
-}
-
-.features {
-display: none;
-/* Hide features to focus on login */
-}
-
-.card-left {
-padding-bottom: 1rem;
-}
-
-.card-right {
-padding-top: 1.5rem;
-}
-
-.brand {
-margin-bottom: 1rem;
-}
+    .brand {
+        margin-bottom: 1rem;
+    }
 }
 
 /* ====================================
@@ -869,20 +854,6 @@ margin-bottom: 1rem;
 /* Fix for "laggy" feel on mobile - reduces GPU load and main thread blocking */
 @media (max-width: 899px) {
 
-/* 1. Disable heavy background animations */
-.login-body::after,
-.login-body .bg-shapes::before,
-.login-body .bg-shapes::after,
-.particle {
-animation: none !important;
-/* Use static positions instead of moving orbs */
-transform: none !important;
-opacity: 0.6;
-/* Slight dim to compensate for lack of movement */
-filter: blur(40px) !important;
-/* Static blur is cheaper */
-transition: none !important;
-}
     /* 1. Disable heavy background animations */
     .login-body::after,
     .login-body .bg-shapes::before,
