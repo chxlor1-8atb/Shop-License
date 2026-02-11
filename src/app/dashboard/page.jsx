@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { API_ENDPOINTS } from '@/constants';
-import { StatsGridSkeleton, Skeleton } from '@/components/ui/Skeleton';
+// Skeleton CSS classes used directly in DashboardSkeleton
 
 // Constants
 const STAT_CARDS = [
@@ -64,7 +64,7 @@ export default function DashboardPage() {
     if (!stats) return null;
 
     return (
-        <div>
+        <div className="content-fade-in">
             <StatsGrid stats={stats} />
 
             {user?.role === 'admin' && (
@@ -194,11 +194,35 @@ function StatsGrid({ stats }) {
 
 /**
  * DashboardSkeleton Component
+ * Matches the exact layout of StatsGrid to prevent CLS
  */
 function DashboardSkeleton() {
     return (
         <div>
-            <StatsGridSkeleton count={5} />
+            <div className="card mb-3" style={{ border: 'none', boxShadow: 'var(--shadow-sm)' }}>
+                <div className="card-body" style={{ padding: '0.5rem' }}>
+                    <div className="dashboard-stats-row">
+                        {STAT_CARDS.map((card) => (
+                            <div key={card.key} className="stat-item">
+                                <div
+                                    className="skeleton-cell skeleton-animate"
+                                    style={{ width: '36px', height: '36px', minWidth: '36px', borderRadius: '8px', flex: 'none' }}
+                                />
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                    <div
+                                        className="skeleton-cell skeleton-animate"
+                                        style={{ width: '50%', height: '1rem' }}
+                                    />
+                                    <div
+                                        className="skeleton-cell skeleton-animate"
+                                        style={{ width: '70%', height: '0.75rem' }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

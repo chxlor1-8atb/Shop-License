@@ -4375,109 +4375,6 @@ body:has(.sidebar.show) .mobile-toggle i {
     }
 }
 
-/* Skeleton Loading */
-.skeleton-table {
-    width: 100%;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-}
-
-.skeleton-header,
-.skeleton-row {
-    display: flex;
-    gap: 1rem;
-    padding: 0.875rem 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.skeleton-header {
-    background: rgba(243, 244, 246, 0.8);
-}
-
-.skeleton-row:nth-child(even) {
-    background: rgba(249, 250, 251, 0.5);
-}
-
-.skeleton-cell {
-    flex: 1;
-    height: 1rem;
-    background: linear-gradient(90deg,
-            rgba(229, 231, 235, 0.8) 0%,
-            rgba(243, 244, 246, 0.8) 50%,
-            rgba(229, 231, 235, 0.8) 100%);
-    background-size: 200% 100%;
-    border-radius: 4px;
-}
-
-.skeleton-animate {
-    animation: skeletonShimmer 1.5s ease-in-out infinite;
-}
-
-@keyframes skeletonShimmer {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-/* Skeleton Cards */
-.skeleton-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-.skeleton-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.25rem;
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    border-radius: var(--border-radius);
-    border: 1px solid var(--glass-border);
-}
-
-.skeleton-card-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    background: linear-gradient(90deg,
-            rgba(217, 119, 87, 0.2) 0%,
-            rgba(217, 119, 87, 0.3) 50%,
-            rgba(217, 119, 87, 0.2) 100%);
-    background-size: 200% 100%;
-}
-
-.skeleton-card-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.skeleton-line {
-    height: 0.75rem;
-    background: linear-gradient(90deg,
-            rgba(229, 231, 235, 0.8) 0%,
-            rgba(243, 244, 246, 0.8) 50%,
-            rgba(229, 231, 235, 0.8) 100%);
-    background-size: 200% 100%;
-    border-radius: 4px;
-}
-
-.skeleton-line-lg {
-    width: 60%;
-    height: 1.25rem;
-}
-
-.skeleton-line-sm {
-    width: 40%;
-}
-
 /* ========================================
    Custom DatePicker Styles
    ======================================== */
@@ -6127,99 +6024,72 @@ tr:focus-within:has(.editable-cell) {
     }
 }
 
-/* Skeleton Shimmer - Enhanced */
-.skeleton-cell {
-    background: linear-gradient(90deg,
-            rgba(216, 211, 200, 0.3) 0%,
-            rgba(216, 211, 200, 0.5) 50%,
-            rgba(216, 211, 200, 0.3) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
-    border-radius: 6px;
-}
-
-@keyframes shimmer {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-/* Page Transition Animation */
+/* Page Transition Animation - Subtle fade only */
 .card {
-    animation: cardEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: cardEnter 0.25s ease-out both;
 }
 
 @keyframes cardEnter {
     0% {
         opacity: 0;
-        transform: translateY(16px) scale(0.98);
+        transform: translateY(6px);
     }
 
     100% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
     }
 }
 
-/* Stat Cards Cascade */
+/* Stat Cards Cascade - Subtle with minimal delay */
 .stat-card {
-    animation: statEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: statEnter 0.3s ease-out both;
 }
 
 .stats-grid .stat-card:nth-child(1) {
-    animation-delay: 0.05s;
+    animation-delay: 0.02s;
 }
 
 .stats-grid .stat-card:nth-child(2) {
-    animation-delay: 0.1s;
+    animation-delay: 0.04s;
 }
 
 .stats-grid .stat-card:nth-child(3) {
-    animation-delay: 0.15s;
+    animation-delay: 0.06s;
 }
 
 .stats-grid .stat-card:nth-child(4) {
-    animation-delay: 0.2s;
+    animation-delay: 0.08s;
 }
 
 .stats-grid .stat-card:nth-child(5) {
-    animation-delay: 0.25s;
+    animation-delay: 0.1s;
 }
 
 @keyframes statEnter {
     0% {
         opacity: 0;
-        transform: translateY(20px) scale(0.95);
+        transform: translateY(8px);
     }
 
     100% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
     }
 }
 
-/* Stat Value Counter Animation */
+/* Stat Value - Simple fade in */
 .stat-value {
-    animation: countUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: countUp 0.3s ease-out both;
 }
 
 @keyframes countUp {
     0% {
         opacity: 0;
-        transform: scale(0.5);
-    }
-
-    50% {
-        transform: scale(1.1);
     }
 
     100% {
         opacity: 1;
-        transform: scale(1);
     }
 }
 
@@ -6574,6 +6444,12 @@ tr:focus-within:has(.editable-cell) {
 
 .skeleton-line {
     border-radius: 4px;
+    background: linear-gradient(90deg,
+            rgba(229, 231, 235, 0.6) 0%,
+            rgba(243, 244, 246, 0.8) 50%,
+            rgba(229, 231, 235, 0.6) 100%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.8s ease-in-out infinite;
 }
 
 .skeleton-line-lg {
@@ -6614,6 +6490,37 @@ tr:focus-within:has(.editable-cell) {
 .skeleton-cell {
     flex: 1;
     border-radius: 6px;
+    background: linear-gradient(90deg,
+            rgba(229, 231, 235, 0.6) 0%,
+            rgba(243, 244, 246, 0.8) 50%,
+            rgba(229, 231, 235, 0.6) 100%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes skeletonShimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Smooth fade-in for content replacing skeleton */
+.content-fade-in {
+    animation: contentFadeIn 0.2s ease-out both;
+}
+
+@keyframes contentFadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 /* Loading Container - Prevents CLS */
@@ -6716,21 +6623,20 @@ img {
    Performance Optimizations
    ======================================== */
 
-/* GPU acceleration for animations */
-.card,
-.stat-card,
-.modal,
-.data-table tbody tr,
-.pagination-btn {
+/* GPU acceleration - only for elements that truly need it */
+.modal {
     will-change: transform;
-    transform: translateZ(0);
 }
 
-/* Optimize paint for frequently animated elements */
+/* Optimize paint for spinner elements */
 .spinner-ring,
-.loading-spinner,
-.skeleton-animate {
+.loading-spinner {
     will-change: transform, opacity;
+}
+
+/* Skeleton shimmer uses background-position */
+.skeleton-cell {
+    will-change: background-position;
 }
 
 /* Content visibility for off-screen elements */

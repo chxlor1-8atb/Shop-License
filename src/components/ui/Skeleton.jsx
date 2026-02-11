@@ -18,15 +18,8 @@ export const Skeleton = memo(function Skeleton({
 }) {
     return (
         <div 
-            className={`skeleton-base ${className}`}
-            style={{ 
-                width, 
-                height, 
-                borderRadius,
-                background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
-                backgroundSize: '200% 100%',
-                animation: 'skeleton-shimmer 1.5s infinite',
-            }}
+            className={`skeleton-cell skeleton-animate ${className}`}
+            style={{ width, height, borderRadius }}
         />
     );
 });
@@ -178,21 +171,9 @@ export const PageSkeleton = memo(function PageSkeleton() {
 });
 
 /**
- * Inline CSS for skeleton animation
- * Add this to your global CSS or include in component
+ * Skeleton animation is defined in style.css (.skeleton-cell, .skeleton-animate)
+ * No inline styles needed - single source of truth
  */
-export const skeletonStyles = `
-@keyframes skeleton-shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-}
-
-.skeleton-base {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: skeleton-shimmer 1.5s infinite;
-}
-`;
 
 // Default export
 const SkeletonComponents = {
