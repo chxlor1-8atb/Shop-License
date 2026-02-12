@@ -97,7 +97,7 @@ export const getCachedDashboardStats = unstable_cache(
                 (SELECT COUNT(*) FROM licenses) as total_licenses,
                 (SELECT COUNT(*) FROM licenses WHERE (expiry_date >= CURRENT_DATE OR expiry_date IS NULL) AND status NOT IN ('suspended', 'revoked')) as active_licenses,
                 (SELECT COUNT(*) FROM licenses WHERE expiry_date < CURRENT_DATE AND expiry_date IS NOT NULL AND status NOT IN ('suspended', 'revoked')) as expired_licenses,
-                (SELECT COUNT(*) FROM licenses WHERE expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + $1 AND status NOT IN ('suspended', 'revoked')) as expiring_soon,
+                (SELECT COUNT(*) FROM licenses WHERE expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + ($1::int) AND status NOT IN ('suspended', 'revoked')) as expiring_soon,
                 (SELECT COUNT(*) FROM users) as total_users
         `;
         return await fetchOne(query, [warningDays]);
@@ -121,7 +121,7 @@ export const getCachedLicenseBreakdown = unstable_cache(
                 lt.name as type_name,
                 COUNT(l.id) as total_count,
                 SUM(CASE WHEN (l.expiry_date >= CURRENT_DATE OR l.expiry_date IS NULL) AND l.status NOT IN ('suspended', 'revoked') THEN 1 ELSE 0 END) as active_count,
-                SUM(CASE WHEN l.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + $1 AND l.status NOT IN ('suspended', 'revoked') THEN 1 ELSE 0 END) as expiring_count,
+                SUM(CASE WHEN l.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + ($1::int) AND l.status NOT IN ('suspended', 'revoked') THEN 1 ELSE 0 END) as expiring_count,
                 SUM(CASE WHEN l.expiry_date < CURRENT_DATE AND l.expiry_date IS NOT NULL AND l.status NOT IN ('suspended', 'revoked') THEN 1 ELSE 0 END) as expired_count
             FROM license_types lt
             LEFT JOIN licenses l ON lt.id = l.license_type_id
@@ -144,7 +144,7 @@ export const getCachedExpiringCount = unstable_cache(
     async (warningDays = 30) => {
         // Expiring count: นับจาก expiry_date โดยตัดสถานะ suspended/revoked ออก
         const result = await fetchOne(
-            `SELECT COUNT(*) as count FROM licenses WHERE expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + $1 AND status NOT IN ('suspended', 'revoked')`,
+            `SELECT COUNT(*) as count FROM licenses WHERE expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + ($1::int) AND status NOT IN ('suspended', 'revoked')`,
             [warningDays]
         );
         return parseInt(result?.count || 0);
