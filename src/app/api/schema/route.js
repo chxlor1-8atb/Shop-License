@@ -2,6 +2,10 @@
 import { NextResponse } from 'next/server';
 import { executeQuery, fetchAll } from '@/lib/db';
 import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
+
+const ALLOWED_TABLES = ['shops', 'licenses', 'license_types', 'users'];
+const ALLOWED_COLUMN_TYPES = ['text', 'number', 'date', 'select', 'boolean', 'textarea'];
 
 export const dynamic = 'force-dynamic';
 
@@ -12,10 +16,10 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const table = searchParams.get('table');
+        const table = validateEnum(sanitizeString(searchParams.get('table')), ALLOWED_TABLES, '');
 
         if (!table) {
-            return NextResponse.json({ success: false, message: 'Table name is required' }, { status: 400 });
+            return NextResponse.json({ success: false, message: 'Valid table name is required' }, { status: 400 });
         }
 
         const columns = await fetchAll(
@@ -36,7 +40,10 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { table_name, column_key, column_label, column_type } = body;
+        const table_name = validateEnum(sanitizeString(body.table_name), ALLOWED_TABLES, '');
+        const column_key = sanitizeString(body.column_key || '', 100);
+        const column_label = sanitizeString(body.column_label || '', 255);
+        const column_type = validateEnum(sanitizeString(body.column_type), ALLOWED_COLUMN_TYPES, 'text');
 
         if (!table_name || !column_key || !column_label) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
@@ -55,7 +62,7 @@ export async function POST(request) {
         await executeQuery(
             `INSERT INTO schema_definitions (table_name, column_key, column_label, column_type)
              VALUES ($1, $2, $3, $4)`,
-            [table_name, column_key, column_label, column_type || 'text']
+            [table_name, column_key, column_label, column_type]
         );
 
         return NextResponse.json({ success: true, message: 'Column added successfully' });
@@ -71,10 +78,10 @@ export async function DELETE(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const id = sanitizeInt(searchParams.get('id'), 0, 1);
 
-        if (!id) {
-            return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 });
+        if (id < 1) {
+            return NextResponse.json({ success: false, message: 'Valid ID is required' }, { status: 400 });
         }
 
         await executeQuery('DELETE FROM schema_definitions WHERE id = $1', [id]);

@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { fetchAll } from '@/lib/db';
-import { sessionOptions } from '@/lib/session';
+import { sessionOptions, isSessionValid } from '@/lib/session';
 import { NextResponse } from 'next/server';
 import {
     getCachedDashboardStats,
@@ -18,7 +18,8 @@ export async function GET(request) {
         const cookieStore = await cookies();
         const session = await getIronSession(cookieStore, sessionOptions);
 
-        if (!session.userId) {
+        if (!session.userId || !isSessionValid(session)) {
+            if (session.userId) await session.destroy();
             return NextResponse.json(
                 { success: false, message: 'Not authenticated' },
                 { status: 401 }

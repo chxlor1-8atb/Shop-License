@@ -1,9 +1,8 @@
-
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
-import { sanitizeString } from '@/lib/security';
+import { sanitizeString, sanitizeInt } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,10 +13,14 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const rawId = searchParams.get('id');
 
-        if (id) {
-            const type = await fetchOne('SELECT * FROM license_types WHERE id = $1', [id]);
+        if (rawId) {
+            const safeId = sanitizeInt(rawId, 0, 1);
+            if (safeId < 1) {
+                return NextResponse.json({ success: false, message: 'Invalid license type ID' }, { status: 400 });
+            }
+            const type = await fetchOne('SELECT * FROM license_types WHERE id = $1', [safeId]);
             return NextResponse.json({ success: true, type });
         }
 
@@ -81,11 +84,12 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { id, price, validity_days } = body;
+        const { price, validity_days } = body;
+        const id = sanitizeInt(body.id, 0, 1);
         const name = sanitizeString(body.name || '', 255);
         const description = sanitizeString(body.description || '', 1000);
 
-        if (!id || !name) {
+        if (id < 1 || !name) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
         }
 
@@ -100,7 +104,7 @@ export async function PUT(request) {
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.UPDATE,
             entityType: ENTITY_TYPES.LICENSE_TYPE,
-            entityId: parseInt(id),
+            entityId: id,
             details: `แก้ไขประเภทใบอนุญาต: ${name}`
         });
 
@@ -117,10 +121,10 @@ export async function DELETE(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const id = sanitizeInt(searchParams.get('id'), 0, 1);
 
-        if (!id) {
-            return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 });
+        if (id < 1) {
+            return NextResponse.json({ success: false, message: 'Valid ID is required' }, { status: 400 });
         }
 
         // Get type info for logging
@@ -140,7 +144,7 @@ export async function DELETE(request) {
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.DELETE,
             entityType: ENTITY_TYPES.LICENSE_TYPE,
-            entityId: parseInt(id),
+            entityId: id,
             details: `ลบประเภทใบอนุญาต: ${licenseType?.name || id}`
         });
 

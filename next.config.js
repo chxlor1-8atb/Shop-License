@@ -43,6 +43,12 @@ const nextConfig = {
     // Headers for caching static assets and security
     async headers() {
         // Content Security Policy
+        // ⚠️ SECURITY NOTE: 'unsafe-inline' is required for:
+        //   - script-src: Next.js inline scripts, Vercel Analytics
+        //   - style-src: Next.js CSS-in-JS, Google Fonts inline styles
+        // TODO: Migrate to nonce-based CSP when Next.js App Router fully supports it
+        //   (see: https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy)
+        // 'unsafe-eval' has been removed - not needed by the app.
         const cspHeader = `
             default-src 'self';
             script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cdnjs.cloudflare.com https://va.vercel-scripts.com;

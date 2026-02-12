@@ -29,9 +29,14 @@ export function sanitizeInt(value, defaultValue = 0, min = 0, max = Number.MAX_S
  */
 export function sanitizeString(str, maxLength = 255) {
     if (typeof str !== 'string') return '';
-    return str
-        .trim()
-        .slice(0, maxLength)
+    let s = str.trim().slice(0, maxLength);
+    // Decode HTML entities first to catch encoded attacks (&#60; → <, &#x3c; → <)
+    s = s.replace(/&#x([0-9a-f]+);?/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    s = s.replace(/&#(\d+);?/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)));
+    // Decode unicode escapes (\u003c → <)
+    s = s.replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    // Now apply sanitization on the decoded string
+    return s
         .replace(/[<>]/g, '')                    // Remove HTML angle brackets
         .replace(/javascript\s*:/gi, '')         // Remove javascript: protocol
         .replace(/on\w+\s*=/gi, '')              // Remove event handlers (onerror=, onload=, etc.)
@@ -67,6 +72,28 @@ export function isValidEmail(email) {
 export function isValidPhone(phone) {
     const phoneRegex = /^[0-9\-\+\s\(\)]{8,20}$/;
     return phoneRegex.test(phone);
+}
+
+/**
+ * Validate and sanitize date input (YYYY-MM-DD format)
+ * @param {any} value - Input date string
+ * @param {string|null} defaultValue - Default if invalid
+ * @returns {string|null} Validated date string in YYYY-MM-DD format, or defaultValue
+ */
+export function sanitizeDate(value, defaultValue = null) {
+    if (!value || typeof value !== 'string') return defaultValue;
+    const trimmed = value.trim();
+    // Strict YYYY-MM-DD format check
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return defaultValue;
+    const date = new Date(trimmed + 'T00:00:00Z');
+    if (isNaN(date.getTime())) return defaultValue;
+    // Verify the parsed date matches input (catches invalid dates like 2024-02-30)
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(date.getUTCDate()).padStart(2, '0');
+    const reconstructed = `${y}-${m}-${d}`;
+    if (reconstructed !== trimmed) return defaultValue;
+    return trimmed;
 }
 
 // ========================================
@@ -156,46 +183,9 @@ export function getSecurityHeaders() {
     return {
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
-        'X-XSS-Protection': '1; mode=block',
         'Referrer-Policy': 'strict-origin-when-cross-origin',
         'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     };
-}
-
-// ========================================
-// Rate Limiting Helper (Simple in-memory)
-// ========================================
-
-const rateLimitStore = new Map();
-
-/**
- * Simple in-memory rate limiter
- * @param {string} key - Unique key (e.g., IP address)
- * @param {number} maxRequests - Max requests allowed
- * @param {number} windowMs - Time window in milliseconds
- * @returns {boolean} Is rate limited
- */
-export function isRateLimited(key, maxRequests = 100, windowMs = 60000) {
-    const now = Date.now();
-    const record = rateLimitStore.get(key) || { count: 0, resetAt: now + windowMs };
-
-    // Reset if window expired
-    if (now > record.resetAt) {
-        record.count = 0;
-        record.resetAt = now + windowMs;
-    }
-
-    record.count++;
-    rateLimitStore.set(key, record);
-
-    // Cleanup old entries periodically
-    if (rateLimitStore.size > 10000) {
-        for (const [k, v] of rateLimitStore) {
-            if (now > v.resetAt) rateLimitStore.delete(k);
-        }
-    }
-
-    return record.count > maxRequests;
 }
 
 // ========================================

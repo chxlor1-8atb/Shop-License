@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
-import { validatePassword, validateUsername, sanitizeInt } from '@/lib/security';
+import { validatePassword, validateUsername, sanitizeInt, sanitizeString } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,7 +83,8 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { username, full_name, password, role } = body;
+        const { username, password, role } = body;
+        const full_name = sanitizeString(body.full_name || '', 255);
 
         if (!username || !password || !role) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
@@ -144,7 +145,8 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { id, full_name, password, role } = body;
+        const { id, password, role } = body;
+        const full_name = sanitizeString(body.full_name || '', 255);
 
         // Security: Validate ID
         const safeId = sanitizeInt(id, 0, 1);

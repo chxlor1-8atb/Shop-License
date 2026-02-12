@@ -1,6 +1,10 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requireAuth, safeErrorMessage } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { sanitizeInt, validateEnum } from '@/lib/security';
+
+// Security: Whitelist of allowed entity types
+const ALLOWED_ENTITY_TYPES = ['shops', 'licenses', 'license_types'];
 
 export const dynamic = 'force-dynamic';
 
@@ -12,13 +16,14 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const entityType = searchParams.get('entity_type');
-        const entityId = searchParams.get('entity_id');
+        const entityType = validateEnum(searchParams.get('entity_type'), ALLOWED_ENTITY_TYPES, '');
+        const entityIdParam = searchParams.get('entity_id');
+        const entityId = entityIdParam ? sanitizeInt(entityIdParam, 0, 1) : 0;
 
         if (!entityType) {
             return NextResponse.json({
                 success: false,
-                message: 'entity_type จำเป็น'
+                message: 'Valid entity_type จำเป็น'
             }, { status: 400 });
         }
 
@@ -35,7 +40,8 @@ export async function GET(request) {
         `;
         const params = [entityType];
 
-        if (entityId) {
+        // Filter by entity_id if provided
+        if (entityId > 0) {
             query += ` AND cfv.entity_id = $2`;
             params.push(entityId);
         }
@@ -66,9 +72,11 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { entity_type, entity_id, values } = body;
+        const { values } = body;
+        const entity_type = validateEnum(body.entity_type, ALLOWED_ENTITY_TYPES, '');
+        const entity_id = sanitizeInt(body.entity_id, 0, 1);
 
-        if (!entity_type || !entity_id || !values) {
+        if (!entity_type || entity_id < 1 || !values) {
             return NextResponse.json({
                 success: false,
                 message: 'entity_type, entity_id และ values จำเป็น'
@@ -110,19 +118,19 @@ export async function POST(request) {
 
 // DELETE - Delete all custom field values for an entity
 export async function DELETE(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin for destructive operation
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
         const { searchParams } = new URL(request.url);
-        const entityType = searchParams.get('entity_type');
-        const entityId = searchParams.get('entity_id');
+        const entityType = validateEnum(searchParams.get('entity_type'), ALLOWED_ENTITY_TYPES, '');
+        const entityId = sanitizeInt(searchParams.get('entity_id'), 0, 1);
 
-        if (!entityType || !entityId) {
+        if (!entityType || entityId < 1) {
             return NextResponse.json({
                 success: false,
-                message: 'entity_type และ entity_id จำเป็น'
+                message: 'Valid entity_type และ entity_id จำเป็น'
             }, { status: 400 });
         }
 

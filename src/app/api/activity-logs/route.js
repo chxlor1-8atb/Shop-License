@@ -1,32 +1,15 @@
-import { cookies } from 'next/headers';
-import { getIronSession } from 'iron-session';
 import { fetchAll, fetchOne } from '@/lib/db';
-import { sessionOptions } from '@/lib/session';
 import { NextResponse } from 'next/server';
-import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
+import { requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { sanitizeInt, sanitizeString, validateEnum, sanitizeDate } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
     try {
-        // Check authentication
-        const cookieStore = await cookies();
-        const session = await getIronSession(cookieStore, sessionOptions);
-
-        if (!session.userId) {
-            return NextResponse.json(
-                { success: false, message: 'Not authenticated' },
-                { status: 401 }
-            );
-        }
-
-        // Check admin role
-        if (session.role !== 'admin') {
-            return NextResponse.json(
-                { success: false, message: 'Admin access required' },
-                { status: 403 }
-            );
-        }
+        // Security: Use requireAdmin() which validates session expiry via isSessionValid()
+        const authError = await requireAdmin();
+        if (authError) return authError;
 
         const { searchParams } = new URL(request.url);
         const action = searchParams.get('action') || 'list';
@@ -44,7 +27,7 @@ export async function GET(request) {
     } catch (err) {
         console.error('Activity logs error:', err);
         return NextResponse.json(
-            { success: false, message: process.env.NODE_ENV === 'production' ? 'เกิดข้อผิดพลาดภายในระบบ' : 'เกิดข้อผิดพลาด: ' + err.message },
+            { success: false, message: safeErrorMessage(err) },
             { status: 500 }
         );
     }
@@ -52,15 +35,9 @@ export async function GET(request) {
 
 export async function DELETE(request) {
     try {
-        const cookieStore = await cookies();
-        const session = await getIronSession(cookieStore, sessionOptions);
-
-        if (!session.userId || session.role !== 'admin') {
-            return NextResponse.json(
-                { success: false, message: 'Admin access required' },
-                { status: 403 }
-            );
-        }
+        // Security: Use requireAdmin() which validates session expiry via isSessionValid()
+        const authError = await requireAdmin();
+        if (authError) return authError;
 
         // Security: Only delete logs older than 7 days to preserve recent audit trail
         const result = await fetchAll("DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '7 days'");
@@ -73,7 +50,7 @@ export async function DELETE(request) {
     } catch (err) {
         console.error('Clear logs error:', err);
         return NextResponse.json(
-            { success: false, message: process.env.NODE_ENV === 'production' ? 'เกิดข้อผิดพลาดภายในระบบ' : 'เกิดข้อผิดพลาด: ' + err.message },
+            { success: false, message: safeErrorMessage(err) },
             { status: 500 }
         );
     }
@@ -100,8 +77,14 @@ async function getActivityLogs(searchParams) {
         ['AUTH', 'USER', 'SHOP', 'LICENSE', 'LICENSE_TYPE', 'CUSTOM_FIELD', 'ENTITY'],
         ''
     );
-    const dateFrom = searchParams.get('date_from');
-    const dateTo = searchParams.get('date_to');
+    const dateFrom = sanitizeDate(searchParams.get('date_from'));
+    const dateTo = sanitizeDate(searchParams.get('date_to'));
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+        return NextResponse.json({
+            success: false,
+            message: 'Invalid date range'
+        });
+    }
     const search = sanitizeString(searchParams.get('search') || '', 100);
 
     let whereClauses = [];

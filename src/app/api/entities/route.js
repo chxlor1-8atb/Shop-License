@@ -1,6 +1,7 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { sanitizeInt, sanitizeString } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,9 +13,13 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const rawId = searchParams.get('id');
 
-        if (id) {
+        if (rawId) {
+            const id = sanitizeInt(rawId, 0, 1);
+            if (id < 1) {
+                return NextResponse.json({ success: false, message: 'Invalid entity ID' }, { status: 400 });
+            }
             // Get single entity details
             const entity = await fetchOne('SELECT * FROM entities WHERE id = $1', [id]);
             if (!entity) {
@@ -48,9 +53,13 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { slug, label, icon, description, display_order } = body;
+        const label = sanitizeString(body.label || '', 255);
+        const icon = sanitizeString(body.icon || 'fa-folder', 100);
+        const description = sanitizeString(body.description || '', 1000);
+        const display_order = sanitizeInt(body.display_order, 0, 0, 1000);
+        const slug = (body.slug || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
 
-        if (!slug || !label) {
+        if (!slug || slug.length < 2 || !label) {
             return NextResponse.json({
                 success: false,
                 message: 'slug and label are required'
@@ -69,7 +78,7 @@ export async function POST(request) {
         await executeQuery(
             `INSERT INTO entities (slug, label, icon, description, display_order)
              VALUES ($1, $2, $3, $4, $5)`,
-            [slug.toLowerCase(), label, icon || 'fa-folder', description, display_order || 0]
+            [slug, label, icon, description, display_order]
         );
 
         return NextResponse.json({ success: true, message: 'Entity created successfully' });
@@ -88,9 +97,14 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { id, label, icon, description, display_order, is_active } = body;
+        const id = sanitizeInt(body.id, 0, 1);
+        const label = body.label ? sanitizeString(body.label, 255) : null;
+        const icon = body.icon ? sanitizeString(body.icon, 100) : null;
+        const description = body.description !== undefined ? sanitizeString(body.description, 1000) : null;
+        const display_order = body.display_order !== undefined ? sanitizeInt(body.display_order, 0, 0, 1000) : null;
+        const is_active = body.is_active !== undefined ? body.is_active : null;
 
-        if (!id) return NextResponse.json({ success: false, message: 'ID required' }, { status: 400 });
+        if (id < 1) return NextResponse.json({ success: false, message: 'Valid ID required' }, { status: 400 });
 
         await executeQuery(
             `UPDATE entities 
@@ -119,9 +133,9 @@ export async function DELETE(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const id = sanitizeInt(searchParams.get('id'), 0, 1);
 
-        if (!id) return NextResponse.json({ success: false, message: 'ID required' }, { status: 400 });
+        if (id < 1) return NextResponse.json({ success: false, message: 'Valid ID required' }, { status: 400 });
 
         await executeQuery('DELETE FROM entities WHERE id = $1', [id]);
 

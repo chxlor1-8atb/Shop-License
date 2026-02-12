@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAuth, getSession, safeErrorMessage } from '@/lib/api-helpers';
-import { validatePassword } from '@/lib/security';
+import { validatePassword, sanitizeString } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +37,8 @@ export async function PUT(request) {
     try {
         const session = await getSession();
         const body = await request.json();
-        const { full_name, current_password, new_password } = body;
+        const full_name = sanitizeString(body.full_name || '', 255);
+        const { current_password, new_password } = body;
 
         // Fetch current user data including password hash
         const currentUser = await fetchOne('SELECT * FROM users WHERE id = $1', [session.id]);

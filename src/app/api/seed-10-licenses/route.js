@@ -162,9 +162,10 @@ export async function GET() {
         });
 
     } catch (err) {
+        console.error('Seed 10 licenses error:', err);
         return NextResponse.json({
             success: false,
-            message: err.message
+            message: process.env.NODE_ENV === 'production' ? 'Seed operation failed' : err.message
         }, { status: 500 });
     }
 }

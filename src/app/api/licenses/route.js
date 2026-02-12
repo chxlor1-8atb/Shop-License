@@ -3,7 +3,7 @@ import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
-import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
+import { sanitizeInt, sanitizeString, validateEnum, sanitizeDate } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -171,12 +171,16 @@ export async function POST(request) {
     try {
         const body = await request.json();
 
-        const { shop_id, license_type_id, issue_date, expiry_date, custom_fields } = body;
+        const { custom_fields } = body;
+        const issue_date = sanitizeDate(body.issue_date);
+        const expiry_date = sanitizeDate(body.expiry_date);
+        const shop_id = sanitizeInt(body.shop_id, 0, 1);
+        const license_type_id = sanitizeInt(body.license_type_id, 0, 1);
         const license_number = sanitizeString(body.license_number || '', 100);
         const status = validateEnum(body.status, ['active', 'expired', 'pending', 'suspended', 'revoked'], 'active');
         const notes = sanitizeString(body.notes || '', 1000);
 
-        if (!shop_id || !license_type_id || !license_number) {
+        if (shop_id < 1 || license_type_id < 1 || !license_number) {
             console.error('[POST /api/licenses] Missing required fields');
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
         }
@@ -188,8 +192,6 @@ export async function POST(request) {
         );
 
         const licenseId = result?.rows?.[0]?.id || result?.[0]?.id; // Handle both neon formats
-
-
 
         // Save custom fields if provided
         if (custom_fields && licenseId && Object.keys(custom_fields).length > 0) {
@@ -243,12 +245,17 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { id, shop_id, license_type_id, issue_date, expiry_date, custom_fields } = body;
+        const { custom_fields } = body;
+        const issue_date = sanitizeDate(body.issue_date);
+        const expiry_date = sanitizeDate(body.expiry_date);
+        const id = sanitizeInt(body.id, 0, 1);
+        const shop_id = sanitizeInt(body.shop_id, 0, 1);
+        const license_type_id = sanitizeInt(body.license_type_id, 0, 1);
         const license_number = sanitizeString(body.license_number || '', 100);
         const status = validateEnum(body.status, ['active', 'expired', 'pending', 'suspended', 'revoked'], 'active');
         const notes = sanitizeString(body.notes || '', 1000);
 
-        if (!id || !shop_id || !license_type_id) {
+        if (id < 1 || shop_id < 1 || license_type_id < 1) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
         }
 
@@ -302,7 +309,7 @@ export async function PUT(request) {
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.UPDATE,
             entityType: ENTITY_TYPES.LICENSE,
-            entityId: parseInt(id),
+            entityId: id,
             details: `แก้ไขใบอนุญาตหมายเลข: ${license_number}`
         });
 
@@ -319,10 +326,10 @@ export async function DELETE(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const id = sanitizeInt(searchParams.get('id'), 0, 1);
 
-        if (!id) {
-            return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 });
+        if (id < 1) {
+            return NextResponse.json({ success: false, message: 'Invalid license ID' }, { status: 400 });
         }
 
         // Get license info before deleting for logging
@@ -336,7 +343,7 @@ export async function DELETE(request) {
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.DELETE,
             entityType: ENTITY_TYPES.LICENSE,
-            entityId: parseInt(id),
+            entityId: id,
             details: `ลบใบอนุญาตหมายเลข: ${license?.license_number || id}`
         });
 

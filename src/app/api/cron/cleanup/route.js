@@ -1,5 +1,21 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { timingSafeEqual } from 'crypto';
+
+/**
+ * Security: Timing-safe string comparison to prevent timing attacks
+ */
+function safeCompare(a, b) {
+    if (!a || !b || typeof a !== 'string' || typeof b !== 'string') return false;
+    try {
+        const bufA = Buffer.from(a);
+        const bufB = Buffer.from(b);
+        if (bufA.length !== bufB.length) return false;
+        return timingSafeEqual(bufA, bufB);
+    } catch {
+        return false;
+    }
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +32,7 @@ export async function GET(request) {
         const authHeader = request.headers.get('authorization');
         const cronSecret = process.env.CRON_SECRET;
 
-        if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+        if (!cronSecret || !safeCompare(authHeader, `Bearer ${cronSecret}`)) {
             return NextResponse.json(
                 { success: false, message: 'Unauthorized' },
                 { status: 401 }
@@ -40,8 +56,11 @@ export async function GET(request) {
         });
     } catch (error) {
         console.error('[Cron Cleanup] Error:', error);
+        const message = process.env.NODE_ENV === 'production'
+            ? 'Cleanup failed'
+            : 'Cleanup failed: ' + error.message;
         return NextResponse.json(
-            { success: false, message: 'Cleanup failed: ' + error.message },
+            { success: false, message },
             { status: 500 }
         );
     }

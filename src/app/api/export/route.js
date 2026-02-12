@@ -4,8 +4,22 @@ import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAuth, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { generatePdf } from '@/lib/serverPdfGenerator';
+import { sanitizeString, sanitizeInt, validateEnum, sanitizeDate } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Security: Prevent CSV Formula Injection
+ * Prefixes dangerous characters with a single quote to neutralize formulas in Excel/LibreOffice
+ */
+function sanitizeCsvValue(val) {
+    if (typeof val !== 'string' || val.length === 0) return val;
+    const dangerousChars = ['=', '+', '-', '@', '\t', '\r'];
+    if (dangerousChars.includes(val.charAt(0))) {
+        return "'" + val;
+    }
+    return val;
+}
 
 export async function GET(request) {
     // Check authentication - REQUIRED for security
@@ -14,16 +28,18 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const type = searchParams.get('type');
-        const format = searchParams.get('format') || 'csv';
+        const type = validateEnum(searchParams.get('type'), ['shops', 'licenses', 'users'], '');
+        const format = validateEnum(searchParams.get('format') || 'csv', ['csv', 'pdf'], 'csv');
         const fieldsParam = searchParams.get('fields');
 
-        if (format !== 'csv' && format !== 'pdf') {
-            return NextResponse.json({ success: false, message: 'Only CSV and PDF formats are supported' }, { status: 400 });
+        if (!type) {
+            return NextResponse.json({ success: false, message: 'Invalid export type' }, { status: 400 });
         }
 
         let data = [];
-        let filename = `export_${type}_${new Date().toISOString().split('T')[0]}.${format}`;
+        // Security: Sanitize filename to prevent header injection
+        const safeType = type.replace(/[^a-zA-Z0-9_-]/g, '');
+        let filename = `export_${safeType}_${new Date().toISOString().split('T')[0]}.${format}`;
 
         // Define Base Columns Mapping
         // Updated to match custom_fields keys and labels EXACTLY
@@ -95,25 +111,34 @@ export async function GET(request) {
         // Fetch Data
         if (type === 'licenses') {
             const license_type = searchParams.get('license_type');
-            const status = searchParams.get('status');
-            const shop_id = searchParams.get('shop_id');
-            const search = searchParams.get('search');
-            const expiry_from = searchParams.get('expiry_from');
-            const expiry_to = searchParams.get('expiry_to');
+            const status = validateEnum(
+                sanitizeString(searchParams.get('status'), 50),
+                ['active', 'expired', 'pending', 'suspended', 'revoked'],
+                ''
+            );
+            const shop_id = sanitizeInt(searchParams.get('shop_id'), 0, 1);
+            const search = sanitizeString(searchParams.get('search') || '', 100);
+            const expiry_from = sanitizeDate(searchParams.get('expiry_from'));
+            const expiry_to = sanitizeDate(searchParams.get('expiry_to'));
 
             let whereClauses = [];
             let params = [];
             let paramIndex = 1;
 
             if (license_type) {
-                whereClauses.push(`l.license_type_id = $${paramIndex++}`);
-                params.push(license_type);
-                filters['License Type ID'] = license_type;
+                const safeLicenseType = sanitizeInt(license_type, 0, 1);
+                if (safeLicenseType > 0) {
+                    whereClauses.push(`l.license_type_id = $${paramIndex++}`);
+                    params.push(safeLicenseType);
+                    filters['License Type ID'] = safeLicenseType;
+                }
             }
             if (shop_id) {
-                whereClauses.push(`l.shop_id = $${paramIndex++}`);
-                params.push(shop_id);
-                // We might want to look up shop name for the filter label if possible, or just show ID
+                const safeShopId = sanitizeInt(shop_id, 0, 1);
+                if (safeShopId > 0) {
+                    whereClauses.push(`l.shop_id = $${paramIndex++}`);
+                    params.push(safeShopId);
+                }
             }
             if (search) {
                 whereClauses.push(`(
@@ -272,6 +297,9 @@ export async function GET(request) {
                     stringVal = stringVal === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป';
                 }
 
+                // Security: Prevent CSV formula injection
+                stringVal = sanitizeCsvValue(stringVal);
+
                 if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
                     values.push(`"${stringVal.replace(/"/g, '""')}"`);
                 } else {
@@ -286,7 +314,7 @@ export async function GET(request) {
                 if (cfValue === null || cfValue === undefined) {
                     values.push('');
                 } else {
-                    let stringVal = String(cfValue);
+                    let stringVal = sanitizeCsvValue(String(cfValue));
                     if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
                         values.push(`"${stringVal.replace(/"/g, '""')}"`);
                     } else {

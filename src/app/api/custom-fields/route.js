@@ -1,6 +1,11 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
+import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
 import { NextResponse } from 'next/server';
 import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+
+// Security: Allowed entity types and field types
+const ALLOWED_ENTITY_TYPES = ['shops', 'licenses', 'users', 'license_types'];
+const ALLOWED_FIELD_TYPES = ['text', 'number', 'date', 'select', 'boolean', 'textarea'];
 
 export const dynamic = 'force-dynamic';
 
@@ -13,10 +18,14 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const entityType = searchParams.get('entity_type');
-        const id = searchParams.get('id');
+        const idParam = searchParams.get('id');
 
         // Get single field by ID
-        if (id) {
+        if (idParam) {
+            const id = sanitizeInt(idParam, 0, 1);
+            if (id < 1) {
+                return NextResponse.json({ success: false, message: 'Invalid field ID' }, { status: 400 });
+            }
             const field = await fetchOne(
                 'SELECT * FROM custom_fields WHERE id = $1',
                 [id]
@@ -29,8 +38,12 @@ export async function GET(request) {
         let params = [];
 
         if (entityType) {
+            const validatedEntityType = validateEnum(entityType, ALLOWED_ENTITY_TYPES, '');
+            if (!validatedEntityType) {
+                return NextResponse.json({ success: false, message: 'Invalid entity type' }, { status: 400 });
+            }
             query += ' WHERE entity_type = $1 AND is_active = true';
-            params.push(entityType);
+            params.push(validatedEntityType);
         }
 
         query += ' ORDER BY display_order ASC, id ASC';
@@ -53,9 +66,6 @@ export async function POST(request) {
     try {
         const body = await request.json();
         const {
-            entity_type,
-            field_name,
-            field_label,
             field_type = 'text',
             field_options = [],
             is_required = false,
@@ -63,6 +73,15 @@ export async function POST(request) {
             show_in_table = true,
             show_in_form = true
         } = body;
+
+        // Security: Sanitize field_name (strict: alphanumeric, Thai, underscore only)
+        const field_name = sanitizeString(body.field_name || '', 100)
+            .replace(/[^a-zA-Z0-9_\u0E00-\u0E7F]/g, '_');
+        // Security: Sanitize field_label
+        const field_label = sanitizeString(body.field_label || '', 255);
+
+        // Security: Validate entity_type against whitelist
+        const entity_type = validateEnum(body.entity_type, ALLOWED_ENTITY_TYPES, '');
 
         // Validation
         if (!entity_type || !field_name || !field_label) {
@@ -110,19 +129,19 @@ export async function PUT(request) {
     try {
         const body = await request.json();
         const {
-            id,
-            field_label,
-            field_type,
             field_options,
             is_required,
-            display_order,
             show_in_table,
             show_in_form,
             is_active
         } = body;
+        const id = sanitizeInt(body.id, 0, 1);
+        const field_label = body.field_label ? sanitizeString(body.field_label, 255) : null;
+        const field_type = body.field_type ? validateEnum(body.field_type, ALLOWED_FIELD_TYPES, null) : null;
+        const display_order = body.display_order !== undefined ? sanitizeInt(body.display_order, 0, 0, 1000) : null;
 
-        if (!id) {
-            return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 });
+        if (id < 1) {
+            return NextResponse.json({ success: false, message: 'Invalid field ID' }, { status: 400 });
         }
 
         await executeQuery(
@@ -136,7 +155,7 @@ export async function PUT(request) {
                  show_in_form = COALESCE($7, show_in_form),
                  is_active = COALESCE($8, is_active)
              WHERE id = $9`,
-            [field_label, field_type, field_options ? JSON.stringify(field_options) : null, is_required, display_order, show_in_table, show_in_form, is_active, id]
+            [field_label, field_type, field_options ? JSON.stringify(field_options) : null, is_required !== undefined ? is_required : null, display_order !== undefined ? display_order : null, show_in_table !== undefined ? show_in_table : null, show_in_form !== undefined ? show_in_form : null, is_active !== undefined ? is_active : null, id]
         );
 
         return NextResponse.json({ success: true, message: 'อัปเดต Custom Field สำเร็จ' });
@@ -154,10 +173,10 @@ export async function DELETE(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const id = sanitizeInt(searchParams.get('id'), 0, 1);
 
-        if (!id) {
-            return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 });
+        if (id < 1) {
+            return NextResponse.json({ success: false, message: 'Invalid field ID' }, { status: 400 });
         }
 
         // Delete field (cascade will delete values too)

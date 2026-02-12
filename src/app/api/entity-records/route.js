@@ -1,6 +1,7 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { sanitizeInt, sanitizeString } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const entitySlug = searchParams.get('entity');
+        const entitySlug = sanitizeString(searchParams.get('entity') || '', 100);
         const id = searchParams.get('id');
 
         if (!entitySlug) {
@@ -56,8 +57,12 @@ export async function GET(request) {
         const params = [entity.id];
 
         if (id) {
+            const safeId = sanitizeInt(id, 0, 1);
+            if (safeId < 1) {
+                return NextResponse.json({ success: false, message: 'Invalid record ID' }, { status: 400 });
+            }
             query += ' AND r.id = $2';
-            params.push(id);
+            params.push(safeId);
         }
 
         query += ' ORDER BY r.created_at DESC';
@@ -122,7 +127,8 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { entitySlug, data } = body;
+        const { data } = body;
+        const entitySlug = sanitizeString(body.entitySlug || '', 100);
 
         if (!entitySlug || !data) {
             return NextResponse.json({ success: false, message: 'Entity slug and data required' }, { status: 400 });
@@ -143,8 +149,13 @@ export async function POST(request) {
 
         // 2. Insert Values
         for (const field of fields) {
-            const value = data[field.field_name];
+            let value = data[field.field_name];
             if (value === undefined || value === null || value === '') continue;
+
+            // Security: Sanitize text values to prevent XSS
+            if (field.field_type === 'text' && typeof value === 'string') {
+                value = sanitizeString(value, 1000);
+            }
 
             const col = getValueColumn(field.field_type);
 
@@ -170,9 +181,11 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { entitySlug, id, data } = body;
+        const { data } = body;
+        const entitySlug = sanitizeString(body.entitySlug || '', 100);
+        const id = sanitizeInt(body.id, 0, 1);
 
-        if (!entitySlug || !id || !data) {
+        if (!entitySlug || id < 1 || !data) {
             return NextResponse.json({ success: false, message: 'Required fields missing' }, { status: 400 });
         }
 
@@ -186,8 +199,13 @@ export async function PUT(request) {
 
         // Upsert values
         for (const field of fields) {
-            const value = data[field.field_name];
+            let value = data[field.field_name];
             if (value === undefined) continue; // Skip if not present in update payload
+
+            // Security: Sanitize text values to prevent XSS
+            if (field.field_type === 'text' && typeof value === 'string') {
+                value = sanitizeString(value, 1000);
+            }
 
             const col = getValueColumn(field.field_type);
 
@@ -237,9 +255,9 @@ export async function DELETE(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const id = sanitizeInt(searchParams.get('id'), 0, 1);
 
-        if (!id) return NextResponse.json({ success: false, message: 'ID required' }, { status: 400 });
+        if (id < 1) return NextResponse.json({ success: false, message: 'Valid ID required' }, { status: 400 });
 
         await executeQuery('DELETE FROM entity_records WHERE id = $1', [id]);
 

@@ -199,9 +199,10 @@ export async function POST(request) {
         });
 
     } catch (err) {
+        console.error('Seed custom fields error:', err);
         return NextResponse.json({
             success: false,
-            message: err.message
+            message: process.env.NODE_ENV === 'production' ? 'Seed operation failed' : err.message
         }, { status: 500 });
     }
 }
@@ -235,7 +236,7 @@ export async function GET() {
     } catch (err) {
         return NextResponse.json({
             success: false,
-            message: err.message
+            message: process.env.NODE_ENV === 'production' ? 'Seed operation failed' : err.message
         }, { status: 500 });
     }
 }

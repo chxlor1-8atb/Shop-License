@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 /**
  * Next.js Middleware for Security & Performance Headers
@@ -40,43 +41,65 @@ const SUSPICIOUS_PATTERNS = [
     /win\.ini/                   // LFI (Windows)
 ];
 
-// Rate Limiting Config (In-Memory specific to this runtime instance)
-// ⚠️ SECURITY NOTE: In-memory rate limiting does NOT persist across serverless cold starts
-// and does NOT share state across multiple instances. For production-grade rate limiting,
-// migrate to a distributed store (e.g., Vercel KV, Upstash Redis, or Vercel Edge Config).
-// Current implementation is only effective against burst attacks within a single instance.
+// Rate Limiting Config
+// ✅ Uses Redis (Upstash) if UPSTASH_REDIS_REST_URL is set, otherwise falls back to in-memory
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 300; // General limit
 const MAX_LOGIN_REQUESTS = 10;       // Login attempt limit (POST /api/auth?action=login)
 const MAX_SENSITIVE_REQUESTS = 60;   // Auth check/other sensitive paths limit
 
-const ipRequestCounts = new Map();
-
-// Helper: Basic cleanup of old rate limit entries
-function cleanupRateLimits() {
-    const now = Date.now();
-    for (const [ip, data] of ipRequestCounts.entries()) {
-        if (now - data.startTime > RATE_LIMIT_WINDOW) {
-            ipRequestCounts.delete(ip);
-        }
-    }
-}
-
-// Only set interval if not already set (reloads might cause issues in dev, but benign here)
-if (!global.rateLimitInterval) {
-    global.rateLimitInterval = setInterval(cleanupRateLimits, 60000);
-}
-
 // ========================================
 
-export function middleware(request) {
+export async function middleware(request) {
     const { pathname } = request.nextUrl;
     // Security: Prefer x-real-ip (set by reverse proxy, harder to spoof) over x-forwarded-for
+    // ⚠️ NOTE: On Vercel, x-real-ip is set by the platform and is trustworthy.
+    // For other hosting providers, configure a trusted proxy list to prevent IP spoofing.
+    // x-forwarded-for is used as fallback only (first entry = client IP from proxy chain).
     const rawIp = request.headers.get('x-real-ip')
         || (request.headers.get('x-forwarded-for') || '').split(',')[0].trim()
         || 'unknown';
     const ip = rawIp.length <= 45 ? rawIp : 'invalid';
     const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
+    const isPageRoute = !pathname.startsWith('/api/');
+
+    // 0a. BODY SIZE LIMIT: Reject oversized API payloads (100KB) to prevent DoS
+    if (!isPageRoute && ['POST', 'PUT', 'PATCH'].includes(request.method)) {
+        const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
+        if (contentLength > 102400) {
+            return new NextResponse(JSON.stringify({ error: 'Payload too large' }), {
+                status: 413,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+    }
+
+    // 0b. CSRF DEFENSE: Origin/Referer validation for state-changing API requests
+    // Defense-in-depth alongside sameSite:strict cookies
+    if (!isPageRoute && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
+        const origin = request.headers.get('origin');
+        const referer = request.headers.get('referer');
+        const host = request.headers.get('host');
+        if (host && origin) {
+            const originHost = new URL(origin).host;
+            if (originHost !== host) {
+                return new NextResponse(JSON.stringify({ error: 'Cross-origin request blocked' }), {
+                    status: 403,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+        } else if (host && referer) {
+            try {
+                const refererHost = new URL(referer).host;
+                if (refererHost !== host) {
+                    return new NextResponse(JSON.stringify({ error: 'Cross-origin request blocked' }), {
+                        status: 403,
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                }
+            } catch { /* malformed referer - allow (some clients don't send it) */ }
+        }
+    }
 
     // 1. BLOCK KNOWN ATTACK TOOLS (User-Agent Check)
     // Protection against: sqlmap, dalfox, nuclei, katana, nikko, hydra, rustscan
@@ -91,12 +114,22 @@ export function middleware(request) {
     // Protection against: sqlmap, dalfox, manual SQLi/XSS injection
     // Optimization: Skip expensive regex checks for simple page routes (no query params)
     // Page routes don't process URL params server-side, so injection is not a risk
-    const isPageRoute = !pathname.startsWith('/api/');
     const hasQueryParams = request.nextUrl.search !== '';
 
     if (!isPageRoute || hasQueryParams) {
+        // Security: Recursive decode to prevent double-encoding bypass (%253C → %3C → <)
+        let decodedUrl = request.url;
+        try {
+            let prev = decodedUrl;
+            for (let i = 0; i < 3; i++) {
+                decodedUrl = decodeURIComponent(decodedUrl);
+                if (decodedUrl === prev) break;
+                prev = decodedUrl;
+            }
+        } catch { /* malformed URI - test raw */ }
+
         const hasSuspiciousPayload = SUSPICIOUS_PATTERNS.some(pattern =>
-            pattern.test(pathname) || pattern.test(decodeURIComponent(request.url))
+            pattern.test(pathname) || pattern.test(decodedUrl)
         );
 
         if (hasSuspiciousPayload) {
@@ -107,10 +140,9 @@ export function middleware(request) {
         }
     }
 
-    // 3. RATE LIMITING
+    // 3. RATE LIMITING (Redis + In-Memory Fallback)
     // Protection against: hydra (brute-force), gau (crawling), DoS
-    // Optimization: Only compute login/sensitive checks for API routes
-    const now = Date.now();
+    // Uses Upstash Redis if configured, otherwise in-memory fallback
     let rateLimitType = 'general';
     let limit = MAX_REQUESTS_PER_WINDOW;
 
@@ -122,29 +154,15 @@ export function middleware(request) {
         limit = isLoginAttempt ? MAX_LOGIN_REQUESTS : isSensitivePath ? MAX_SENSITIVE_REQUESTS : MAX_REQUESTS_PER_WINDOW;
     }
 
-    // Use separate keys per request type so counters don't interfere
     const rateLimitKey = `${ip}:${rateLimitType}`;
+    const rlResult = await checkRateLimit(rateLimitKey, RATE_LIMIT_WINDOW, limit);
 
-    let clientData = ipRequestCounts.get(rateLimitKey);
-
-    if (!clientData) {
-        clientData = { count: 1, startTime: now };
-        ipRequestCounts.set(rateLimitKey, clientData);
-    } else {
-        if (now - clientData.startTime > RATE_LIMIT_WINDOW) {
-            // Reset window
-            clientData.count = 1;
-            clientData.startTime = now;
-        } else {
-            clientData.count++;
-        }
-    }
-
-    if (clientData.count > limit) {
+    if (!rlResult.allowed) {
         return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
             status: 429,
             headers: {
-                'Retry-After': '60',
+                'Retry-After': String(rlResult.resetIn),
+                'X-RateLimit-Remaining': '0',
                 'Content-Type': 'application/json'
             }
         });
@@ -159,6 +177,8 @@ export function middleware(request) {
         // Core security headers
         response.headers.set('X-Content-Type-Options', 'nosniff');
         response.headers.set('X-Frame-Options', 'DENY');
+        response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
         response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         response.headers.set('Pragma', 'no-cache');
         response.headers.set('Expires', '0');
@@ -171,6 +191,9 @@ export function middleware(request) {
         // API-specific CSP - very restrictive
         response.headers.set('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
 
+        // Remove headers that might leak info
+        response.headers.delete('X-Powered-By');
+
         return response;
     }
 
@@ -179,6 +202,11 @@ export function middleware(request) {
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+
+    // CSP for page routes - allow self + inline for Next.js hydration, restrict external sources
+    response.headers.set('Content-Security-Policy',
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com data:; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none';"
+    );
 
     // HSTS - Force HTTPS (2 years with preload)
     if (isProduction) {

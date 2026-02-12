@@ -2,6 +2,7 @@
 import { fetchAll } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { requireAuth, safeErrorMessage } from '@/lib/api-helpers';
+import { sanitizeString, sanitizeInt, validateEnum, sanitizeDate } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,9 +13,12 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const type = searchParams.get('type');
+        const type = validateEnum(searchParams.get('type'), ['licenses', 'shops', 'users'], '');
+        if (!type) {
+            return NextResponse.json({ success: false, message: 'Invalid export type' }, { status: 400 });
+        }
         const fieldsParam = searchParams.get('fields');
-        const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '100') || 100), 1000); // Limit preview rows, cap at 1000
+        const limit = sanitizeInt(searchParams.get('limit'), 100, 1, 1000);
 
         let data = [];
 
@@ -86,23 +90,33 @@ export async function GET(request) {
         // Fetch Data with limit
         if (type === 'licenses') {
             const license_type = searchParams.get('license_type');
-            const status = searchParams.get('status');
+            const status = validateEnum(
+                searchParams.get('status'),
+                ['active', 'expired', 'pending', 'suspended', 'revoked'],
+                ''
+            );
             const shop_id = searchParams.get('shop_id');
-            const search = searchParams.get('search');
-            const expiry_from = searchParams.get('expiry_from');
-            const expiry_to = searchParams.get('expiry_to');
+            const search = sanitizeString(searchParams.get('search') || '', 100);
+            const expiry_from = sanitizeDate(searchParams.get('expiry_from'));
+            const expiry_to = sanitizeDate(searchParams.get('expiry_to'));
 
             let whereClauses = [];
             let params = [];
             let paramIndex = 1;
 
             if (license_type) {
-                whereClauses.push(`l.license_type_id = $${paramIndex++}`);
-                params.push(license_type);
+                const safeLicenseType = sanitizeInt(license_type, 0, 1);
+                if (safeLicenseType > 0) {
+                    whereClauses.push(`l.license_type_id = $${paramIndex++}`);
+                    params.push(safeLicenseType);
+                }
             }
             if (shop_id) {
-                whereClauses.push(`l.shop_id = $${paramIndex++}`);
-                params.push(shop_id);
+                const safeShopId = sanitizeInt(shop_id, 0, 1);
+                if (safeShopId > 0) {
+                    whereClauses.push(`l.shop_id = $${paramIndex++}`);
+                    params.push(safeShopId);
+                }
             }
             if (search) {
                 whereClauses.push(`(

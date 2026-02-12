@@ -6,7 +6,8 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { queryCache, CACHE_KEYS, CACHE_TTL } from '@/lib/performance';
-import { requireAuth, safeErrorMessage } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { sanitizeInt, sanitizeString } from '@/lib/security';
 
 // Force dynamic for this route - can't use static generation
 export const dynamic = 'force-dynamic';
@@ -22,13 +23,17 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const rawId = searchParams.get('id');
 
         // Single item - no caching (specific lookup)
-        if (id) {
+        if (rawId) {
+            const safeId = sanitizeInt(rawId, 0, 1);
+            if (safeId < 1) {
+                return NextResponse.json({ success: false, message: 'Invalid ID' }, { status: 400 });
+            }
             const type = await fetchOne(
                 'SELECT id, name, description, validity_days FROM license_types WHERE id = $1', 
-                [id]
+                [safeId]
             );
             
             return NextResponse.json({ 
@@ -72,13 +77,15 @@ export async function GET(request) {
  * Creates new license type and invalidates cache
  */
 export async function POST(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin for creating license types
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
         const body = await request.json();
-        const { name, description, validity_days } = body;
+        const name = sanitizeString(body.name || '', 255);
+        const description = sanitizeString(body.description || '', 1000);
+        const validity_days = sanitizeInt(body.validity_days, 365, 1, 9999);
 
         if (!name) {
             return NextResponse.json({ 
@@ -91,7 +98,7 @@ export async function POST(request) {
             `INSERT INTO license_types (name, description, validity_days) 
              VALUES ($1, $2, $3) 
              RETURNING id`,
-            [name, description || null, validity_days || 365]
+            [name, description || null, validity_days]
         );
 
         // Invalidate cache when data changes
@@ -117,15 +124,18 @@ export async function POST(request) {
  * Updates license type and invalidates cache
  */
 export async function PUT(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin for updating license types
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
         const body = await request.json();
-        const { id, name, description, validity_days } = body;
+        const id = sanitizeInt(body.id, 0, 1);
+        const name = sanitizeString(body.name || '', 255);
+        const description = sanitizeString(body.description || '', 1000);
+        const validity_days = sanitizeInt(body.validity_days, 365, 1, 9999);
 
-        if (!id || !name) {
+        if (id < 1 || !name) {
             return NextResponse.json({ 
                 success: false, 
                 message: 'ID and Name are required' 
@@ -136,7 +146,7 @@ export async function PUT(request) {
             `UPDATE license_types 
              SET name = $1, description = $2, validity_days = $3, updated_at = CURRENT_TIMESTAMP
              WHERE id = $4`,
-            [name, description || null, validity_days || 365, id]
+            [name, description || null, validity_days, id]
         );
 
         // Invalidate cache when data changes
@@ -161,18 +171,18 @@ export async function PUT(request) {
  * Deletes license type and invalidates cache
  */
 export async function DELETE(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin for deleting license types
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const id = sanitizeInt(searchParams.get('id'), 0, 1);
 
-        if (!id) {
+        if (id < 1) {
             return NextResponse.json({ 
                 success: false, 
-                message: 'ID is required' 
+                message: 'Valid ID is required' 
             }, { status: 400 });
         }
 

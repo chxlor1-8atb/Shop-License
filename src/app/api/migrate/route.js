@@ -6,8 +6,14 @@ import { requireAdmin } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
-    // Security: Block migration in production unless explicitly allowed
+export async function POST() {
+    // Security: Block migration in production — double-check with VERCEL_ENV
+    if (process.env.VERCEL_ENV === 'production') {
+        return NextResponse.json(
+            { success: false, message: 'Migration is disabled in production' },
+            { status: 403 }
+        );
+    }
     if (process.env.NODE_ENV === 'production' && process.env.ALLOW_MIGRATE !== 'true') {
         return NextResponse.json(
             { success: false, message: 'Migration is disabled in production' },
@@ -50,6 +56,9 @@ export async function GET() {
         return NextResponse.json({ success: true, message: 'Migration completed' });
     } catch (error) {
         console.error('Migration failed:', error);
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        const message = process.env.NODE_ENV === 'production'
+            ? 'Migration failed'
+            : error.message;
+        return NextResponse.json({ success: false, message }, { status: 500 });
     }
 }
