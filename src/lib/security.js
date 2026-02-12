@@ -32,7 +32,11 @@ export function sanitizeString(str, maxLength = 255) {
     return str
         .trim()
         .slice(0, maxLength)
-        .replace(/[<>]/g, ''); // Remove basic HTML tags
+        .replace(/[<>]/g, '')                    // Remove HTML angle brackets
+        .replace(/javascript\s*:/gi, '')         // Remove javascript: protocol
+        .replace(/on\w+\s*=/gi, '')              // Remove event handlers (onerror=, onload=, etc.)
+        .replace(/data\s*:\s*text\/html/gi, '')  // Remove data:text/html URIs
+        .replace(/vbscript\s*:/gi, '');          // Remove vbscript: protocol
 }
 
 /**

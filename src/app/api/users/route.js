@@ -3,8 +3,8 @@ import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
-import { requireAdmin, getCurrentUser } from '@/lib/api-helpers';
-import { validatePassword, sanitizeInt } from '@/lib/security';
+import { requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
+import { validatePassword, validateUsername, sanitizeInt } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,7 +72,7 @@ export async function GET(request) {
             stats
         });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -87,6 +87,12 @@ export async function POST(request) {
 
         if (!username || !password || !role) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
+        }
+
+        // Security: Validate username format
+        const usernameCheck = validateUsername(username);
+        if (!usernameCheck.valid) {
+            return NextResponse.json({ success: false, message: usernameCheck.message }, { status: 400 });
         }
 
         // Security: Strong password validation
@@ -127,7 +133,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true, message: 'User created successfully' });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -191,7 +197,7 @@ export async function PUT(request) {
 
         return NextResponse.json({ success: true, message: 'User updated successfully' });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -235,6 +241,6 @@ export async function DELETE(request) {
 
         return NextResponse.json({ success: true, message: 'User deleted successfully' });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

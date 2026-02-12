@@ -1,6 +1,6 @@
 import { fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,14 +21,14 @@ export async function GET(request) {
 
     } catch (err) {
         console.error('Error fetching field:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
 // POST - Create new field for an entity
 export async function POST(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin for schema changes
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
@@ -85,14 +85,14 @@ export async function POST(request) {
 
     } catch (err) {
         console.error('Error creating field:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
 // PUT - Update field
 export async function PUT(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin for schema changes
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
@@ -142,14 +142,14 @@ export async function PUT(request) {
 
     } catch (err) {
         console.error('Error updating field:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
 // DELETE - Delete field
 export async function DELETE(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin for schema changes
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
@@ -164,6 +164,6 @@ export async function DELETE(request) {
 
     } catch (err) {
         console.error('Error deleting field:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

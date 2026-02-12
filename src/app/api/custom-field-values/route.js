@@ -1,6 +1,6 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/api-helpers';
+import { requireAuth, safeErrorMessage } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,7 +54,7 @@ export async function GET(request) {
         return NextResponse.json({ success: true, values, valuesMap });
     } catch (err) {
         console.error('Error fetching custom field values:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -104,7 +104,7 @@ export async function POST(request) {
         return NextResponse.json({ success: true, message: 'บันทึก Custom Fields สำเร็จ' });
     } catch (err) {
         console.error('Error saving custom field values:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -136,6 +136,6 @@ export async function DELETE(request) {
         return NextResponse.json({ success: true, message: 'ลบ Custom Field Values สำเร็จ' });
     } catch (err) {
         console.error('Error deleting custom field values:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

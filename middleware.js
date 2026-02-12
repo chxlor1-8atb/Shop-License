@@ -41,7 +41,10 @@ const SUSPICIOUS_PATTERNS = [
 ];
 
 // Rate Limiting Config (In-Memory specific to this runtime instance)
-// Note: In a serverless generic environment, this resets often, but effective for burst attacks.
+// ⚠️ SECURITY NOTE: In-memory rate limiting does NOT persist across serverless cold starts
+// and does NOT share state across multiple instances. For production-grade rate limiting,
+// migrate to a distributed store (e.g., Vercel KV, Upstash Redis, or Vercel Edge Config).
+// Current implementation is only effective against burst attacks within a single instance.
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 300; // General limit
 const MAX_LOGIN_REQUESTS = 10;       // Login attempt limit (POST /api/auth?action=login)
@@ -68,7 +71,11 @@ if (!global.rateLimitInterval) {
 
 export function middleware(request) {
     const { pathname } = request.nextUrl;
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    // Security: Prefer x-real-ip (set by reverse proxy, harder to spoof) over x-forwarded-for
+    const rawIp = request.headers.get('x-real-ip')
+        || (request.headers.get('x-forwarded-for') || '').split(',')[0].trim()
+        || 'unknown';
+    const ip = rawIp.length <= 45 ? rawIp : 'invalid';
     const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
 
     // 1. BLOCK KNOWN ATTACK TOOLS (User-Agent Check)

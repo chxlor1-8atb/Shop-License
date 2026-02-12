@@ -2,7 +2,7 @@
 import { fetchAll } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
-import { requireAuth, getCurrentUser } from '@/lib/api-helpers';
+import { requireAuth, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { generatePdf } from '@/lib/serverPdfGenerator';
 
 export const dynamic = 'force-dynamic';
@@ -310,6 +310,6 @@ export async function GET(request) {
 
     } catch (err) {
         console.error('Export Error:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

@@ -52,8 +52,8 @@ function getSessionOptions() {
             secure: process.env.NODE_ENV === 'production',
             // Prevent JavaScript access - critical for XSS protection
             httpOnly: true,
-            // Protect against CSRF - 'strict' breaks OAuth flows, 'lax' is safe default
-            sameSite: 'lax',
+            // Protect against CSRF - 'strict' for maximum CSRF protection (no OAuth flows in this app)
+            sameSite: 'strict',
             // Session expiration
             maxAge: SESSION_TTL.DEFAULT,
             // Explicit path
@@ -72,7 +72,7 @@ const sessionOptions = {
         return {
             secure: process.env.NODE_ENV === 'production',
             httpOnly: true,
-            sameSite: 'lax',
+            sameSite: 'strict',
             maxAge: SESSION_TTL.DEFAULT,
             path: '/',
         };

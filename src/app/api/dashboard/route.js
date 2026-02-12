@@ -46,7 +46,7 @@ export async function GET(request) {
     } catch (err) {
         console.error('Dashboard error:', err);
         return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด: ' + err.message },
+            { success: false, message: process.env.NODE_ENV === 'production' ? 'เกิดข้อผิดพลาดภายในระบบ' : 'เกิดข้อผิดพลาด: ' + err.message },
             { status: 500 }
         );
     }

@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { executeQuery, fetchAll } from '@/lib/db';
-import { requireAuth, requireAdmin } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +25,7 @@ export async function GET(request) {
 
         return NextResponse.json({ success: true, columns });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -60,7 +60,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true, message: 'Column added successfully' });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -81,6 +81,6 @@ export async function DELETE(request) {
 
         return NextResponse.json({ success: true, message: 'Column removed successfully' });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

@@ -1,7 +1,7 @@
 
 import { fetchAll } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/api-helpers';
+import { requireAuth, safeErrorMessage } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +14,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const type = searchParams.get('type');
         const fieldsParam = searchParams.get('fields');
-        const limit = Math.max(1, parseInt(searchParams.get('limit') || '100') || 100); // Limit preview rows
+        const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '100') || 100), 1000); // Limit preview rows, cap at 1000
 
         let data = [];
 
@@ -182,8 +182,9 @@ export async function GET(request) {
                 ${whereSQL}
                 GROUP BY l.id, l.license_number, s.shop_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
                 ORDER BY l.id DESC
-                LIMIT ${limit}
+                LIMIT $${paramIndex}
             `;
+            params.push(limit);
             data = await fetchAll(query, params);
 
             return NextResponse.json({
@@ -213,8 +214,8 @@ export async function GET(request) {
                     (SELECT COUNT(*) FROM licenses WHERE shop_id = s.id) as license_count
                 FROM shops s
                 ORDER BY s.id DESC
-                LIMIT ${limit}
-            `);
+                LIMIT $1
+            `, [limit]);
 
             return NextResponse.json({
                 success: true,
@@ -234,8 +235,8 @@ export async function GET(request) {
                 SELECT username, full_name, role, created_at
                 FROM users
                 ORDER BY id ASC
-                LIMIT ${limit}
-            `);
+                LIMIT $1
+            `, [limit]);
 
             return NextResponse.json({
                 success: true,
@@ -251,6 +252,6 @@ export async function GET(request) {
 
     } catch (err) {
         console.error('Preview Error:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

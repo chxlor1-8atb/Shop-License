@@ -1,8 +1,22 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requireAuth, requireAdmin } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
+
+// Security: Whitelist of allowed value columns to prevent SQL injection via field_type
+const ALLOWED_VALUE_COLUMNS = ['value_text', 'value_number', 'value_boolean', 'value_date'];
+
+function getValueColumn(fieldType) {
+    let col = 'value_text';
+    if (fieldType === 'number') col = 'value_number';
+    else if (fieldType === 'boolean') col = 'value_boolean';
+    else if (fieldType === 'date') col = 'value_date';
+    if (!ALLOWED_VALUE_COLUMNS.includes(col)) {
+        throw new Error(`Invalid value column: ${col}`);
+    }
+    return col;
+}
 
 // GET - List records for an entity
 export async function GET(request) {
@@ -96,7 +110,7 @@ export async function GET(request) {
 
     } catch (err) {
         console.error('Error fetching records:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -132,10 +146,7 @@ export async function POST(request) {
             const value = data[field.field_name];
             if (value === undefined || value === null || value === '') continue;
 
-            let col = 'value_text';
-            if (field.field_type === 'number') col = 'value_number';
-            else if (field.field_type === 'boolean') col = 'value_boolean';
-            else if (field.field_type === 'date') col = 'value_date';
+            const col = getValueColumn(field.field_type);
 
             await executeQuery(
                 `INSERT INTO entity_values (record_id, field_id, ${col}) VALUES ($1, $2, $3)`,
@@ -147,7 +158,7 @@ export async function POST(request) {
 
     } catch (err) {
         console.error('Error creating record:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -178,10 +189,7 @@ export async function PUT(request) {
             const value = data[field.field_name];
             if (value === undefined) continue; // Skip if not present in update payload
 
-            let col = 'value_text';
-            if (field.field_type === 'number') col = 'value_number';
-            else if (field.field_type === 'boolean') col = 'value_boolean';
-            else if (field.field_type === 'date') col = 'value_date';
+            const col = getValueColumn(field.field_type);
 
             // Delete old value first (simplest way to handle upsert/clear for EAV without complex conditional SQL)
             // Or better: use ON CONFLICT
@@ -217,7 +225,7 @@ export async function PUT(request) {
 
     } catch (err) {
         console.error('Error updating record:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -239,6 +247,6 @@ export async function DELETE(request) {
 
     } catch (err) {
         console.error('Error deleting record:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

@@ -2,7 +2,7 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
-import { requireAuth, requireAdmin, getCurrentUser } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
@@ -159,7 +159,7 @@ export async function GET(request) {
         });
 
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -171,10 +171,10 @@ export async function POST(request) {
     try {
         const body = await request.json();
 
-
-        const { shop_id, license_type_id, license_number, issue_date, expiry_date, status, notes, custom_fields } = body;
-
-
+        const { shop_id, license_type_id, issue_date, expiry_date, custom_fields } = body;
+        const license_number = sanitizeString(body.license_number || '', 100);
+        const status = validateEnum(body.status, ['active', 'expired', 'pending', 'suspended', 'revoked'], 'active');
+        const notes = sanitizeString(body.notes || '', 1000);
 
         if (!shop_id || !license_type_id || !license_number) {
             console.error('[POST /api/licenses] Missing required fields');
@@ -232,7 +232,7 @@ export async function POST(request) {
         return NextResponse.json({ success: true, message: 'เพิ่มใบอนุญาตเรียบร้อยแล้ว' });
     } catch (err) {
         console.error('[POST /api/licenses] Error:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -243,7 +243,10 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { id, shop_id, license_type_id, license_number, issue_date, expiry_date, status, notes, custom_fields } = body;
+        const { id, shop_id, license_type_id, issue_date, expiry_date, custom_fields } = body;
+        const license_number = sanitizeString(body.license_number || '', 100);
+        const status = validateEnum(body.status, ['active', 'expired', 'pending', 'suspended', 'revoked'], 'active');
+        const notes = sanitizeString(body.notes || '', 1000);
 
         if (!id || !shop_id || !license_type_id) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
@@ -305,7 +308,7 @@ export async function PUT(request) {
 
         return NextResponse.json({ success: true, message: 'บันทึกใบอนุญาตเรียบร้อยแล้ว' });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 

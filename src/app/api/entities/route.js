@@ -1,6 +1,6 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requireAuth, requireAdmin } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +36,7 @@ export async function GET(request) {
 
     } catch (err) {
         console.error('Error fetching entities:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -76,7 +76,7 @@ export async function POST(request) {
 
     } catch (err) {
         console.error('Error creating entity:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -107,7 +107,7 @@ export async function PUT(request) {
 
     } catch (err) {
         console.error('Error updating entity:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -129,6 +129,6 @@ export async function DELETE(request) {
 
     } catch (err) {
         console.error('Error deleting entity:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

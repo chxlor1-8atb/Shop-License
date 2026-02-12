@@ -6,7 +6,7 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { queryCache, CACHE_KEYS, CACHE_TTL } from '@/lib/performance';
-import { requireAuth } from '@/lib/api-helpers';
+import { requireAuth, safeErrorMessage } from '@/lib/api-helpers';
 
 // Force dynamic for this route - can't use static generation
 export const dynamic = 'force-dynamic';
@@ -62,7 +62,7 @@ export async function GET(request) {
         console.error('License Types GET error:', err);
         return NextResponse.json({ 
             success: false, 
-            message: err.message 
+            message: safeErrorMessage(err) 
         }, { status: 500 });
     }
 }
@@ -107,7 +107,7 @@ export async function POST(request) {
         console.error('License Types POST error:', err);
         return NextResponse.json({ 
             success: false, 
-            message: err.message 
+            message: safeErrorMessage(err) 
         }, { status: 500 });
     }
 }
@@ -151,7 +151,7 @@ export async function PUT(request) {
         console.error('License Types PUT error:', err);
         return NextResponse.json({ 
             success: false, 
-            message: err.message 
+            message: safeErrorMessage(err) 
         }, { status: 500 });
     }
 }
@@ -190,7 +190,7 @@ export async function DELETE(request) {
         console.error('License Types DELETE error:', err);
         return NextResponse.json({ 
             success: false, 
-            message: err.message 
+            message: safeErrorMessage(err) 
         }, { status: 500 });
     }
 }

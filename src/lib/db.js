@@ -102,10 +102,23 @@ function validateTableName(table) {
     return table;
 }
 
+/**
+ * Validate column name to prevent SQL injection via dynamic column names
+ * Only allows alphanumeric characters and underscores
+ */
+function validateColumnName(column) {
+    if (typeof column !== 'string' || !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(column)) {
+        throw new Error(`Invalid column name: ${column}`);
+    }
+    return column;
+}
+
 export async function insert(table, data) {
     validateTableName(table);
-    const columns = Object.keys(data).join(', ');
-    const placeholders = Object.keys(data).map((_, i) => `$${i + 1}`).join(', ');
+    const keys = Object.keys(data);
+    keys.forEach(validateColumnName);
+    const columns = keys.join(', ');
+    const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
     const values = Object.values(data);
 
     const sqlQuery = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) RETURNING id`;
@@ -115,7 +128,9 @@ export async function insert(table, data) {
 
 export async function update(table, data, where, whereParams = []) {
     validateTableName(table);
-    const setClause = Object.keys(data).map((key, i) => `${key} = $${i + 1}`).join(', ');
+    const keys = Object.keys(data);
+    keys.forEach(validateColumnName);
+    const setClause = keys.map((key, i) => `${key} = $${i + 1}`).join(', ');
     const values = [...Object.values(data), ...whereParams];
     const whereOffset = Object.keys(data).length + 1;
 

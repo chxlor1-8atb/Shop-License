@@ -1,7 +1,7 @@
 
 import { fetchAll } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/api-helpers';
+import { requireAuth, safeErrorMessage } from '@/lib/api-helpers';
 import { getWarningDays } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
@@ -26,13 +26,13 @@ export async function GET() {
             WHERE 
                 l.status NOT IN ('suspended', 'revoked')
                 AND (
-                    l.expiry_date <= CURRENT_DATE + INTERVAL '${warningDays} days'
+                    l.expiry_date <= CURRENT_DATE + ($1 || ' days')::INTERVAL
                     OR l.expiry_date < CURRENT_DATE
                 )
             ORDER BY days_until_expiry ASC
         `;
 
-        const licenses = await fetchAll(query);
+        const licenses = await fetchAll(query, [warningDays]);
 
         return NextResponse.json({
             success: true,
@@ -40,6 +40,6 @@ export async function GET() {
         });
 
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

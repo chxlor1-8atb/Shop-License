@@ -2,7 +2,8 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
-import { requireAuth, requireAdmin, getCurrentUser } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
+import { sanitizeString } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,7 @@ export async function GET(request) {
         const types = await fetchAll(query);
         return NextResponse.json({ success: true, types });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -40,10 +41,9 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { name, price, description, validity_days } = body;
-
-        // Note: Legacy JS used 'type_name' but schema uses 'name'. Mapped in JS or here.
-        // Let's stick to DB schema 'name'. The UI should send 'name'.
+        const name = sanitizeString(body.name || '', 255);
+        const description = sanitizeString(body.description || '', 1000);
+        const { price, validity_days } = body;
 
         if (!name) {
             return NextResponse.json({ success: false, message: 'Missing type name' }, { status: 400 });
@@ -70,7 +70,7 @@ export async function POST(request) {
         return NextResponse.json({ success: true, message: 'เพิ่มประเภทใบอนุญาตเรียบร้อยแล้ว', type: { id: newId } });
     } catch (err) {
         console.error('Error in POST /api/license-types:', err);
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -81,7 +81,9 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { id, name, price, description, validity_days } = body;
+        const { id, price, validity_days } = body;
+        const name = sanitizeString(body.name || '', 255);
+        const description = sanitizeString(body.description || '', 1000);
 
         if (!id || !name) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
@@ -104,7 +106,7 @@ export async function PUT(request) {
 
         return NextResponse.json({ success: true, message: 'บันทึกเรียบร้อยแล้ว' });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -144,6 +146,6 @@ export async function DELETE(request) {
 
         return NextResponse.json({ success: true, message: 'ลบเรียบร้อยแล้ว' });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

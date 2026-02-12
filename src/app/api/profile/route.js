@@ -2,7 +2,7 @@ import { fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
-import { requireAuth, getSession } from '@/lib/api-helpers';
+import { requireAuth, getSession, safeErrorMessage } from '@/lib/api-helpers';
 import { validatePassword } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +26,7 @@ export async function GET(request) {
 
         return NextResponse.json({ success: true, user });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -106,6 +106,6 @@ export async function PUT(request) {
         });
 
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }

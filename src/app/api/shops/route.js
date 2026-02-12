@@ -2,7 +2,7 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
-import { requireAuth, requireAdmin, getCurrentUser } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { sanitizeInt, sanitizeString } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
@@ -86,7 +86,7 @@ export async function GET(request) {
         });
 
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -97,7 +97,13 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { shop_name, owner_name, address, phone, email, notes, custom_fields } = body;
+        const { custom_fields } = body;
+        const shop_name = sanitizeString(body.shop_name || '', 255);
+        const owner_name = sanitizeString(body.owner_name || '', 255);
+        const address = sanitizeString(body.address || '', 500);
+        const phone = sanitizeString(body.phone || '', 50);
+        const email = sanitizeString(body.email || '', 255);
+        const notes = sanitizeString(body.notes || '', 1000);
 
         if (!shop_name) {
             return NextResponse.json({ success: false, message: 'Shop name is required' }, { status: 400 });
@@ -121,7 +127,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true, message: 'เพิ่มร้านค้าเรียบร้อยแล้ว', shop_id: result?.[0]?.id });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 
@@ -132,7 +138,13 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { id, shop_name, owner_name, address, phone, email, notes, custom_fields } = body;
+        const { id, custom_fields } = body;
+        const shop_name = sanitizeString(body.shop_name || '', 255);
+        const owner_name = sanitizeString(body.owner_name || '', 255);
+        const address = sanitizeString(body.address || '', 500);
+        const phone = sanitizeString(body.phone || '', 50);
+        const email = sanitizeString(body.email || '', 255);
+        const notes = sanitizeString(body.notes || '', 1000);
 
         if (!id || !shop_name) {
             return NextResponse.json({ success: false, message: 'ID and Shop name are required' }, { status: 400 });
@@ -157,7 +169,7 @@ export async function PUT(request) {
 
         return NextResponse.json({ success: true, message: 'อัปเดตร้านค้าเรียบร้อยแล้ว' });
     } catch (err) {
-        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
 

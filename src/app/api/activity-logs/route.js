@@ -44,7 +44,7 @@ export async function GET(request) {
     } catch (err) {
         console.error('Activity logs error:', err);
         return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด: ' + err.message },
+            { success: false, message: process.env.NODE_ENV === 'production' ? 'เกิดข้อผิดพลาดภายในระบบ' : 'เกิดข้อผิดพลาด: ' + err.message },
             { status: 500 }
         );
     }
@@ -62,16 +62,18 @@ export async function DELETE(request) {
             );
         }
 
-        await fetchAll('DELETE FROM audit_logs');
+        // Security: Only delete logs older than 7 days to preserve recent audit trail
+        const result = await fetchAll("DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '7 days'");
+        const deletedCount = result?.length || 0;
 
         return NextResponse.json({
             success: true,
-            message: 'ล้างข้อมูลเรียบร้อยแล้ว'
+            message: `ล้างข้อมูลเก่ากว่า 7 วันเรียบร้อยแล้ว (${deletedCount} รายการ)`
         });
     } catch (err) {
         console.error('Clear logs error:', err);
         return NextResponse.json(
-            { success: false, message: 'เกิดข้อผิดพลาด: ' + err.message },
+            { success: false, message: process.env.NODE_ENV === 'production' ? 'เกิดข้อผิดพลาดภายในระบบ' : 'เกิดข้อผิดพลาด: ' + err.message },
             { status: 500 }
         );
     }

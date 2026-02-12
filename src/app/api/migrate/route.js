@@ -7,6 +7,14 @@ import { requireAdmin } from '@/lib/api-helpers';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+    // Security: Block migration in production unless explicitly allowed
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_MIGRATE !== 'true') {
+        return NextResponse.json(
+            { success: false, message: 'Migration is disabled in production' },
+            { status: 403 }
+        );
+    }
+
     // Require admin access for database migration
     const authError = await requireAdmin();
     if (authError) return authError;

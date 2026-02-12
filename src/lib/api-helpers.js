@@ -5,7 +5,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
-import { sessionOptions } from '@/lib/session';
+import { sessionOptions, isSessionValid } from '@/lib/session';
 
 // ========================================
 // Authentication Helpers
@@ -21,6 +21,13 @@ export async function getSession() {
         const session = await getIronSession(cookieStore, sessionOptions);
 
         if (!session.userId) {
+            return null;
+        }
+
+        // Security: Validate session expiry (loginTime + TTL check)
+        if (!isSessionValid(session)) {
+            // Session expired - destroy it
+            await session.destroy();
             return null;
         }
 
@@ -120,6 +127,21 @@ export function errorResponse(message, status = 500) {
         { success: false, message },
         { status }
     );
+}
+
+/**
+ * Get safe error message for API responses
+ * In production, returns a generic message to prevent information leakage
+ * In development, returns the actual error message for debugging
+ * @param {Error|string} error - Error object or message
+ * @param {string} fallback - Fallback message for production
+ * @returns {string}
+ */
+export function safeErrorMessage(error, fallback = 'เกิดข้อผิดพลาดภายในระบบ') {
+    if (process.env.NODE_ENV === 'production') {
+        return fallback;
+    }
+    return typeof error === 'string' ? error : (error?.message || fallback);
 }
 
 /**
