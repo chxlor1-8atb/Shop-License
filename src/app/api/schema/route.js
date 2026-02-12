@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { executeQuery, fetchAll } from '@/lib/db';
-import { requireAuth } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,8 +30,8 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
@@ -65,8 +65,8 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {

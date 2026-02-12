@@ -1,6 +1,6 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -102,8 +102,8 @@ export async function GET(request) {
 
 // POST - Create new record
 export async function POST(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
@@ -153,8 +153,8 @@ export async function POST(request) {
 
 // PUT - Update record
 export async function PUT(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
@@ -223,8 +223,8 @@ export async function PUT(request) {
 
 // DELETE - Delete record
 export async function DELETE(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Check authentication - Require Admin
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {
