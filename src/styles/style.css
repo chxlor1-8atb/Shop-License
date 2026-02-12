@@ -7017,7 +7017,7 @@ img {
     text-align: center;
 }
 
-.header-actions {
+.header-cell .header-actions {
     display: flex;
     gap: 0.25rem;
     opacity: 0;

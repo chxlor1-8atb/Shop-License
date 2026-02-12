@@ -221,24 +221,6 @@ export default function DashboardLayout({ children }) {
             </Link>
           </div>
 
-          <div className="nav-section">
-            <div className="nav-section-title">ช่วยเหลือ</div>
-            <button
-              className="nav-link"
-              onClick={() => setShowPatchNotes(true)}
-              style={{
-                background: "none",
-                border: "none",
-                width: "calc(100% - 1.5rem)",
-                cursor: "pointer",
-                textAlign: "left",
-                fontFamily: "inherit"
-              }}
-            >
-              <i className="fas fa-bullhorn"></i>
-              <span>ประกาศและอัปเดต</span>
-            </button>
-          </div>
         </nav>
         <div className="sidebar-footer">
           <div className="user-info">
