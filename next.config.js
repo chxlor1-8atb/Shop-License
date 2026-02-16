@@ -33,8 +33,7 @@ const nextConfig = {
             'clsx',
             'tailwind-merge'
         ],
-        // Enable CSS optimization 
-        optimizeCss: true,
+        // Note: optimizeCss removed — experimental feature causes PostCSS serialization warnings in build
     },
 
     // Transpile specific packages for better code splitting

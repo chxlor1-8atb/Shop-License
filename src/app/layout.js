@@ -16,10 +16,11 @@ const notoSansThai = Noto_Sans_Thai({
     display: 'swap',
     variable: '--font-noto-thai',
     preload: true,
-    weight: ['400', '500', '600', '700'],
+    weight: ['400', '600'],
 });
 
 export const metadata = {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://shop-license-system.vercel.app'),
     title: {
         default: 'ระบบจัดการใบอนุญาตร้านค้า | Shop License System',
         template: '%s | Shop License System'
@@ -85,7 +86,10 @@ export const viewport = {
 export default function RootLayout({ children }) {
     return (
         <html lang="th" className={`${inter.variable} ${notoSansThai.variable}`} suppressHydrationWarning>
-            <head />
+            <head>
+                <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossOrigin="anonymous" />
+                <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+            </head>
             <body suppressHydrationWarning>
                 <script
                     type="application/ld+json"

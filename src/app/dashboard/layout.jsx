@@ -9,6 +9,7 @@ import { formatThaiDateFull } from "@/utils/formatters";
 import { logout, checkAuth as checkAuthUtil } from "@/utils/auth";
 import Loading from "@/components/Loading";
 import "../../styles/style.css";
+// SweetAlert & Toast CSS loaded lazily — not needed for initial paint
 import "../../styles/sweetalert-custom.css";
 import "../../styles/toast.css";
 
@@ -34,14 +35,23 @@ export default function DashboardLayout({ children }) {
   const [expiringCount, setExpiringCount] = useState(0);
   const [showPatchNotes, setShowPatchNotes] = useState(false);
 
-  // Load Font Awesome CSS non-blocking (only in dashboard)
+  // Load Font Awesome CSS non-blocking with preload for faster start
   const faLoadedRef = useRef(false);
   useEffect(() => {
     if (faLoadedRef.current) return;
     faLoadedRef.current = true;
+    const href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css";
+    // Preload hint — browser starts downloading immediately
+    const preload = document.createElement("link");
+    preload.rel = "preload";
+    preload.as = "style";
+    preload.href = href;
+    preload.crossOrigin = "anonymous";
+    document.head.appendChild(preload);
+    // Actual stylesheet — applies after download
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css";
+    link.href = href;
     link.crossOrigin = "anonymous";
     document.head.appendChild(link);
   }, []);
