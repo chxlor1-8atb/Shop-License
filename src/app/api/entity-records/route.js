@@ -1,7 +1,8 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { sanitizeInt, sanitizeString } from '@/lib/security';
+import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 
 export const dynamic = 'force-dynamic';
 
@@ -165,6 +166,16 @@ export async function POST(request) {
             );
         }
 
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.CREATE,
+            entityType: ENTITY_TYPES.ENTITY_RECORD,
+            entityId: recordId,
+            details: `สร้าง Record ใน Entity: ${entitySlug}`
+        });
+
         return NextResponse.json({ success: true, message: 'Record created', id: recordId });
 
     } catch (err) {
@@ -197,7 +208,7 @@ export async function PUT(request) {
         // Update timestamp
         await executeQuery('UPDATE entity_records SET updated_at = NOW() WHERE id = $1', [id]);
 
-        // Upsert values
+        // Upsert values (single clean pass per field)
         for (const field of fields) {
             let value = data[field.field_name];
             if (value === undefined) continue; // Skip if not present in update payload
@@ -207,30 +218,12 @@ export async function PUT(request) {
                 value = sanitizeString(value, 1000);
             }
 
-            const col = getValueColumn(field.field_type);
-
-            // Delete old value first (simplest way to handle upsert/clear for EAV without complex conditional SQL)
-            // Or better: use ON CONFLICT
-            await executeQuery(
-                `INSERT INTO entity_values (record_id, field_id, ${col}) 
-                 VALUES ($1, $2, $3)
-                 ON CONFLICT (record_id, field_id) 
-                 DO UPDATE SET ${col} = EXCLUDED.${col}, 
-                               value_text = NULL, value_number = NULL, value_date = NULL, value_boolean = NULL
-                               -- Note: We reset other columns to NULL to handle type changes or just safety
-                `,
-                [id, field.id, value === '' ? null : value]
-            );
-
-            // Because we only update the specific typed column, we must make sure to NULL out others if we reused the row?
-            // Actually, for a single field_id, the type is fixed in entity_fields. 
-            // So we don't need to null out other columns unless field type changed (which is rare operation).
-            // But the ON CONFLICT clause above is tricky because we need to clear the specific column if value is null.
-
-            /* Enhanced Logic for clean updates: */
             if (value === null || value === '') {
+                // Clear: remove the value row
                 await executeQuery('DELETE FROM entity_values WHERE record_id = $1 AND field_id = $2', [id, field.id]);
             } else {
+                // Upsert: insert or update the typed column
+                const col = getValueColumn(field.field_type);
                 await executeQuery(
                     `INSERT INTO entity_values (record_id, field_id, ${col}) VALUES ($1, $2, $3)
                      ON CONFLICT (record_id, field_id) DO UPDATE SET ${col} = $3`,
@@ -238,6 +231,16 @@ export async function PUT(request) {
                 );
             }
         }
+
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.UPDATE,
+            entityType: ENTITY_TYPES.ENTITY_RECORD,
+            entityId: id,
+            details: `อัปเดต Record ID: ${id} ใน Entity: ${entitySlug}`
+        });
 
         return NextResponse.json({ success: true, message: 'Record updated' });
 
@@ -260,6 +263,16 @@ export async function DELETE(request) {
         if (id < 1) return NextResponse.json({ success: false, message: 'Valid ID required' }, { status: 400 });
 
         await executeQuery('DELETE FROM entity_records WHERE id = $1', [id]);
+
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.DELETE,
+            entityType: ENTITY_TYPES.ENTITY_RECORD,
+            entityId: id,
+            details: `ลบ Record ID: ${id}`
+        });
 
         return NextResponse.json({ success: true, message: 'Record deleted' });
 

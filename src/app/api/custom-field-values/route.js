@@ -66,8 +66,8 @@ export async function GET(request) {
 
 // POST - Save/Update custom field values for an entity
 export async function POST(request) {
-    // Check authentication
-    const authError = await requireAuth();
+    // Security: Require Admin for write operations
+    const authError = await requireAdmin();
     if (authError) return authError;
 
     try {

@@ -6,8 +6,9 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { queryCache, CACHE_KEYS, CACHE_TTL } from '@/lib/performance';
-import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { sanitizeInt, sanitizeString } from '@/lib/security';
+import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 
 // Force dynamic for this route - can't use static generation
 export const dynamic = 'force-dynamic';
@@ -104,6 +105,16 @@ export async function POST(request) {
         // Invalidate cache when data changes
         queryCache.invalidate(CACHE_KEYS.LICENSE_TYPES);
 
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.CREATE,
+            entityType: ENTITY_TYPES.LICENSE_TYPE,
+            entityId: result[0]?.id || null,
+            details: `เพิ่มประเภทใบอนุญาต: ${name}`
+        });
+
         return NextResponse.json({ 
             success: true, 
             message: 'เพิ่มประเภทใบอนุญาตเรียบร้อยแล้ว',
@@ -152,6 +163,16 @@ export async function PUT(request) {
         // Invalidate cache when data changes
         queryCache.invalidate(CACHE_KEYS.LICENSE_TYPES);
 
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.UPDATE,
+            entityType: ENTITY_TYPES.LICENSE_TYPE,
+            entityId: id,
+            details: `แก้ไขประเภทใบอนุญาต: ${name}`
+        });
+
         return NextResponse.json({ 
             success: true, 
             message: 'บันทึกประเภทใบอนุญาตเรียบร้อยแล้ว'
@@ -190,6 +211,16 @@ export async function DELETE(request) {
 
         // Invalidate cache when data changes
         queryCache.invalidate(CACHE_KEYS.LICENSE_TYPES);
+
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.DELETE,
+            entityType: ENTITY_TYPES.LICENSE_TYPE,
+            entityId: id,
+            details: `ลบประเภทใบอนุญาต ID: ${id}`
+        });
 
         return NextResponse.json({ 
             success: true, 

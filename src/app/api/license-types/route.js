@@ -46,7 +46,9 @@ export async function POST(request) {
         const body = await request.json();
         const name = sanitizeString(body.name || '', 255);
         const description = sanitizeString(body.description || '', 1000);
-        const { price, validity_days } = body;
+        // Security: Validate price (0-999999999) and validity_days (1-9999)
+        const price = Math.min(Math.max(parseFloat(body.price) || 0, 0), 999999999);
+        const validity_days = sanitizeInt(body.validity_days, 365, 1, 9999);
 
         if (!name) {
             return NextResponse.json({ success: false, message: 'Missing type name' }, { status: 400 });
@@ -54,7 +56,7 @@ export async function POST(request) {
 
         const result = await executeQuery(
             `INSERT INTO license_types (name, price, description, validity_days) VALUES ($1, $2, $3, $4) RETURNING id`,
-            [name, parseFloat(price) || 0, description || '', parseInt(validity_days) || 365]
+            [name, price, description || '', validity_days]
         );
 
         // Result from neon is the array of rows directly
@@ -84,10 +86,12 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const { price, validity_days } = body;
         const id = sanitizeInt(body.id, 0, 1);
         const name = sanitizeString(body.name || '', 255);
         const description = sanitizeString(body.description || '', 1000);
+        // Security: Validate price (0-999999999) and validity_days (1-9999)
+        const price = Math.min(Math.max(parseFloat(body.price) || 0, 0), 999999999);
+        const validity_days = sanitizeInt(body.validity_days, 365, 1, 9999);
 
         if (id < 1 || !name) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
@@ -95,7 +99,7 @@ export async function PUT(request) {
 
         await executeQuery(
             `UPDATE license_types SET name = $1, price = $2, description = $3, validity_days = $4 WHERE id = $5`,
-            [name, parseFloat(price) || 0, description, parseInt(validity_days), id]
+            [name, price, description, validity_days, id]
         );
 
         // Log activity

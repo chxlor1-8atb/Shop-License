@@ -7,8 +7,8 @@ import { requireAdmin } from '@/lib/api-helpers';
 export const dynamic = 'force-dynamic';
 
 export async function POST() {
-    // Security: Block migration in production — double-check with VERCEL_ENV
-    if (process.env.VERCEL_ENV === 'production') {
+    // Security: Hard block on ALL Vercel environments (production + preview) — no override possible
+    if (process.env.VERCEL_ENV === 'production' || process.env.VERCEL_ENV === 'preview') {
         return NextResponse.json(
             { success: false, message: 'Migration is disabled in production' },
             { status: 403 }

@@ -265,6 +265,33 @@ export default function QuickAddModal({
               />
             </div>
 
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="email" className="form-label">อีเมล</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  className="form-input"
+                  value={formData.email || ""}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                  placeholder="example@email.com"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="notes" className="form-label">หมายเหตุ</label>
+                <input
+                  id="notes"
+                  name="notes"
+                  type="text"
+                  className="form-input"
+                  value={formData.notes || ""}
+                  onChange={(e) => handleChange("notes", e.target.value)}
+                  placeholder="หมายเหตุเพิ่มเติม"
+                />
+              </div>
+            </div>
+
             {/* Custom Fields Section */}
             {customFields.length > 0 && (
               <>

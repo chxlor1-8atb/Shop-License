@@ -1,8 +1,9 @@
 
 import { NextResponse } from 'next/server';
 import { executeQuery, fetchAll } from '@/lib/db';
-import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
+import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 
 const ALLOWED_TABLES = ['shops', 'licenses', 'license_types', 'users'];
 const ALLOWED_COLUMN_TYPES = ['text', 'number', 'date', 'select', 'boolean', 'textarea'];
@@ -65,6 +66,16 @@ export async function POST(request) {
             [table_name, column_key, column_label, column_type]
         );
 
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.CREATE,
+            entityType: ENTITY_TYPES.SETTINGS,
+            entityId: null,
+            details: `เพิ่ม Schema Column: ${column_label} (${table_name}.${column_key})`
+        });
+
         return NextResponse.json({ success: true, message: 'Column added successfully' });
     } catch (err) {
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
@@ -85,6 +96,16 @@ export async function DELETE(request) {
         }
 
         await executeQuery('DELETE FROM schema_definitions WHERE id = $1', [id]);
+
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.DELETE,
+            entityType: ENTITY_TYPES.SETTINGS,
+            entityId: id,
+            details: `ลบ Schema Column ID: ${id}`
+        });
 
         return NextResponse.json({ success: true, message: 'Column removed successfully' });
     } catch (err) {

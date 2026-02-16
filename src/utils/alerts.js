@@ -16,6 +16,14 @@ import Swal from 'sweetalert2';
 
 const TOAST_CONTAINER_ID = 'custom-toast-container';
 
+// Security: Escape HTML to prevent XSS via innerHTML
+function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 const Colors = {
     success: '#10b981',
     error: '#ef4444',
@@ -73,7 +81,7 @@ function createToastElement({ id, type, title, message, duration, showCancel = t
     toast.innerHTML = `
         <div class="toast-header">
             <div class="toast-icon">${createIcon(type)}</div>
-            <div class="toast-title">${title}</div>
+            <div class="toast-title">${escapeHtml(title)}</div>
             <div class="toast-actions">
                 ${showCancel ? `
                 <button class="toast-btn toast-close-btn" type="button" aria-label="ยกเลิก">
@@ -86,7 +94,7 @@ function createToastElement({ id, type, title, message, duration, showCancel = t
         </div>
         
         <div class="toast-content expanded">
-            ${message ? `<p class="toast-message">${message}</p>` : ''}
+            ${message ? `<p class="toast-message">${escapeHtml(message)}</p>` : ''}
         </div>
         
         <div class="toast-footer">

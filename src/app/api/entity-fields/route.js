@@ -1,7 +1,8 @@
 import { fetchOne, executeQuery } from '@/lib/db';
 import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
 import { NextResponse } from 'next/server';
-import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
+import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 
 const ALLOWED_FIELD_TYPES = ['text', 'number', 'date', 'select', 'boolean', 'textarea', 'email', 'phone', 'url'];
 
@@ -84,6 +85,16 @@ export async function POST(request) {
             ]
         );
 
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.CREATE,
+            entityType: ENTITY_TYPES.ENTITY_FIELD,
+            entityId: entity_id,
+            details: `สร้าง Entity Field: ${field_label} (${field_name})`
+        });
+
         return NextResponse.json({ success: true, message: 'Field created successfully' });
 
     } catch (err) {
@@ -141,6 +152,16 @@ export async function PUT(request) {
             ]
         );
 
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.UPDATE,
+            entityType: ENTITY_TYPES.ENTITY_FIELD,
+            entityId: id,
+            details: `อัปเดต Entity Field ID: ${id}`
+        });
+
         return NextResponse.json({ success: true, message: 'Field updated successfully' });
 
     } catch (err) {
@@ -162,6 +183,16 @@ export async function DELETE(request) {
         if (id < 1) return NextResponse.json({ success: false, message: 'Valid ID required' }, { status: 400 });
 
         await executeQuery('DELETE FROM entity_fields WHERE id = $1', [id]);
+
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.DELETE,
+            entityType: ENTITY_TYPES.ENTITY_FIELD,
+            entityId: id,
+            details: `ลบ Entity Field ID: ${id}`
+        });
 
         return NextResponse.json({ success: true, message: 'Field deleted successfully' });
 

@@ -3,6 +3,7 @@ import { getIronSession } from 'iron-session';
 import { fetchAll } from '@/lib/db';
 import { sessionOptions, isSessionValid } from '@/lib/session';
 import { NextResponse } from 'next/server';
+import { safeErrorMessage } from '@/lib/api-helpers';
 import {
     getCachedDashboardStats,
     getCachedLicenseBreakdown,
@@ -47,7 +48,7 @@ export async function GET(request) {
     } catch (err) {
         console.error('Dashboard error:', err);
         return NextResponse.json(
-            { success: false, message: process.env.NODE_ENV === 'production' ? 'เกิดข้อผิดพลาดภายในระบบ' : 'เกิดข้อผิดพลาด: ' + err.message },
+            { success: false, message: safeErrorMessage(err) },
             { status: 500 }
         );
     }

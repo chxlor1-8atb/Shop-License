@@ -13,6 +13,9 @@ import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogge
  * @throws {Error} If authentication fails.
  */
 // In-memory failed login tracker (per-instance; complements DB-level lockout if added later)
+// ⚠️ SECURITY NOTE: This Map resets on cold starts and is NOT shared across serverless instances.
+// For production hardening, migrate to Redis (Upstash) or DB-based lockout tracking.
+// The middleware rate limiter (10 req/min for login) provides the primary brute-force protection.
 const failedLogins = new Map();
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes

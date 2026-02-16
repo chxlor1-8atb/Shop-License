@@ -1,7 +1,8 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { sanitizeInt, sanitizeString } from '@/lib/security';
+import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,6 +82,16 @@ export async function POST(request) {
             [slug, label, icon, description, display_order]
         );
 
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.CREATE,
+            entityType: ENTITY_TYPES.ENTITY,
+            entityId: null,
+            details: `สร้าง Entity: ${label} (${slug})`
+        });
+
         return NextResponse.json({ success: true, message: 'Entity created successfully' });
 
     } catch (err) {
@@ -117,6 +128,16 @@ export async function PUT(request) {
             [label, icon, description, display_order, is_active, id]
         );
 
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.UPDATE,
+            entityType: ENTITY_TYPES.ENTITY,
+            entityId: id,
+            details: `อัปเดต Entity ID: ${id}`
+        });
+
         return NextResponse.json({ success: true, message: 'Entity updated successfully' });
 
     } catch (err) {
@@ -138,6 +159,16 @@ export async function DELETE(request) {
         if (id < 1) return NextResponse.json({ success: false, message: 'Valid ID required' }, { status: 400 });
 
         await executeQuery('DELETE FROM entities WHERE id = $1', [id]);
+
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.DELETE,
+            entityType: ENTITY_TYPES.ENTITY,
+            entityId: id,
+            details: `ลบ Entity ID: ${id}`
+        });
 
         return NextResponse.json({ success: true, message: 'Entity deleted successfully' });
 

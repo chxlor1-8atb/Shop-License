@@ -6,6 +6,13 @@ export const dynamic = 'force-dynamic';
 
 // Security: Block seed routes in production
 function isProductionBlocked() {
+    // Hard block on Vercel production — no override possible
+    if (process.env.VERCEL_ENV === 'production') {
+        return NextResponse.json(
+            { success: false, message: 'Seed routes are disabled in production' },
+            { status: 403 }
+        );
+    }
     if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED !== 'true') {
         return NextResponse.json(
             { success: false, message: 'Seed routes are disabled in production' },

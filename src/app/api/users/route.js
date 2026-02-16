@@ -193,7 +193,7 @@ export async function PUT(request) {
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.UPDATE,
             entityType: ENTITY_TYPES.USER,
-            entityId: parseInt(id),
+            entityId: safeId,
             details: `แก้ไขผู้ใช้: ${targetUser?.username || id}${password ? ' (รวมเปลี่ยนรหัสผ่าน)' : ''}`
         });
 

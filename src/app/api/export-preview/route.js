@@ -17,6 +17,13 @@ export async function GET(request) {
         if (!type) {
             return NextResponse.json({ success: false, message: 'Invalid export type' }, { status: 400 });
         }
+
+        // Security: Previewing user data requires admin privileges
+        if (type === 'users') {
+            const { requireAdmin } = await import('@/lib/api-helpers');
+            const adminError = await requireAdmin();
+            if (adminError) return adminError;
+        }
         const fieldsParam = searchParams.get('fields');
         const limit = sanitizeInt(searchParams.get('limit'), 100, 1, 1000);
 

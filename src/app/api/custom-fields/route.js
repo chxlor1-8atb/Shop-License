@@ -1,7 +1,8 @@
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
 import { NextResponse } from 'next/server';
-import { requireAuth, requireAdmin, safeErrorMessage } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
+import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 
 // Security: Allowed entity types and field types
 const ALLOWED_ENTITY_TYPES = ['shops', 'licenses', 'users', 'license_types'];
@@ -113,6 +114,16 @@ export async function POST(request) {
 
         const newId = result?.[0]?.id;
 
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.CREATE,
+            entityType: ENTITY_TYPES.CUSTOM_FIELD,
+            entityId: newId,
+            details: `สร้าง Custom Field: ${field_label} (${entity_type})`
+        });
+
         return NextResponse.json({ success: true, message: 'สร้าง Custom Field สำเร็จ', field: { id: newId } });
     } catch (err) {
         console.error('Error creating custom field:', err);
@@ -128,17 +139,16 @@ export async function PUT(request) {
 
     try {
         const body = await request.json();
-        const {
-            field_options,
-            is_required,
-            show_in_table,
-            show_in_form,
-            is_active
-        } = body;
+        const { field_options } = body;
         const id = sanitizeInt(body.id, 0, 1);
         const field_label = body.field_label ? sanitizeString(body.field_label, 255) : null;
         const field_type = body.field_type ? validateEnum(body.field_type, ALLOWED_FIELD_TYPES, null) : null;
         const display_order = body.display_order !== undefined ? sanitizeInt(body.display_order, 0, 0, 1000) : null;
+        // Security: Enforce boolean type for toggle fields
+        const is_required = body.is_required !== undefined ? Boolean(body.is_required) : null;
+        const show_in_table = body.show_in_table !== undefined ? Boolean(body.show_in_table) : null;
+        const show_in_form = body.show_in_form !== undefined ? Boolean(body.show_in_form) : null;
+        const is_active = body.is_active !== undefined ? Boolean(body.is_active) : null;
 
         if (id < 1) {
             return NextResponse.json({ success: false, message: 'Invalid field ID' }, { status: 400 });
@@ -155,8 +165,18 @@ export async function PUT(request) {
                  show_in_form = COALESCE($7, show_in_form),
                  is_active = COALESCE($8, is_active)
              WHERE id = $9`,
-            [field_label, field_type, field_options ? JSON.stringify(field_options) : null, is_required !== undefined ? is_required : null, display_order !== undefined ? display_order : null, show_in_table !== undefined ? show_in_table : null, show_in_form !== undefined ? show_in_form : null, is_active !== undefined ? is_active : null, id]
+            [field_label, field_type, field_options ? JSON.stringify(field_options) : null, is_required, display_order, show_in_table, show_in_form, is_active, id]
         );
+
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.UPDATE,
+            entityType: ENTITY_TYPES.CUSTOM_FIELD,
+            entityId: id,
+            details: `อัปเดต Custom Field ID: ${id}`
+        });
 
         return NextResponse.json({ success: true, message: 'อัปเดต Custom Field สำเร็จ' });
     } catch (err) {
@@ -181,6 +201,16 @@ export async function DELETE(request) {
 
         // Delete field (cascade will delete values too)
         await executeQuery('DELETE FROM custom_fields WHERE id = $1', [id]);
+
+        // Log activity
+        const currentUser = await getCurrentUser();
+        await logActivity({
+            userId: currentUser?.id || null,
+            action: ACTIVITY_ACTIONS.DELETE,
+            entityType: ENTITY_TYPES.CUSTOM_FIELD,
+            entityId: id,
+            details: `ลบ Custom Field ID: ${id}`
+        });
 
         return NextResponse.json({ success: true, message: 'ลบ Custom Field สำเร็จ' });
     } catch (err) {

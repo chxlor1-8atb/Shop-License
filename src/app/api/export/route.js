@@ -36,6 +36,13 @@ export async function GET(request) {
             return NextResponse.json({ success: false, message: 'Invalid export type' }, { status: 400 });
         }
 
+        // Security: Exporting user data requires admin privileges
+        if (type === 'users') {
+            const { requireAdmin } = await import('@/lib/api-helpers');
+            const adminError = await requireAdmin();
+            if (adminError) return adminError;
+        }
+
         let data = [];
         // Security: Sanitize filename to prevent header injection
         const safeType = type.replace(/[^a-zA-Z0-9_-]/g, '');
@@ -210,7 +217,7 @@ export async function GET(request) {
                 ${whereSQL}
                 GROUP BY l.id, l.license_number, s.shop_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
                 ORDER BY l.id DESC
-                LIMIT 10000
+                LIMIT 5000
             `;
             data = await fetchAll(query, params);
 
@@ -295,7 +302,7 @@ export async function GET(request) {
                 ${shopWhereSQL}
                 GROUP BY s.id, s.shop_name, s.owner_name, s.phone, s.email, s.address, s.notes, s.created_at
                 ORDER BY s.id DESC
-                LIMIT 10000
+                LIMIT 5000
             `, shopParams);
         } else if (type === 'users') {
             data = await fetchAll(`
