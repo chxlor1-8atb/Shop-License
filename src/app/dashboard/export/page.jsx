@@ -507,12 +507,12 @@ export default function ExportPage() {
                 </span>
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    display: "flex",
+                    flexWrap: "wrap",
                     gap: "1rem",
                   }}
                 >
-                  <div>
+                  <div style={{ flex: "1 1 150px" }}>
                     <label
                       htmlFor="export-search"
                       style={{
@@ -528,29 +528,10 @@ export default function ExportPage() {
                       value={search}
                       onChange={setSearch}
                       placeholder="ระบุคำค้นหา..."
+                      style={{ width: "100%", boxSizing: "border-box" }}
                     />
                   </div>
-                  <div>
-                    <label
-                      htmlFor="export-shop"
-                      style={{
-                        fontSize: "0.875rem",
-                        marginBottom: "0.5rem",
-                        display: "block",
-                      }}
-                    >
-                      ร้านค้า
-                    </label>
-                     <CustomSelect
-                      id="export-shop"
-                      value={filterShop}
-                      onChange={(e) => setFilterShop(e.target.value)}
-                      options={[{ value: "", label: "ทุกร้านค้า" }, ...shopOptions]}
-                      placeholder="เลือกร้านค้า..."
-                      searchable={true}
-                    />
-                  </div>
-                  <div>
+                  <div style={{ flex: "1 1 150px" }}>
                     <label
                       htmlFor="export-license-type"
                       style={{
@@ -575,7 +556,7 @@ export default function ExportPage() {
                       placeholder="ทั้งหมด"
                     />
                   </div>
-                  <div>
+                  <div style={{ flex: "1 1 150px" }}>
                     <label
                       htmlFor="export-status"
                       style={{
@@ -601,7 +582,7 @@ export default function ExportPage() {
                       placeholder="ทั้งหมด"
                     />
                   </div>
-                  <div>
+                  <div style={{ flex: "1 1 150px" }}>
                     <label
                       htmlFor="export-expiry-from"
                       style={{
@@ -619,7 +600,7 @@ export default function ExportPage() {
                       placeholder="เลือกวันที่"
                     />
                   </div>
-                  <div>
+                  <div style={{ flex: "1 1 150px" }}>
                     <label
                       htmlFor="export-expiry-to"
                       style={{
@@ -663,12 +644,12 @@ export default function ExportPage() {
                 </span>
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    display: "flex",
+                    flexWrap: "wrap",
                     gap: "1rem",
                   }}
                 >
-                  <div>
+                  <div style={{ flex: "0 1 220px" }}>
                     <label
                       htmlFor="export-shop-search"
                       style={{ fontSize: "0.875rem", marginBottom: "0.5rem", display: "block" }}
@@ -680,9 +661,10 @@ export default function ExportPage() {
                       value={search}
                       onChange={setSearch}
                       placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร..."
+                      style={{ width: "100%", boxSizing: "border-box" }}
                     />
                   </div>
-                  <div>
+                  <div style={{ flex: "0 1 220px" }}>
                     <label
                       htmlFor="export-has-license"
                       style={{ fontSize: "0.875rem", marginBottom: "0.5rem", display: "block" }}
@@ -700,7 +682,7 @@ export default function ExportPage() {
                       ]}
                     />
                   </div>
-                  <div>
+                  <div style={{ flex: "0 1 220px" }}>
                     <label
                       htmlFor="export-shop-license-status"
                       style={{ fontSize: "0.875rem", marginBottom: "0.5rem", display: "block" }}
@@ -721,7 +703,7 @@ export default function ExportPage() {
                       ]}
                     />
                   </div>
-                  <div>
+                  <div style={{ flex: "0 1 220px" }}>
                     <label
                       htmlFor="export-shop-license-type"
                       style={{ fontSize: "0.875rem", marginBottom: "0.5rem", display: "block" }}

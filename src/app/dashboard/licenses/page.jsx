@@ -655,20 +655,6 @@ function LicensesPageContent() {
             />
           </div>
           <div className="filter-group">
-            <label htmlFor="shop-filter" className="filter-label">ร้านค้า</label>
-            <CustomSelect
-              id="shop-filter"
-              value={filterShop}
-              onChange={(e) => {
-                setFilterShop(e.target.value);
-                pagination.resetPage();
-              }}
-              options={[{ value: "", label: "ทุกร้านค้า" }, ...shopOptions]}
-              placeholder="เลือกร้านค้า..."
-              isSearchable={true} 
-            />
-          </div>
-          <div className="filter-group">
             <label htmlFor="license-type-filter" className="filter-label">ประเภทใบอนุญาต</label>
             <CustomSelect
               id="license-type-filter"

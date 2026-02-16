@@ -88,6 +88,21 @@ export async function GET(request) {
             whereClauses.push(`EXISTS (SELECT 1 FROM licenses l WHERE l.shop_id = s.id)`);
         } else if (hasLicense === 'no') {
             whereClauses.push(`NOT EXISTS (SELECT 1 FROM licenses l WHERE l.shop_id = s.id)`);
+        } else if (hasLicense === 'no_active') {
+            // ร้านค้าที่ไม่มีใบอนุญาตที่ใช้งานได้เลย (ไม่มีใบอนุญาต หรือ หมดอายุ/ถูกระงับทั้งหมด)
+            whereClauses.push(`NOT EXISTS (
+                SELECT 1 FROM licenses l WHERE l.shop_id = s.id 
+                AND l.expiry_date >= CURRENT_DATE 
+                AND l.status NOT IN ('suspended', 'revoked')
+            )`);
+        } else if (hasLicense === 'all_expired') {
+            // เฉพาะร้านค้าที่มีใบอนุญาตแต่หมดอายุทั้งหมด (ไม่รวมร้านที่ไม่มีใบอนุญาตเลย)
+            whereClauses.push(`EXISTS (SELECT 1 FROM licenses l2 WHERE l2.shop_id = s.id)`);
+            whereClauses.push(`NOT EXISTS (
+                SELECT 1 FROM licenses l WHERE l.shop_id = s.id 
+                AND l.expiry_date >= CURRENT_DATE 
+                AND l.status NOT IN ('suspended', 'revoked')
+            )`);
         }
 
         // Filter: by license status

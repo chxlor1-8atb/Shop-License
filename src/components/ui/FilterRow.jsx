@@ -14,9 +14,10 @@ export default function FilterRow({ children, className = '' }) {
             style={{
                 display: 'flex',
                 gap: '0.75rem',
-                flexWrap: 'wrap',
+                flexWrap: 'nowrap',
                 marginBottom: '1rem',
-                alignItems: 'center'
+                alignItems: 'center',
+                overflowX: 'auto'
             }}
         >
             {children}
