@@ -3,7 +3,7 @@ import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
-import { sanitizeInt, sanitizeString } from '@/lib/security';
+import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,10 +40,18 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
         const search = sanitizeString(searchParams.get('search') || '', 100);
+        const hasLicense = searchParams.get('has_license') || '';
+        const licenseStatus = validateEnum(
+            searchParams.get('license_status'),
+            ['active', 'expired', 'pending', 'suspended', 'revoked'],
+            ''
+        );
+        const licenseTypeFilter = searchParams.get('license_type') || '';
 
         // Security: Sanitize pagination parameters
+        // Allow higher limit for dropdown/select use (up to 2000)
         const page = sanitizeInt(searchParams.get('page'), 1, 1, 1000);
-        const limit = sanitizeInt(searchParams.get('limit'), 20, 1, 100);
+        const limit = sanitizeInt(searchParams.get('limit'), 20, 1, 2000);
         const offset = (page - 1) * limit;
 
         // Get Single Shop
@@ -57,25 +65,67 @@ export async function GET(request) {
         }
 
         // List Shops
-        let whereClause = '';
+        let whereClauses = [];
         let params = [];
         let paramIndex = 1;
 
         if (search) {
-            // ค้นหาในทุกฟิลด์หลัก และใน custom_fields (JSONB)
-            whereClause = `WHERE 
-                shop_name ILIKE $1 OR 
-                owner_name ILIKE $1 OR 
-                phone ILIKE $1 OR 
-                address ILIKE $1 OR 
-                email ILIKE $1 OR 
-                notes ILIKE $1 OR
-                custom_fields::text ILIKE $1`;
+            whereClauses.push(`(
+                s.shop_name ILIKE $${paramIndex} OR 
+                s.owner_name ILIKE $${paramIndex} OR 
+                s.phone ILIKE $${paramIndex} OR 
+                s.address ILIKE $${paramIndex} OR 
+                s.email ILIKE $${paramIndex} OR 
+                s.notes ILIKE $${paramIndex} OR
+                s.custom_fields::text ILIKE $${paramIndex}
+            )`);
             params.push(`%${search}%`);
             paramIndex++;
         }
 
-        const countQuery = `SELECT COUNT(*) as total FROM shops ${whereClause}`;
+        // Filter: has license or not
+        if (hasLicense === 'yes') {
+            whereClauses.push(`EXISTS (SELECT 1 FROM licenses l WHERE l.shop_id = s.id)`);
+        } else if (hasLicense === 'no') {
+            whereClauses.push(`NOT EXISTS (SELECT 1 FROM licenses l WHERE l.shop_id = s.id)`);
+        }
+
+        // Filter: by license status
+        if (licenseStatus) {
+            if (licenseStatus === 'active') {
+                whereClauses.push(`EXISTS (
+                    SELECT 1 FROM licenses l WHERE l.shop_id = s.id 
+                    AND l.expiry_date >= CURRENT_DATE AND l.status NOT IN ('suspended', 'revoked')
+                )`);
+            } else if (licenseStatus === 'expired') {
+                whereClauses.push(`EXISTS (
+                    SELECT 1 FROM licenses l WHERE l.shop_id = s.id 
+                    AND l.expiry_date < CURRENT_DATE AND l.status NOT IN ('suspended', 'revoked')
+                )`);
+            } else {
+                whereClauses.push(`EXISTS (
+                    SELECT 1 FROM licenses l WHERE l.shop_id = s.id AND l.status = $${paramIndex}
+                )`);
+                params.push(licenseStatus);
+                paramIndex++;
+            }
+        }
+
+        // Filter: by license type
+        if (licenseTypeFilter) {
+            const safeLicenseType = sanitizeInt(licenseTypeFilter, 0, 1);
+            if (safeLicenseType > 0) {
+                whereClauses.push(`EXISTS (
+                    SELECT 1 FROM licenses l WHERE l.shop_id = s.id AND l.license_type_id = $${paramIndex}
+                )`);
+                params.push(safeLicenseType);
+                paramIndex++;
+            }
+        }
+
+        const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
+
+        const countQuery = `SELECT COUNT(*) as total FROM shops s ${whereSQL}`;
 
         // Security: Use parameterized queries for LIMIT/OFFSET
         const limitParamIndex = paramIndex;
@@ -83,9 +133,9 @@ export async function GET(request) {
 
         const query = `
             SELECT s.*, 
-            (SELECT COUNT(*) FROM licenses l WHERE l.shop_id = s.id AND l.status = 'active') as license_count
+            (SELECT COUNT(*) FROM licenses l WHERE l.shop_id = s.id) as license_count
             FROM shops s
-            ${whereClause}
+            ${whereSQL}
             ORDER BY s.id DESC
             LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}
         `;

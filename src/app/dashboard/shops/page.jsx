@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData } from "@/hooks";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
+import CustomSelect from "@/components/ui/CustomSelect";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import ShopDetailModal from "@/components/ui/ShopDetailModal";
 import QuickAddModal from "@/components/ui/QuickAddModal";
@@ -81,7 +83,9 @@ const STANDARD_COLUMNS = [
   },
 ];
 
-export default function ShopsPage() {
+function ShopsPageContent() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
   const pagination = usePagination(10);
   const { page, limit, updateFromResponse } = pagination;
 
@@ -93,10 +97,15 @@ export default function ShopsPage() {
   const { typeOptions } = useDropdownData();
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [columns, setColumns] = useState(STANDARD_COLUMNS);
   
+  // Filter states
+  const [filterHasLicense, setFilterHasLicense] = useState("");
+  const [filterLicenseStatus, setFilterLicenseStatus] = useState("");
+  const [filterLicenseType, setFilterLicenseType] = useState("");
+
   // Modal states
   const [selectedShop, setSelectedShop] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -112,6 +121,14 @@ export default function ShopsPage() {
 
   // Shared fetch function that takes search as parameter to avoid stale closures
   // Uses refs for page/limit so this callback is stable and doesn't cause re-fetches
+  // Refs for filters to keep performFetchShops stable
+  const filterHasLicenseRef = useRef(filterHasLicense);
+  const filterLicenseStatusRef = useRef(filterLicenseStatus);
+  const filterLicenseTypeRef = useRef(filterLicenseType);
+  useEffect(() => { filterHasLicenseRef.current = filterHasLicense; }, [filterHasLicense]);
+  useEffect(() => { filterLicenseStatusRef.current = filterLicenseStatus; }, [filterLicenseStatus]);
+  useEffect(() => { filterLicenseTypeRef.current = filterLicenseType; }, [filterLicenseType]);
+
   const performFetchShops = useCallback(async (searchValue) => {
     setLoading(true);
     try {
@@ -120,6 +137,10 @@ export default function ShopsPage() {
         limit: limitRef.current,
         search: searchValue,
       });
+
+      if (filterHasLicenseRef.current) params.append("has_license", filterHasLicenseRef.current);
+      if (filterLicenseStatusRef.current) params.append("license_status", filterLicenseStatusRef.current);
+      if (filterLicenseTypeRef.current) params.append("license_type", filterLicenseTypeRef.current);
 
       const response = await fetch(`${API_ENDPOINTS.SHOPS}?${params}`, { credentials: "include" });
       const data = await response.json();
@@ -200,10 +221,10 @@ export default function ShopsPage() {
     }
   }, [fetchCustomColumns]);
 
-  // Fetch shops when search or page/limit changes
+  // Fetch shops when search, filters, or page/limit changes
   useEffect(() => {
     performFetchShops(debouncedSearch);
-  }, [performFetchShops, debouncedSearch, page, limit]);
+  }, [performFetchShops, debouncedSearch, page, limit, filterHasLicense, filterLicenseStatus, filterLicenseType]);
 
   // Keep fetchShops for external use (e.g., after updates)
   const fetchShops = useCallback(async () => {
@@ -573,8 +594,9 @@ export default function ShopsPage() {
       </div>
 
       <div className="card-body">
-        <div className="filter-grid" style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap' }}>
-          <div className="filter-group" style={{ maxWidth: '400px', flex: 1 }}>
+        <div className="mb-4">
+        <div className="filter-grid">
+          <div className="filter-group">
             <label htmlFor="shop-search" className="filter-label">ค้นหา</label>
             <SearchInput
               id="shop-search"
@@ -586,6 +608,54 @@ export default function ShopsPage() {
               placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร, ที่อยู่, อีเมล..."
             />
           </div>
+          <div className="filter-group">
+            <label htmlFor="has-license-filter" className="filter-label">ใบอนุญาต</label>
+            <CustomSelect
+              id="has-license-filter"
+              value={filterHasLicense}
+              onChange={(e) => {
+                setFilterHasLicense(e.target.value);
+                pagination.resetPage();
+              }}
+              options={[
+                { value: "", label: "ทั้งหมด" },
+                { value: "yes", label: "มีใบอนุญาต" },
+                { value: "no", label: "ยังไม่มีใบอนุญาต" },
+              ]}
+            />
+          </div>
+          <div className="filter-group">
+            <label htmlFor="license-status-filter" className="filter-label">สถานะใบอนุญาต</label>
+            <CustomSelect
+              id="license-status-filter"
+              value={filterLicenseStatus}
+              onChange={(e) => {
+                setFilterLicenseStatus(e.target.value);
+                pagination.resetPage();
+              }}
+              options={[
+                { value: "", label: "ทุกสถานะ" },
+                { value: "active", label: "ปกติ" },
+                { value: "expired", label: "หมดอายุ" },
+                { value: "pending", label: "กำลังดำเนินการ" },
+                { value: "suspended", label: "ถูกพักใช้" },
+                { value: "revoked", label: "ถูกเพิกถอน" },
+              ]}
+            />
+          </div>
+          <div className="filter-group">
+            <label htmlFor="license-type-filter" className="filter-label">ประเภทใบอนุญาต</label>
+            <CustomSelect
+              id="license-type-filter"
+              value={filterLicenseType}
+              onChange={(e) => {
+                setFilterLicenseType(e.target.value);
+                pagination.resetPage();
+              }}
+              options={[{ value: "", label: "ทุกประเภท" }, ...typeOptions]}
+            />
+          </div>
+        </div>
         </div>
 
         {!loading ? (
@@ -676,5 +746,13 @@ export default function ShopsPage() {
         onSubmit={handleQuickAddShop}
       />
     </div>
+  );
+}
+
+export default function ShopsPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-center">Loading...</div>}>
+      <ShopsPageContent />
+    </Suspense>
   );
 }

@@ -191,7 +191,7 @@ export async function GET(request) {
                 FROM licenses l
                 LEFT JOIN shops s ON l.shop_id = s.id
                 LEFT JOIN license_types lt ON l.license_type_id = lt.id
-                LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id
+                LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
                 LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
                 ${whereSQL}
                 GROUP BY l.id, l.license_number, s.shop_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
@@ -211,8 +211,63 @@ export async function GET(request) {
             });
 
         } else if (type === 'shops') {
+            const search = sanitizeString(searchParams.get('search') || '', 100);
+            const hasLicense = searchParams.get('has_license') || '';
+            const licenseStatus = validateEnum(
+                searchParams.get('license_status'),
+                ['active', 'expired', 'pending', 'suspended', 'revoked'],
+                ''
+            );
+            const licenseTypeFilter = searchParams.get('license_type') || '';
+
+            let shopWhereClauses = [];
+            let shopParams = [];
+            let shopParamIndex = 1;
+
+            if (search) {
+                shopWhereClauses.push(`(
+                    s.shop_name ILIKE $${shopParamIndex} OR 
+                    s.owner_name ILIKE $${shopParamIndex} OR 
+                    s.phone ILIKE $${shopParamIndex} OR 
+                    s.address ILIKE $${shopParamIndex} OR 
+                    s.email ILIKE $${shopParamIndex} OR 
+                    s.notes ILIKE $${shopParamIndex}
+                )`);
+                shopParams.push(`%${search}%`);
+                shopParamIndex++;
+            }
+
+            if (hasLicense === 'yes') {
+                shopWhereClauses.push(`EXISTS (SELECT 1 FROM licenses l WHERE l.shop_id = s.id)`);
+            } else if (hasLicense === 'no') {
+                shopWhereClauses.push(`NOT EXISTS (SELECT 1 FROM licenses l WHERE l.shop_id = s.id)`);
+            }
+
+            if (licenseStatus) {
+                if (licenseStatus === 'active') {
+                    shopWhereClauses.push(`EXISTS (SELECT 1 FROM licenses l WHERE l.shop_id = s.id AND l.expiry_date >= CURRENT_DATE AND l.status NOT IN ('suspended', 'revoked'))`);
+                } else if (licenseStatus === 'expired') {
+                    shopWhereClauses.push(`EXISTS (SELECT 1 FROM licenses l WHERE l.shop_id = s.id AND l.expiry_date < CURRENT_DATE AND l.status NOT IN ('suspended', 'revoked'))`);
+                } else {
+                    shopWhereClauses.push(`EXISTS (SELECT 1 FROM licenses l WHERE l.shop_id = s.id AND l.status = $${shopParamIndex})`);
+                    shopParams.push(licenseStatus);
+                    shopParamIndex++;
+                }
+            }
+
+            if (licenseTypeFilter) {
+                const safeLicenseType = sanitizeInt(licenseTypeFilter, 0, 1);
+                if (safeLicenseType > 0) {
+                    shopWhereClauses.push(`EXISTS (SELECT 1 FROM licenses l WHERE l.shop_id = s.id AND l.license_type_id = $${shopParamIndex})`);
+                    shopParams.push(safeLicenseType);
+                    shopParamIndex++;
+                }
+            }
+
+            const shopWhereSQL = shopWhereClauses.length > 0 ? 'WHERE ' + shopWhereClauses.join(' AND ') : '';
+
             // Count total
-            const countResult = await fetchAll(`SELECT COUNT(*) as total FROM shops`);
+            const countResult = await fetchAll(`SELECT COUNT(*) as total FROM shops s ${shopWhereSQL}`, shopParams);
             const totalCount = parseInt(countResult[0]?.total || 0);
 
             data = await fetchAll(`
@@ -223,13 +278,20 @@ export async function GET(request) {
                     s.email, 
                     s.address, 
                     s.notes, 
-                    s.custom_fields, 
                     s.created_at,
-                    (SELECT COUNT(*) FROM licenses WHERE shop_id = s.id) as license_count
+                    (SELECT COUNT(*) FROM licenses WHERE shop_id = s.id) as license_count,
+                    COALESCE(
+                        json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
+                        '{}'::json
+                    ) as custom_fields
                 FROM shops s
+                LEFT JOIN custom_field_values cfv ON cfv.entity_id = s.id AND cfv.entity_type = 'shops'
+                LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'shops' AND cf.is_active = true
+                ${shopWhereSQL}
+                GROUP BY s.id, s.shop_name, s.owner_name, s.phone, s.email, s.address, s.notes, s.created_at
                 ORDER BY s.id DESC
-                LIMIT $1
-            `, [limit]);
+                LIMIT $${shopParamIndex}
+            `, [...shopParams, limit]);
 
             return NextResponse.json({
                 success: true,

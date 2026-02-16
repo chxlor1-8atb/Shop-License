@@ -28,7 +28,7 @@ export async function GET(request) {
 
         // Security: Sanitize pagination parameters
         const page = sanitizeInt(searchParams.get('page'), 1, 1, 1000);
-        const limit = sanitizeInt(searchParams.get('limit'), 20, 1, 100);
+        const limit = sanitizeInt(searchParams.get('limit'), 20, 1, 2000);
         const offset = (page - 1) * limit;
 
         // Get Single License

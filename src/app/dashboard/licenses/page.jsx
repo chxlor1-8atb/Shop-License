@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData } from "@/hooks";
 import { API_ENDPOINTS, STATUS_OPTIONS, STATUS_FILTER_OPTIONS } from "@/constants";
@@ -109,6 +110,20 @@ function LicensesPageContent() {
         options: enhancedShopOptions,
         display_order: 1,
         align: "center",
+        render: (value, row) => {
+          const shopName = enhancedShopOptions.find((o) => o.value == value)?.label || row.shop_name || value;
+          if (!value || value === CREATE_NEW_SHOP_VALUE) return <span className="text-muted">-</span>;
+          return (
+            <Link
+              href={`/dashboard/shops?search=${encodeURIComponent(shopName)}`}
+              className="text-primary hover:underline font-medium"
+              onClick={(e) => e.stopPropagation()}
+              title={`ดูข้อมูลร้าน: ${shopName}`}
+            >
+              {shopName} <i className="fas fa-external-link-alt" style={{ fontSize: '0.65em', opacity: 0.6 }}></i>
+            </Link>
+          );
+        },
       },
       {
         id: "license_type_id",

@@ -25,13 +25,20 @@ export default function ExportPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [previewCount, setPreviewCount] = useState(0);
 
+  // Shared filters
+  const [search, setSearch] = useState("");
+
   // License filters
   const [licenseType, setLicenseType] = useState("");
   const [status, setStatus] = useState("");
   const [expiryFrom, setExpiryFrom] = useState("");
   const [expiryTo, setExpiryTo] = useState("");
-  const [search, setSearch] = useState("");
   const [filterShop, setFilterShop] = useState("");
+
+  // Shop filters
+  const [shopHasLicense, setShopHasLicense] = useState("");
+  const [shopLicenseStatus, setShopLicenseStatus] = useState("");
+  const [shopLicenseType, setShopLicenseType] = useState("");
 
   useEffect(() => {
     loadDropdowns();
@@ -100,13 +107,20 @@ export default function ExportPage() {
       params.append("fields", selectedFields.join(','));
     }
 
+    if (search) params.append("search", search);
+
     if (type === "licenses") {
       if (licenseType) params.append("license_type", licenseType);
       if (status) params.append("status", status);
       if (expiryFrom) params.append("expiry_from", expiryFrom);
       if (expiryTo) params.append("expiry_to", expiryTo);
-      if (search) params.append("search", search);
       if (filterShop) params.append("shop_id", filterShop);
+    }
+
+    if (type === "shops") {
+      if (shopHasLicense) params.append("has_license", shopHasLicense);
+      if (shopLicenseStatus) params.append("license_status", shopLicenseStatus);
+      if (shopLicenseType) params.append("license_type", shopLicenseType);
     }
     return params;
   };
@@ -152,23 +166,8 @@ export default function ExportPage() {
   const handleExportCSV = async () => {
     setIsExporting(true);
 
-    const params = new URLSearchParams();
-    params.append("type", type);
+    const params = buildParams();
     params.append("format", "csv");
-    
-    // Append selected fields
-    if (selectedFields.length > 0) {
-        params.append("fields", selectedFields.join(','));
-    }
-
-    if (type === "licenses") {
-      if (licenseType) params.append("license_type", licenseType);
-      if (status) params.append("status", status);
-      if (expiryFrom) params.append("expiry_from", expiryFrom);
-      if (expiryTo) params.append("expiry_to", expiryTo);
-      if (search) params.append("search", search);
-      if (filterShop) params.append("shop_id", filterShop);
-    }
 
     const url = `/api/export?${params.toString()}`;
     const filename = `export_${type}_${new Date().toISOString().split('T')[0]}.csv`;
@@ -213,23 +212,8 @@ export default function ExportPage() {
   const handleExportPDF = async () => {
     setIsExporting(true); // Start loading state
     
-    const params = new URLSearchParams();
-    params.append("type", type);
+    const params = buildParams();
     params.append("format", "pdf");
-
-    // Append selected fields
-    if (selectedFields.length > 0) {
-        params.append("fields", selectedFields.join(','));
-    }
-
-    if (type === "licenses") {
-      if (licenseType) params.append("license_type", licenseType);
-      if (status) params.append("status", status);
-      if (expiryFrom) params.append("expiry_from", expiryFrom);
-      if (expiryTo) params.append("expiry_to", expiryTo);
-      if (search) params.append("search", search);
-      if (filterShop) params.append("shop_id", filterShop);
-    }
 
     const url = `/api/export?${params.toString()}`;
     const filename = `export_${type}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -651,6 +635,107 @@ export default function ExportPage() {
                       value={expiryTo}
                       onChange={(e) => setExpiryTo(e.target.value)}
                       placeholder="เลือกวันที่"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Shop Filters */}
+            {type === "shops" && (
+              <div
+                className="form-group"
+                style={{
+                  marginTop: "1.5rem",
+                  padding: "1rem",
+                  background: "var(--bg-secondary)",
+                  borderRadius: "0.5rem",
+                }}
+              >
+                <span
+                  style={{
+                    marginBottom: "1rem",
+                    display: "block",
+                    fontWeight: 600,
+                  }}
+                >
+                  ตัวกรองข้อมูล (ร้านค้า)
+                </span>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    gap: "1rem",
+                  }}
+                >
+                  <div>
+                    <label
+                      htmlFor="export-shop-search"
+                      style={{ fontSize: "0.875rem", marginBottom: "0.5rem", display: "block" }}
+                    >
+                      ค้นหา
+                    </label>
+                    <SearchInput
+                      id="export-shop-search"
+                      value={search}
+                      onChange={setSearch}
+                      placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร..."
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="export-has-license"
+                      style={{ fontSize: "0.875rem", marginBottom: "0.5rem", display: "block" }}
+                    >
+                      ใบอนุญาต
+                    </label>
+                    <CustomSelect
+                      id="export-has-license"
+                      value={shopHasLicense}
+                      onChange={(e) => setShopHasLicense(e.target.value)}
+                      options={[
+                        { value: "", label: "ทั้งหมด" },
+                        { value: "yes", label: "มีใบอนุญาต" },
+                        { value: "no", label: "ยังไม่มีใบอนุญาต" },
+                      ]}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="export-shop-license-status"
+                      style={{ fontSize: "0.875rem", marginBottom: "0.5rem", display: "block" }}
+                    >
+                      สถานะใบอนุญาต
+                    </label>
+                    <CustomSelect
+                      id="export-shop-license-status"
+                      value={shopLicenseStatus}
+                      onChange={(e) => setShopLicenseStatus(e.target.value)}
+                      options={[
+                        { value: "", label: "ทุกสถานะ" },
+                        { value: "active", label: "ปกติ" },
+                        { value: "expired", label: "หมดอายุ" },
+                        { value: "pending", label: "กำลังดำเนินการ" },
+                        { value: "suspended", label: "ถูกพักใช้" },
+                        { value: "revoked", label: "ถูกเพิกถอน" },
+                      ]}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="export-shop-license-type"
+                      style={{ fontSize: "0.875rem", marginBottom: "0.5rem", display: "block" }}
+                    >
+                      ประเภทใบอนุญาต
+                    </label>
+                    <CustomSelect
+                      id="export-shop-license-type"
+                      value={shopLicenseType}
+                      onChange={(e) => setShopLicenseType(e.target.value)}
+                      options={[
+                        { value: "", label: "ทุกประเภท" },
+                        ...typesList.map((t) => ({ value: t.id, label: t.name })),
+                      ]}
                     />
                   </div>
                 </div>
