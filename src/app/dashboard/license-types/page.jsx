@@ -1,39 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import TableSkeleton from "@/components/ui/TableSkeleton";
-
-// Lazy load heavy ExcelTable component
-const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
-  ssr: false,
-  loading: () => (
-    <div className="table-card">
-      <div className="table-container">
-        <table className="excel-table">
-          <thead>
-            <tr>
-              {["ชื่อประเภท", "คำอธิบาย", "อายุ (วัน)", "ใบอนุญาต"].map((h, i) => (
-                <th key={i} style={{ textAlign: "center" }}><div className="th-content" style={{ justifyContent: "center" }}>{h}</div></th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <TableSkeleton rows={5} columns={[
-              { width: "80%", center: true },
-              { width: "90%", center: true },
-              { width: "50%", center: true },
-              { width: "40%", center: true },
-            ]} />
-          </tbody>
-        </table>
-      </div>
-    </div>
-  ),
-});
+import ExcelTable from "@/components/ExcelTable";
 
 // Constants
 const STANDARD_COLUMNS = [

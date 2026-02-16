@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData } from "@/hooks";
@@ -13,6 +12,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import ShopDetailModal from "@/components/ui/ShopDetailModal";
 import QuickAddModal from "@/components/ui/QuickAddModal";
+import ExcelTable from "@/components/ExcelTable";
 import { mutate } from "swr"; // Import mutate
 
 // Lazy load PDF export to reduce initial bundle size
@@ -20,37 +20,6 @@ const exportShopsToPDF = async (...args) => {
   const { exportShopsToPDF: exportFn } = await import("@/lib/pdfExportSafe");
   return exportFn(...args);
 };
-
-// Lazy load heavy ExcelTable component
-const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
-  ssr: false,
-  loading: () => (
-    <div className="table-card">
-      <div className="table-container">
-        <table className="excel-table">
-          <thead>
-            <tr>
-              {["ชื่อร้านค้า", "ชื่อเจ้าของ", "เบอร์โทรศัพท์", "ที่อยู่", "อีเมล", "หมายเหตุ", "จำนวนใบอนุญาต"].map((h, i) => (
-                <th key={i} style={{ minWidth: "120px", textAlign: "center" }}><div className="th-content" style={{ justifyContent: "center" }}>{h}</div></th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <TableSkeleton rows={10} columns={[
-              { width: "90%", center: true },
-              { width: "80%", center: true },
-              { width: "70%", center: true },
-              { width: "85%", center: true },
-              { width: "70%", center: true },
-              { width: "60%", center: true },
-              { width: "40%", center: true },
-            ]} />
-          </tbody>
-        </table>
-      </div>
-    </div>
-  ),
-});
 
 // Default column definition
 const STANDARD_COLUMNS = [

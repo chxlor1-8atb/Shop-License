@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData } from "@/hooks";
@@ -12,47 +11,14 @@ import { SearchInput } from "@/components/ui/FilterRow";
 import CustomSelect from "@/components/ui/CustomSelect";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import QuickAddModal from "@/components/ui/QuickAddModal";
+import ExcelTable from "@/components/ExcelTable";
 import { mutate } from "swr"; // Import mutate
 
-// Lazy load PDF export to reduce initial bundle size
 // Lazy load PDF export to reduce initial bundle size
 const exportLicensesToPDF = async (...args) => {
   const { exportLicensesToPDF: exportFn } = await import("@/lib/pdfExportSafe");
   return exportFn(...args);
 };
-
-// Lazy load heavy ExcelTable component
-const ExcelTable = dynamic(() => import("@/components/ExcelTable"), {
-  ssr: false,
-  loading: () => (
-    <div className="table-card">
-      <div className="table-container">
-        <table className="excel-table">
-          <thead>
-            <tr>
-              {["ร้านค้า", "ประเภทใบอนุญาต", "สถานที่จำหน่าย", "จำนวนเงิน", "เลขที่ใบอนุญาต", "วันที่ออก", "วันหมดอายุ", "พื้นที่ (ตารางเมตร)", "พื้นที่ (แรงม้า)"].map((h, i) => (
-                <th key={i} style={{ minWidth: "120px" }}><div className="th-content">{h}</div></th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <TableSkeleton rows={10} columns={[
-              { width: "180px" }, // Shop
-              { width: "150px" }, // Type
-              { width: "150px" }, // Location
-              { width: "100px" }, // Amount
-              { width: "150px" }, // License No
-              { width: "120px", center: true }, // Issue Date
-              { width: "120px", center: true }, // Expiry
-              { width: "100px" }, // Area Sqm
-              { width: "100px" }, // Area HP
-            ]} />
-          </tbody>
-        </table>
-      </div>
-    </div>
-  ),
-});
 
 // Helper to format options for ExcelTable select columns
 const formatOptions = (items, labelKey = "name", valueKey = "id") =>

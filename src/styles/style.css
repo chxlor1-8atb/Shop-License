@@ -821,12 +821,10 @@ min-width: 180px;
     z-index: 0;
 }
 
-/* Sidebar - Frosted Glass Dark */
+/* Sidebar - Solid Dark (no backdrop-filter for better LCP) */
 .sidebar {
     width: var(--sidebar-width);
-    background: var(--glass-bg-dark);
-    backdrop-filter: blur(var(--glass-blur-lg));
-    -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+    background: rgb(30, 28, 25);
     border-right: 1px solid var(--glass-border-dark);
     display: flex;
     flex-direction: column;
@@ -928,7 +926,7 @@ min-width: 180px;
     margin: 0.125rem 0.75rem;
     color: rgba(255, 255, 255, 0.65);
     border-radius: var(--border-radius);
-    transition: all var(--transition);
+    transition: color 0.15s ease, background 0.15s ease;
     font-size: 0.9375rem;
 }
 
@@ -1029,14 +1027,10 @@ min-width: 180px;
     /* Explicitly constrain width */
 }
 
-/* Header - Enhanced Premium Glass */
+/* Header - Clean & Fast (no backdrop-filter for better LCP) */
 .content-header {
     padding: 1.5rem 2rem;
-    background: linear-gradient(135deg,
-            rgba(255, 255, 255, 0.85) 0%,
-            rgba(255, 255, 255, 0.65) 100%);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(255, 255, 255, 0.97);
     border-bottom: 1px solid rgba(216, 211, 200, 0.3);
     display: flex;
     align-items: center;
@@ -1105,10 +1099,7 @@ min-width: 180px;
     font-size: 1.75rem;
     margin: 0;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--gray-800) 0%, var(--gray-600) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--gray-800);
     letter-spacing: -0.02em;
 }
 

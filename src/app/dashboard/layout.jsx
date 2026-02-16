@@ -31,7 +31,13 @@ export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentDate, setCurrentDate] = useState("");
+  const [currentDate, setCurrentDate] = useState(() => {
+    try {
+      const d = new Date();
+      const weekday = d.toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", weekday: "long" });
+      return `${weekday} ${formatThaiDateFull(d)}`;
+    } catch { return ""; }
+  });
   const [expiringCount, setExpiringCount] = useState(0);
   const [showPatchNotes, setShowPatchNotes] = useState(false);
 
