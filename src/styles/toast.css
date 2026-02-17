@@ -35,7 +35,7 @@
     overflow: hidden !important;
     animation: toastSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
     transform-origin: top right !important;
-    font-family: var(--font-inter), var(--font-noto-thai), -apple-system, sans-serif !important;
+    font-family: var(--font-noto-thai), var(--font-inter), -apple-system, sans-serif !important;
 }
 
 .custom-toast.exiting {

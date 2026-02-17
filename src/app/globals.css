@@ -7,8 +7,11 @@
 body {
   margin: 0;
   padding: 0;
-  /* Use the CSS variables from next/font */
+  /* ใช้ Noto Sans Thai เป็นฟอนต์หลัก */
   font-family: var(--font-noto-thai), var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 
