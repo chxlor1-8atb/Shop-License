@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import useSWR from 'swr';
 import useSWRMutation from 'swr/mutation';
 import { fetcher, swrConfigVariants as CONFIG } from '@/lib/swr-config';
@@ -110,13 +110,13 @@ export function useLicenseTypes() {
  * Pre-formats options for CustomSelect component
  */
 export function useDropdownData() {
-    const { data: shopsData, isLoading: shopsLoading, error: shopsError } = useSWR(
-        '/api/shops?limit=1000',
+    const { data: shopsData, isLoading: shopsLoading, error: shopsError, mutate: refreshShops } = useSWR(
+        '/api/shops?limit=5000',
         fetcher,
         { ...CONFIG.static, revalidateOnFocus: true }
     );
 
-    const { data: typesData, isLoading: typesLoading, error: typesError } = useSWR(
+    const { data: typesData, isLoading: typesLoading, error: typesError, mutate: refreshTypes } = useSWR(
         '/api/license-types',
         fetcher,
         { ...CONFIG.static, revalidateOnFocus: true }
@@ -137,13 +137,20 @@ export function useDropdownData() {
         label: t.name
     })), [licenseTypes]);
 
+    // Refresh function to update both shops and types
+    const refresh = useCallback(() => {
+        refreshShops();
+        refreshTypes();
+    }, [refreshShops, refreshTypes]);
+
     return {
         shops,
         licenseTypes,
         shopOptions,
         typeOptions,
         loading: shopsLoading || typesLoading,
-        error: shopsError || typesError
+        error: shopsError || typesError,
+        refresh
     };
 }
 

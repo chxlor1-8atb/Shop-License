@@ -836,7 +836,6 @@ function LicensesPageContent() {
         isOpen={showQuickAddShop}
         onClose={() => setShowQuickAddShop(false)}
         type="shop"
-        typeOptions={typeOptions}
         onSubmit={handleQuickAddShop}
       />
 
@@ -845,8 +844,6 @@ function LicensesPageContent() {
         isOpen={showQuickAddLicense}
         onClose={() => setShowQuickAddLicense(false)}
         type="license"
-        shopOptions={shopOptions}
-        typeOptions={typeOptions}
         onSubmit={handleQuickAddLicense}
       />
     </div>

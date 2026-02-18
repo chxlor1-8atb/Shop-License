@@ -724,7 +724,6 @@ function ShopsPageContent() {
         isOpen={showQuickAdd}
         onClose={() => setShowQuickAdd(false)}
         type="shop"
-        typeOptions={typeOptions}
         onSubmit={handleQuickAddShop}
       />
     </div>

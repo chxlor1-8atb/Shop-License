@@ -345,6 +345,9 @@ export async function DELETE(request) {
         // Get license info before deleting for logging
         const license = await fetchOne('SELECT license_number FROM licenses WHERE id = $1', [id]);
 
+        // Delete custom field values first (to prevent orphans)
+        await executeQuery('DELETE FROM custom_field_values WHERE entity_type = $1 AND entity_id = $2', ['licenses', id]);
+
         await executeQuery('DELETE FROM licenses WHERE id = $1', [id]);
 
         // Log activity

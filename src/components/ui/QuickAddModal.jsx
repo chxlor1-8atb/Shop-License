@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import CustomSelect from "./CustomSelect";
 import DatePicker from "./DatePicker";
 import Modal from "./Modal";
+import { useDropdownData, mutate } from "@/hooks";
 import "./QuickAddModal.css";
 
 const DEFAULT_PREFILL = {};
@@ -27,14 +28,20 @@ export default function QuickAddModal({
   type,
   prefillData = DEFAULT_PREFILL,
   onSubmit,
-  shopOptions = DEFAULT_OPTIONS,
-  typeOptions = DEFAULT_OPTIONS,
 }) {
+  const { shopOptions, typeOptions, refresh } = useDropdownData();
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [customFields, setCustomFields] = useState([]);
   const [loadingFields, setLoadingFields] = useState(false);
+
+  // Refresh dropdown data when modal opens
+  useEffect(() => {
+    if (isOpen && refresh) {
+      refresh();
+    }
+  }, [isOpen, refresh]);
 
   // Fetch custom fields when modal opens
   useEffect(() => {
@@ -177,6 +184,9 @@ export default function QuickAddModal({
       } else {
         await onSubmit(formData);
       }
+      
+      // Invalidate cache to refresh dropdown data
+      mutate(() => true, undefined, { revalidate: true });
       
       onClose();
     } catch (err) {
