@@ -162,12 +162,12 @@ function ShopsPageContent() {
 
     // Split standard vs custom fields
     const standardData = {
-      shop_name: updatedRow.shop_name,
-      owner_name: updatedRow.owner_name,
-      phone: updatedRow.phone,
-      address: updatedRow.address,
-      email: updatedRow.email,
-      notes: updatedRow.notes,
+      shop_name: updatedRow.shop_name || "",
+      owner_name: updatedRow.owner_name || "",
+      phone: updatedRow.phone || "",
+      address: updatedRow.address || "",
+      email: updatedRow.email || "",
+      notes: updatedRow.notes || "",
     };
 
     // Determine custom fields
@@ -187,7 +187,10 @@ function ShopsPageContent() {
 
     try {
       if (isNew) {
-        if (!updatedRow.shop_name) return; // minimal validation
+        if (!updatedRow.shop_name || updatedRow.shop_name.trim() === "") {
+          showError("กรุณาระบุชื่อร้านค้า");
+          return;
+        }
 
         const payload = {
           ...standardData,
@@ -251,7 +254,7 @@ function ShopsPageContent() {
             console.error('Failed to global mutate:', err);
           }
         } else {
-          showError(data.message);
+          showError(data.message || "ไม่สามารถสร้างร้านค้าได้");
         }
       } else {
         const payload = {
@@ -269,16 +272,18 @@ function ShopsPageContent() {
         const data = await res.json();
 
         if (data.success) {
+          showSuccess("อัปเดตร้านค้าเรียบร้อย");
           notifyDataChange("shops-sync");
           fetchShops();
           mutate('/api/shops/dropdown'); // Update dropdown data
         } else {
-          showError(data.message);
+          showError(data.message || "ไม่สามารถอัปเดตร้านค้าได้");
           fetchShops(); // Revert
         }
       }
     } catch (error) {
-      showError(error.message);
+      console.error('Error updating shop:', error);
+      showError(error.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       fetchShops();
     }
   };
