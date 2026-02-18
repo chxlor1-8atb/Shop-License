@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/Loading";
-import { showSuccess, showError, confirmDelete } from "@/utils/alerts";
+import { showSuccess, showError } from "@/utils/alerts";
+import Swal from "sweetalert2";
 import Pagination from "@/components/ui/Pagination";
 import "./activity-logs.css";
 
@@ -126,8 +127,16 @@ export default function ActivityLogsPage() {
   }, [isAuthorized]);
 
   const handleClearLogs = async () => {
-    const confirmed = await confirmDelete("บันทึกกิจกรรมทั้งหมด");
-    if (!confirmed) return;
+    const result = await Swal.fire({
+      title: 'ล้างข้อมูลกิจกรรม?',
+      text: 'จะลบเฉพาะบันทึกที่เก่ากว่า 7 วัน บันทึกล่าสุดจะยังคงอยู่',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ล้างข้อมูล',
+      cancelButtonText: 'ยกเลิก',
+      reverseButtons: true
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch("/api/activity-logs", {
@@ -136,7 +145,7 @@ export default function ActivityLogsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        showSuccess("ล้างข้อมูลเรียบร้อยแล้ว");
+        showSuccess(data.message);
         fetchStats();
         fetchLogs(1);
       } else {

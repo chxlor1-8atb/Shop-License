@@ -40,8 +40,15 @@ export async function DELETE(request) {
         if (authError) return authError;
 
         // Security: Only delete logs older than 7 days to preserve recent audit trail
-        const result = await fetchAll("DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '7 days'");
+        const result = await fetchAll("DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '7 days' RETURNING id");
         const deletedCount = result?.length || 0;
+
+        if (deletedCount === 0) {
+            return NextResponse.json({
+                success: true,
+                message: 'ไม่มีข้อมูลที่เก่ากว่า 7 วัน ไม่มีรายการที่ถูกลบ'
+            });
+        }
 
         return NextResponse.json({
             success: true,
