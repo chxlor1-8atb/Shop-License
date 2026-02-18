@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData } from "@/hooks";
 import { API_ENDPOINTS, STATUS_OPTIONS, STATUS_FILTER_OPTIONS } from "@/constants";
+import Swal from "sweetalert2";
 import { showSuccess, showError } from "@/utils/alerts";
 import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
@@ -504,6 +505,81 @@ function LicensesPageContent() {
     }
   };
 
+  // --- Renew License Handler ---
+  const handleRenewLicense = async (rowId) => {
+    const license = licenses.find((l) => l.id === rowId);
+    if (!license) {
+      showError("ไม่พบข้อมูลใบอนุญาต");
+      return;
+    }
+
+    const shopName = shopOptions.find((o) => o.value == license.shop_id)?.label || license.shop_name || "";
+    const typeName = typeOptions.find((o) => o.value == license.license_type_id)?.label || license.type_name || "";
+    const currentExpiry = license.expiry_date
+      ? new Date(license.expiry_date).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" })
+      : "ไม่ระบุ";
+
+    // Calculate new expiry for display
+    const currentExp = license.expiry_date ? new Date(license.expiry_date) : new Date();
+    const today = new Date();
+    const baseDate = currentExp > today ? currentExp : today;
+    const newExp = new Date(baseDate);
+    newExp.setFullYear(newExp.getFullYear() + 1);
+    const newExpiryDisplay = newExp.toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+
+    const confirmResult = await Swal.fire({
+      title: "🔄 ต่ออายุใบอนุญาต",
+      html: `
+        <div style="text-align:left; margin-bottom:1rem; padding:0.75rem 1rem; background:#f8f9fa; border-radius:8px; font-size:0.9rem;">
+          <div style="margin-bottom:0.25rem;"><strong>ร้านค้า:</strong> ${shopName}</div>
+          <div style="margin-bottom:0.25rem;"><strong>ประเภท:</strong> ${typeName}</div>
+          <div style="margin-bottom:0.25rem;"><strong>เลขที่:</strong> ${license.license_number || "-"}</div>
+          <div><strong>หมดอายุปัจจุบัน:</strong> <span style="color:#ef4444; font-weight:600;">${currentExpiry}</span></div>
+        </div>
+        <div style="text-align:left; font-size:0.95rem;">
+          <p>⚡ ต่ออายุ 1 ปี → วันหมดอายุใหม่: <strong style="color:#10b981;">${newExpiryDisplay}</strong></p>
+        </div>
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "✅ ยืนยัน",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#d97757",
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
+    try {
+      const res = await fetch("/api/licenses/renew", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          id: license.id,
+          mode: "one_year",
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showSuccess(data.message);
+        fetchLicenses();
+      } else {
+        showError(data.message);
+      }
+    } catch (error) {
+      showError(error.message);
+    }
+  };
+
+  const customContextMenuItems = useMemo(() => [
+    {
+      label: "🔄 ต่ออายุใบอนุญาต",
+      icon: "fas fa-sync-alt",
+      onClick: handleRenewLicense,
+    },
+  ], [licenses, shopOptions, typeOptions]);
+
   const handleExport = async () => {
     try {
       await exportLicensesToPDF(licenses, {
@@ -661,6 +737,7 @@ function LicensesPageContent() {
               onExport={handleExport}
               exportLabel="Export PDF"
               exportIcon="fa-file-pdf"
+              customContextMenuItems={customContextMenuItems}
             />
           </div>
         ) : (

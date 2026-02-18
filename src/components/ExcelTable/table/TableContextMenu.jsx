@@ -11,6 +11,7 @@ export function TableContextMenu({
   onAddColumn,
   onDeleteColumn,
   onUpdateColumnType,
+  customContextMenuItems = [],
 }) {
   if (!contextMenu) return null;
 
@@ -52,6 +53,23 @@ export function TableContextMenu({
           >
             <i className="fas fa-copy"></i> ทำซ้ำแถว
           </div>
+          {customContextMenuItems.length > 0 && (
+            <>
+              <div className="context-menu-divider" />
+              {customContextMenuItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  className={`context-menu-item ${item.className || ""}`}
+                  onClick={() => {
+                    item.onClick(contextMenu.rowId);
+                    onClose();
+                  }}
+                >
+                  {item.icon && <i className={item.icon}></i>} {item.label}
+                </div>
+              ))}
+            </>
+          )}
           <div className="context-menu-divider" />
           <div
             className="context-menu-item danger"
@@ -86,6 +104,23 @@ export function TableContextMenu({
           >
             <i className="fas fa-copy"></i> ทำซ้ำแถว
           </div>
+          {customContextMenuItems.length > 0 && (
+            <>
+              <div className="context-menu-divider" />
+              {customContextMenuItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  className={`context-menu-item ${item.className || ""}`}
+                  onClick={() => {
+                    item.onClick(contextMenu.rowId);
+                    onClose();
+                  }}
+                >
+                  {item.icon && <i className={item.icon}></i>} {item.label}
+                </div>
+              ))}
+            </>
+          )}
           <div className="context-menu-divider" />
           <div
             className="context-menu-item danger"

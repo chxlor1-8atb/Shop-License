@@ -31,6 +31,7 @@ export default function ExcelTable({
   allowClear = false,
   allowReset = false,
   defaultRowValues = {},
+  customContextMenuItems = [],
 }) {
   // Logic & State management extracted to custom hook
   const {
@@ -328,6 +329,7 @@ export default function ExcelTable({
         onAddColumn={handleAddColumn}
         onDeleteColumn={handleDeleteColumn}
         onUpdateColumnType={handleUpdateColumnType}
+        customContextMenuItems={customContextMenuItems}
       />
     </div>
   );
