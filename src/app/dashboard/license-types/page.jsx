@@ -56,9 +56,6 @@ export default function LicenseTypesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-refresh: sync data every 30s + on tab focus + cross-tab
-  useAutoRefresh(fetchData, { interval: 30000, channel: "license-types-sync" });
-
   const fetchData = useCallback(async () => {
     if (!initialLoadDoneRef.current) {
       setLoading(true);
@@ -158,6 +155,9 @@ export default function LicenseTypesPage() {
       initialLoadDoneRef.current = true;
     }
   }, []);
+
+  // Auto-refresh: sync data every 30s + on tab focus + cross-tab
+  useAutoRefresh(fetchData, { interval: 30000, channel: "license-types-sync" });
 
   // Computed statistics
   const stats = useMemo(

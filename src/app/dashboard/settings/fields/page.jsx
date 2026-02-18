@@ -52,9 +52,6 @@ function FieldsContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [entityId]);
 
-    // Auto-refresh: sync data every 30s + on tab focus
-    useAutoRefresh(loadData, { interval: 30000 });
-
     const loadData = async () => {
         if (!initialLoadDoneRef.current) {
             setLoading(true);
@@ -76,6 +73,9 @@ function FieldsContent() {
             initialLoadDoneRef.current = true;
         }
     };
+
+    // Auto-refresh: sync data every 30s + on tab focus
+    useAutoRefresh(loadData, { interval: 30000 });
 
     const openModal = (field = null) => {
         if (field) {

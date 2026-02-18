@@ -26,9 +26,6 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Auto-refresh: sync dashboard stats every 30s + on tab focus
-    useAutoRefresh(fetchAll, { interval: 30000 });
-
     const fetchAll = async () => {
         try {
             const [authRes, statsRes, expiringRes] = await Promise.all([
@@ -48,6 +45,9 @@ export default function DashboardPage() {
             setLoading(false);
         }
     };
+
+    // Auto-refresh: sync dashboard stats every 30s + on tab focus
+    useAutoRefresh(fetchAll, { interval: 30000 });
 
     if (loading) return <DashboardSkeleton />;
     if (error) return <div className="error-message">{error}</div>;

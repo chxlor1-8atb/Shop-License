@@ -28,9 +28,6 @@ export default function EntitiesSettingsPage() {
         loadEntities();
     }, []);
 
-    // Auto-refresh: sync data every 30s + on tab focus
-    useAutoRefresh(loadEntities, { interval: 30000 });
-
     const loadEntities = async () => {
         if (!initialLoadDoneRef.current) {
             setLoading(true);
@@ -48,6 +45,9 @@ export default function EntitiesSettingsPage() {
             initialLoadDoneRef.current = true;
         }
     };
+
+    // Auto-refresh: sync data every 30s + on tab focus
+    useAutoRefresh(loadEntities, { interval: 30000 });
 
     const openModal = (entity = null) => {
         if (entity) {
