@@ -53,6 +53,25 @@ export default function LicenseTypesPage() {
   const initialLoadDoneRef = useRef(false);
   const shouldSkipFetchRef = useRef(false);
 
+  // Helper to check if server data has real changes we should accept
+  const hasRealDataChanges = (localTypes, serverTypes) => {
+    if (!localTypes || !serverTypes) return true;
+    
+    // Check if server has new IDs we don't have locally
+    const localIds = new Set(localTypes.map(t => t.id));
+    const serverIds = new Set(serverTypes.map(t => t.id));
+    
+    // If server has IDs we don't have, accept the update
+    for (const id of serverIds) {
+      if (!localIds.has(id)) return true;
+    }
+    
+    // If lengths differ significantly, accept the update
+    if (Math.abs(localTypes.length - serverTypes.length) > 1) return true;
+    
+    return false;
+  };
+
   useEffect(() => {
     fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,9 +126,12 @@ export default function LicenseTypesPage() {
 
         console.log('Merged types:', mergedTypes); // Debug log
         
-        // Only update state if we're not in the middle of row creation
-        if (!shouldSkipFetchRef.current) {
+        // Only update state if we're not in the middle of row creation OR if we have real data changes
+        if (!shouldSkipFetchRef.current || hasRealDataChanges(types, mergedTypes)) {
+          console.log('Updating types with server data');
           setTypes(mergedTypes);
+        } else {
+          console.log('Skipping types update - shouldSkipFetch is true or no real changes');
         }
         shouldSkipFetchRef.current = true;
       }
@@ -334,7 +356,6 @@ export default function LicenseTypesPage() {
 
     const standardData = {
       name: updatedRow.name,
-
       description: updatedRow.description || "",
       validity_days: updatedRow.validity_days || 365,
     };
@@ -354,6 +375,18 @@ export default function LicenseTypesPage() {
     try {
       if (isNew) {
         if (!updatedRow.name) return; // Wait until name is filled
+        
+        // Prevent duplicate submissions
+        if (updatedRow._isSubmitting) {
+          console.log('Already submitting, skipping...');
+          return;
+        }
+        
+        // Mark as submitting to prevent duplicates
+        setTypes(prev => prev.map(t => 
+          t.id === updatedRow.id ? { ...t, _isSubmitting: true } : t
+        ));
+        
         const res = await fetch(API_ENDPOINTS.LICENSE_TYPES, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -367,14 +400,15 @@ export default function LicenseTypesPage() {
         const newTypeId = data.type?.id || data.id;
         
         if (newTypeId) {
-          // Update local state - replace temp ID with real ID
+          // Optimistic update: Replace temp row with real data immediately
           setTypes((prev) =>
             prev.map((t) =>
               t.id === updatedRow.id
-                ? { ...t, ...standardData, ...customValues, id: newTypeId, license_count: 0 }
+                ? { ...t, ...standardData, ...customValues, id: newTypeId, license_count: 0, _isSubmitting: false }
                 : t
             )
           );
+          
           showSuccess("สร้างประเภทใบอนุญาตเรียบร้อย");
           notifyDataChange("license-types-sync");
           
@@ -385,7 +419,9 @@ export default function LicenseTypesPage() {
           // Re-enable data fetching after successful creation
           setTimeout(() => {
             shouldSkipFetchRef.current = false;
-          }, 1000);
+            // Trigger a refresh to ensure data consistency
+            fetchData();
+          }, 500); // Reduced timeout for faster feedback
           
           // Save custom values with new ID
           if (Object.keys(customValues).length > 0) {
@@ -491,14 +527,14 @@ export default function LicenseTypesPage() {
 
   const handleRowAdd = (newRow) => {
     // Add the new row to types immediately so stats update
-    setTypes((prev) => [...prev, { ...newRow, license_count: 0 }]);
+    setTypes((prev) => [...prev, { ...newRow, license_count: 0, _isSubmitting: false }]);
     // Prevent auto-refresh from running for 3 seconds to avoid duplication
     initialLoadDoneRef.current = false;
     shouldSkipFetchRef.current = true; // Set to true to prevent fetch during row creation
     setTimeout(() => {
       initialLoadDoneRef.current = true;
       shouldSkipFetchRef.current = false; // Re-enable fetch after delay
-    }, 3000); // Increased from 2s to 3s
+    }, 3000); // Reduced to 3s for better UX
   };
 
   return (
@@ -539,6 +575,7 @@ export default function LicenseTypesPage() {
               description: "",
               validity_days: 365,
               license_count: 0,
+              _isSubmitting: false,
             };
             setTypes(prev => [newType, ...prev]);
             // Prevent auto-refresh from running for 3 seconds to avoid duplication
@@ -547,7 +584,7 @@ export default function LicenseTypesPage() {
             setTimeout(() => {
               initialLoadDoneRef.current = true;
               shouldSkipFetchRef.current = false; // Re-enable fetch after delay
-            }, 3000); // Increased from 2s to 3s
+            }, 3000); // Reduced to 3s for better UX
           }}>
             <i className="fas fa-plus"></i> เพิ่มประเภทใบอนุญาต
           </button>
@@ -556,6 +593,7 @@ export default function LicenseTypesPage() {
           {!loading ? (
             <div style={{ overflow: "auto", maxHeight: "600px" }}>
               <ExcelTable
+                key={`license-types-${types.length}-${loading}`}
                 initialColumns={columns}
                 initialRows={types}
                 onRowUpdate={handleRowUpdate}

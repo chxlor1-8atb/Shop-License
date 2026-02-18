@@ -206,48 +206,49 @@ function ShopsPageContent() {
           showSuccess("สร้างร้านค้าเรียบร้อย");
           notifyDataChange("shops-sync");
           
-          // Optimistic update: Add new shop to UI immediately
+          // Optimistic update: Replace temp row with real data immediately
           // Handle different response formats between local and production
           const newShopId = data.shop_id || data.id || data.data?.id;
-          const newShop = {
-            id: newShopId || `temp_${Date.now()}`, // Fallback ID for UI
-            shop_name: updatedRow.shop_name,
-            owner_name: updatedRow.owner_name,
-            phone: updatedRow.phone,
-            address: updatedRow.address,
-            email: updatedRow.email,
-            notes: updatedRow.notes,
-            license_count: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            ...(customValues || {})
-          };
           
-          // Update local state immediately for instant UI feedback
-          setLocalShops(prev => [newShop, ...prev]);
-          
-          // Clear optimistic updates after server response is processed
-          // Increased timeout for production network latency
-          const timeoutId = setTimeout(() => {
-            console.log('Timeout: clearing optimistic updates');
-            setLocalShops([]);
-          }, 2000); // Increased timeout for production
-          
-          fetchShops().then(() => {
-            // Clear optimistic updates immediately after successful fetch
-            console.log('Fetch completed: clearing optimistic updates');
-            clearTimeout(timeoutId);
-            setLocalShops([]);
-          }).catch(err => {
-            console.error('Failed to refresh shops:', err);
-            setLocalShops([]);
-          });
+          if (newShopId) {
+            // Update local state - replace temp ID with real ID
+            setLocalShops(prev => 
+              prev.map(shop => 
+                shop.id === updatedRow.id 
+                  ? { ...shop, ...standardData, ...customValues, id: newShopId, license_count: 0 }
+                  : shop
+              )
+            );
+            
+            // Clear optimistic updates after a short delay
+            setTimeout(() => {
+              setLocalShops([]);
+            }, 1000);
+          } else {
+            // Fallback: Add new shop if no ID returned
+            const newShop = {
+              id: `temp_${Date.now()}`,
+              ...standardData,
+              license_count: 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              ...(customValues || {})
+            };
+            setLocalShops(prev => [newShop, ...prev]);
+          }
           
           // Update dropdown data with error handling
           try {
             mutate('/api/shops/dropdown', undefined, { revalidate: true });
           } catch (err) {
             console.error('Failed to mutate dropdown:', err);
+          }
+          
+          // Also trigger a global revalidation to update any cached data
+          try {
+            mutate(() => true, undefined, { revalidate: true });
+          } catch (err) {
+            console.error('Failed to global mutate:', err);
           }
         } else {
           showError(data.message);
@@ -685,6 +686,7 @@ function ShopsPageContent() {
         {!isLoading ? (
           <div style={{ overflow: "auto", maxHeight: "600px" }}>
             <ExcelTable
+              key={`shops-${displayShops.length}-${loading}`}
               initialColumns={columns}
               initialRows={displayShops}
               onRowUpdate={handleRowUpdate}

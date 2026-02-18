@@ -338,9 +338,26 @@ function LicensesPageContent() {
         if (data.success) {
           showSuccess("สร้างใบอนุญาตเรียบร้อย");
           notifyDataChange("licenses-sync");
-          // Optimistic update: add new license to UI immediately
-          setLicenses((prev) => [...prev, data.license]);
-          fetchLicenses(); // Still fetch to get complete data
+          
+          // Optimistic update: Replace temp row with real data immediately
+          const newLicenseId = data.license?.id || data.id || data.data?.id;
+          
+          if (newLicenseId) {
+            // Update local state - replace temp ID with real ID
+            setLicenses(prev => 
+              prev.map(license => 
+                license.id === updatedRow.id 
+                  ? { ...license, ...standardData, ...customValues, id: newLicenseId }
+                  : license
+              )
+            );
+          } else {
+            // Fallback: add new license from response
+            if (data.license) {
+              setLicenses(prev => [...prev, data.license]);
+            }
+          }
+          
           // Force refresh all dropdown data to ensure real-time updates
           mutate('/api/shops/dropdown', undefined, { revalidate: true });
           mutate('/api/license-types/dropdown', undefined, { revalidate: true });
@@ -760,6 +777,7 @@ function LicensesPageContent() {
         {!loading ? (
           <div style={{ overflow: "auto", maxHeight: "600px" }}>
             <ExcelTable
+              key={`licenses-${licenses.length}-${loading}`}
               initialColumns={columns}
               initialRows={licenses}
               onRowUpdate={handleRowUpdate}
