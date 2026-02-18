@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange, useShops } from "@/hooks";
@@ -80,7 +80,14 @@ function ShopsPageContent() {
 
   // Local state for optimistic updates
   const [localShops, setLocalShops] = useState([]);
-  const displayShops = localShops.length > 0 ? localShops : shops;
+  
+  // Safely compute display shops
+  const displayShops = useMemo(() => {
+    if (localShops.length > 0) {
+      return localShops;
+    }
+    return shops || [];
+  }, [localShops, shops]);
 
   // Modal states
   const [selectedShop, setSelectedShop] = useState(null);
@@ -473,118 +480,124 @@ function ShopsPageContent() {
 
   // Handle quick add shop with optional license
   const handleQuickAddShop = async (formData) => {
-    // Create shop first
-    const shopPayload = {
-      shop_name: formData.shop_name,
-      owner_name: formData.owner_name,
-      phone: formData.phone,
-      address: formData.address,
-      email: formData.email,
-      notes: formData.notes,
-      custom_fields: formData.custom_fields || {},
-    };
-
-    const shopRes = await fetch(API_ENDPOINTS.SHOPS, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(shopPayload),
-    });
-    const shopData = await shopRes.json();
-
-    if (!shopData.success) {
-      throw new Error(shopData.message || "ไม่สามารถสร้างร้านค้าได้");
-    }
-
-    // If user wants to create license too
-    if (formData.create_license && formData.license_type_id && formData.license_number) {
-      const newShopId = shopData.shop_id;
-
-      if (newShopId) {
-        const licenseRes = await fetch(API_ENDPOINTS.LICENSES, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            shop_id: newShopId,
-            license_type_id: formData.license_type_id,
-            license_number: formData.license_number,
-            issue_date: new Date().toISOString().split("T")[0],
-            status: "active",
-          }),
-        });
-        const licenseData = await licenseRes.json();
-
-        if (!licenseData.success) {
-          showError("สร้างร้านค้าแล้วแต่ไม่สามารถสร้างใบอนุญาตได้: " + licenseData.message);
-        } else {
-          showSuccess("สร้างร้านค้าและใบอนุญาตเรียบร้อย");
-        }
-      } else {
-        showError("สร้างร้านค้าแล้วแต่ไม่ได้รับ ID กลับมา");
+    try {
+      // Validate required fields
+      if (!formData.shop_name || formData.shop_name.trim() === "") {
+        throw new Error("กรุณาระบุชื่อร้านค้า");
       }
-    } else {
-      showSuccess("สร้างร้านค้าเรียบร้อย");
-    }
 
-    // Optimistic update: Add new shop to UI immediately
-    // Handle different response formats between local and production
-    const newShopId = shopData.shop_id || shopData.id || shopData.data?.id;
-    
-    // Debug logging for production
-    if (process.env.NODE_ENV === 'production') {
-      console.log('Shop creation response:', shopData);
-      console.log('Extracted shop ID:', newShopId);
-    }
-    
-    const newShop = {
-      id: newShopId || `temp_${Date.now()}`, // Fallback ID for UI
-      shop_name: formData.shop_name,
-      owner_name: formData.owner_name,
-      phone: formData.phone,
-      address: formData.address,
-      email: formData.email,
-      notes: formData.notes,
-      license_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      ...(formData.custom_fields || {})
-    };
+      // Create shop first
+      const shopPayload = {
+        shop_name: formData.shop_name?.trim() || "",
+        owner_name: formData.owner_name?.trim() || "",
+        phone: formData.phone?.trim() || "",
+        address: formData.address?.trim() || "",
+        email: formData.email?.trim() || "",
+        notes: formData.notes?.trim() || "",
+        custom_fields: formData.custom_fields || {},
+      };
 
-    // Update local state immediately for instant UI feedback
-    setLocalShops(prev => [newShop, ...prev]);
-    
-    // Clear optimistic updates after server response is processed
-    // Increased timeout for production network latency
-    const timeoutId = setTimeout(() => {
-      console.log('Timeout: clearing optimistic updates');
-      setLocalShops([]);
-    }, 2000); // Increased from 1s to 2s for production
-    
-    // Then refresh data to ensure consistency
-    fetchShops().then(() => {
-      // Clear optimistic updates immediately after successful fetch
-      console.log('Fetch completed: clearing optimistic updates');
-      clearTimeout(timeoutId);
-      setLocalShops([]);
-    }).catch(err => {
-      console.error('Failed to refresh shops:', err);
-      // Still clear optimistic updates on error
-      setLocalShops([]);
-    });
-    
-    // Update dropdown data with error handling
-    try {
-      mutate('/api/shops/dropdown', undefined, { revalidate: true });
-    } catch (err) {
-      console.error('Failed to mutate dropdown:', err);
-    }
-    
-    // Also trigger a global revalidation to update any cached data
-    try {
-      mutate(() => true, undefined, { revalidate: true });
-    } catch (err) {
-      console.error('Failed to global mutate:', err);
+      const shopRes = await fetch(API_ENDPOINTS.SHOPS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(shopPayload),
+      });
+      const shopData = await shopRes.json();
+
+      if (!shopData.success) {
+        throw new Error(shopData.message || "ไม่สามารถสร้างร้านค้าได้");
+      }
+
+      // If user wants to create license too
+      if (formData.create_license && formData.license_type_id && formData.license_number) {
+        const newShopId = shopData.shop_id || shopData.id;
+
+        if (newShopId) {
+          const licenseRes = await fetch(API_ENDPOINTS.LICENSES, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              shop_id: newShopId,
+              license_type_id: formData.license_type_id,
+              license_number: formData.license_number?.trim() || "",
+              issue_date: new Date().toISOString().split("T")[0],
+              status: "active",
+            }),
+          });
+          const licenseData = await licenseRes.json();
+
+          if (!licenseData.success) {
+            throw new Error("สร้างร้านค้าแล้วแต่ไม่สามารถสร้างใบอนุญาตได้: " + (licenseData.message || "Unknown error"));
+          }
+        } else {
+          throw new Error("สร้างร้านค้าแล้วแต่ไม่ได้รับ ID กลับมา");
+        }
+      }
+
+      // Optimistic update: Add new shop to UI immediately
+      // Handle different response formats between local and production
+      const newShopId = shopData.shop_id || shopData.id || shopData.data?.id;
+      
+      // Debug logging for production
+      if (process.env.NODE_ENV === 'production') {
+        console.log('Shop creation response:', shopData);
+        console.log('Extracted shop ID:', newShopId);
+      }
+      
+      const newShop = {
+        id: newShopId || `temp_${Date.now()}`, // Fallback ID for UI
+        shop_name: formData.shop_name?.trim() || "",
+        owner_name: formData.owner_name?.trim() || "",
+        phone: formData.phone?.trim() || "",
+        address: formData.address?.trim() || "",
+        email: formData.email?.trim() || "",
+        notes: formData.notes?.trim() || "",
+        license_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(formData.custom_fields || {})
+      };
+
+      // Update local state immediately for instant UI feedback
+      setLocalShops(prev => [newShop, ...prev]);
+      
+      // Clear optimistic updates after server response is processed
+      // Increased timeout for production network latency
+      const timeoutId = setTimeout(() => {
+        console.log('Timeout: clearing optimistic updates');
+        setLocalShops([]);
+      }, 2000); // Increased from 1s to 2s for production
+      
+      // Then refresh data to ensure consistency
+      fetchShops().then(() => {
+        // Clear optimistic updates immediately after successful fetch
+        console.log('Fetch completed: clearing optimistic updates');
+        clearTimeout(timeoutId);
+        setLocalShops([]);
+      }).catch(err => {
+        console.error('Failed to refresh shops:', err);
+        // Still clear optimistic updates on error
+        setLocalShops([]);
+      });
+      
+      // Update dropdown data with error handling
+      try {
+        mutate('/api/shops/dropdown', undefined, { revalidate: true });
+      } catch (err) {
+        console.error('Failed to mutate dropdown:', err);
+      }
+      
+      // Also trigger a global revalidation to update any cached data
+      try {
+        mutate(() => true, undefined, { revalidate: true });
+      } catch (err) {
+        console.error('Failed to global mutate:', err);
+      }
+    } catch (error) {
+      console.error('Quick add shop error:', error);
+      throw error; // Re-throw to let QuickAddModal handle the error display
     }
   };
 
@@ -691,7 +704,7 @@ function ShopsPageContent() {
         {!isLoading ? (
           <div style={{ overflow: "auto", maxHeight: "600px" }}>
             <ExcelTable
-              key={`shops-${displayShops.length}-${loading}`}
+              key={`shops-${displayShops.length}-${isLoading}`}
               initialColumns={columns}
               initialRows={displayShops}
               onRowUpdate={handleRowUpdate}
