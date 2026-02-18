@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData } from "@/hooks";
@@ -36,6 +36,7 @@ function LicensesPageContent() {
 
   const [licenses, setLicenses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDoneRef = useRef(false);
   
   // Initialize from URL params
   const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -210,7 +211,10 @@ function LicensesPageContent() {
   }, [fetchCustomColumns]);
 
   const fetchLicenses = useCallback(async () => {
-    setLoading(true);
+    // Only show skeleton on initial load, not on refetch
+    if (!initialLoadDoneRef.current) {
+      setLoading(true);
+    }
     try {
       const params = new URLSearchParams({
         page: page,
@@ -238,6 +242,7 @@ function LicensesPageContent() {
       showError("โหลดข้อมูลใบอนุญาตล้มเหลว");
     } finally {
       setLoading(false);
+      initialLoadDoneRef.current = true;
     }
   }, [updateFromResponse, page, limit, debouncedSearch, filterType, filterStatus, filterShop]);
 

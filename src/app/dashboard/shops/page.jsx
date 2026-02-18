@@ -66,6 +66,7 @@ function ShopsPageContent() {
   const { typeOptions } = useDropdownData();
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDoneRef = useRef(false);
   const [search, setSearch] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [columns, setColumns] = useState(STANDARD_COLUMNS);
@@ -99,7 +100,10 @@ function ShopsPageContent() {
   useEffect(() => { filterLicenseTypeRef.current = filterLicenseType; }, [filterLicenseType]);
 
   const performFetchShops = useCallback(async (searchValue) => {
-    setLoading(true);
+    // Only show skeleton on initial load, not on refetch
+    if (!initialLoadDoneRef.current) {
+      setLoading(true);
+    }
     try {
       const params = new URLSearchParams({
         page: pageRef.current,
@@ -130,6 +134,7 @@ function ShopsPageContent() {
       showError("โหลดข้อมูลร้านค้าล้มเหลว");
     } finally {
       setLoading(false);
+      initialLoadDoneRef.current = true;
     }
   }, [updateFromResponse]);
 
