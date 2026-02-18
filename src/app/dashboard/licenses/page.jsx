@@ -412,7 +412,7 @@ function LicensesPageContent() {
         setLicenses((prev) => prev.filter((l) => l.id !== rowId));
       } else {
         showError(data.message);
-        fetchLicenses(); // Revert on error
+        // No need to call fetchLicenses() - optimistic update handles UI
       }
     } catch (error) {
       showError(error.message);
@@ -607,7 +607,7 @@ function LicensesPageContent() {
 
       if (data.success) {
         showSuccess(data.message);
-        fetchLicenses();
+        // No need to call fetchLicenses() - SWR will handle revalidation
       } else {
         showError(data.message);
       }
@@ -693,7 +693,7 @@ function LicensesPageContent() {
     }
 
     showSuccess("สร้างใบอนุญาตเรียบร้อย");
-    fetchLicenses();
+    // No need to call fetchLicenses() - SWR will handle revalidation
     // Force refresh all dropdown data to ensure real-time updates
     mutate('/api/shops/dropdown', undefined, { revalidate: true });
     mutate('/api/license-types/dropdown', undefined, { revalidate: true });

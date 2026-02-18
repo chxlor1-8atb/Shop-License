@@ -281,11 +281,11 @@ function ShopsPageContent() {
         if (data.success) {
           showSuccess("อัปเดตร้านค้าเรียบร้อย");
           notifyDataChange("shops-sync");
-          fetchShops();
           mutate('/api/shops/dropdown'); // Update dropdown data
+          // No need to call fetchShops() - SWR will handle revalidation
         } else {
           showError(data.message || "ไม่สามารถอัปเดตร้านค้าได้");
-          fetchShops(); // Revert
+          fetchShops(); // Revert only on error
         }
       }
     } catch (error) {
@@ -310,11 +310,11 @@ function ShopsPageContent() {
       if (data.success) {
         showSuccess("ลบร้านค้าเรียบร้อย");
         notifyDataChange("shops-sync");
-        fetchShops();
         mutate('/api/shops/dropdown'); // Update dropdown data
+        // No need to call fetchShops() - SWR will handle revalidation
       } else {
         showError(data.message);
-        fetchShops();
+        fetchShops(); // Revert only on error
       }
     } catch (error) {
       showError(error.message);
@@ -563,24 +563,10 @@ function ShopsPageContent() {
       // Update local state immediately for instant UI feedback
       setLocalShops(prev => [newShop, ...prev]);
       
-      // Clear optimistic updates after server response is processed
-      // Increased timeout for production network latency
-      const timeoutId = setTimeout(() => {
-        console.log('Timeout: clearing optimistic updates');
+      // Clear optimistic updates after a short delay since SWR handles revalidation
+      setTimeout(() => {
         setLocalShops([]);
-      }, 2000); // Increased from 1s to 2s for production
-      
-      // Then refresh data to ensure consistency
-      fetchShops().then(() => {
-        // Clear optimistic updates immediately after successful fetch
-        console.log('Fetch completed: clearing optimistic updates');
-        clearTimeout(timeoutId);
-        setLocalShops([]);
-      }).catch(err => {
-        console.error('Failed to refresh shops:', err);
-        // Still clear optimistic updates on error
-        setLocalShops([]);
-      });
+      }, 500); // Reduced from 2s to 500ms for faster UI response
       
       // Update dropdown data with error handling
       try {

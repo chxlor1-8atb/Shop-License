@@ -194,7 +194,7 @@ export default function UsersPage() {
           if (data.success) {
             showSuccess("ลบผู้ใช้งานสำเร็จ");
             notifyDataChange("users-sync");
-            fetchUsers(); // Refresh to ensure stats are correct
+            // No need to call fetchUsers() - optimistic update handles UI
           } else {
             setUsers((prev) => [...prev, userToDelete]);
             showError(data.message);
@@ -270,7 +270,7 @@ export default function UsersPage() {
       if (data.success) {
         setShowModal(false);
         showSuccess(data.message);
-        fetchUsers();
+        // No need to call fetchUsers() - SWR will handle revalidation
         notifyDataChange("users-sync");
         setSelectedUser(null); // Clear selection
 

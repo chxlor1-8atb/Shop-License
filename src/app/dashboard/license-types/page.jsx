@@ -66,6 +66,11 @@ export default function LicenseTypesPage() {
       if (!localIds.has(id)) return true;
     }
     
+    // If local has IDs that server doesn't have (deleted), accept the update
+    for (const id of localIds) {
+      if (!serverIds.has(id)) return true;
+    }
+    
     // If lengths differ significantly, accept the update
     if (Math.abs(localTypes.length - serverTypes.length) > 1) return true;
     
@@ -418,8 +423,8 @@ export default function LicenseTypesPage() {
           
           // Re-enable data fetching after successful creation
           shouldSkipFetchRef.current = false;
-          // Trigger immediate refresh to ensure data consistency
-          fetchData();
+          // No need to call fetchData() - optimistic update already handled UI
+          // Remove unnecessary server round-trip
           
           // Save custom values with new ID
           if (Object.keys(customValues).length > 0) {
@@ -544,6 +549,11 @@ export default function LicenseTypesPage() {
       // Invalidate SWR cache to refresh dropdown data
       mutate('/api/license-types/dropdown', undefined, { revalidate: true });
       mutate('/api/license-types'); // Also invalidate main endpoint
+      
+      // Force refresh to ensure UI is in sync with server
+      shouldSkipFetchRef.current = false;
+      // No need to call fetchData() - optimistic update already removed the item
+      // Remove unnecessary server round-trip
     } catch (error) {
       showError(error.message);
       fetchData();
@@ -554,13 +564,7 @@ export default function LicenseTypesPage() {
   const handleRowAdd = (newRow) => {
     // Add the new row to types immediately so stats update
     setTypes((prev) => [...prev, { ...newRow, license_count: 0, _isSubmitting: false }]);
-    // Prevent auto-refresh from running for 1 second to avoid duplication
-    initialLoadDoneRef.current = false;
-    shouldSkipFetchRef.current = true; // Set to true to prevent fetch during row creation
-    setTimeout(() => {
-      initialLoadDoneRef.current = true;
-      shouldSkipFetchRef.current = false; // Re-enable fetch after delay
-    }, 1000); // Reduced to 1s for faster response
+    // No need to prevent auto-refresh - optimistic update handles UI immediately
   };
 
   return (
@@ -604,13 +608,7 @@ export default function LicenseTypesPage() {
               _isSubmitting: false,
             };
             setTypes(prev => [newType, ...prev]);
-            // Prevent auto-refresh from running for 1 second to avoid duplication
-            initialLoadDoneRef.current = false;
-            shouldSkipFetchRef.current = true; // Set to true to prevent fetch during row creation
-            setTimeout(() => {
-              initialLoadDoneRef.current = true;
-              shouldSkipFetchRef.current = false; // Re-enable fetch after delay
-            }, 1000); // Reduced to 1s for faster response
+            // No need to prevent auto-refresh - optimistic update handles UI immediately
           }}>
             <i className="fas fa-plus"></i> เพิ่มประเภทใบอนุญาต
           </button>

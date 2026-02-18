@@ -223,10 +223,10 @@ export default function ExpiringPage() {
                 
                 await Promise.all(deletePromises);
                 showSuccess(`ลบ ${expiredLicenses.length} รายการเรียบร้อยแล้ว`);
-                fetchData();
+                // No need to call fetchData() - SWR will handle revalidation
             } catch (error) {
                 showError('เกิดข้อผิดพลาดในการลบข้อมูล');
-                fetchData();
+                fetchData(); // Only fetch on error
             } finally {
                 setLoading(false);
             }
