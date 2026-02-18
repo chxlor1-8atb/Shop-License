@@ -1,8 +1,13 @@
+import { memo } from "react";
 import CustomSelect from "../../ui/CustomSelect";
 import DatePicker from "../../ui/DatePicker";
 import { formatThaiDate } from "@/utils/formatters";
 
-export function TableRow({
+/**
+ * Performance: React.memo prevents re-rendering rows that haven't changed.
+ * Custom comparison ensures only relevant prop changes trigger re-render.
+ */
+export const TableRow = memo(function TableRow({
   row,
   rowIndex,
   columns,
@@ -148,4 +153,23 @@ export function TableRow({
       </td>
     </tr>
   );
-}
+}, function areEqual(prevProps, nextProps) {
+  // Only re-render if this specific row's data or editing state changed
+  if (prevProps.row !== nextProps.row) return false;
+  if (prevProps.rowIndex !== nextProps.rowIndex) return false;
+  if (prevProps.selectedRow !== nextProps.selectedRow) return false;
+  if (prevProps.columns !== nextProps.columns) return false;
+  
+  // Check if editing state changed for THIS row
+  const prevEditing = prevProps.editingCell;
+  const nextEditing = nextProps.editingCell;
+  const rowId = prevProps.row.id;
+  
+  const prevIsEditingThisRow = prevEditing?.rowId === rowId;
+  const nextIsEditingThisRow = nextEditing?.rowId === rowId;
+  
+  if (prevIsEditingThisRow !== nextIsEditingThisRow) return false;
+  if (prevIsEditingThisRow && nextIsEditingThisRow && prevEditing?.colId !== nextEditing?.colId) return false;
+  
+  return true;
+});

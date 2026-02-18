@@ -570,7 +570,8 @@ function LicensesPageContent() {
     } catch (error) {
       showError(error.message);
     }
-  }, [licenses, shopOptions, typeOptions, fetchLicenses, showSuccess, showError]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [licenses, shopOptions, typeOptions, fetchLicenses]);
 
   const customContextMenuItems = useMemo(() => [
     {

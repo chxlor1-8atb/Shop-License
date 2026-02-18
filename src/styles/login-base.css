@@ -160,8 +160,8 @@ html {
     position: fixed;
     top: 0;
     right: 0;
-    width: 600px;
-    height: 600px;
+    width: 400px;
+    height: 400px;
     background: radial-gradient(circle,
             rgba(251, 191, 36, 0.5) 0%,
             rgba(245, 158, 11, 0.35) 15%,
@@ -172,7 +172,7 @@ html {
     z-index: 0;
     /* Optimize animation: use transform instead of top/right */
     transform: translate3d(10%, -10%, 0);
-    animation: bounceOrb1 20s ease-in-out infinite;
+    animation: bounceOrb1 30s ease-in-out infinite;
     /* Removed expensive blur filter - using standard gradient transparency instead */
     will-change: transform;
 }
@@ -217,8 +217,8 @@ html {
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 550px;
-    height: 550px;
+    width: 380px;
+    height: 380px;
     background: radial-gradient(circle,
             rgba(167, 139, 250, 0.45) 0%,
             rgba(139, 92, 246, 0.3) 15%,
@@ -228,7 +228,7 @@ html {
     pointer-events: none;
     /* Optimize animation: use transform */
     transform: translate3d(-10%, 10%, 0);
-    animation: bounceOrb2 25s ease-in-out infinite;
+    animation: bounceOrb2 35s ease-in-out infinite;
     will-change: transform;
 }
 
@@ -260,8 +260,8 @@ html {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 500px;
-    height: 500px;
+    width: 350px;
+    height: 350px;
     background: radial-gradient(circle,
             rgba(45, 212, 191, 0.4) 0%,
             rgba(20, 184, 166, 0.28) 15%,
@@ -271,7 +271,7 @@ html {
     pointer-events: none;
     /* Optimize animation */
     transform: translate3d(-50%, -50%, 0);
-    animation: bounceOrb3 18s ease-in-out infinite;
+    animation: bounceOrb3 28s ease-in-out infinite;
     will-change: transform;
 }
 
@@ -373,6 +373,8 @@ html {
     height: 4px;
     animation-delay: 3s;
     animation-duration: 16s;
+    /* Performance: reduce particle count on screen */
+    display: none;
 }
 
 .particle:nth-child(6) {
@@ -381,6 +383,8 @@ html {
     height: 7px;
     animation-delay: 1.5s;
     animation-duration: 11s;
+    /* Performance: reduce particle count on screen */
+    display: none;
 }
 
 @keyframes floatUp {
@@ -583,7 +587,8 @@ html {
     letter-spacing: -0.02em;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    min-height: 2.4em; /* Reserve space for 2 lines */
+    min-height: 2.4em;
+    /* Reserve space for 2 lines */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -596,7 +601,8 @@ html {
     background-clip: text;
     position: relative;
     display: inline-block;
-    width: fit-content; /* Ensure gradient highlight fits content */
+    width: fit-content;
+    /* Ensure gradient highlight fits content */
 }
 
 .hero__title--highlight::after {
@@ -619,7 +625,8 @@ html {
     max-width: 420px;
     margin-bottom: var(--space-section);
     font-weight: 400;
-    min-height: 5.1em; /* Reserve space for 3 lines */
+    min-height: 5.1em;
+    /* Reserve space for 3 lines */
 }
 
 /* ====================================
@@ -644,7 +651,8 @@ html {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    min-height: 84px; /* Reserve space for 2 rows of tags */
+    min-height: 84px;
+    /* Reserve space for 2 rows of tags */
 }
 
 .feature-tag {
