@@ -113,18 +113,44 @@ export function useDropdownData() {
     const { data: shopsData, isLoading: shopsLoading, error: shopsError, mutate: refreshShops } = useSWR(
         '/api/shops?limit=5000',
         fetcher,
-        { ...CONFIG.static, revalidateOnFocus: true }
+        { 
+            ...CONFIG.static, 
+            revalidateOnFocus: true,
+            revalidateOnReconnect: true,
+            refreshWhenOffline: false,
+            refreshWhenHidden: false,
+            dedupingInterval: 1000, // Reduce deduping for more responsive updates
+            errorRetryCount: 3,
+            errorRetryInterval: 5000,
+        }
     );
 
     const { data: typesData, isLoading: typesLoading, error: typesError, mutate: refreshTypes } = useSWR(
         '/api/license-types',
         fetcher,
-        { ...CONFIG.static, revalidateOnFocus: true }
+        { 
+            ...CONFIG.static, 
+            revalidateOnFocus: true,
+            revalidateOnReconnect: true,
+            refreshWhenOffline: false,
+            refreshWhenHidden: false,
+            dedupingInterval: 1000, // Reduce deduping for more responsive updates
+            errorRetryCount: 3,
+            errorRetryInterval: 5000,
+        }
     );
 
     // Wrap in useMemo to prevent dependency changes on every render
-    const shops = useMemo(() => shopsData?.shops || [], [shopsData]);
-    const licenseTypes = useMemo(() => typesData?.types || typesData?.licenseTypes || [], [typesData]);
+    const shops = useMemo(() => {
+        const shopsList = shopsData?.shops || [];
+        console.log('useDropdownData: Shops data updated', shopsList.length, 'shops');
+        return shopsList;
+    }, [shopsData]);
+    const licenseTypes = useMemo(() => {
+        const typesList = typesData?.types || typesData?.licenseTypes || [];
+        console.log('useDropdownData: License types data updated', typesList.length, 'types');
+        return typesList;
+    }, [typesData]);
 
     // Pre-formatted options for CustomSelect
     const shopOptions = useMemo(() => shops.map(s => ({
@@ -139,8 +165,10 @@ export function useDropdownData() {
 
     // Refresh function to update both shops and types
     const refresh = useCallback(() => {
-        refreshShops();
-        refreshTypes();
+        console.log('useDropdownData: Manual refresh triggered');
+        // Force revalidation by clearing cache and refetching
+        refreshShops(undefined, { revalidate: true });
+        refreshTypes(undefined, { revalidate: true });
     }, [refreshShops, refreshTypes]);
 
     return {

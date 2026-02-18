@@ -339,7 +339,11 @@ function LicensesPageContent() {
           showSuccess("สร้างใบอนุญาตเรียบร้อย");
           notifyDataChange("licenses-sync");
           fetchLicenses();
-          mutate('/api/shops?limit=5000'); // Update shop dropdown cache
+          // Force refresh all dropdown data to ensure real-time updates
+          mutate('/api/shops?limit=5000');
+          mutate('/api/license-types');
+          // Also trigger a global revalidation to update any cached data
+          mutate(() => true, undefined, { revalidate: true });
         } else {
           showError(data.message);
         }
@@ -636,9 +640,11 @@ function LicensesPageContent() {
     }
 
     showSuccess("สร้างร้านค้าเรียบร้อย กรุณาเลือกร้านค้าใหม่จากรายการ");
-    // Reload the page or refetch shop options
-    mutate('/api/shops?limit=1000'); // Update dropdown cache
-    // window.location.reload(); // No longer needed
+    // Force refresh all dropdown data to ensure real-time updates
+    mutate('/api/shops?limit=5000');
+    mutate('/api/shops?limit=1000');
+    // Also trigger a global revalidation to update any cached data
+    mutate(() => true, undefined, { revalidate: true });
   };
 
   // Handle creating new license via quick add modal
@@ -668,7 +674,11 @@ function LicensesPageContent() {
 
     showSuccess("สร้างใบอนุญาตเรียบร้อย");
     fetchLicenses();
-    mutate('/api/shops?limit=5000'); // Update shop dropdown cache
+    // Force refresh all dropdown data to ensure real-time updates
+    mutate('/api/shops?limit=5000');
+    mutate('/api/license-types');
+    // Also trigger a global revalidation to update any cached data
+    mutate(() => true, undefined, { revalidate: true });
   };
 
   return (

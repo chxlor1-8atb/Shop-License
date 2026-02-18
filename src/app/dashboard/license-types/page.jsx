@@ -58,6 +58,11 @@ export default function LicenseTypesPage() {
   }, []);
 
   const fetchData = useCallback(async () => {
+    // Skip if initial load is deliberately paused (e.g., during row addition)
+    if (!initialLoadDoneRef.current && types.length > 0) {
+      return;
+    }
+    
     if (!initialLoadDoneRef.current) {
       setLoading(true);
     }
@@ -459,6 +464,11 @@ export default function LicenseTypesPage() {
   const handleRowAdd = (newRow) => {
     // Add the new row to types immediately so stats update
     setTypes((prev) => [...prev, { ...newRow, license_count: 0 }]);
+    // Prevent auto-refresh from running for 2 seconds to avoid duplication
+    initialLoadDoneRef.current = false;
+    setTimeout(() => {
+      initialLoadDoneRef.current = true;
+    }, 2000);
   };
 
   return (

@@ -40,6 +40,7 @@ export default function QuickAddModal({
   // Refresh dropdown data when modal opens
   useEffect(() => {
     if (isOpen && refresh) {
+      console.log('QuickAddModal: Refreshing dropdown data on open');
       refresh();
     }
   }, [isOpen, refresh]);
@@ -186,8 +187,15 @@ export default function QuickAddModal({
         await onSubmit(formData);
       }
       
-      // Invalidate cache to refresh dropdown data
+      // Invalidate cache to refresh dropdown data immediately
+      console.log('QuickAddModal: Invalidating cache after successful submission');
       mutate(() => true, undefined, { revalidate: true });
+      
+      // Also call the refresh function to ensure dropdown data is updated
+      if (refresh) {
+        console.log('QuickAddModal: Calling refresh function after successful submission');
+        refresh();
+      }
       
       onClose();
     } catch (err) {
