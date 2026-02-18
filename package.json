@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@neondatabase/mcp-server-neon": "^0.6.5",
     "@neondatabase/serverless": "^0.9.5",
     "@upstash/redis": "^1.36.2",

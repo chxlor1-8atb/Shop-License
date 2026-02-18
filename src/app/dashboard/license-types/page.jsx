@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
-import { useAutoRefresh, notifyDataChange } from "@/hooks";
+import { useAutoRefresh, notifyDataChange, mutate } from "@/hooks";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import ExcelTable from "@/components/ExcelTable";
 
@@ -357,6 +357,9 @@ export default function LicenseTypesPage() {
           );
           showSuccess("สร้างประเภทใบอนุญาตเรียบร้อย");
           notifyDataChange("license-types-sync");
+          
+          // Invalidate SWR cache to refresh dropdown data
+          mutate('/api/license-types');
           
           // Save custom values with new ID
           if (Object.keys(customValues).length > 0) {

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "neon": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@neondatabase/mcp-server-neon"
+      ],
+      "env": {
+        "NEON_API_KEY": "napi_q6x4fi1uwr7v343w48plihp3ifamyg381d7mmtwhfjifc36t5hkwaor1dia1t0jb",
+        "DATABASE_URL": "postgresql://neondb_owner:npg_dmWJrab3uSP5@ep-lively-bird-a1vsnlbg-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+      }
+    }
+  }
+}

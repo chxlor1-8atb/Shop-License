@@ -339,6 +339,7 @@ function LicensesPageContent() {
           showSuccess("สร้างใบอนุญาตเรียบร้อย");
           notifyDataChange("licenses-sync");
           fetchLicenses();
+          mutate('/api/shops?limit=5000'); // Update shop dropdown cache
         } else {
           showError(data.message);
         }
@@ -667,6 +668,7 @@ function LicensesPageContent() {
 
     showSuccess("สร้างใบอนุญาตเรียบร้อย");
     fetchLicenses();
+    mutate('/api/shops?limit=5000'); // Update shop dropdown cache
   };
 
   return (
