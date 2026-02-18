@@ -193,7 +193,7 @@ export default function LicenseTypesPage() {
       setLoading(false);
       initialLoadDoneRef.current = true;
     }
-  }, []);
+  }, [types]); // Added types dependency to fix ESLint warning
 
   // Auto-refresh: sync data every 10s + on tab focus + cross-tab
   useAutoRefresh(fetchData, { interval: 10000, channel: "license-types-sync" });
