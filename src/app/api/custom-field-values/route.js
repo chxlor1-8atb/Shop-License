@@ -70,11 +70,13 @@ export async function POST(request) {
     const authError = await requireAdmin();
     if (authError) return authError;
 
+    let body, entity_type, entity_id, values;
+    
     try {
-        const body = await request.json();
-        const { values } = body;
-        const entity_type = validateEnum(body.entity_type, ALLOWED_ENTITY_TYPES, '');
-        const entity_id = sanitizeInt(body.entity_id, 0, 1);
+        body = await request.json();
+        values = body.values;
+        entity_type = validateEnum(body.entity_type, ALLOWED_ENTITY_TYPES, '');
+        entity_id = sanitizeInt(body.entity_id, 0, 1);
 
         if (!entity_type || entity_id < 1 || !values) {
             return NextResponse.json({
@@ -102,16 +104,19 @@ export async function POST(request) {
 
             // Use INSERT ... ON CONFLICT for upsert
             await executeQuery(`
-                INSERT INTO custom_field_values(custom_field_id, entity_id, field_value)
-                VALUES($1, $2, $3)
+                INSERT INTO custom_field_values(custom_field_id, entity_id, field_value, updated_at)
+                VALUES($1, $2, $3, NOW())
                 ON CONFLICT(custom_field_id, entity_id) 
-                DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = NOW()
+                DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
             `, [fieldId, entity_id, value?.toString() || '']);
         }
 
         return NextResponse.json({ success: true, message: 'บันทึก Custom Fields สำเร็จ' });
     } catch (err) {
         console.error('Error saving custom field values:', err);
+        console.error('Request body:', body);
+        console.error('Entity type:', entity_type, 'Entity ID:', entity_id);
+        console.error('Custom values:', values);
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
 }
