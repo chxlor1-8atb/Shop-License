@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, isSessionValid } from '@/lib/session';
+import { fetchOne as dbFetchOne } from '@/lib/db';
 
 // ========================================
 // Authentication Helpers
@@ -37,7 +38,6 @@ export async function getSession() {
         const now = Date.now();
         if (!session.lastDbCheck || (now - session.lastDbCheck) > SESSION_REVALIDATE_MS) {
             try {
-                const { fetchOne: dbFetchOne } = await import('@/lib/db');
                 const dbUser = await dbFetchOne('SELECT id, role FROM users WHERE id = $1', [session.userId]);
                 if (!dbUser) {
                     // User was deleted — destroy session
@@ -107,6 +107,40 @@ export async function requireAdmin() {
     }
 
     return null; // Authorized
+}
+
+/**
+ * Require admin role and return user session
+ * Avoids calling getSession() twice (once for auth, once for activity logging)
+ * @returns {Promise<{error: NextResponse|null, user: {id: number, username: string}|null}>}
+ */
+export async function requireAdminWithUser() {
+    const session = await getSession();
+
+    if (!session) {
+        return {
+            error: NextResponse.json(
+                { success: false, message: 'กรุณาเข้าสู่ระบบก่อน' },
+                { status: 401 }
+            ),
+            user: null
+        };
+    }
+
+    if (session.role !== 'admin') {
+        return {
+            error: NextResponse.json(
+                { success: false, message: 'ต้องการสิทธิ์ผู้ดูแลระบบ' },
+                { status: 403 }
+            ),
+            user: null
+        };
+    }
+
+    return {
+        error: null,
+        user: { id: session.id, username: session.username }
+    };
 }
 
 /**

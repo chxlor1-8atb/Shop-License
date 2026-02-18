@@ -3,7 +3,7 @@ import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
-import { requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
+import { requireAdmin, requireAdminWithUser, safeErrorMessage } from '@/lib/api-helpers';
 import { validatePassword, validateUsername, sanitizeInt, sanitizeString } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
@@ -77,8 +77,8 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-    // Require admin access
-    const authError = await requireAdmin();
+    // Require admin access & get current user in one call
+    const { error: authError, user: currentUser } = await requireAdminWithUser();
     if (authError) return authError;
 
     try {
@@ -123,7 +123,6 @@ export async function POST(request) {
         );
 
         // Log activity
-        const currentUser = await getCurrentUser();
         await logActivity({
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.CREATE,
@@ -139,8 +138,8 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
-    // Require admin access
-    const authError = await requireAdmin();
+    // Require admin access & get current user in one call
+    const { error: authError, user: currentUser } = await requireAdminWithUser();
     if (authError) return authError;
 
     try {
@@ -188,7 +187,6 @@ export async function PUT(request) {
         await executeQuery(query, params);
 
         // Log activity
-        const currentUser = await getCurrentUser();
         await logActivity({
             userId: currentUser?.id || null,
             action: ACTIVITY_ACTIONS.UPDATE,
@@ -204,8 +202,8 @@ export async function PUT(request) {
 }
 
 export async function DELETE(request) {
-    // Require admin access
-    const authError = await requireAdmin();
+    // Require admin access & get current user in one call
+    const { error: authError, user: currentUser } = await requireAdminWithUser();
     if (authError) return authError;
 
     try {
@@ -225,7 +223,6 @@ export async function DELETE(request) {
         }
 
         // Prevent deleting self
-        const currentUser = await getCurrentUser();
         if (currentUser?.id === safeId) {
             return NextResponse.json({ success: false, message: 'ไม่สามารถลบบัญชีตัวเองได้' }, { status: 400 });
         }

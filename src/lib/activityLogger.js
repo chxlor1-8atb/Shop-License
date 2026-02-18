@@ -35,11 +35,6 @@ export async function logActivity({ userId, action, entityType, entityId = null,
         // Log error but don't throw - activity logging shouldn't break main functionality
         console.error('Failed to log activity:', error);
         return false;
-    } finally {
-        // Trigger auto-cleanup ~10% of the time (Fire-and-forget, non-blocking)
-        if (Math.random() < 0.1) {
-            cleanupOldLogs();
-        }
     }
 }
 
