@@ -440,7 +440,12 @@ export default function LicenseTypesPage() {
               });
               const customData = await customRes.json();
               if (!customData.success) {
-                console.warn("Failed to save custom values:", customData.message);
+                console.error("Failed to save custom values:", customData);
+                console.error("Error details:", customData.details);
+                // Show detailed error in console for debugging
+                if (customData.details) {
+                  console.error("Full error details:", JSON.stringify(customData.details, null, 2));
+                }
               } else {
                 console.log("Custom values saved successfully");
               }

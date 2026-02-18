@@ -156,7 +156,24 @@ export async function POST(request) {
         console.error('Request body:', body);
         console.error('Entity type:', entity_type, 'Entity ID:', entity_id);
         console.error('Custom values:', values);
-        return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
+        
+        // Return detailed error for debugging
+        const errorMessage = process.env.NODE_ENV === 'production' 
+            ? err.message || 'Unknown error occurred'
+            : `${err.message}\n\nStack: ${err.stack}`;
+            
+        return NextResponse.json({ 
+            success: false, 
+            message: errorMessage,
+            details: {
+                error: err.message,
+                stack: err.stack,
+                body: body,
+                entity_type: entity_type,
+                entity_id: entity_id,
+                values: values
+            }
+        }, { status: 500 });
     }
 }
 
