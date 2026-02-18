@@ -61,6 +61,7 @@ export default function LicenseTypesPage() {
   const fetchData = useCallback(async () => {
     // Skip if initial load is deliberately paused (e.g., during row addition)
     if (!initialLoadDoneRef.current && shouldSkipFetchRef.current) {
+      console.log('Skipping fetch - shouldSkipFetch is true');
       return;
     }
     
@@ -105,7 +106,11 @@ export default function LicenseTypesPage() {
         }));
 
         console.log('Merged types:', mergedTypes); // Debug log
-        setTypes(mergedTypes);
+        
+        // Only update state if we're not in the middle of row creation
+        if (!shouldSkipFetchRef.current) {
+          setTypes(mergedTypes);
+        }
         shouldSkipFetchRef.current = true;
       }
 
@@ -377,6 +382,11 @@ export default function LicenseTypesPage() {
           mutate('/api/license-types/dropdown', undefined, { revalidate: true });
           mutate('/api/license-types'); // Also invalidate main endpoint
           
+          // Re-enable data fetching after successful creation
+          setTimeout(() => {
+            shouldSkipFetchRef.current = false;
+          }, 1000);
+          
           // Save custom values with new ID
           if (Object.keys(customValues).length > 0) {
             const valuesPayload = {
@@ -482,12 +492,13 @@ export default function LicenseTypesPage() {
   const handleRowAdd = (newRow) => {
     // Add the new row to types immediately so stats update
     setTypes((prev) => [...prev, { ...newRow, license_count: 0 }]);
-    // Prevent auto-refresh from running for 2 seconds to avoid duplication
+    // Prevent auto-refresh from running for 3 seconds to avoid duplication
     initialLoadDoneRef.current = false;
-    shouldSkipFetchRef.current = false;
+    shouldSkipFetchRef.current = true; // Set to true to prevent fetch during row creation
     setTimeout(() => {
       initialLoadDoneRef.current = true;
-    }, 2000);
+      shouldSkipFetchRef.current = false; // Re-enable fetch after delay
+    }, 3000); // Increased from 2s to 3s
   };
 
   return (
@@ -495,8 +506,8 @@ export default function LicenseTypesPage() {
       <StatsSection stats={stats} />
 
       <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">
+        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <h3 className="card-title" style={{ margin: 0 }}>
             <i className="fas fa-tags"></i>
             ประเภทใบอนุญาต
             <span style={{ 
@@ -520,6 +531,26 @@ export default function LicenseTypesPage() {
               คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข | คลิกขวาเพื่อเปิดเมนู
             </span>
           </h3>
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => {
+            // Add a new empty row to the table
+            const newType = {
+              id: `id_${Date.now()}`,
+              name: "",
+              description: "",
+              validity_days: 365,
+              license_count: 0,
+            };
+            setTypes(prev => [newType, ...prev]);
+            // Prevent auto-refresh from running for 3 seconds to avoid duplication
+            initialLoadDoneRef.current = false;
+            shouldSkipFetchRef.current = true; // Set to true to prevent fetch during row creation
+            setTimeout(() => {
+              initialLoadDoneRef.current = true;
+              shouldSkipFetchRef.current = false; // Re-enable fetch after delay
+            }, 3000); // Increased from 2s to 3s
+          }}>
+            <i className="fas fa-plus"></i> เพิ่มประเภทใบอนุญาต
+          </button>
         </div>
         <div className="card-body">
           {!loading ? (

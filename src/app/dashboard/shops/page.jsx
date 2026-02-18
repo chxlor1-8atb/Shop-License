@@ -207,8 +207,10 @@ function ShopsPageContent() {
           notifyDataChange("shops-sync");
           
           // Optimistic update: Add new shop to UI immediately
+          // Handle different response formats between local and production
+          const newShopId = data.shop_id || data.id || data.data?.id;
           const newShop = {
-            id: data.shop_id || data.id,
+            id: newShopId || `temp_${Date.now()}`, // Fallback ID for UI
             shop_name: updatedRow.shop_name,
             owner_name: updatedRow.owner_name,
             phone: updatedRow.phone,
@@ -224,13 +226,29 @@ function ShopsPageContent() {
           // Update local state immediately for instant UI feedback
           setLocalShops(prev => [newShop, ...prev]);
           
-          fetchShops(); // Refresh to get real ID
-          mutate('/api/shops/dropdown'); // Update dropdown data
-          
-          // Clear optimistic updates after a short delay to sync with server data
-          setTimeout(() => {
+          // Clear optimistic updates after server response is processed
+          // Increased timeout for production network latency
+          const timeoutId = setTimeout(() => {
+            console.log('Timeout: clearing optimistic updates');
             setLocalShops([]);
-          }, 1000);
+          }, 2000); // Increased timeout for production
+          
+          fetchShops().then(() => {
+            // Clear optimistic updates immediately after successful fetch
+            console.log('Fetch completed: clearing optimistic updates');
+            clearTimeout(timeoutId);
+            setLocalShops([]);
+          }).catch(err => {
+            console.error('Failed to refresh shops:', err);
+            setLocalShops([]);
+          });
+          
+          // Update dropdown data with error handling
+          try {
+            mutate('/api/shops/dropdown', undefined, { revalidate: true });
+          } catch (err) {
+            console.error('Failed to mutate dropdown:', err);
+          }
         } else {
           showError(data.message);
         }
@@ -504,8 +522,17 @@ function ShopsPageContent() {
     }
 
     // Optimistic update: Add new shop to UI immediately
+    // Handle different response formats between local and production
+    const newShopId = shopData.shop_id || shopData.id || shopData.data?.id;
+    
+    // Debug logging for production
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Shop creation response:', shopData);
+      console.log('Extracted shop ID:', newShopId);
+    }
+    
     const newShop = {
-      id: shopData.shop_id || shopData.id,
+      id: newShopId || `temp_${Date.now()}`, // Fallback ID for UI
       shop_name: formData.shop_name,
       owner_name: formData.owner_name,
       phone: formData.phone,
@@ -521,16 +548,38 @@ function ShopsPageContent() {
     // Update local state immediately for instant UI feedback
     setLocalShops(prev => [newShop, ...prev]);
     
-    // Then refresh data to ensure consistency
-    fetchShops();
-    mutate('/api/shops/dropdown'); // Update dropdown data
-    // Also trigger a global revalidation to update any cached data
-    mutate(() => true, undefined, { revalidate: true });
-    
-    // Clear optimistic updates after a short delay to sync with server data
-    setTimeout(() => {
+    // Clear optimistic updates after server response is processed
+    // Increased timeout for production network latency
+    const timeoutId = setTimeout(() => {
+      console.log('Timeout: clearing optimistic updates');
       setLocalShops([]);
-    }, 1000);
+    }, 2000); // Increased from 1s to 2s for production
+    
+    // Then refresh data to ensure consistency
+    fetchShops().then(() => {
+      // Clear optimistic updates immediately after successful fetch
+      console.log('Fetch completed: clearing optimistic updates');
+      clearTimeout(timeoutId);
+      setLocalShops([]);
+    }).catch(err => {
+      console.error('Failed to refresh shops:', err);
+      // Still clear optimistic updates on error
+      setLocalShops([]);
+    });
+    
+    // Update dropdown data with error handling
+    try {
+      mutate('/api/shops/dropdown', undefined, { revalidate: true });
+    } catch (err) {
+      console.error('Failed to mutate dropdown:', err);
+    }
+    
+    // Also trigger a global revalidation to update any cached data
+    try {
+      mutate(() => true, undefined, { revalidate: true });
+    } catch (err) {
+      console.error('Failed to global mutate:', err);
+    }
   };
 
   return (
