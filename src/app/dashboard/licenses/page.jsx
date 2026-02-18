@@ -30,7 +30,14 @@ const CREATE_NEW_SHOP_VALUE = "__CREATE_NEW__";
 
 function LicensesPageContent() {
   const searchParams = useSearchParams();
-  const { shopOptions, typeOptions, shops } = useDropdownData(); // Use hook for dropdown data
+  const { shopOptions, typeOptions, shops, error: dropdownError } = useDropdownData(); // Use hook for dropdown data
+  
+  useEffect(() => {
+    if (dropdownError) {
+      console.error("Dropdown data error:", dropdownError);
+      showError("โหลดข้อมูลร้านค้าหรือประเภทล้มเหลว กรุณารีเฟรชหน้าจอ");
+    }
+  }, [dropdownError]);
   const pagination = usePagination();
   const { page, limit, updateFromResponse } = pagination;
 

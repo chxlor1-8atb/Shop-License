@@ -110,21 +110,21 @@ export function useLicenseTypes() {
  * Pre-formats options for CustomSelect component
  */
 export function useDropdownData() {
-    const { data: shopsData, isLoading: shopsLoading } = useSWR(
+    const { data: shopsData, isLoading: shopsLoading, error: shopsError } = useSWR(
         '/api/shops?limit=1000',
         fetcher,
-        CONFIG.static
+        { ...CONFIG.static, revalidateOnFocus: true }
     );
 
-    const { data: typesData, isLoading: typesLoading } = useSWR(
+    const { data: typesData, isLoading: typesLoading, error: typesError } = useSWR(
         '/api/license-types',
         fetcher,
-        CONFIG.static
+        { ...CONFIG.static, revalidateOnFocus: true }
     );
 
     // Wrap in useMemo to prevent dependency changes on every render
-    const shops = useMemo(() => shopsData?.shops || [], [shopsData?.shops]);
-    const licenseTypes = useMemo(() => typesData?.types || typesData?.licenseTypes || [], [typesData?.types, typesData?.licenseTypes]);
+    const shops = useMemo(() => shopsData?.shops || [], [shopsData]);
+    const licenseTypes = useMemo(() => typesData?.types || typesData?.licenseTypes || [], [typesData]);
 
     // Pre-formatted options for CustomSelect
     const shopOptions = useMemo(() => shops.map(s => ({
@@ -143,6 +143,7 @@ export function useDropdownData() {
         shopOptions,
         typeOptions,
         loading: shopsLoading || typesLoading,
+        error: shopsError || typesError
     };
 }
 
