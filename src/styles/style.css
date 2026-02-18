@@ -80,6 +80,10 @@
 
     /* Spacing */
     --sidebar-width: 260px;
+
+    /* Performance: Reduced blur for better GPU perf */
+    --glass-blur: 8px;
+    --glass-blur-lg: 12px;
 }
 
 /* Base Reset */
@@ -393,17 +397,17 @@ select option:checked {
 
 /* Filter Grid System */
 .filter-grid {
-display: flex;
-flex-wrap: wrap;
-gap: 1rem;
-margin-bottom: 1.5rem;
-align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: flex-end;
 }
 
 .filter-group {
-margin-bottom: 0;
-flex: 0 1 240px;
-min-width: 180px;
+    margin-bottom: 0;
+    flex: 0 1 240px;
+    min-width: 180px;
     min-width: 180px;
 }
 
@@ -804,6 +808,8 @@ min-width: 180px;
     background: linear-gradient(135deg, #F8F6F3 0%, #EFEAE3 25%, #F5F0EA 50%, #EAE5DD 75%, #F0EBE4 100%);
     background-attachment: fixed;
     position: relative;
+    /* Performance: contain layout recalculations */
+    contain: style;
 }
 
 .dashboard-container::before {
@@ -837,6 +843,8 @@ min-width: 180px;
     transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    /* Performance: isolate sidebar from rest of page */
+    contain: layout style paint;
 }
 
 /* Removed slideInLeft animation to prevent sidebar re-rendering on page change */
@@ -1431,8 +1439,8 @@ min-width: 180px;
     background: linear-gradient(135deg,
             rgba(255, 255, 255, 0.9) 0%,
             rgba(255, 255, 255, 0.7) 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(var(--glass-blur-lg));
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg));
     border: 1.5px solid rgba(255, 255, 255, 0.3);
     border-radius: 50px;
     overflow: visible;
@@ -1440,8 +1448,11 @@ min-width: 180px;
         0 8px 32px rgba(0, 0, 0, 0.08),
         0 2px 8px rgba(0, 0, 0, 0.04),
         inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    /* Performance: isolate card rendering */
+    contain: layout style;
+    content-visibility: auto;
 }
 
 .card:hover {
@@ -1498,16 +1509,56 @@ min-width: 180px;
 }
 
 /* Unique icon colors per page */
-.card-title i.fa-bell          { background: linear-gradient(135deg, #f59e0b, #fbbf24); } /* Expiring - Amber */
-.card-title i.fa-store         { background: linear-gradient(135deg, #3b82f6, #60a5fa); } /* Shops - Blue */
-.card-title i.fa-file-alt      { background: linear-gradient(135deg, #6366f1, #818cf8); } /* Licenses - Indigo */
-.card-title i.fa-users         { background: linear-gradient(135deg, #14b8a6, #2dd4bf); } /* Users - Teal */
-.card-title i.fa-tags          { background: linear-gradient(135deg, #ec4899, #f472b6); } /* License Types - Pink */
-.card-title i.fa-history       { background: linear-gradient(135deg, #10b981, #34d399); } /* Activity Logs - Emerald */
-.card-title i.fa-file-export   { background: linear-gradient(135deg, #8b5cf6, #a78bfa); } /* Export - Purple */
-.card-title i.fa-bolt          { background: linear-gradient(135deg, #f97316, #fb923c); } /* Action Breakdown - Orange */
-.card-title i.fa-database      { background: linear-gradient(135deg, #0ea5e9, #38bdf8); } /* Entity Breakdown - Sky */
-.card-title i.fa-globe         { background: linear-gradient(135deg, #64748b, #94a3b8); } /* IP Stats - Slate */
+.card-title i.fa-bell {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+/* Expiring - Amber */
+.card-title i.fa-store {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+}
+
+/* Shops - Blue */
+.card-title i.fa-file-alt {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+}
+
+/* Licenses - Indigo */
+.card-title i.fa-users {
+    background: linear-gradient(135deg, #14b8a6, #2dd4bf);
+}
+
+/* Users - Teal */
+.card-title i.fa-tags {
+    background: linear-gradient(135deg, #ec4899, #f472b6);
+}
+
+/* License Types - Pink */
+.card-title i.fa-history {
+    background: linear-gradient(135deg, #10b981, #34d399);
+}
+
+/* Activity Logs - Emerald */
+.card-title i.fa-file-export {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+}
+
+/* Export - Purple */
+.card-title i.fa-bolt {
+    background: linear-gradient(135deg, #f97316, #fb923c);
+}
+
+/* Action Breakdown - Orange */
+.card-title i.fa-database {
+    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+}
+
+/* Entity Breakdown - Sky */
+.card-title i.fa-globe {
+    background: linear-gradient(135deg, #64748b, #94a3b8);
+}
+
+/* IP Stats - Slate */
 
 .card-body {
     padding: 1.5rem;
@@ -1560,8 +1611,8 @@ min-width: 180px;
     background: linear-gradient(135deg,
             rgba(255, 255, 255, 0.95) 0%,
             rgba(255, 255, 255, 0.8) 100%);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(var(--glass-blur-lg));
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg));
     border: 1.5px solid rgba(255, 255, 255, 0.4);
     border-radius: 18px;
     padding: 1.5rem;
@@ -1571,9 +1622,11 @@ min-width: 180px;
     box-shadow:
         0 4px 20px rgba(0, 0, 0, 0.06),
         inset 0 1px 0 rgba(255, 255, 255, 0.7);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    /* Performance: isolate stat cards */
+    contain: layout style paint;
 }
 
 .stat-card::after {
@@ -2689,8 +2742,8 @@ body:has(.sidebar.show) .mobile-toggle i {
     width: 100%;
     height: 100%;
     background: rgba(10, 10, 18, 0.75);
-    backdrop-filter: blur(8px) saturate(150%);
-    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
     opacity: 0;
     visibility: hidden;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2720,8 +2773,8 @@ body:has(.sidebar.show) .mobile-toggle i {
                 rgba(35, 32, 28, 0.98) 0%,
                 rgba(26, 24, 21, 0.99) 50%,
                 rgba(20, 18, 15, 1) 100%);
-        backdrop-filter: blur(24px) saturate(180%);
-        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        backdrop-filter: blur(var(--glass-blur-lg));
+        -webkit-backdrop-filter: blur(var(--glass-blur-lg));
         border-right: 1px solid rgba(255, 255, 255, 0.08);
     }
 
@@ -3454,8 +3507,8 @@ body:has(.sidebar.show) .mobile-toggle i {
     max-width: min(400px, calc(100vw - 2rem));
     max-height: min(320px, 50vh);
     background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(var(--glass-blur-lg));
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg));
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-lg);
@@ -3729,8 +3782,8 @@ body:has(.sidebar.show) .mobile-toggle i {
 
 .confirm-dialog {
     background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(var(--glass-blur-lg));
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg));
     border-radius: var(--border-radius-xl);
     box-shadow:
         0 24px 64px rgba(0, 0, 0, 0.15),
@@ -3916,8 +3969,8 @@ body:has(.sidebar.show) .mobile-toggle i {
     width: 100%;
     padding: 0.75rem 1rem;
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     border: 1.5px solid rgba(216, 211, 200, 0.5);
     border-radius: var(--border-radius);
     color: var(--text-primary);
@@ -3926,7 +3979,7 @@ body:has(.sidebar.show) .mobile-toggle i {
     font-weight: 500;
     text-align: left;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .custom-select-trigger:hover {
@@ -5406,8 +5459,8 @@ body:has(.sidebar.show) .mobile-toggle i {
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: var(--border-radius-lg);
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
@@ -6409,7 +6462,7 @@ tr:focus-within:has(.editable-cell) {
     }
 }
 
-/* Reduce motion for accessibility */
+/* Reduce motion for accessibility + performance on older machines */
 @media (prefers-reduced-motion: reduce) {
 
     *,
@@ -6418,6 +6471,13 @@ tr:focus-within:has(.editable-cell) {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+    }
+
+    .card,
+    .stat-card,
+    .table-card {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 }
 
@@ -6784,8 +6844,8 @@ img {
 /* Global Card Styling - Glassmorphism (Matches .table-card) */
 .card {
     background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(var(--glass-blur-lg));
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg));
     border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.04),
@@ -6804,8 +6864,8 @@ img {
 /* การ์ดตาราง - Soft & Rounded */
 .table-card {
     background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(var(--glass-blur-lg));
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg));
     border: 1px solid rgba(255, 255, 255, 0.5);
     box-shadow:
         0 4px 24px rgba(0, 0, 0, 0.03),

@@ -506,7 +506,7 @@ function LicensesPageContent() {
   };
 
   // --- Renew License Handler ---
-  const handleRenewLicense = async (rowId) => {
+  const handleRenewLicense = useCallback(async (rowId) => {
     const license = licenses.find((l) => l.id === rowId);
     if (!license) {
       showError("ไม่พบข้อมูลใบอนุญาต");
@@ -570,7 +570,7 @@ function LicensesPageContent() {
     } catch (error) {
       showError(error.message);
     }
-  };
+  }, [licenses, shopOptions, typeOptions, fetchLicenses, showSuccess, showError]);
 
   const customContextMenuItems = useMemo(() => [
     {
@@ -578,7 +578,7 @@ function LicensesPageContent() {
       icon: "fas fa-sync-alt",
       onClick: handleRenewLicense,
     },
-  ], [licenses, shopOptions, typeOptions]);
+  ], [handleRenewLicense]);
 
   const handleExport = async () => {
     try {
