@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
@@ -48,6 +48,7 @@ export default function LicenseTypesPage() {
   const [columns, setColumns] = useState(STANDARD_COLUMNS);
   const [customFields, setCustomFields] = useState([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDoneRef = useRef(false);
 
   useEffect(() => {
     fetchData();
@@ -55,7 +56,9 @@ export default function LicenseTypesPage() {
   }, []);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    if (!initialLoadDoneRef.current) {
+      setLoading(true);
+    }
     try {
       const timestamp = Date.now();
       
@@ -148,6 +151,7 @@ export default function LicenseTypesPage() {
       showError("โหลดข้อมูลล้มเหลว");
     } finally {
       setLoading(false);
+      initialLoadDoneRef.current = true;
     }
   }, []);
 

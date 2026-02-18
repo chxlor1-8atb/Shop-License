@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, use } from 'react';
+import { useState, useEffect, useCallback, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import Loading from '@/components/Loading';
@@ -18,6 +18,7 @@ export default function DynamicDataPage({ params }) {
     const [fields, setFields] = useState([]);
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
+    const initialLoadDoneRef = useRef(false);
 
     // Modal & Form
     const [showModal, setShowModal] = useState(false);
@@ -25,7 +26,9 @@ export default function DynamicDataPage({ params }) {
     const [formData, setFormData] = useState({});
 
     const loadEntityAndData = useCallback(async () => {
-        setLoading(true);
+        if (!initialLoadDoneRef.current) {
+            setLoading(true);
+        }
         try {
             // 1. Get Entity Definition
             const listRes = await fetch('/api/entities', { credentials: 'include' });
@@ -59,6 +62,7 @@ export default function DynamicDataPage({ params }) {
             Swal.fire('Error', error.message, 'error');
         } finally {
             setLoading(false);
+            initialLoadDoneRef.current = true;
         }
     }, [entitySlug, router]);
 

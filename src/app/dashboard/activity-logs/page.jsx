@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/Loading";
 import { showSuccess, showError, confirmDelete } from "@/utils/alerts";
@@ -49,6 +49,7 @@ export default function ActivityLogsPage() {
   // Logs state
   const [activities, setActivities] = useState([]);
   const [logsLoading, setLogsLoading] = useState(true);
+  const logsInitialLoadDoneRef = useRef(false);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
 
@@ -96,7 +97,9 @@ export default function ActivityLogsPage() {
 
   // Fetch activity logs
   const fetchLogs = useCallback(async (page = 1, customLimit = null) => {
-    setLogsLoading(true);
+    if (!logsInitialLoadDoneRef.current) {
+      setLogsLoading(true);
+    }
     try {
       const params = new URLSearchParams({ action: "list", page, limit: customLimit || itemsPerPage });
       const response = await fetch(`/api/activity-logs?${params}`, { credentials: "include" });
@@ -109,6 +112,7 @@ export default function ActivityLogsPage() {
       console.error("Failed to fetch logs:", error);
     } finally {
       setLogsLoading(false);
+      logsInitialLoadDoneRef.current = true;
     }
   }, [itemsPerPage]);
 

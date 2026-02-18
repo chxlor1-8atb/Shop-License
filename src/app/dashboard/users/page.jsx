@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { usePagination } from "@/hooks";
 import { API_ENDPOINTS, ROLE_OPTIONS } from "@/constants";
 import { formatThaiDateTime } from "@/utils/formatters";
@@ -86,6 +86,7 @@ export default function UsersPage() {
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDoneRef = useRef(false);
   const [showModal, setShowModal] = useState(false);
 
   const [selectedUser, setSelectedUser] = useState(null); // Track selected user
@@ -97,7 +98,9 @@ export default function UsersPage() {
   });
 
   const fetchUsers = useCallback(async () => {
-    setLoading(true);
+    if (!initialLoadDoneRef.current) {
+      setLoading(true);
+    }
     try {
       const params = new URLSearchParams({
         page: page,
@@ -124,6 +127,7 @@ export default function UsersPage() {
       console.error("Failed to fetch users:", error);
     } finally {
       setLoading(false);
+      initialLoadDoneRef.current = true;
     }
   }, [page, limit, updateFromResponse]);
 

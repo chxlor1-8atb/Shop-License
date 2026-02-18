@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import CustomSelect from '@/components/ui/CustomSelect';
 import Loading from '@/components/Loading';
@@ -24,6 +24,7 @@ const FIELD_TYPES = [
 export default function CustomFieldsSettingsPage() {
     const [fields, setFields] = useState([]);
     const [loading, setLoading] = useState(true);
+    const initialLoadDoneRef = useRef(false);
     const [selectedEntity, setSelectedEntity] = useState('licenses');
 
     // Modal
@@ -50,7 +51,9 @@ export default function CustomFieldsSettingsPage() {
     }, [selectedEntity]);
 
     const loadFields = async () => {
-        setLoading(true);
+        if (!initialLoadDoneRef.current) {
+            setLoading(true);
+        }
         try {
             const res = await fetch(`/api/custom-fields?entity_type=${selectedEntity}`, { credentials: 'include' });
             const data = await res.json();
@@ -61,6 +64,7 @@ export default function CustomFieldsSettingsPage() {
             console.error(error);
         } finally {
             setLoading(false);
+            initialLoadDoneRef.current = true;
         }
     };
 

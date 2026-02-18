@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import Loading from '@/components/Loading';
 import Link from 'next/link';
@@ -8,6 +8,7 @@ import Link from 'next/link';
 export default function EntitiesSettingsPage() {
     const [entities, setEntities] = useState([]);
     const [loading, setLoading] = useState(true);
+    const initialLoadDoneRef = useRef(false);
     const [showModal, setShowModal] = useState(false);
     const [isEdit, setIsEdit] = useState(false);
 
@@ -27,7 +28,9 @@ export default function EntitiesSettingsPage() {
     }, []);
 
     const loadEntities = async () => {
-        setLoading(true);
+        if (!initialLoadDoneRef.current) {
+            setLoading(true);
+        }
         try {
             const res = await fetch('/api/entities', { credentials: 'include' });
             const data = await res.json();
@@ -38,6 +41,7 @@ export default function EntitiesSettingsPage() {
             console.error(error);
         } finally {
             setLoading(false);
+            initialLoadDoneRef.current = true;
         }
     };
 

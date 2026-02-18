@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import Loading from '@/components/Loading';
@@ -23,6 +23,7 @@ function FieldsContent() {
     const [entity, setEntity] = useState(null);
     const [fields, setFields] = useState([]);
     const [loading, setLoading] = useState(true);
+    const initialLoadDoneRef = useRef(false);
     const [showModal, setShowModal] = useState(false);
     const [isEdit, setIsEdit] = useState(false);
 
@@ -51,7 +52,9 @@ function FieldsContent() {
     }, [entityId]);
 
     const loadData = async () => {
-        setLoading(true);
+        if (!initialLoadDoneRef.current) {
+            setLoading(true);
+        }
         try {
             const res = await fetch(`/api/entities?id=${entityId}`, { credentials: 'include' });
             const data = await res.json();
@@ -66,6 +69,7 @@ function FieldsContent() {
             console.error(error);
         } finally {
             setLoading(false);
+            initialLoadDoneRef.current = true;
         }
     };
 

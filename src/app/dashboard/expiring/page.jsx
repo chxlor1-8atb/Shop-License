@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { API_ENDPOINTS } from '@/constants';
 import { formatThaiDate } from '@/utils/formatters';
 import { showSuccess, showError, showInfo, confirmDelete, pendingDelete } from '@/utils/alerts';
@@ -34,6 +34,7 @@ const EXPIRY_STATUS_FILTERS = [
 export default function ExpiringPage() {
     const [allLicenses, setAllLicenses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const initialLoadDoneRef = useRef(false);
     const [search, setSearch] = useState('');
     const [filterType, setFilterType] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
@@ -49,7 +50,9 @@ export default function ExpiringPage() {
     }, []);
 
     const fetchData = useCallback(async () => {
-        setLoading(true);
+        if (!initialLoadDoneRef.current) {
+            setLoading(true);
+        }
         try {
             const response = await fetch('/api/licenses/expiring', { credentials: 'include' });
             const data = await response.json();
@@ -61,6 +64,7 @@ export default function ExpiringPage() {
             console.error('Failed to fetch expiring licenses:', error);
         } finally {
             setLoading(false);
+            initialLoadDoneRef.current = true;
         }
     }, []);
 
