@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange } from "@/hooks";
+import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange, useShops } from "@/hooks";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import Pagination from "@/components/ui/Pagination";
@@ -58,23 +58,29 @@ function ShopsPageContent() {
   const pagination = usePagination(10);
   const { page, limit, updateFromResponse } = pagination;
 
-  // Refs for page/limit to avoid recreating performFetchShops on every page/limit change
-  const pageRef = useRef(page);
-  const limitRef = useRef(limit);
-  useEffect(() => { pageRef.current = page; }, [page]);
-  useEffect(() => { limitRef.current = limit; }, [limit]);
   const { typeOptions } = useDropdownData();
-  const [shops, setShops] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const initialLoadDoneRef = useRef(false);
-  const [search, setSearch] = useState(initialSearch);
-  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [columns, setColumns] = useState(STANDARD_COLUMNS);
   
   // Filter states
   const [filterHasLicense, setFilterHasLicense] = useState("");
   const [filterLicenseStatus, setFilterLicenseStatus] = useState("");
   const [filterLicenseType, setFilterLicenseType] = useState("");
+  const [search, setSearch] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
+
+  // Use SWR hook for shops data
+  const { shops, isLoading, error, refresh: fetchShops } = useShops({
+    search: debouncedSearch,
+    page,
+    limit,
+    has_license: filterHasLicense,
+    license_status: filterLicenseStatus,
+    license_type: filterLicenseType,
+  });
+
+  // Local state for optimistic updates
+  const [localShops, setLocalShops] = useState([]);
+  const displayShops = localShops.length > 0 ? localShops : shops;
 
   // Modal states
   const [selectedShop, setSelectedShop] = useState(null);
@@ -88,55 +94,6 @@ function ShopsPageContent() {
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
-
-  // Shared fetch function that takes search as parameter to avoid stale closures
-  // Uses refs for page/limit so this callback is stable and doesn't cause re-fetches
-  // Refs for filters to keep performFetchShops stable
-  const filterHasLicenseRef = useRef(filterHasLicense);
-  const filterLicenseStatusRef = useRef(filterLicenseStatus);
-  const filterLicenseTypeRef = useRef(filterLicenseType);
-  useEffect(() => { filterHasLicenseRef.current = filterHasLicense; }, [filterHasLicense]);
-  useEffect(() => { filterLicenseStatusRef.current = filterLicenseStatus; }, [filterLicenseStatus]);
-  useEffect(() => { filterLicenseTypeRef.current = filterLicenseType; }, [filterLicenseType]);
-
-  const performFetchShops = useCallback(async (searchValue) => {
-    // Only show skeleton on initial load, not on refetch
-    if (!initialLoadDoneRef.current) {
-      setLoading(true);
-    }
-    try {
-      const params = new URLSearchParams({
-        page: pageRef.current,
-        limit: limitRef.current,
-        search: searchValue,
-      });
-
-      if (filterHasLicenseRef.current) params.append("has_license", filterHasLicenseRef.current);
-      if (filterLicenseStatusRef.current) params.append("license_status", filterLicenseStatusRef.current);
-      if (filterLicenseTypeRef.current) params.append("license_type", filterLicenseTypeRef.current);
-
-      const response = await fetch(`${API_ENDPOINTS.SHOPS}?${params}`, { credentials: "include" });
-      const data = await response.json();
-
-      if (data.success) {
-        // Formatting for ExcelTable
-        // Flatten custom_fields
-        const formattedShops = data.shops.map((s) => ({
-          ...s,
-          ...(s.custom_fields || {}),
-        }));
-
-        setShops(formattedShops);
-        updateFromResponse(data.pagination);
-      }
-    } catch (error) {
-      console.error("Failed to fetch shops:", error);
-      showError("โหลดข้อมูลร้านค้าล้มเหลว");
-    } finally {
-      setLoading(false);
-      initialLoadDoneRef.current = true;
-    }
-  }, [updateFromResponse]);
 
   // Track if columns have been fetched to prevent infinite loop
   const columnsLoadedRef = useRef(false);
@@ -195,16 +152,6 @@ function ShopsPageContent() {
     }
   }, [fetchCustomColumns]);
 
-  // Fetch shops when search, filters, or page/limit changes
-  useEffect(() => {
-    performFetchShops(debouncedSearch);
-  }, [performFetchShops, debouncedSearch, page, limit, filterHasLicense, filterLicenseStatus, filterLicenseType]);
-
-  // Keep fetchShops for external use (e.g., after updates)
-  const fetchShops = useCallback(async () => {
-    await performFetchShops(debouncedSearch);
-  }, [performFetchShops, debouncedSearch]);
-
   // Auto-refresh: sync data every 30s + on tab focus + cross-tab
   useAutoRefresh(fetchShops, { interval: 30000, channel: "shops-sync" });
 
@@ -258,8 +205,32 @@ function ShopsPageContent() {
         if (data.success) {
           showSuccess("สร้างร้านค้าเรียบร้อย");
           notifyDataChange("shops-sync");
+          
+          // Optimistic update: Add new shop to UI immediately
+          const newShop = {
+            id: data.shop_id || data.id,
+            shop_name: updatedRow.shop_name,
+            owner_name: updatedRow.owner_name,
+            phone: updatedRow.phone,
+            address: updatedRow.address,
+            email: updatedRow.email,
+            notes: updatedRow.notes,
+            license_count: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            ...(customValues || {})
+          };
+          
+          // Update local state immediately for instant UI feedback
+          setLocalShops(prev => [newShop, ...prev]);
+          
           fetchShops(); // Refresh to get real ID
-          mutate('/api/shops?limit=1000'); // Update dropdown cache
+          mutate('/api/shops/dropdown'); // Update dropdown data
+          
+          // Clear optimistic updates after a short delay to sync with server data
+          setTimeout(() => {
+            setLocalShops([]);
+          }, 1000);
         } else {
           showError(data.message);
         }
@@ -280,11 +251,8 @@ function ShopsPageContent() {
 
         if (data.success) {
           notifyDataChange("shops-sync");
-          // Update local state
-          setShops((prev) =>
-            prev.map((s) => (s.id === updatedRow.id ? updatedRow : s))
-          );
-          mutate('/api/shops?limit=1000'); // Update dropdown cache
+          fetchShops();
+          mutate('/api/shops/dropdown'); // Update dropdown data
         } else {
           showError(data.message);
           fetchShops(); // Revert
@@ -299,7 +267,6 @@ function ShopsPageContent() {
   const handleRowDelete = async (rowId) => {
     // Skip API call for unsaved temp rows
     if (rowId.toString().startsWith("id_")) {
-      setShops((prev) => prev.filter((s) => s.id !== rowId));
       return;
     }
 
@@ -312,8 +279,8 @@ function ShopsPageContent() {
       if (data.success) {
         showSuccess("ลบร้านค้าเรียบร้อย");
         notifyDataChange("shops-sync");
-        setShops((prev) => prev.filter((s) => s.id !== rowId));
-        mutate('/api/shops?limit=1000'); // Update dropdown cache
+        fetchShops();
+        mutate('/api/shops/dropdown'); // Update dropdown data
       } else {
         showError(data.message);
         fetchShops();
@@ -536,9 +503,34 @@ function ShopsPageContent() {
       showSuccess("สร้างร้านค้าเรียบร้อย");
     }
 
+    // Optimistic update: Add new shop to UI immediately
+    const newShop = {
+      id: shopData.shop_id || shopData.id,
+      shop_name: formData.shop_name,
+      owner_name: formData.owner_name,
+      phone: formData.phone,
+      address: formData.address,
+      email: formData.email,
+      notes: formData.notes,
+      license_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...(formData.custom_fields || {})
+    };
+
+    // Update local state immediately for instant UI feedback
+    setLocalShops(prev => [newShop, ...prev]);
+    
+    // Then refresh data to ensure consistency
     fetchShops();
-    mutate('/api/shops?limit=1000'); // Update dropdown cache
     mutate('/api/shops/dropdown'); // Update dropdown data
+    // Also trigger a global revalidation to update any cached data
+    mutate(() => true, undefined, { revalidate: true });
+    
+    // Clear optimistic updates after a short delay to sync with server data
+    setTimeout(() => {
+      setLocalShops([]);
+    }, 1000);
   };
 
   return (
@@ -641,11 +633,11 @@ function ShopsPageContent() {
         </div>
         </div>
 
-        {!loading ? (
+        {!isLoading ? (
           <div style={{ overflow: "auto", maxHeight: "600px" }}>
             <ExcelTable
               initialColumns={columns}
-              initialRows={shops}
+              initialRows={displayShops}
               onRowUpdate={handleRowUpdate}
               onRowDelete={handleRowDelete}
               onRowAdd={handleRowAdd}

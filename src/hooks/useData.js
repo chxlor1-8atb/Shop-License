@@ -196,6 +196,9 @@ export function useShops(params = {}) {
     if (params.search) searchParams.set('search', params.search);
     if (params.page) searchParams.set('page', params.page);
     if (params.limit) searchParams.set('limit', params.limit);
+    if (params.has_license) searchParams.set('has_license', params.has_license);
+    if (params.license_status) searchParams.set('license_status', params.license_status);
+    if (params.license_type) searchParams.set('license_type', params.license_type);
 
     const url = `/api/shops${searchParams.toString() ? `?${searchParams}` : ''}`;
 

@@ -128,7 +128,7 @@ export const TableRow = memo(function TableRow({
                       ""
                     )
                   ) : (
-                    row[col.id] || ""
+                    row[col.id] !== undefined && row[col.id] !== null && row[col.id] !== "" ? row[col.id] : ""
                   )}
                 </span>
               </div>

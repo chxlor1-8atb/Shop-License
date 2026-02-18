@@ -95,12 +95,16 @@ export default function LicenseTypesPage() {
           valuesByEntity[v.entity_id][v.field_name] = v.value;
         });
 
+        console.log('Raw types from API:', rawTypes); // Debug log
+        console.log('Values by entity:', valuesByEntity); // Debug log
+        
         // Merge
         mergedTypes = rawTypes.map((t) => ({
           ...t,
           ...(valuesByEntity[t.id] || {}),
         }));
 
+        console.log('Merged types:', mergedTypes); // Debug log
         setTypes(mergedTypes);
         shouldSkipFetchRef.current = true;
       }
