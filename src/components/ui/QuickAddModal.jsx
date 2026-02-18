@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import CustomSelect from "./CustomSelect";
 import DatePicker from "./DatePicker";
 import Modal from "./Modal";
-import { useDropdownData, mutate } from "@/hooks";
+import { useDropdownData } from "@/hooks";
+import useSWR, { mutate } from "swr";
 import "./QuickAddModal.css";
 
 const DEFAULT_PREFILL = {};

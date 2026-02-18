@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
-import { useAutoRefresh, notifyDataChange, mutate } from "@/hooks";
+import { useAutoRefresh, notifyDataChange } from "@/hooks";
+import { mutate } from "swr";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import ExcelTable from "@/components/ExcelTable";
 

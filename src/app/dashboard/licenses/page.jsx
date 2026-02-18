@@ -13,7 +13,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import QuickAddModal from "@/components/ui/QuickAddModal";
 import ExcelTable from "@/components/ExcelTable";
-import { mutate } from "swr"; // Import mutate
+import { mutate } from "swr";
 
 // Lazy load PDF export to reduce initial bundle size
 const exportLicensesToPDF = async (...args) => {

@@ -13,7 +13,7 @@ import TableSkeleton from "@/components/ui/TableSkeleton";
 import ShopDetailModal from "@/components/ui/ShopDetailModal";
 import QuickAddModal from "@/components/ui/QuickAddModal";
 import ExcelTable from "@/components/ExcelTable";
-import { mutate } from "swr"; // Import mutate
+import { mutate } from "swr";
 
 // Lazy load PDF export to reduce initial bundle size
 const exportShopsToPDF = async (...args) => {
