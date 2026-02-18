@@ -66,9 +66,16 @@ export async function GET(request) {
 
 // POST - Save/Update custom field values for an entity
 export async function POST(request) {
+    console.log('POST /api/custom-field-values - Starting request');
+    
     // Security: Require Admin for write operations
     const authError = await requireAdmin();
-    if (authError) return authError;
+    if (authError) {
+        console.log('POST /api/custom-field-values - Auth failed:', authError);
+        return authError;
+    }
+    
+    console.log('POST /api/custom-field-values - Auth passed');
 
     let body, entity_type, entity_id, values;
     
@@ -141,9 +148,10 @@ export async function POST(request) {
             console.log(`Successfully saved field: ${fieldName}`);
         }
 
+        console.log('POST /api/custom-field-values - Success');
         return NextResponse.json({ success: true, message: 'บันทึก Custom Fields สำเร็จ' });
     } catch (err) {
-        console.error('Error saving custom field values:', err);
+        console.error('POST /api/custom-field-values - Error:', err);
         console.error('Error stack:', err.stack);
         console.error('Request body:', body);
         console.error('Entity type:', entity_type, 'Entity ID:', entity_id);
