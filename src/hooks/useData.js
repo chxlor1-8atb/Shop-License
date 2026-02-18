@@ -9,6 +9,7 @@ import { useMemo, useCallback } from 'react';
 import useSWR from 'swr';
 import useSWRMutation from 'swr/mutation';
 import { fetcher, swrConfigVariants as CONFIG } from '@/lib/swr-config';
+import { usePerformanceMonitor } from './usePerformanceMonitor';
 
 /**
  * Fetcher for POST/PUT/DELETE requests
@@ -110,31 +111,39 @@ export function useLicenseTypes() {
  * Pre-formats options for CustomSelect component
  */
 export function useDropdownData() {
+    const { trackStart, metrics } = usePerformanceMonitor('useDropdownData');
+    
     const { data: shopsData, isLoading: shopsLoading, error: shopsError, mutate: refreshShops } = useSWR(
-        '/api/shops?limit=5000',
-        fetcher,
+        '/api/shops/dropdown',
+        (url) => {
+            const tracker = trackStart('fetch-shops');
+            return fetcher(url).finally(tracker.end);
+        },
         { 
             revalidateOnFocus: true,
             revalidateOnReconnect: true,
             refreshWhenOffline: false,
             refreshWhenHidden: false,
-            dedupingInterval: 200, // Very fast deduping for dropdowns
+            dedupingInterval: 100, // Ultra-fast deduping for dropdowns
             errorRetryCount: 3,
-            errorRetryInterval: 300,
+            errorRetryInterval: 200,
         }
     );
 
     const { data: typesData, isLoading: typesLoading, error: typesError, mutate: refreshTypes } = useSWR(
-        '/api/license-types',
-        fetcher,
+        '/api/license-types/dropdown',
+        (url) => {
+            const tracker = trackStart('fetch-license-types');
+            return fetcher(url).finally(tracker.end);
+        },
         { 
             revalidateOnFocus: true,
             revalidateOnReconnect: true,
             refreshWhenOffline: false,
             refreshWhenHidden: false,
-            dedupingInterval: 200, // Very fast deduping for dropdowns
+            dedupingInterval: 100, // Ultra-fast deduping for dropdowns
             errorRetryCount: 3,
-            errorRetryInterval: 300,
+            errorRetryInterval: 200,
         }
     );
 
@@ -171,9 +180,9 @@ export function useDropdownData() {
         licenseTypes,
         shopOptions,
         typeOptions,
-        loading: shopsLoading || typesLoading,
+        refresh,
+        isLoading: shopsLoading || typesLoading,
         error: shopsError || typesError,
-        refresh
     };
 }
 

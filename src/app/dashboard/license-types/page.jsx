@@ -370,7 +370,8 @@ export default function LicenseTypesPage() {
           notifyDataChange("license-types-sync");
           
           // Invalidate SWR cache to refresh dropdown data
-          mutate('/api/license-types');
+          mutate('/api/license-types/dropdown', undefined, { revalidate: true });
+          mutate('/api/license-types'); // Also invalidate main endpoint
           
           // Save custom values with new ID
           if (Object.keys(customValues).length > 0) {
@@ -463,6 +464,10 @@ export default function LicenseTypesPage() {
       setTypes((prev) => prev.filter((t) => t.id !== id));
       showSuccess("ลบประเภทใบอนุญาตเรียบร้อย");
       notifyDataChange("license-types-sync");
+      
+      // Invalidate SWR cache to refresh dropdown data
+      mutate('/api/license-types/dropdown', undefined, { revalidate: true });
+      mutate('/api/license-types'); // Also invalidate main endpoint
     } catch (error) {
       showError(error.message);
       fetchData();

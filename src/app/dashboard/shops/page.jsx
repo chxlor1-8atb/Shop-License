@@ -538,6 +538,7 @@ function ShopsPageContent() {
 
     fetchShops();
     mutate('/api/shops?limit=1000'); // Update dropdown cache
+    mutate('/api/shops/dropdown'); // Update dropdown data
   };
 
   return (

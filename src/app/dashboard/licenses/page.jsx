@@ -342,8 +342,8 @@ function LicensesPageContent() {
           setLicenses((prev) => [...prev, data.license]);
           fetchLicenses(); // Still fetch to get complete data
           // Force refresh all dropdown data to ensure real-time updates
-          mutate('/api/shops?limit=5000', undefined, { revalidate: true });
-          mutate('/api/license-types', undefined, { revalidate: true });
+          mutate('/api/shops/dropdown', undefined, { revalidate: true });
+          mutate('/api/license-types/dropdown', undefined, { revalidate: true });
           // Also trigger a global revalidation to update any cached data
           mutate(() => true, undefined, { revalidate: true });
         } else {
@@ -645,8 +645,7 @@ function LicensesPageContent() {
 
     showSuccess("สร้างร้านค้าเรียบร้อย กรุณาเลือกร้านค้าใหม่จากรายการ");
     // Force refresh all dropdown data to ensure real-time updates
-    mutate('/api/shops?limit=5000', undefined, { revalidate: true });
-    mutate('/api/shops?limit=1000', undefined, { revalidate: true });
+    mutate('/api/shops/dropdown', undefined, { revalidate: true });
     // Also trigger a global revalidation to update any cached data
     mutate(() => true, undefined, { revalidate: true });
   };
@@ -679,8 +678,8 @@ function LicensesPageContent() {
     showSuccess("สร้างใบอนุญาตเรียบร้อย");
     fetchLicenses();
     // Force refresh all dropdown data to ensure real-time updates
-    mutate('/api/shops?limit=5000', undefined, { revalidate: true });
-    mutate('/api/license-types', undefined, { revalidate: true });
+    mutate('/api/shops/dropdown', undefined, { revalidate: true });
+    mutate('/api/license-types/dropdown', undefined, { revalidate: true });
     // Also trigger a global revalidation to update any cached data
     mutate(() => true, undefined, { revalidate: true });
   };

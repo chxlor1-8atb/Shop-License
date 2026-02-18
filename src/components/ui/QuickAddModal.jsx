@@ -194,9 +194,9 @@ export default function QuickAddModal({
         refresh();
       }
       
-      // Force immediate revalidation of specific endpoints
-      mutate('/api/shops?limit=5000', undefined, { revalidate: true });
-      mutate('/api/license-types', undefined, { revalidate: true });
+      // Force immediate revalidation of fast dropdown endpoints
+      mutate('/api/shops/dropdown', undefined, { revalidate: true });
+      mutate('/api/license-types/dropdown', undefined, { revalidate: true });
       
       onClose();
     } catch (err) {

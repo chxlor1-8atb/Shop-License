@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect, useId } from 'react';
+import { useState, useRef, useEffect, useId, useMemo } from 'react';
 
 export default function CustomSelect({
     value,
@@ -24,15 +24,21 @@ export default function CustomSelect({
     const searchInputRef = useRef(null);
     const searchInputId = useId();
 
-    const selectedOption = options.find(opt => opt.value == value);
+    const selectedOption = useMemo(() => 
+        options.find(opt => opt.value == value), 
+        [options, value]
+    );
 
-    // Filter options based on search term
-    const filteredOptions = searchTerm
-        ? options.filter(opt => {
+    // Filter options based on search term - memoized for performance
+    const filteredOptions = useMemo(() => {
+        if (!searchTerm) return options;
+        
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        return options.filter(opt => {
             const label = (opt.label || opt.name || '').toLowerCase();
-            return label.includes(searchTerm.toLowerCase());
-        })
-        : options;
+            return label.includes(lowerSearchTerm);
+        });
+    }, [options, searchTerm]);
 
     useEffect(() => {
         if (autoFocus && !disabled) {

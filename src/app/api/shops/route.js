@@ -148,22 +148,28 @@ export async function GET(request) {
         const limitParamIndex = paramIndex;
         const offsetParamIndex = paramIndex + 1;
 
+        // Simple query without expensive subqueries for dropdown use
         const query = `
-            SELECT s.*, 
-            (SELECT COUNT(*) FROM licenses l WHERE l.shop_id = s.id) as license_count
+            SELECT s.*
             FROM shops s
             ${whereSQL}
             ORDER BY s.id DESC
             LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}
         `;
 
-        const [countResult, shops] = await Promise.all([
-            fetchOne(countQuery, params),
-            fetchAll(query, [...params, limit, offset])
-        ]);
+        // Only count for pagination when needed (not for dropdown)
+        let total = 0;
+        if (limit < 1000) { // Only count for normal pagination, not for dropdown
+            const countResult = await fetchOne(countQuery, params);
+            total = parseInt(countResult?.total || 0, 10);
+        } else {
+            // For dropdown, just fetch without counting
+            total = limit;
+        }
 
-        const total = parseInt(countResult?.total || 0, 10);
-        const totalPages = Math.ceil(total / limit);
+        const shops = await fetchAll(query, [...params, limit, offset]);
+
+        const totalPages = limit < 1000 ? Math.ceil(total / limit) : 1;
 
         return NextResponse.json({
             success: true,
