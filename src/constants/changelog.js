@@ -6,7 +6,7 @@
 export const CHANGELOG = [
     {
         version: '2.1.0',
-        date: '2026-02-11',
+        date: '2026-02-18',
         title: 'ระบบบริหารจัดการใบอนุญาตร้านค้า — รวมทุกฟีเจอร์ & คุณสมบัติระบบ',
         changes: [
             // ═══════════════════════════════════════════
@@ -17,6 +17,16 @@ export const CHANGELOG = [
             { type: 'improve', text: '🎨 UX/UI Design: ธีม Orange-Gold ทันสมัย, Responsive ทุกอุปกรณ์ (Mobile / Tablet / Desktop)' },
             { type: 'improve', text: '• ฟอนต์ Inter + Noto Sans Thai ผ่าน next/font/google — Zero CLS, Preload' },
             { type: 'improve', text: '• Vanilla CSS Styling (ไม่ใช้ Tailwind) พร้อม CSS Variables สำหรับธีม' },
+
+            // ═══════════════════════════════════════════
+            // Real-time Data Sync System (New!)
+            // ═══════════════════════════════════════════
+            { type: 'feature', text: '⚡ Real-time Data Sync: อัปเดตข้อมูลอัตโนมัติทุก 30 วินาที โดยไม่ต้องรีเฟรชหน้าจอ (F5)' },
+            { type: 'feature', text: '• Cross-tab Synchronization: เปลี่ยนข้อมูลในแท็บหนึ่ง อีกแท็บจะอัปเดตทันทีผ่าน BroadcastChannel' },
+            { type: 'feature', text: '• Focus Refetching: ดึงข้อมูลใหม่ทันทีเมื่อผู้ใช้กลับมาที่แท็บ (Window Focus)' },
+            { type: 'feature', text: '• Visibility Pausing: หยุด Polling เมื่อพับหน้าจอหรือซ่อนแท็บ เพื่อประหยัดทรัพยากร' },
+            { type: 'feature', text: '• รองรับทุกหน้าหลัก: Dashboard, Users, Licenses, Shops, License Types, Settings' },
+            { type: 'fix', text: '🐛 Fix Build Error: แก้ไข Temporal Dead Zone (TDZ) ใน ReferenceError ของ useAutoRefresh' },
 
             // ═══════════════════════════════════════════
             // หน้า Login & Authentication
