@@ -425,17 +425,30 @@ export default function LicenseTypesPage() {
           
           // Save custom values with new ID
           if (Object.keys(customValues).length > 0) {
+            console.log('Saving custom values:', customValues);
             const valuesPayload = {
               entity_type: "license_types",
               entity_id: newTypeId,
               values: customValues,
             };
-            await fetch("/api/custom-field-values", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify(valuesPayload),
-            });
+            try {
+              const customRes = await fetch("/api/custom-field-values", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(valuesPayload),
+              });
+              const customData = await customRes.json();
+              if (!customData.success) {
+                console.warn("Failed to save custom values:", customData.message);
+              } else {
+                console.log("Custom values saved successfully");
+              }
+            } catch (customError) {
+              console.error("Error saving custom values:", customError);
+            }
+          } else {
+            console.log("No custom values to save");
           }
         } else {
           // Fallback to fetchData if no ID returned
@@ -458,21 +471,31 @@ export default function LicenseTypesPage() {
 
       // Save Custom Field Values (if any)
       if (Object.keys(customValues).length > 0) {
+        console.log('Updating custom values:', customValues);
         const valuesPayload = {
           entity_type: "license_types",
           entity_id: typeId,
           values: customValues,
         };
 
-        const valRes = await fetch("/api/custom-field-values", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(valuesPayload),
-        });
-        const valData = await valRes.json();
-        if (!valData.success)
-          console.warn("Failed to save custom values", valData.message);
+        try {
+          const valRes = await fetch("/api/custom-field-values", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(valuesPayload),
+          });
+          const valData = await valRes.json();
+          if (!valData.success) {
+            console.warn("Failed to save custom values:", valData.message);
+          } else {
+            console.log("Custom values updated successfully");
+          }
+        } catch (customError) {
+          console.error("Error updating custom values:", customError);
+        }
+      } else {
+        console.log("No custom values to update");
       }
 
       setTypes((prev) =>

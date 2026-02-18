@@ -140,10 +140,10 @@ export async function GET() {
                             if (value) {
                                 // Insert custom field value (schema doesn't have entity_type column)
                                 await executeQuery(
-                                    `INSERT INTO custom_field_values (custom_field_id, entity_id, field_value)
-                                     VALUES ($1, $2, $3)
+                                    `INSERT INTO custom_field_values (custom_field_id, entity_id, field_value, updated_at)
+                                     VALUES ($1, $2, $3, NOW())
                                      ON CONFLICT (custom_field_id, entity_id) 
-                                     DO UPDATE SET field_value = EXCLUDED.field_value`,
+                                     DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at`,
                                     [field.id, licenseId, value]
                                 );
                                 customFieldsFilledCount++;

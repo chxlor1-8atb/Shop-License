@@ -74,11 +74,16 @@ export async function POST(request) {
     
     try {
         body = await request.json();
+        console.log('POST /api/custom-field-values - Request body:', JSON.stringify(body, null, 2));
+        
         values = body.values;
         entity_type = validateEnum(body.entity_type, ALLOWED_ENTITY_TYPES, '');
         entity_id = sanitizeInt(body.entity_id, 0, 1);
 
+        console.log('Parsed data - entity_type:', entity_type, 'entity_id:', entity_id, 'values:', values);
+
         if (!entity_type || entity_id < 1 || !values) {
+            console.log('Validation failed - entity_type:', entity_type, 'entity_id:', entity_id, 'has values:', !!values);
             return NextResponse.json({
                 success: false,
                 message: 'entity_type, entity_id และ values จำเป็น'
@@ -86,34 +91,60 @@ export async function POST(request) {
         }
 
         // Get all active fields for this entity type
+        console.log('Fetching custom fields for entity_type:', entity_type);
         const fields = await fetchAll(
             'SELECT id, field_name FROM custom_fields WHERE entity_type = $1 AND is_active = true',
             [entity_type]
         );
+        
+        console.log('Found custom fields:', fields);
+
+        // If no custom fields exist, just return success
+        if (fields.length === 0) {
+            console.log('No custom fields defined for this entity type, returning success');
+            return NextResponse.json({ success: true, message: 'บันทึก Custom Fields สำเร็จ (ไม่มีฟิลด์)' });
+        }
 
         // Create a map of field_name to field_id
         const fieldMap = {};
         fields.forEach(f => {
             fieldMap[f.field_name] = f.id;
         });
+        console.log('Field map:', fieldMap);
 
         // Upsert each value
-        for (const [fieldName, value] of Object.entries(values)) {
+        const entries = Object.entries(values);
+        console.log('Processing custom values entries:', entries);
+        
+        for (const [fieldName, value] of entries) {
             const fieldId = fieldMap[fieldName];
-            if (!fieldId) continue; // Skip unknown fields
+            console.log(`Processing field: ${fieldName}, fieldId: ${fieldId}, value:`, value);
+            
+            if (!fieldId) {
+                console.log(`Skipping unknown field: ${fieldName}`);
+                continue; // Skip unknown fields
+            }
 
             // Use INSERT ... ON CONFLICT for upsert
-            await executeQuery(`
+            const query = `
                 INSERT INTO custom_field_values(custom_field_id, entity_id, field_value, updated_at)
                 VALUES($1, $2, $3, NOW())
                 ON CONFLICT(custom_field_id, entity_id) 
                 DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
-            `, [fieldId, entity_id, value?.toString() || '']);
+            `;
+            const params = [fieldId, entity_id, value?.toString() || ''];
+            
+            console.log('Executing query:', query);
+            console.log('Query params:', params);
+            
+            await executeQuery(query, params);
+            console.log(`Successfully saved field: ${fieldName}`);
         }
 
         return NextResponse.json({ success: true, message: 'บันทึก Custom Fields สำเร็จ' });
     } catch (err) {
         console.error('Error saving custom field values:', err);
+        console.error('Error stack:', err.stack);
         console.error('Request body:', body);
         console.error('Entity type:', entity_type, 'Entity ID:', entity_id);
         console.error('Custom values:', values);
