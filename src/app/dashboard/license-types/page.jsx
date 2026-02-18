@@ -51,6 +51,7 @@ export default function LicenseTypesPage() {
   const [customFields, setCustomFields] = useState([]);
   const [loading, setLoading] = useState(true);
   const initialLoadDoneRef = useRef(false);
+  const shouldSkipFetchRef = useRef(false);
 
   useEffect(() => {
     fetchData();
@@ -59,7 +60,7 @@ export default function LicenseTypesPage() {
 
   const fetchData = useCallback(async () => {
     // Skip if initial load is deliberately paused (e.g., during row addition)
-    if (!initialLoadDoneRef.current && types.length > 0) {
+    if (!initialLoadDoneRef.current && shouldSkipFetchRef.current) {
       return;
     }
     
@@ -101,6 +102,7 @@ export default function LicenseTypesPage() {
         }));
 
         setTypes(mergedTypes);
+        shouldSkipFetchRef.current = true;
       }
 
       if (fieldsData.success) {
@@ -162,8 +164,8 @@ export default function LicenseTypesPage() {
     }
   }, []);
 
-  // Auto-refresh: sync data every 30s + on tab focus + cross-tab
-  useAutoRefresh(fetchData, { interval: 30000, channel: "license-types-sync" });
+  // Auto-refresh: sync data every 10s + on tab focus + cross-tab
+  useAutoRefresh(fetchData, { interval: 10000, channel: "license-types-sync" });
 
   // Computed statistics
   const stats = useMemo(
@@ -259,6 +261,7 @@ export default function LicenseTypesPage() {
       if (!data.success) {
         showError(data.message);
         fetchData(); // Revert on failure
+        shouldSkipFetchRef.current = false;
       } else {
         // Success: Update local state to reflect change permanently
         setColumns((prev) =>
@@ -283,6 +286,7 @@ export default function LicenseTypesPage() {
     ) {
       showError("ไม่สามารถลบคอลัมน์ของระบบได้");
       fetchData(); // Revert UI
+      shouldSkipFetchRef.current = false;
       return;
     }
 
@@ -303,6 +307,7 @@ export default function LicenseTypesPage() {
       } else {
         showError(data.message);
         fetchData(); // Revert
+        shouldSkipFetchRef.current = false;
       }
     } catch (error) {
       showError(error.message);
@@ -385,6 +390,7 @@ export default function LicenseTypesPage() {
           // Fallback to fetchData if no ID returned
           showSuccess("สร้างเรียบร้อย");
           fetchData();
+          shouldSkipFetchRef.current = false;
         }
         return;
       } else {
@@ -426,6 +432,7 @@ export default function LicenseTypesPage() {
     } catch (error) {
       showError(error.message);
       fetchData();
+      shouldSkipFetchRef.current = false;
     }
   };
 
@@ -436,6 +443,7 @@ export default function LicenseTypesPage() {
     if (parseInt(type.license_count || 0) > 0) {
       showError("ไม่สามารถลบได้เนื่องจากมีใบอนุญาตผูกอยู่");
       fetchData();
+      shouldSkipFetchRef.current = false;
       return;
     }
 
@@ -458,6 +466,7 @@ export default function LicenseTypesPage() {
     } catch (error) {
       showError(error.message);
       fetchData();
+      shouldSkipFetchRef.current = false;
     }
   };
 
@@ -466,6 +475,7 @@ export default function LicenseTypesPage() {
     setTypes((prev) => [...prev, { ...newRow, license_count: 0 }]);
     // Prevent auto-refresh from running for 2 seconds to avoid duplication
     initialLoadDoneRef.current = false;
+    shouldSkipFetchRef.current = false;
     setTimeout(() => {
       initialLoadDoneRef.current = true;
     }, 2000);

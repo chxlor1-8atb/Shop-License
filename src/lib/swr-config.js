@@ -34,11 +34,11 @@ export const swrConfig = {
     refreshWhenOffline: false,       // Don't refresh when offline
 
     // Deduplication
-    dedupingInterval: 5000,          // Dedupe requests within 5 seconds
+    dedupingInterval: 500,           // Dedupe requests within 0.5 seconds (much faster)
 
     // Error retry
     errorRetryCount: 3,              // Retry failed requests 3 times
-    errorRetryInterval: 1000,        // Wait 1 second between retries
+    errorRetryInterval: 500,        // Wait 0.5 seconds between retries (faster)
     onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
         // Never retry on 404 or 401
         if (error.status === 404 || error.status === 401) return;
@@ -68,8 +68,8 @@ export const swrConfigVariants = {
     static: {
         ...swrConfig,
         refreshInterval: 0,
-        revalidateOnFocus: false,
-        revalidateOnReconnect: false,
+        revalidateOnFocus: true,          // Enable focus revalidation
+        revalidateOnReconnect: true,     // Enable reconnect revalidation
     },
 
     // For dashboard data (moderate refresh)
@@ -90,8 +90,8 @@ export const swrConfigVariants = {
     list: {
         ...swrConfig,
         refreshInterval: 0,
-        revalidateOnFocus: false,
-        dedupingInterval: 10000,     // Dedupe for 10 seconds
+        revalidateOnFocus: true,          // Enable focus revalidation for lists
+        dedupingInterval: 200,            // Much faster deduping for lists
     },
 
     // For heavy data (reports, exports)

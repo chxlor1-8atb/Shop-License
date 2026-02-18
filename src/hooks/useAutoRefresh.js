@@ -20,7 +20,7 @@ import { useEffect, useRef, useCallback } from "react";
  */
 export function useAutoRefresh(fetchFn, options = {}) {
     const {
-        interval = 30000,
+        interval = 10000, // Reduced from 30s to 10s for faster updates
         enabled = true,
         channel = null,
     } = options;
@@ -38,8 +38,8 @@ export function useAutoRefresh(fetchFn, options = {}) {
     // Debounced fetch — prevents rapid consecutive calls
     const debouncedFetch = useCallback(() => {
         const now = Date.now();
-        // Minimum 3 seconds between fetches
-        if (now - lastFetchRef.current < 3000) return;
+        // Minimum 500ms between fetches (much faster)
+        if (now - lastFetchRef.current < 500) return;
         if (!isMountedRef.current) return;
 
         lastFetchRef.current = now;

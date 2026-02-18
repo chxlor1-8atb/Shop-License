@@ -114,14 +114,13 @@ export function useDropdownData() {
         '/api/shops?limit=5000',
         fetcher,
         { 
-            ...CONFIG.static, 
             revalidateOnFocus: true,
             revalidateOnReconnect: true,
             refreshWhenOffline: false,
             refreshWhenHidden: false,
-            dedupingInterval: 1000, // Reduce deduping for more responsive updates
+            dedupingInterval: 200, // Very fast deduping for dropdowns
             errorRetryCount: 3,
-            errorRetryInterval: 5000,
+            errorRetryInterval: 300,
         }
     );
 
@@ -129,26 +128,23 @@ export function useDropdownData() {
         '/api/license-types',
         fetcher,
         { 
-            ...CONFIG.static, 
             revalidateOnFocus: true,
             revalidateOnReconnect: true,
             refreshWhenOffline: false,
             refreshWhenHidden: false,
-            dedupingInterval: 1000, // Reduce deduping for more responsive updates
+            dedupingInterval: 200, // Very fast deduping for dropdowns
             errorRetryCount: 3,
-            errorRetryInterval: 5000,
+            errorRetryInterval: 300,
         }
     );
 
     // Wrap in useMemo to prevent dependency changes on every render
     const shops = useMemo(() => {
         const shopsList = shopsData?.shops || [];
-        console.log('useDropdownData: Shops data updated', shopsList.length, 'shops');
         return shopsList;
     }, [shopsData]);
     const licenseTypes = useMemo(() => {
         const typesList = typesData?.types || typesData?.licenseTypes || [];
-        console.log('useDropdownData: License types data updated', typesList.length, 'types');
         return typesList;
     }, [typesData]);
 
@@ -165,7 +161,6 @@ export function useDropdownData() {
 
     // Refresh function to update both shops and types
     const refresh = useCallback(() => {
-        console.log('useDropdownData: Manual refresh triggered');
         // Force revalidation by clearing cache and refetching
         refreshShops(undefined, { revalidate: true });
         refreshTypes(undefined, { revalidate: true });
