@@ -54,7 +54,7 @@ export default function LicenseTypesPage() {
   const shouldSkipFetchRef = useRef(false);
 
   // Helper to check if server data has real changes we should accept
-  const hasRealDataChanges = (localTypes, serverTypes) => {
+  const hasRealDataChanges = useCallback((localTypes, serverTypes) => {
     if (!localTypes || !serverTypes) return true;
     
     // Check if server has new IDs we don't have locally
@@ -70,7 +70,7 @@ export default function LicenseTypesPage() {
     if (Math.abs(localTypes.length - serverTypes.length) > 1) return true;
     
     return false;
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -193,7 +193,7 @@ export default function LicenseTypesPage() {
       setLoading(false);
       initialLoadDoneRef.current = true;
     }
-  }, [types]); // Added types dependency to fix ESLint warning
+  }, [types, hasRealDataChanges]); // Added dependencies but hasRealDataChanges is stable
 
   // Auto-refresh: sync data every 10s + on tab focus + cross-tab
   useAutoRefresh(fetchData, { interval: 10000, channel: "license-types-sync" });
