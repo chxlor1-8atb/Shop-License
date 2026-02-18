@@ -20,7 +20,7 @@ import { useEffect, useRef, useCallback } from "react";
  */
 export function useAutoRefresh(fetchFn, options = {}) {
     const {
-        interval = 10000, // Reduced from 30s to 10s for faster updates
+        interval = 15000, // Reduced from 10s to 15s to reduce server load
         enabled = true,
         channel = null,
     } = options;
