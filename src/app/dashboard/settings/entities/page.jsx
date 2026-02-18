@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
+import { useAutoRefresh } from '@/hooks';
 import Loading from '@/components/Loading';
 import Link from 'next/link';
 
@@ -26,6 +27,9 @@ export default function EntitiesSettingsPage() {
     useEffect(() => {
         loadEntities();
     }, []);
+
+    // Auto-refresh: sync data every 30s + on tab focus
+    useAutoRefresh(loadEntities, { interval: 30000 });
 
     const loadEntities = async () => {
         if (!initialLoadDoneRef.current) {

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
+import { useAutoRefresh, notifyDataChange } from "@/hooks";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import ExcelTable from "@/components/ExcelTable";
 
@@ -54,6 +55,9 @@ export default function LicenseTypesPage() {
     fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-refresh: sync data every 30s + on tab focus + cross-tab
+  useAutoRefresh(fetchData, { interval: 30000, channel: "license-types-sync" });
 
   const fetchData = useCallback(async () => {
     if (!initialLoadDoneRef.current) {
@@ -352,6 +356,7 @@ export default function LicenseTypesPage() {
             )
           );
           showSuccess("สร้างประเภทใบอนุญาตเรียบร้อย");
+          notifyDataChange("license-types-sync");
           
           // Save custom values with new ID
           if (Object.keys(customValues).length > 0) {
@@ -440,6 +445,7 @@ export default function LicenseTypesPage() {
       }
       setTypes((prev) => prev.filter((t) => t.id !== id));
       showSuccess("ลบประเภทใบอนุญาตเรียบร้อย");
+      notifyDataChange("license-types-sync");
     } catch (error) {
       showError(error.message);
       fetchData();

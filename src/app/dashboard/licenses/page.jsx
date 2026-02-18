@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { usePagination, useDropdownData } from "@/hooks";
+import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange } from "@/hooks";
 import { API_ENDPOINTS, STATUS_OPTIONS, STATUS_FILTER_OPTIONS } from "@/constants";
 import Swal from "sweetalert2";
 import { showSuccess, showError } from "@/utils/alerts";
@@ -251,6 +251,9 @@ function LicensesPageContent() {
     fetchLicenses();
   }, [fetchLicenses]);
 
+  // Auto-refresh: sync data every 30s + on tab focus + cross-tab
+  useAutoRefresh(fetchLicenses, { interval: 30000, channel: "licenses-sync" });
+
 
 
   // --- Row Handlers ---
@@ -327,6 +330,7 @@ function LicensesPageContent() {
 
         if (data.success) {
           showSuccess("สร้างใบอนุญาตเรียบร้อย");
+          notifyDataChange("licenses-sync");
           fetchLicenses();
         } else {
           showError(data.message);
@@ -347,6 +351,7 @@ function LicensesPageContent() {
         const data = await res.json();
 
         if (data.success) {
+          notifyDataChange("licenses-sync");
           setLicenses((prev) =>
             prev.map((l) => (l.id === updatedRow.id ? updatedRow : l))
           );
@@ -370,6 +375,7 @@ function LicensesPageContent() {
       const data = await res.json();
       if (data.success) {
         showSuccess("ลบใบอนุญาตเรียบร้อย");
+        notifyDataChange("licenses-sync");
         setLicenses((prev) => prev.filter((l) => l.id !== rowId));
       } else {
         showError(data.message);

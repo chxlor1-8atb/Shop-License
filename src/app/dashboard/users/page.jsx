@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { usePagination } from "@/hooks";
+import { usePagination, useAutoRefresh, notifyDataChange } from "@/hooks";
 import { API_ENDPOINTS, ROLE_OPTIONS } from "@/constants";
 import { formatThaiDateTime } from "@/utils/formatters";
 import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
@@ -135,6 +135,9 @@ export default function UsersPage() {
     fetchUsers();
   }, [fetchUsers]);
 
+  // Auto-refresh: sync data every 30s + on tab focus + cross-tab
+  useAutoRefresh(fetchUsers, { interval: 30000, channel: "users-sync" });
+
   const handleRowUpdate = async (updatedRow) => {
     const user = users.find((u) => u.id === updatedRow.id);
     if (!user) return;
@@ -190,6 +193,7 @@ export default function UsersPage() {
 
           if (data.success) {
             showSuccess("ลบผู้ใช้งานสำเร็จ");
+            notifyDataChange("users-sync");
             fetchUsers(); // Refresh to ensure stats are correct
           } else {
             setUsers((prev) => [...prev, userToDelete]);
@@ -267,6 +271,7 @@ export default function UsersPage() {
         setShowModal(false);
         showSuccess(data.message);
         fetchUsers();
+        notifyDataChange("users-sync");
         setSelectedUser(null); // Clear selection
 
         // Only ask for PDF on Create

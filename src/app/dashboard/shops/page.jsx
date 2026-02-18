@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { usePagination, useDropdownData } from "@/hooks";
+import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange } from "@/hooks";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import Pagination from "@/components/ui/Pagination";
@@ -205,6 +205,9 @@ function ShopsPageContent() {
     await performFetchShops(debouncedSearch);
   }, [performFetchShops, debouncedSearch]);
 
+  // Auto-refresh: sync data every 30s + on tab focus + cross-tab
+  useAutoRefresh(fetchShops, { interval: 30000, channel: "shops-sync" });
+
   // --- Row Handlers ---
 
   const handleRowUpdate = async (updatedRow) => {
@@ -254,6 +257,7 @@ function ShopsPageContent() {
 
         if (data.success) {
           showSuccess("สร้างร้านค้าเรียบร้อย");
+          notifyDataChange("shops-sync");
           fetchShops(); // Refresh to get real ID
           mutate('/api/shops?limit=1000'); // Update dropdown cache
         } else {
@@ -275,6 +279,7 @@ function ShopsPageContent() {
         const data = await res.json();
 
         if (data.success) {
+          notifyDataChange("shops-sync");
           // Update local state
           setShops((prev) =>
             prev.map((s) => (s.id === updatedRow.id ? updatedRow : s))
@@ -306,6 +311,7 @@ function ShopsPageContent() {
       const data = await res.json();
       if (data.success) {
         showSuccess("ลบร้านค้าเรียบร้อย");
+        notifyDataChange("shops-sync");
         setShops((prev) => prev.filter((s) => s.id !== rowId));
         mutate('/api/shops?limit=1000'); // Update dropdown cache
       } else {

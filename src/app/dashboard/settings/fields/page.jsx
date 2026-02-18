@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
+import { useAutoRefresh } from '@/hooks';
 import Loading from '@/components/Loading';
 import CustomSelect from '@/components/ui/CustomSelect';
 
@@ -50,6 +51,9 @@ function FieldsContent() {
         loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [entityId]);
+
+    // Auto-refresh: sync data every 30s + on tab focus
+    useAutoRefresh(loadData, { interval: 30000 });
 
     const loadData = async () => {
         if (!initialLoadDoneRef.current) {

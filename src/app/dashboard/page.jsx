@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { API_ENDPOINTS } from '@/constants';
+import { useAutoRefresh } from '@/hooks';
 import { formatThaiDate } from '@/utils/formatters';
 
 /**
@@ -24,6 +25,9 @@ export default function DashboardPage() {
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Auto-refresh: sync dashboard stats every 30s + on tab focus
+    useAutoRefresh(fetchAll, { interval: 30000 });
 
     const fetchAll = async () => {
         try {

@@ -13,7 +13,7 @@ export { usePagination } from './usePagination';
 export { useSchema } from './useSchema';
 
 // SWR-based data hooks (recommended)
-export { 
+export {
     useShops,
     useLicenses,
     useLicenseTypes,
@@ -46,3 +46,6 @@ export {
     useAsync,
     useMemoCompare
 } from './useOptimized';
+
+// Auto-refresh hook for real-time sync
+export { useAutoRefresh, notifyDataChange } from './useAutoRefresh';
