@@ -1,9 +1,11 @@
 
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { sanitizeInt, sanitizeString, validateEnum, sanitizeDate } from '@/lib/security';
+import { CACHE_TAGS } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -231,6 +233,10 @@ export async function POST(request) {
             details: `เพิ่มใบอนุญาตหมายเลข: ${license_number}`
         });
 
+        // Revalidate cache so sidebar badge updates immediately
+        revalidateTag(CACHE_TAGS.LICENSES);
+        revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
+
         return NextResponse.json({ success: true, message: 'เพิ่มใบอนุญาตเรียบร้อยแล้ว' });
     } catch (err) {
         console.error('[POST /api/licenses] Error:', err);
@@ -313,6 +319,10 @@ export async function PUT(request) {
             details: `แก้ไขใบอนุญาตหมายเลข: ${license_number}`
         });
 
+        // Revalidate cache so sidebar badge updates immediately
+        revalidateTag(CACHE_TAGS.LICENSES);
+        revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
+
         return NextResponse.json({ success: true, message: 'บันทึกใบอนุญาตเรียบร้อยแล้ว' });
     } catch (err) {
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
@@ -346,6 +356,10 @@ export async function DELETE(request) {
             entityId: id,
             details: `ลบใบอนุญาตหมายเลข: ${license?.license_number || id}`
         });
+
+        // Revalidate cache so sidebar badge updates immediately
+        revalidateTag(CACHE_TAGS.LICENSES);
+        revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
 
         return NextResponse.json({ success: true, message: 'ลบใบอนุญาตเรียบร้อยแล้ว' });
     } catch (err) {

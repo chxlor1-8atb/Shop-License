@@ -1,9 +1,11 @@
 
 import { fetchAll, fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAuth, requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { sanitizeInt, sanitizeString, validateEnum } from '@/lib/security';
+import { CACHE_TAGS } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -224,6 +226,10 @@ export async function POST(request) {
             details: `เพิ่มร้านค้า: ${shop_name}`
         });
 
+        // Revalidate cache so dashboard stats update immediately
+        revalidateTag(CACHE_TAGS.SHOPS);
+        revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
+
         return NextResponse.json({ success: true, message: 'เพิ่มร้านค้าเรียบร้อยแล้ว', shop_id: result?.[0]?.id });
     } catch (err) {
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
@@ -277,6 +283,10 @@ export async function PUT(request) {
             details: `แก้ไขร้านค้า: ${shop_name}`
         });
 
+        // Revalidate cache so dashboard stats update immediately
+        revalidateTag(CACHE_TAGS.SHOPS);
+        revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
+
         return NextResponse.json({ success: true, message: 'อัปเดตร้านค้าเรียบร้อยแล้ว' });
     } catch (err) {
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
@@ -312,6 +322,10 @@ export async function DELETE(request) {
             entityId: id,
             details: `ลบร้านค้า: ${shop?.shop_name || id}`
         });
+
+        // Revalidate cache so dashboard stats update immediately
+        revalidateTag(CACHE_TAGS.SHOPS);
+        revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
 
         return NextResponse.json({ success: true, message: 'ลบร้านค้าเรียบร้อยแล้ว' });
     } catch (err) {

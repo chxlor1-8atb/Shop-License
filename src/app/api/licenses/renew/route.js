@@ -1,9 +1,11 @@
 
 import { fetchOne, executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { logActivity, ACTIVITY_ACTIONS, ENTITY_TYPES } from '@/lib/activityLogger';
 import { requireAdmin, getCurrentUser, safeErrorMessage } from '@/lib/api-helpers';
 import { sanitizeInt, sanitizeDate } from '@/lib/security';
+import { CACHE_TAGS } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +69,10 @@ export async function POST(request) {
             entityId: id,
             details: `ต่ออายุใบอนุญาต ${license.license_number || id} → หมดอายุ ${newExpiryDate}`
         });
+
+        // Revalidate cache so sidebar badge updates immediately
+        revalidateTag(CACHE_TAGS.LICENSES);
+        revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
 
         return NextResponse.json({
             success: true,
