@@ -73,16 +73,20 @@ export const getCachedShops = unstable_cache(
 );
 
 /**
- * Helper: Get warning days from notification_settings (not cached by unstable_cache)
+ * Helper: Get warning days from notification_settings (cached 5 minutes)
  */
-export async function getWarningDays() {
-    try {
-        const settings = await fetchOne('SELECT days_before_expiry FROM notification_settings WHERE id = 1');
-        return parseInt(settings?.days_before_expiry) || 30;
-    } catch {
-        return 30;
-    }
-}
+export const getWarningDays = unstable_cache(
+    async () => {
+        try {
+            const settings = await fetchOne('SELECT days_before_expiry FROM notification_settings WHERE id = 1');
+            return parseInt(settings?.days_before_expiry) || 30;
+        } catch {
+            return 30;
+        }
+    },
+    ['warning-days'],
+    { revalidate: CACHE_DURATION.MEDIUM }
+);
 
 /**
  * Get dashboard stats with caching (1 minute)

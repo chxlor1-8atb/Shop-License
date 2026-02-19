@@ -10,6 +10,9 @@ import { neon, neonConfig } from '@neondatabase/serverless';
  * - Sensitive data sanitization in logs
  */
 
+// Cache HTTP connections to reduce cold start latency
+neonConfig.fetchConnectionCache = true;
+
 // Create Neon SQL client
 let sql;
 try {

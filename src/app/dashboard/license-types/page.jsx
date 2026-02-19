@@ -188,6 +188,7 @@ export default function LicenseTypesPage() {
       setLoading(false);
       initialLoadDoneRef.current = true;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasRealDataChanges]); // Removed `types` from deps to prevent re-fetch loop
 
   // Auto-refresh: sync data every 60s + on tab focus + cross-tab
