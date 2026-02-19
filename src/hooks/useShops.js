@@ -104,6 +104,7 @@ export function useShops({ page, limit, search }) {
 
             if (data.success) {
                 showSuccess(data.message);
+                await fetchShops();
                 return true;
             }
             showError(data.message);
@@ -112,7 +113,7 @@ export function useShops({ page, limit, search }) {
             showError(err.message);
             return false;
         }
-    }, []);
+    }, [fetchShops]);
 
     const updateShopField = useCallback(async (shopId, field, value) => {
         const shop = shops.find(s => s.id === shopId);
@@ -134,13 +135,11 @@ export function useShops({ page, limit, search }) {
         const data = await response.json();
 
         if (data.success) {
-            setShops(prev => prev.map(s =>
-                s.id === shopId ? { ...s, [field]: value } : s
-            ));
+            await fetchShops();
             return true;
         }
         throw new Error(data.message);
-    }, [shops]);
+    }, [shops, fetchShops]);
 
     const deleteShop = useCallback(async (id) => {
         const confirmed = await confirmDelete('ข้อมูลร้านค้า');
@@ -154,6 +153,8 @@ export function useShops({ page, limit, search }) {
 
             if (data.success) {
                 showSuccess(data.message);
+                // Revalidate data immediately after successful delete
+                await fetchShops();
                 return true;
             }
             showError(data.message);
@@ -162,7 +163,7 @@ export function useShops({ page, limit, search }) {
             showError(err.message);
             return false;
         }
-    }, []);
+    }, [fetchShops]);
 
     return {
         shops,

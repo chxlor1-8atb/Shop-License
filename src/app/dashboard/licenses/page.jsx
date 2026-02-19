@@ -408,9 +408,11 @@ function LicensesPageContent() {
         notifyDataChange("licenses-sync");
         // Optimistic update: remove license from UI immediately
         setLicenses((prev) => prev.filter((l) => l.id !== rowId));
+        // Revalidate SWR cache to update other components
+        mutate(() => true, undefined, { revalidate: true });
       } else {
         showError(data.message);
-        // No need to call fetchLicenses() - optimistic update handles UI
+        fetchLicenses();
       }
     } catch (error) {
       showError(error.message);
