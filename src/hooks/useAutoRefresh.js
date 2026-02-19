@@ -20,7 +20,7 @@ import { useEffect, useRef, useCallback } from "react";
  */
 export function useAutoRefresh(fetchFn, options = {}) {
     const {
-        interval = 15000, // Reduced from 10s to 15s to reduce server load
+        interval = 60000, // 60 seconds default — auto-refresh shouldn't hammer the server
         enabled = true,
         channel = null,
     } = options;
@@ -38,8 +38,8 @@ export function useAutoRefresh(fetchFn, options = {}) {
     // Debounced fetch — prevents rapid consecutive calls
     const debouncedFetch = useCallback(() => {
         const now = Date.now();
-        // Minimum 500ms between fetches (much faster)
-        if (now - lastFetchRef.current < 500) return;
+        // Minimum 2s between fetches to prevent rapid consecutive calls
+        if (now - lastFetchRef.current < 2000) return;
         if (!isMountedRef.current) return;
 
         lastFetchRef.current = now;
@@ -85,17 +85,14 @@ export function useAutoRefresh(fetchFn, options = {}) {
             }
         };
 
-        // — Window focus: refetch when user clicks back on the tab
-        const handleFocus = () => {
-            debouncedFetch();
-        };
+        // Note: removed window 'focus' listener — visibilitychange already handles tab switching
+        // Having both caused double-fetches on every tab switch
 
         // Start polling
         startPolling();
 
         // Add event listeners
         document.addEventListener("visibilitychange", handleVisibilityChange);
-        window.addEventListener("focus", handleFocus);
 
         // — Cross-tab sync via BroadcastChannel
         let bc = null;
@@ -115,7 +112,6 @@ export function useAutoRefresh(fetchFn, options = {}) {
             isMountedRef.current = false;
             stopPolling();
             document.removeEventListener("visibilitychange", handleVisibilityChange);
-            window.removeEventListener("focus", handleFocus);
             if (bc) {
                 bc.close();
             }

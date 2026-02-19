@@ -93,13 +93,11 @@ export default function LicenseTypesPage() {
       setLoading(true);
     }
     try {
-      const timestamp = Date.now();
-      
       // Parallel fetch all data at once - significantly faster than sequential
       const [typesRes, fieldsRes, valuesRes] = await Promise.all([
-        fetch(`${API_ENDPOINTS.LICENSE_TYPES}?t=${timestamp}`, { credentials: "include" }),
-        fetch(`/api/custom-fields?entity_type=license_types&t=${timestamp}`, { credentials: "include" }),
-        fetch(`/api/custom-field-values?entity_type=license_types&t=${timestamp}`, { credentials: "include" })
+        fetch(API_ENDPOINTS.LICENSE_TYPES, { credentials: "include" }),
+        fetch(`/api/custom-fields?entity_type=license_types`, { credentials: "include" }),
+        fetch(`/api/custom-field-values?entity_type=license_types`, { credentials: "include" })
       ]);
       
       const [typesData, fieldsData, valuesData] = await Promise.all([
@@ -120,23 +118,15 @@ export default function LicenseTypesPage() {
           valuesByEntity[v.entity_id][v.field_name] = v.value;
         });
 
-        console.log('Raw types from API:', rawTypes); // Debug log
-        console.log('Values by entity:', valuesByEntity); // Debug log
-        
         // Merge
         mergedTypes = rawTypes.map((t) => ({
           ...t,
           ...(valuesByEntity[t.id] || {}),
         }));
-
-        console.log('Merged types:', mergedTypes); // Debug log
         
         // Only update state if we're not in the middle of row creation OR if we have real data changes
         if (!shouldSkipFetchRef.current || hasRealDataChanges(types, mergedTypes)) {
-          console.log('Updating types with server data');
           setTypes(mergedTypes);
-        } else {
-          console.log('Skipping types update - shouldSkipFetch is true or no real changes');
         }
         shouldSkipFetchRef.current = true;
       }
@@ -198,10 +188,10 @@ export default function LicenseTypesPage() {
       setLoading(false);
       initialLoadDoneRef.current = true;
     }
-  }, [types, hasRealDataChanges]); // Added dependencies but hasRealDataChanges is stable
+  }, [hasRealDataChanges]); // Removed `types` from deps to prevent re-fetch loop
 
-  // Auto-refresh: sync data every 15s + on tab focus + cross-tab
-  useAutoRefresh(fetchData, { interval: 15000, channel: "license-types-sync" });
+  // Auto-refresh: sync data every 60s + on tab focus + cross-tab
+  useAutoRefresh(fetchData, { interval: 60000, channel: "license-types-sync" });
 
   // Computed statistics
   const stats = useMemo(
@@ -383,7 +373,6 @@ export default function LicenseTypesPage() {
         
         // Prevent duplicate submissions
         if (updatedRow._isSubmitting) {
-          console.log('Already submitting, skipping...');
           return;
         }
         
@@ -417,9 +406,9 @@ export default function LicenseTypesPage() {
           showSuccess("สร้างประเภทใบอนุญาตเรียบร้อย");
           notifyDataChange("license-types-sync");
           
-          // Invalidate SWR cache to refresh dropdown data
-          mutate('/api/license-types/dropdown', undefined, { revalidate: true });
-          mutate('/api/license-types'); // Also invalidate main endpoint
+          // Targeted SWR cache invalidation
+          mutate('/api/license-types/dropdown');
+          mutate('/api/license-types');
           
           // Re-enable data fetching after successful creation
           shouldSkipFetchRef.current = false;
@@ -428,7 +417,6 @@ export default function LicenseTypesPage() {
           
           // Save custom values with new ID
           if (Object.keys(customValues).length > 0) {
-            console.log('Saving custom values:', customValues);
             const valuesPayload = {
               entity_type: "license_types",
               entity_id: newTypeId,
@@ -443,20 +431,11 @@ export default function LicenseTypesPage() {
               });
               const customData = await customRes.json();
               if (!customData.success) {
-                console.error("Failed to save custom values:", customData);
-                console.error("Error details:", customData.details);
-                // Show detailed error in console for debugging
-                if (customData.details) {
-                  console.error("Full error details:", JSON.stringify(customData.details, null, 2));
-                }
-              } else {
-                console.log("Custom values saved successfully");
+                console.error("Failed to save custom values:", customData.message);
               }
             } catch (customError) {
               console.error("Error saving custom values:", customError);
             }
-          } else {
-            console.log("No custom values to save");
           }
         } else {
           // Fallback to fetchData if no ID returned
@@ -479,7 +458,6 @@ export default function LicenseTypesPage() {
 
       // Save Custom Field Values (if any)
       if (Object.keys(customValues).length > 0) {
-        console.log('Updating custom values:', customValues);
         const valuesPayload = {
           entity_type: "license_types",
           entity_id: typeId,
@@ -496,14 +474,10 @@ export default function LicenseTypesPage() {
           const valData = await valRes.json();
           if (!valData.success) {
             console.warn("Failed to save custom values:", valData.message);
-          } else {
-            console.log("Custom values updated successfully");
           }
         } catch (customError) {
           console.error("Error updating custom values:", customError);
         }
-      } else {
-        console.log("No custom values to update");
       }
 
       setTypes((prev) =>
@@ -546,9 +520,9 @@ export default function LicenseTypesPage() {
       showSuccess("ลบประเภทใบอนุญาตเรียบร้อย");
       notifyDataChange("license-types-sync");
       
-      // Invalidate SWR cache to refresh dropdown data
-      mutate('/api/license-types/dropdown', undefined, { revalidate: true });
-      mutate('/api/license-types'); // Also invalidate main endpoint
+      // Targeted SWR cache invalidation
+      mutate('/api/license-types/dropdown');
+      mutate('/api/license-types');
       
       // Force refresh to ensure UI is in sync with server
       shouldSkipFetchRef.current = false;

@@ -349,11 +349,11 @@ export async function POST(request) {
                                 // Insert custom field value
                                 try {
                                     await executeQuery(`
-                                        INSERT INTO custom_field_values(custom_field_id, entity_id, field_value, updated_at)
-                                        VALUES($1, $2, $3, NOW())
+                                        INSERT INTO custom_field_values(custom_field_id, entity_id, entity_type, field_value, updated_at)
+                                        VALUES($1, $2, $3, $4, NOW())
                                         ON CONFLICT(custom_field_id, entity_id) 
                                         DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
-                                    `, [field.id, newLicenseId, fieldValue]);
+                                    `, [field.id, newLicenseId, 'licenses', fieldValue]);
 
                                     customFieldSuccessCount++;
                                 } catch (cfErr) {

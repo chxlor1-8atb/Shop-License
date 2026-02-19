@@ -153,7 +153,7 @@ function LicensesPageContent() {
 
     try {
       const res = await fetch(
-        `/api/custom-fields?entity_type=licenses&t=${Date.now()}`,
+        `/api/custom-fields?entity_type=licenses`,
         { credentials: "include" }
       );
       const data = await res.json();
@@ -259,7 +259,7 @@ function LicensesPageContent() {
   }, [fetchLicenses]);
 
   // Auto-refresh: sync data every 10s + on tab focus + cross-tab
-  useAutoRefresh(fetchLicenses, { interval: 10000, channel: "licenses-sync" });
+  useAutoRefresh(fetchLicenses, { interval: 60000, channel: "licenses-sync" });
 
 
 
@@ -358,11 +358,9 @@ function LicensesPageContent() {
             }
           }
           
-          // Force refresh all dropdown data to ensure real-time updates
-          mutate('/api/shops/dropdown', undefined, { revalidate: true });
-          mutate('/api/license-types/dropdown', undefined, { revalidate: true });
-          // Also trigger a global revalidation to update any cached data
-          mutate(() => true, undefined, { revalidate: true });
+          // Targeted cache invalidation for dropdowns only
+          mutate('/api/shops/dropdown');
+          mutate('/api/license-types/dropdown');
         } else {
           showError(data.message);
         }
@@ -661,10 +659,8 @@ function LicensesPageContent() {
     }
 
     showSuccess("สร้างร้านค้าเรียบร้อย กรุณาเลือกร้านค้าใหม่จากรายการ");
-    // Force refresh all dropdown data to ensure real-time updates
-    mutate('/api/shops/dropdown', undefined, { revalidate: true });
-    // Also trigger a global revalidation to update any cached data
-    mutate(() => true, undefined, { revalidate: true });
+    // Targeted cache invalidation for shop dropdown only
+    mutate('/api/shops/dropdown');
   };
 
   // Handle creating new license via quick add modal
@@ -693,12 +689,10 @@ function LicensesPageContent() {
     }
 
     showSuccess("สร้างใบอนุญาตเรียบร้อย");
-    // No need to call fetchLicenses() - SWR will handle revalidation
-    // Force refresh all dropdown data to ensure real-time updates
-    mutate('/api/shops/dropdown', undefined, { revalidate: true });
-    mutate('/api/license-types/dropdown', undefined, { revalidate: true });
-    // Also trigger a global revalidation to update any cached data
-    mutate(() => true, undefined, { revalidate: true });
+    // Targeted cache invalidation
+    mutate('/api/shops/dropdown');
+    mutate('/api/license-types/dropdown');
+    fetchLicenses();
   };
 
   return (

@@ -34,11 +34,11 @@ export const swrConfig = {
     refreshWhenOffline: false,       // Don't refresh when offline
 
     // Deduplication
-    dedupingInterval: 500,           // Dedupe requests within 0.5 seconds (much faster)
+    dedupingInterval: 2000,           // Dedupe requests within 2 seconds (prevent spam)
 
     // Error retry
     errorRetryCount: 3,              // Retry failed requests 3 times
-    errorRetryInterval: 500,        // Wait 0.5 seconds between retries (faster)
+    errorRetryInterval: 3000,        // Wait 3 seconds between retries
     onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
         // Never retry on 404 or 401
         if (error.status === 404 || error.status === 401) return;
@@ -91,7 +91,7 @@ export const swrConfigVariants = {
         ...swrConfig,
         refreshInterval: 0,
         revalidateOnFocus: true,          // Enable focus revalidation for lists
-        dedupingInterval: 200,            // Much faster deduping for lists
+        dedupingInterval: 1000,            // 1 second deduping for lists
     },
 
     // For heavy data (reports, exports)

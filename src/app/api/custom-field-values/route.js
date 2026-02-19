@@ -67,22 +67,22 @@ export async function GET(request) {
 // POST - Save/Update custom field values for an entity
 export async function POST(request) {
     console.log('POST /api/custom-field-values - Starting request');
-    
+
     // Security: Require Admin for write operations
     const authError = await requireAdmin();
     if (authError) {
         console.log('POST /api/custom-field-values - Auth failed:', authError);
         return authError;
     }
-    
+
     console.log('POST /api/custom-field-values - Auth passed');
 
     let body, entity_type, entity_id, values;
-    
+
     try {
         body = await request.json();
         console.log('POST /api/custom-field-values - Request body:', JSON.stringify(body, null, 2));
-        
+
         values = body.values;
         entity_type = validateEnum(body.entity_type, ALLOWED_ENTITY_TYPES, '');
         entity_id = sanitizeInt(body.entity_id, 0, 1);
@@ -103,7 +103,7 @@ export async function POST(request) {
             'SELECT id, field_name FROM custom_fields WHERE entity_type = $1 AND is_active = true',
             [entity_type]
         );
-        
+
         console.log('Found custom fields:', fields);
 
         // If no custom fields exist, just return success
@@ -122,11 +122,11 @@ export async function POST(request) {
         // Upsert each value
         const entries = Object.entries(values);
         console.log('Processing custom values entries:', entries);
-        
+
         for (const [fieldName, value] of entries) {
             const fieldId = fieldMap[fieldName];
             console.log(`Processing field: ${fieldName}, fieldId: ${fieldId}, value:`, value);
-            
+
             if (!fieldId) {
                 console.log(`Skipping unknown field: ${fieldName}`);
                 continue; // Skip unknown fields
@@ -134,16 +134,16 @@ export async function POST(request) {
 
             // Use INSERT ... ON CONFLICT for upsert
             const query = `
-                INSERT INTO custom_field_values(custom_field_id, entity_id, field_value, updated_at)
-                VALUES($1, $2, $3, NOW())
+                INSERT INTO custom_field_values(custom_field_id, entity_id, entity_type, field_value, updated_at)
+                VALUES($1, $2, $3, $4, NOW())
                 ON CONFLICT(custom_field_id, entity_id) 
                 DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
             `;
-            const params = [fieldId, entity_id, value?.toString() || ''];
-            
+            const params = [fieldId, entity_id, entity_type, value?.toString() || ''];
+
             console.log('Executing query:', query);
             console.log('Query params:', params);
-            
+
             await executeQuery(query, params);
             console.log(`Successfully saved field: ${fieldName}`);
         }
@@ -156,14 +156,14 @@ export async function POST(request) {
         console.error('Request body:', body);
         console.error('Entity type:', entity_type, 'Entity ID:', entity_id);
         console.error('Custom values:', values);
-        
+
         // Return detailed error for debugging
-        const errorMessage = process.env.NODE_ENV === 'production' 
+        const errorMessage = process.env.NODE_ENV === 'production'
             ? err.message || 'Unknown error occurred'
             : `${err.message}\n\nStack: ${err.stack}`;
-            
-        return NextResponse.json({ 
-            success: false, 
+
+        return NextResponse.json({
+            success: false,
             message: errorMessage,
             details: {
                 error: err.message,

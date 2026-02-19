@@ -109,7 +109,7 @@ function ShopsPageContent() {
   const fetchCustomColumns = useCallback(async () => {
     try {
       const res = await fetch(
-        `/api/custom-fields?entity_type=shops&t=${Date.now()}`,
+        `/api/custom-fields?entity_type=shops`,
         { credentials: "include" }
       );
       const data = await res.json();
@@ -160,7 +160,7 @@ function ShopsPageContent() {
   }, [fetchCustomColumns]);
 
   // Auto-refresh: sync data every 30s + on tab focus + cross-tab
-  useAutoRefresh(fetchShops, { interval: 30000, channel: "shops-sync" });
+  useAutoRefresh(fetchShops, { interval: 60000, channel: "shops-sync" });
 
   // --- Row Handlers ---
 
@@ -247,18 +247,11 @@ function ShopsPageContent() {
             setLocalShops(prev => [newShop, ...prev]);
           }
           
-          // Update dropdown data with error handling
+          // Targeted cache invalidation
           try {
-            mutate('/api/shops/dropdown', undefined, { revalidate: true });
+            mutate('/api/shops/dropdown');
           } catch (err) {
             console.error('Failed to mutate dropdown:', err);
-          }
-          
-          // Also trigger a global revalidation to update any cached data
-          try {
-            mutate(() => true, undefined, { revalidate: true });
-          } catch (err) {
-            console.error('Failed to global mutate:', err);
           }
         } else {
           showError(data.message || "ไม่สามารถสร้างร้านค้าได้");
@@ -568,18 +561,11 @@ function ShopsPageContent() {
         setLocalShops([]);
       }, 500); // Reduced from 2s to 500ms for faster UI response
       
-      // Update dropdown data with error handling
+      // Targeted cache invalidation
       try {
-        mutate('/api/shops/dropdown', undefined, { revalidate: true });
+        mutate('/api/shops/dropdown');
       } catch (err) {
         console.error('Failed to mutate dropdown:', err);
-      }
-      
-      // Also trigger a global revalidation to update any cached data
-      try {
-        mutate(() => true, undefined, { revalidate: true });
-      } catch (err) {
-        console.error('Failed to global mutate:', err);
       }
     } catch (error) {
       console.error('Quick add shop error:', error);
