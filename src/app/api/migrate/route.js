@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import sql from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
 import { requireAdmin } from '@/lib/api-helpers';
@@ -26,8 +26,6 @@ export async function POST() {
     if (authError) return authError;
 
     try {
-        const sql = neon(process.env.DATABASE_URL);
-
         // Read schema.sql
         const schemaPath = path.join(process.cwd(), 'schema.sql');
         const schema = fs.readFileSync(schemaPath, 'utf8');

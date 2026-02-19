@@ -1,4 +1,5 @@
-import { neon, neonConfig } from '@neondatabase/serverless';
+import { neon, neonConfig, Pool } from '@neondatabase/serverless';
+import ws from 'ws';
 
 /**
  * Database Configuration with Enhanced Security
@@ -8,24 +9,44 @@ import { neon, neonConfig } from '@neondatabase/serverless';
  * - Table name whitelist
  * - Query timeout protection
  * - Sensitive data sanitization in logs
+ * 
+ * Performance: Uses WebSocket Pool for persistent connections (~5-20ms/query)
+ * instead of HTTP driver (~100-300ms/query)
  */
 
-// Cache HTTP connections to reduce cold start latency
-neonConfig.fetchConnectionCache = true;
+// Enable WebSocket connections for Neon serverless
+neonConfig.webSocketConstructor = ws;
+neonConfig.pipelineConnect = 'password';
 
-// Create Neon SQL client
+// Create connection pool (persistent WebSocket connections)
+let pool;
 let sql;
 try {
     if (!process.env.DATABASE_URL) {
         console.error('CRITICAL: DATABASE_URL is not defined. Database queries will fail.');
     }
-    // Initialize with optimized settings
-    sql = process.env.DATABASE_URL
-        ? neon(process.env.DATABASE_URL)
-        : async () => { throw new Error('DATABASE_URL is not configured'); };
+    if (process.env.DATABASE_URL) {
+        pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
+        // Also keep neon() for tagged template queries (used by logger etc.)
+        sql = neon(process.env.DATABASE_URL);
+    } else {
+        const noDb = async () => { throw new Error('DATABASE_URL is not configured'); };
+        pool = { query: noDb, end: noDb };
+        sql = noDb;
+    }
 } catch (e) {
     console.error('Failed to initialize Neon client:', e);
-    sql = async () => { throw new Error('Database client failed to initialize'); };
+    const failDb = async () => { throw new Error('Database client failed to initialize'); };
+    pool = { query: failDb, end: failDb };
+    sql = failDb;
+}
+
+// Warm up pool connection on module load (async, non-blocking)
+// This pre-establishes WebSocket so the first real query is fast
+if (pool?.query && process.env.DATABASE_URL) {
+    pool.query('SELECT 1').catch(() => {
+        // Silent fail — warmup is best-effort
+    });
 }
 
 // Query timeout in milliseconds (30 seconds)
@@ -59,10 +80,11 @@ async function executeWithTimeout(queryFn, timeout = QUERY_TIMEOUT) {
     return Promise.race([queryFn(), timeoutPromise]);
 }
 
-// Database helper functions
+// Database helper functions — uses Pool for persistent WebSocket connections
 export async function query(sqlQuery, params = []) {
     try {
-        return await executeWithTimeout(() => sql(sqlQuery, params));
+        const result = await executeWithTimeout(() => pool.query(sqlQuery, params));
+        return result.rows;
     } catch (error) {
         console.error('Database query error:', sanitizeErrorMessage(error));
         throw new Error(sanitizeErrorMessage(error));
@@ -124,8 +146,8 @@ export async function insert(table, data) {
     const values = Object.values(data);
 
     const sqlQuery = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) RETURNING id`;
-    const result = await sql(sqlQuery, values);
-    return result[0]?.id;
+    const result = await pool.query(sqlQuery, values);
+    return result.rows[0]?.id;
 }
 
 export async function update(table, data, where, whereParams = []) {
@@ -141,8 +163,8 @@ export async function update(table, data, where, whereParams = []) {
     const whereClause = where.replace(/\?/g, () => `$${paramIndex++}`);
 
     const sqlQuery = `UPDATE ${table} SET ${setClause} WHERE ${whereClause}`;
-    const result = await sql(sqlQuery, values);
-    return result.length;
+    const result = await pool.query(sqlQuery, values);
+    return result.rowCount;
 }
 
 export async function remove(table, where, params = []) {
@@ -152,8 +174,10 @@ export async function remove(table, where, params = []) {
     const whereClause = where.replace(/\?/g, () => `$${paramIndex++}`);
 
     const sqlQuery = `DELETE FROM ${table} WHERE ${whereClause}`;
-    const result = await sql(sqlQuery, params);
-    return result.length;
+    const result = await pool.query(sqlQuery, params);
+    return result.rowCount;
 }
 
+// Export pool as default, and sql for tagged template queries
+export { pool };
 export default sql;

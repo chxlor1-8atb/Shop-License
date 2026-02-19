@@ -30,10 +30,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const action = searchParams.get('action') || 'stats';
 
-        if (action === 'recent_activity') {
-            return await getRecentActivity(session, searchParams);
-        }
-
+        // Fetch warning days once for all actions
         const warningDays = await getWarningDays();
 
         switch (action) {
@@ -43,6 +40,8 @@ export async function GET(request) {
                 return await getExpiringCount(warningDays);
             case 'license_breakdown':
                 return await getLicenseBreakdown(warningDays);
+            case 'recent_activity':
+                return await getRecentActivity(session, searchParams);
             default:
                 return await getStats(warningDays);
         }

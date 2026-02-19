@@ -113,10 +113,11 @@ export function useLicenseTypes() {
 export function useDropdownData() {
     const { trackStart, metrics } = usePerformanceMonitor('useDropdownData');
     
-    const { data: shopsData, isLoading: shopsLoading, error: shopsError, mutate: refreshShops } = useSWR(
-        '/api/shops/dropdown',
+    // Single API call for both shops + license types (combined endpoint)
+    const { data, isLoading, error, mutate } = useSWR(
+        '/api/dropdowns',
         (url) => {
-            const tracker = trackStart('fetch-shops');
+            const tracker = trackStart('fetch-dropdowns');
             return fetcher(url).finally(tracker.end);
         },
         { 
@@ -124,38 +125,15 @@ export function useDropdownData() {
             revalidateOnReconnect: true,
             refreshWhenOffline: false,
             refreshWhenHidden: false,
-            dedupingInterval: 100, // Ultra-fast deduping for dropdowns
-            errorRetryCount: 3,
-            errorRetryInterval: 200,
-        }
-    );
-
-    const { data: typesData, isLoading: typesLoading, error: typesError, mutate: refreshTypes } = useSWR(
-        '/api/license-types/dropdown',
-        (url) => {
-            const tracker = trackStart('fetch-license-types');
-            return fetcher(url).finally(tracker.end);
-        },
-        { 
-            revalidateOnFocus: true,
-            revalidateOnReconnect: true,
-            refreshWhenOffline: false,
-            refreshWhenHidden: false,
-            dedupingInterval: 100, // Ultra-fast deduping for dropdowns
+            dedupingInterval: 100,
             errorRetryCount: 3,
             errorRetryInterval: 200,
         }
     );
 
     // Wrap in useMemo to prevent dependency changes on every render
-    const shops = useMemo(() => {
-        const shopsList = shopsData?.shops || [];
-        return shopsList;
-    }, [shopsData]);
-    const licenseTypes = useMemo(() => {
-        const typesList = typesData?.types || typesData?.licenseTypes || [];
-        return typesList;
-    }, [typesData]);
+    const shops = useMemo(() => data?.shops || [], [data]);
+    const licenseTypes = useMemo(() => data?.types || [], [data]);
 
     // Pre-formatted options for CustomSelect
     const shopOptions = useMemo(() => shops.map(s => ({
@@ -168,12 +146,10 @@ export function useDropdownData() {
         label: t.name
     })), [licenseTypes]);
 
-    // Refresh function to update both shops and types
+    // Refresh function
     const refresh = useCallback(() => {
-        // Force revalidation by clearing cache and refetching
-        refreshShops(undefined, { revalidate: true });
-        refreshTypes(undefined, { revalidate: true });
-    }, [refreshShops, refreshTypes]);
+        mutate(undefined, { revalidate: true });
+    }, [mutate]);
 
     return {
         shops,
@@ -181,8 +157,8 @@ export function useDropdownData() {
         shopOptions,
         typeOptions,
         refresh,
-        isLoading: shopsLoading || typesLoading,
-        error: shopsError || typesError,
+        isLoading,
+        error,
     };
 }
 

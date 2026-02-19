@@ -20,13 +20,14 @@ const nextConfig = {
 
     // Experimental optimizations (reduce bundle size significantly)
     experimental: {
+        // Mark Node.js-only packages as external (not bundled for client)
+        serverComponentsExternalPackages: ['ws', '@neondatabase/serverless'],
         // Optimize package imports - tree shake unused exports
         optimizePackageImports: [
             'chart.js',
             'react-chartjs-2',
             'sweetalert2',
             'bcryptjs',
-            '@neondatabase/serverless',
             'iron-session',
             'lucide-react',
             'react-icons',
