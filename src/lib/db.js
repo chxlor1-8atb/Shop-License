@@ -1,7 +1,13 @@
-import { neon, neonConfig } from '@neondatabase/serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import ws from 'ws';
+
+// Enable WebSocket connections for Neon (required in Node.js environment)
+neonConfig.webSocketConstructor = ws;
 
 /**
  * Database Configuration with Enhanced Security
+ * 
+ * Uses WebSocket Pool for persistent connections (much faster than HTTP driver)
  * 
  * Security Features:
  * - Parameterized queries only (SQL injection prevention)
@@ -10,19 +16,25 @@ import { neon, neonConfig } from '@neondatabase/serverless';
  * - Sensitive data sanitization in logs
  */
 
-// Create Neon SQL client
-let sql;
+// Create connection pool with WebSocket
+let pool;
 try {
     if (!process.env.DATABASE_URL) {
         console.error('CRITICAL: DATABASE_URL is not defined. Database queries will fail.');
     }
-    // Initialize with optimized settings
-    sql = process.env.DATABASE_URL
-        ? neon(process.env.DATABASE_URL)
-        : async () => { throw new Error('DATABASE_URL is not configured'); };
+    pool = process.env.DATABASE_URL
+        ? new Pool({ connectionString: process.env.DATABASE_URL, max: 10 })
+        : null;
 } catch (e) {
-    console.error('Failed to initialize Neon client:', e);
-    sql = async () => { throw new Error('Database client failed to initialize'); };
+    console.error('Failed to initialize database pool:', e);
+    pool = null;
+}
+
+// Wrapper to match existing API: sql(query, params) => rows
+async function sql(sqlQuery, params = []) {
+    if (!pool) throw new Error('Database pool is not initialized');
+    const result = await pool.query(sqlQuery, params);
+    return result.rows;
 }
 
 // Query timeout in milliseconds (30 seconds)
@@ -86,7 +98,6 @@ const ALLOWED_TABLES = [
     'custom_fields',
     'custom_field_values',
     'audit_logs',
-    'schema_definitions',
     'entities',
     'entity_fields',
     'entity_records'

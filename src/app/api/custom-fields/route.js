@@ -199,7 +199,10 @@ export async function DELETE(request) {
             return NextResponse.json({ success: false, message: 'Invalid field ID' }, { status: 400 });
         }
 
-        // Delete field (cascade will delete values too)
+        // First: delete all associated values from custom_field_values
+        await executeQuery('DELETE FROM custom_field_values WHERE custom_field_id = $1', [id]);
+
+        // Then: delete the field definition itself
         await executeQuery('DELETE FROM custom_fields WHERE id = $1', [id]);
 
         // Log activity
