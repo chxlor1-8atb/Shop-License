@@ -319,8 +319,15 @@ export async function DELETE(request) {
         // Get shop info before deleting for logging
         const shop = await fetchOne('SELECT shop_name FROM shops WHERE id = $1', [id]);
 
-        // Check for licenses first? Usually constraints handle this, but let's just create generic logic.
-        // Assuming cascade or check logic. For now just delete.
+        // Check for licenses first - prevent deletion if shop has licenses
+        const licenseCount = await fetchOne('SELECT COUNT(*) as count FROM licenses WHERE shop_id = $1', [id]);
+        if (licenseCount && parseInt(licenseCount.count) > 0) {
+            return NextResponse.json({ 
+                success: false, 
+                message: `ไม่สามารถลบร้านค้าได้ (มีใบอนุญาต ${licenseCount.count} ใบผูกอยู่)` 
+            }, { status: 400 });
+        }
+
         // Also delete associated custom field values from the separate table if any exist (for backward compatibility or hybrid usage)
         await executeQuery('DELETE FROM custom_field_values WHERE entity_type = $1 AND entity_id = $2', ['shops', id]);
 
