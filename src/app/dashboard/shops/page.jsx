@@ -590,7 +590,7 @@ function ShopsPageContent() {
 
       // Optimistic update: Add new shop to UI immediately
       // Handle different response formats between local and production
-      const newShopId = shopData.shop_id || shopData.id || shopData.data?.id;
+      const newShopId = shopData.shop?.id || shopData.shop_id || shopData.id || shopData.data?.id;
       
       // Debug logging for production
       if (process.env.NODE_ENV === 'production') {
@@ -752,6 +752,7 @@ function ShopsPageContent() {
               onRowClick={handleRowClick}
               exportLabel="Export PDF"
               exportIcon="fa-file-pdf"
+              preserveTempRows={false}
             />
           </div>
         ) : (
