@@ -1,5 +1,5 @@
 
-import sql from '@/lib/db';
+import { query } from '@/lib/db';
 
 /**
  * Log an activity to the audit_logs table
@@ -21,10 +21,11 @@ export async function logActivity({ userId, action, entityType, entityId, detail
             userAgent = req.headers.get('user-agent') || 'unknown';
         }
 
-        await sql`
-            INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details, ip_address, user_agent)
-            VALUES (${userId}, ${action}, ${entityType}, ${entityId?.toString()}, ${JSON.stringify(details)}, ${ipAddress}, ${userAgent})
-        `;
+        await query(
+            `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details, ip_address, user_agent)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [userId, action, entityType, entityId?.toString(), JSON.stringify(details), ipAddress, userAgent]
+        );
     } catch (error) {
         console.error('Failed to write audit log:', error);
         // Don't throw, logging shouldn't break the main flow

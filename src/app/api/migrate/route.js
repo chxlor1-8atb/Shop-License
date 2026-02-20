@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import sql from '@/lib/db';
+import { executeQuery } from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
 import { requireAdmin } from '@/lib/api-helpers';
@@ -44,7 +44,7 @@ export async function POST() {
 
             try {
                 // Execute raw sql
-                await sql(statement);
+                await executeQuery(statement);
             } catch (err) {
                 console.error('Error executing statement:', statement.substring(0, 50), err.message);
                 // Ignore "already exists" errors
