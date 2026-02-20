@@ -169,8 +169,8 @@ function ShopsPageContent() {
     }
   }, [fetchCustomColumns]);
 
-  // Auto-refresh: sync data every 30s + on tab focus + cross-tab
-  useAutoRefresh(fetchShops, { interval: 60000, channel: "shops-sync" });
+  // Auto-refresh: sync data every 5s + on tab focus + cross-tab
+  useAutoRefresh(fetchShops, { interval: 5000, channel: "shops-sync" });
 
   // --- Row Handlers ---
 
@@ -226,35 +226,27 @@ function ShopsPageContent() {
           showSuccess("สร้างร้านค้าเรียบร้อย");
           notifyDataChange("shops-sync");
           
-          // Optimistic update: Replace temp row with real data immediately
-          // Handle different response formats between local and production
-          const newShopId = data.shop_id || data.id || data.data?.id;
-          
-          if (newShopId) {
-            // Update local state - replace temp ID with real ID
-            setLocalShops(prev => 
-              prev.map(shop => 
-                shop.id === updatedRow.id 
-                  ? { ...shop, ...standardData, ...customValues, id: newShopId, license_count: 0 }
-                  : shop
-              )
-            );
+          // Optimistic update: Replace temp row with real data from server
+          if (data.shop) {
+             // Update local state - replace temp ID with real shop object
+             setLocalShops(prev => 
+               prev.map(shop => 
+                 shop.id === updatedRow.id 
+                   ? data.shop
+                   : shop
+               )
+             );
+
+             // Also add to main shops list to ensure it stays if localShops is cleared
+             setShops(prev => [data.shop, ...prev]);
             
             // Clear optimistic updates after a short delay
             setTimeout(() => {
-              setLocalShops([]);
+              setLocalShops(prev => prev.filter(s => s.id !== data.shop.id));
             }, 1000);
           } else {
-            // Fallback: Add new shop if no ID returned
-            const newShop = {
-              id: `temp_${Date.now()}`,
-              ...standardData,
-              license_count: 0,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              ...(customValues || {})
-            };
-            setLocalShops(prev => [newShop, ...prev]);
+             // Fallback if no shop returned (should not happen now)
+             fetchShops();
           }
           
           // Targeted cache invalidation
@@ -284,8 +276,17 @@ function ShopsPageContent() {
         if (data.success) {
           showSuccess("อัปเดตร้านค้าเรียบร้อย");
           notifyDataChange("shops-sync");
-          mutate('/api/shops/dropdown'); // Update dropdown data
-          // No need to call fetchShops() - SWR will handle revalidation
+          mutate('/api/shops/dropdown');
+          
+          // Real-time update: Update local state immediately with server response
+          if (data.shop) {
+             setShops(prev => prev.map(s => s.id === updatedRow.id ? data.shop : s));
+          } else {
+             // Fallback
+             setShops((prev) =>
+                prev.map((s) => (s.id === updatedRow.id ? updatedRow : s))
+             );
+          }
         } else {
           showError(data.message || "ไม่สามารถอัปเดตร้านค้าได้");
           fetchShops(); // Revert only on error

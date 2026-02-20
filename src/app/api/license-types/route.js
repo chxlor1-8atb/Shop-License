@@ -72,7 +72,9 @@ export async function POST(request) {
             details: `เพิ่มประเภทใบอนุญาต: ${name}`
         });
 
-        return NextResponse.json({ success: true, message: 'เพิ่มประเภทใบอนุญาตเรียบร้อยแล้ว', type: { id: newId } });
+        const newType = await fetchOne('SELECT * FROM license_types WHERE id = $1', [newId]);
+
+        return NextResponse.json({ success: true, message: 'เพิ่มประเภทใบอนุญาตเรียบร้อยแล้ว', type: newType });
     } catch (err) {
         console.error('Error in POST /api/license-types:', err);
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
@@ -112,7 +114,9 @@ export async function PUT(request) {
             details: `แก้ไขประเภทใบอนุญาต: ${name}`
         });
 
-        return NextResponse.json({ success: true, message: 'บันทึกเรียบร้อยแล้ว' });
+        const updatedType = await fetchOne('SELECT * FROM license_types WHERE id = $1', [id]);
+
+        return NextResponse.json({ success: true, message: 'บันทึกเรียบร้อยแล้ว', type: updatedType });
     } catch (err) {
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }

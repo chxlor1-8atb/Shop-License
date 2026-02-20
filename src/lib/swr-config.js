@@ -7,11 +7,16 @@
  * Default fetcher function
  */
 export const fetcher = async (url) => {
-    const res = await fetch(url, { credentials: 'include' });
+    // Append timestamp to prevent browser caching
+    // SWR handles its own caching/deduping in memory
+    const separator = url.includes('?') ? '&' : '?';
+    const bustUrl = `${url}${separator}_t=${new Date().getTime()}`;
+
+    const res = await fetch(bustUrl, { credentials: 'include' });
 
     if (!res.ok) {
         const error = new Error('An error occurred while fetching data.');
-        error.info = await res.json();
+        error.info = await res.json().catch(() => ({}));
         error.status = res.status;
         throw error;
     }

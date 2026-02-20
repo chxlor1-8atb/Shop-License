@@ -237,7 +237,29 @@ export async function POST(request) {
         revalidateTag(CACHE_TAGS.LICENSES);
         revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
 
-        return NextResponse.json({ success: true, message: 'เพิ่มใบอนุญาตเรียบร้อยแล้ว' });
+        // Fetch the full license object to return for optimistic UI
+        const newLicense = await fetchOne(`
+            SELECT l.*, s.shop_name, lt.name as type_name,
+                   CASE 
+                       WHEN l.status IN ('suspended', 'revoked') THEN l.status
+                       WHEN l.expiry_date < CURRENT_DATE THEN 'expired'
+                       ELSE 'active'
+                   END AS status,
+                   l.status AS original_status,
+                   COALESCE(
+                       json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
+                       '{}'::json
+                   ) as custom_fields
+            FROM licenses l
+            LEFT JOIN shops s ON l.shop_id = s.id
+            LEFT JOIN license_types lt ON l.license_type_id = lt.id
+            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
+            LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
+            WHERE l.id = $1
+            GROUP BY l.id, s.shop_name, lt.name
+        `, [licenseId]);
+
+        return NextResponse.json({ success: true, message: 'เพิ่มใบอนุญาตเรียบร้อยแล้ว', license: newLicense });
     } catch (err) {
         console.error('[POST /api/licenses] Error:', err);
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
@@ -323,7 +345,29 @@ export async function PUT(request) {
         revalidateTag(CACHE_TAGS.LICENSES);
         revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
 
-        return NextResponse.json({ success: true, message: 'บันทึกใบอนุญาตเรียบร้อยแล้ว' });
+        // Fetch the updated license object to return for optimistic UI
+        const updatedLicense = await fetchOne(`
+            SELECT l.*, s.shop_name, lt.name as type_name,
+                   CASE 
+                       WHEN l.status IN ('suspended', 'revoked') THEN l.status
+                       WHEN l.expiry_date < CURRENT_DATE THEN 'expired'
+                       ELSE 'active'
+                   END AS status,
+                   l.status AS original_status,
+                   COALESCE(
+                       json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
+                       '{}'::json
+                   ) as custom_fields
+            FROM licenses l
+            LEFT JOIN shops s ON l.shop_id = s.id
+            LEFT JOIN license_types lt ON l.license_type_id = lt.id
+            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
+            LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
+            WHERE l.id = $1
+            GROUP BY l.id, s.shop_name, lt.name
+        `, [id]);
+
+        return NextResponse.json({ success: true, message: 'บันทึกใบอนุญาตเรียบร้อยแล้ว', license: updatedLicense });
     } catch (err) {
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }

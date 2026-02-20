@@ -262,8 +262,8 @@ function LicensesPageContent() {
     fetchLicenses();
   }, [fetchLicenses]);
 
-  // Auto-refresh: sync data every 10s + on tab focus + cross-tab
-  useAutoRefresh(fetchLicenses, { interval: 60000, channel: "licenses-sync" });
+  // Auto-refresh: sync data every 5s + on tab focus + cross-tab
+  useAutoRefresh(fetchLicenses, { interval: 5000, channel: "licenses-sync" });
 
 
 
@@ -385,10 +385,15 @@ function LicensesPageContent() {
 
         if (data.success) {
           notifyDataChange("licenses-sync");
-          // Optimistic update: update license in UI immediately
-          setLicenses((prev) =>
-            prev.map((l) => (l.id === updatedRow.id ? updatedRow : l))
-          );
+          
+          if (data.license) {
+             setLicenses(prev => prev.map(l => l.id === updatedRow.id ? data.license : l));
+          } else {
+             // Fallback: Optimistic update
+             setLicenses((prev) =>
+               prev.map((l) => (l.id === updatedRow.id ? updatedRow : l))
+             );
+          }
         } else {
           showError(data.message);
           fetchLicenses(); // Revert on error

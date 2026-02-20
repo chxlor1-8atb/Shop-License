@@ -88,11 +88,12 @@ export default function LicenseTypesPage() {
       setLoading(true);
     }
     try {
-      // Parallel fetch all data at once
+      // Parallel fetch all data at once with cache busting
+      const timestamp = new Date().getTime();
       const [typesRes, fieldsRes, valuesRes] = await Promise.all([
-        fetch(API_ENDPOINTS.LICENSE_TYPES, { credentials: "include" }),
-        fetch(`/api/custom-fields?entity_type=license_types`, { credentials: "include" }),
-        fetch(`/api/custom-field-values?entity_type=license_types`, { credentials: "include" })
+        fetch(`${API_ENDPOINTS.LICENSE_TYPES}?t=${timestamp}`, { credentials: "include" }),
+        fetch(`/api/custom-fields?entity_type=license_types&t=${timestamp}`, { credentials: "include" }),
+        fetch(`/api/custom-field-values?entity_type=license_types&t=${timestamp}`, { credentials: "include" })
       ]);
       
       const [typesData, fieldsData, valuesData] = await Promise.all([
@@ -187,8 +188,8 @@ export default function LicenseTypesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-refresh: sync data every 60s + on tab focus + cross-tab
-  useAutoRefresh(fetchData, { interval: 60000, channel: "license-types-sync" });
+  // Auto-refresh: sync data every 5s + on tab focus + cross-tab
+  useAutoRefresh(fetchData, { interval: 5000, channel: "license-types-sync" });
 
   const stats = useMemo(
     () => ({
@@ -369,6 +370,14 @@ export default function LicenseTypesPage() {
           notifyDataChange("license-types-sync");
           mutate('/api/license-types/dropdown');
           mutate('/api/license-types');
+
+          if (data.type) {
+             setTypes(prev => prev.map(t => 
+                 t.id === updatedRow.id ? { ...data.type, _isSubmitting: false, license_count: 0 } : t
+             ));
+          } else {
+             fetchData();
+          }
           
           shouldSkipFetchRef.current = false;
           
@@ -401,6 +410,25 @@ export default function LicenseTypesPage() {
         });
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
+        
+        showSuccess("บันทึกเรียบร้อย");
+        notifyDataChange("license-types-sync");
+        mutate('/api/license-types/dropdown');
+        mutate('/api/license-types');
+
+        if (data.type) {
+           setTypes((prev) =>
+             prev.map((t) =>
+               t.id === updatedRow.id ? { ...t, ...data.type, ...customValues } : t
+             )
+           );
+        } else {
+           setTypes((prev) =>
+             prev.map((t) =>
+               t.id === updatedRow.id ? { ...t, ...standardData, ...customValues } : t
+             )
+           );
+        }
       }
 
       if (Object.keys(customValues).length > 0) {
@@ -417,11 +445,6 @@ export default function LicenseTypesPage() {
         }).catch(console.error);
       }
 
-      setTypes((prev) =>
-        prev.map((t) =>
-          t.id === updatedRow.id ? { ...t, ...standardData, ...customValues } : t
-        )
-      );
     } catch (error) {
       showError(error.message);
       fetchData();
@@ -460,6 +483,7 @@ export default function LicenseTypesPage() {
       
       // Force refresh to ensure UI is in sync with server
       shouldSkipFetchRef.current = false;
+      await fetchData();
     } catch (error) {
       // Revert: Remove from deletedIds list and re-fetch
       deletedIdsRef.current.delete(id);

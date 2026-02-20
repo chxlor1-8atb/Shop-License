@@ -236,7 +236,9 @@ export async function POST(request) {
         revalidateTag(CACHE_TAGS.SHOPS);
         revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
 
-        return NextResponse.json({ success: true, message: 'เพิ่มร้านค้าเรียบร้อยแล้ว', shop_id: result?.[0]?.id });
+        const newShop = await fetchOne('SELECT * FROM shops WHERE id = $1', [result?.[0]?.id]);
+
+        return NextResponse.json({ success: true, message: 'เพิ่มร้านค้าเรียบร้อยแล้ว', shop: newShop });
     } catch (err) {
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
@@ -293,7 +295,9 @@ export async function PUT(request) {
         revalidateTag(CACHE_TAGS.SHOPS);
         revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
 
-        return NextResponse.json({ success: true, message: 'อัปเดตร้านค้าเรียบร้อยแล้ว' });
+        const updatedShop = await fetchOne('SELECT * FROM shops WHERE id = $1', [id]);
+
+        return NextResponse.json({ success: true, message: 'อัปเดตร้านค้าเรียบร้อยแล้ว', shop: updatedShop });
     } catch (err) {
         return NextResponse.json({ success: false, message: safeErrorMessage(err) }, { status: 500 });
     }
