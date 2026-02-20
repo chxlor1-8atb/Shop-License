@@ -28,6 +28,14 @@ function getPool() {
             throw new Error('DATABASE_URL environment variable is not set');
         }
 
+        // Debug: Log the active database host
+        try {
+            const url = new URL(connectionString);
+            console.log('🔌 Database connecting to host:', url.host);
+        } catch (e) {
+            console.log('🔌 Database connecting (could not parse host)');
+        }
+
         pool = new Pool({
             connectionString,
             max: 10,                       // Maximum connections in pool
