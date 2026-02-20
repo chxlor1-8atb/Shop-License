@@ -694,7 +694,14 @@ function LicensesPageContent() {
     // Targeted cache invalidation
     mutate('/api/shops/dropdown');
     mutate('/api/license-types/dropdown');
-    fetchLicenses();
+    
+    // Manually add to state to prevent flashing/disappearing due to pagination
+    if (data.license) {
+      setLicenses(prev => [data.license, ...prev]);
+    } else {
+       // Fallback if full object not returned
+       fetchLicenses();
+    }
   };
 
   return (
