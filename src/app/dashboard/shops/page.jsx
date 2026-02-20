@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange, useShops } from "@/hooks";
+import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange, useShops, useRealtime } from "@/hooks";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
 import Pagination from "@/components/ui/Pagination";
@@ -172,6 +172,16 @@ function ShopsPageContent() {
   // Auto-refresh: sync data every 5s + on tab focus + cross-tab
   useAutoRefresh(fetchShops, { interval: 5000, channel: "shops-sync" });
 
+  // Supabase Realtime: Listen for DB changes
+  useRealtime('shops', (payload) => {
+    // console.log("[Realtime] Shops updated:", payload);
+    // Refresh list
+    fetchShops(); 
+    // Refresh dropdowns everywhere
+    mutate('/api/shops/dropdown');
+    mutate((key) => typeof key === 'string' && key.startsWith('/api/shops'));
+  });
+
   // --- Row Handlers ---
 
   const handleRowUpdate = async (updatedRow) => {
@@ -237,15 +247,18 @@ function ShopsPageContent() {
                )
              );
 
-             // Also add to main shops list to ensure it stays if localShops is cleared
-             setShops(prev => [data.shop, ...prev]);
+             // Update SWR cache immediately
+             fetchShops(currentData => ({
+               ...currentData,
+               shops: [data.shop, ...(currentData?.shops || [])]
+             }), { revalidate: false });
             
             // Clear optimistic updates after a short delay
             setTimeout(() => {
               setLocalShops(prev => prev.filter(s => s.id !== data.shop.id));
             }, 1000);
           } else {
-             // Fallback if no shop returned (should not happen now)
+             // Fallback if no shop returned
              fetchShops();
           }
           
@@ -278,14 +291,18 @@ function ShopsPageContent() {
           notifyDataChange("shops-sync");
           mutate('/api/shops/dropdown');
           
-          // Real-time update: Update local state immediately with server response
+          // Real-time update: Update SWR cache immediately
           if (data.shop) {
-             setShops(prev => prev.map(s => s.id === updatedRow.id ? data.shop : s));
+             fetchShops(currentData => ({
+                ...currentData,
+                shops: currentData?.shops?.map(s => s.id === updatedRow.id ? data.shop : s) || []
+             }), { revalidate: false });
           } else {
              // Fallback
-             setShops((prev) =>
-                prev.map((s) => (s.id === updatedRow.id ? updatedRow : s))
-             );
+             fetchShops(currentData => ({
+                ...currentData,
+                shops: currentData?.shops?.map(s => s.id === updatedRow.id ? updatedRow : s) || []
+             }), { revalidate: false });
           }
         } else {
           showError(data.message || "ไม่สามารถอัปเดตร้านค้าได้");
@@ -323,6 +340,12 @@ function ShopsPageContent() {
         notifyDataChange("shops-sync");
         mutate('/api/shops/dropdown'); // Update dropdown data
         
+        // Update SWR cache effectively
+        fetchShops(currentData => ({
+            ...currentData,
+            shops: currentData?.shops?.filter(s => s.id !== rowId) || []
+        }), { revalidate: false });
+
         // Remove from deletedIds after a delay to allow server sync
         setTimeout(() => {
           setDeletedIds(prev => {
@@ -591,6 +614,12 @@ function ShopsPageContent() {
 
       // Update local state immediately for instant UI feedback
       setLocalShops(prev => [newShop, ...prev]);
+      
+      // Update SWR cache immediately
+      fetchShops(currentData => ({
+        ...currentData,
+        shops: [newShop, ...(currentData?.shops || [])]
+      }), { revalidate: false });
       
       // Removed the setTimeout that clears localShops too early
       // Data will naturally deduplicate in displayShops when server data arrives

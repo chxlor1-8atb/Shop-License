@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
-import { useAutoRefresh, notifyDataChange } from "@/hooks";
+import { useAutoRefresh, notifyDataChange, useRealtime } from "@/hooks";
 import { mutate } from "swr";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import ExcelTable from "@/components/ExcelTable";
@@ -124,9 +124,20 @@ export default function LicenseTypesPage() {
         mergedTypes = mergedTypes.filter(t => !deletedIdsRef.current.has(t.id));
         
         // Only update state if we're not in the middle of row creation OR if we have real data changes
-        if (!shouldSkipFetchRef.current || hasRealDataChanges(types, mergedTypes)) {
-          setTypes(mergedTypes);
-        }
+        setTypes(prev => {
+          // Preserve local temp rows that haven't been saved yet
+          const tempRows = prev.filter(t => t.id.toString().startsWith('id_'));
+          
+          // Check if we really need to update (to avoid unnecessary re-renders)
+          if (shouldSkipFetchRef.current && !hasRealDataChanges(prev, mergedTypes)) {
+            return prev;
+          }
+          
+          // Merge temp rows with server data
+          // Server data (mergedTypes) is the source of truth for saved items
+          return [...tempRows, ...mergedTypes];
+        });
+        
         shouldSkipFetchRef.current = true;
       }
 
@@ -190,6 +201,17 @@ export default function LicenseTypesPage() {
 
   // Auto-refresh: sync data every 5s + on tab focus + cross-tab
   useAutoRefresh(fetchData, { interval: 5000, channel: "license-types-sync" });
+
+  // Supabase Realtime: Listen for DB changes
+  useRealtime('license_types', () => {
+    // console.log("[Realtime] License Types updated");
+    // Refresh list
+    fetchData();
+    // Refresh dropdowns globally
+    mutate('/api/license-types/dropdown');
+    mutate('/api/license-types');
+    mutate((key) => typeof key === 'string' && key.startsWith('/api/dashboard')); // Update stats
+  });
 
   const stats = useMemo(
     () => ({
@@ -571,6 +593,7 @@ export default function LicenseTypesPage() {
                 onColumnAdd={handleColumnAdd}
                 onColumnUpdate={handleColumnUpdate}
                 onColumnDelete={handleColumnDelete}
+                preserveTempRows={false}
               />
             </div>
           ) : (

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange } from "@/hooks";
+import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange, useRealtime } from "@/hooks";
 import { API_ENDPOINTS, STATUS_OPTIONS, STATUS_FILTER_OPTIONS } from "@/constants";
 import Swal from "sweetalert2";
 import { showSuccess, showError } from "@/utils/alerts";
@@ -264,6 +264,17 @@ function LicensesPageContent() {
 
   // Auto-refresh: sync data every 5s + on tab focus + cross-tab
   useAutoRefresh(fetchLicenses, { interval: 5000, channel: "licenses-sync" });
+
+  // Supabase Realtime: Listen for DB changes
+  useRealtime('licenses', (payload) => {
+    // console.log("[Realtime] Licenses updated:", payload);
+    // Refresh list
+    fetchLicenses();
+    // Refresh global states
+    mutate('/api/dashboard?action=stats');
+    mutate('/api/dashboard?action=expiring_count');
+    mutate('/api/dashboard?action=license_breakdown');
+  });
 
 
 

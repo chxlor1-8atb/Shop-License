@@ -32,6 +32,7 @@ export default function ExcelTable({
   allowReset = false,
   defaultRowValues = {},
   customContextMenuItems = [],
+  preserveTempRows = true,
 }) {
   // Logic & State management extracted to custom hook
   const {
@@ -61,7 +62,7 @@ export default function ExcelTable({
     // Save state helpers
     getRows,
     setPendingSave,
-  } = useExcelTable({ initialColumns, initialRows });
+  } = useExcelTable({ initialColumns, initialRows, preserveTempRows });
   // Refs for Focus Management (View Logic)
   const tableRef = useRef(null);
   const inputRef = useRef(null);

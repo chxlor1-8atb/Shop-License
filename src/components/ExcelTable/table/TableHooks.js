@@ -64,6 +64,7 @@ const hasRealDataChanges = (localRows, newRows) => {
 export function useExcelTable({
   initialColumns = defaultColumns,
   initialRows = defaultRows,
+  preserveTempRows = true,
 } = {}) {
   const [columns, setColumns] = useState(initialColumns);
   const [rows, setRows] = useState(initialRows);
@@ -115,11 +116,14 @@ export function useExcelTable({
       recentlyModifiedRef.current.clear();
 
       // For rows that exist in both places, prefer server data
-      // But keep temp rows that haven't been saved yet
-      const tempRows = currentRows.filter(r =>
-        r.id.toString().startsWith('id_') &&
-        !newRows.find(ir => ir.id === r.id)
-      );
+      // But keep temp rows that haven't been saved yet (ONLY if strict sync is disabled)
+      let tempRows = [];
+      if (preserveTempRows) {
+        tempRows = currentRows.filter(r =>
+          r.id.toString().startsWith('id_') &&
+          !newRows.find(ir => ir.id === r.id)
+        );
+      }
 
       // Check if we have unsaved temp rows
       if (tempRows.length > 0) {
@@ -128,7 +132,7 @@ export function useExcelTable({
 
       return newRows;
     });
-  }, []);
+  }, [preserveTempRows]);
 
   // Sync rows from parent with improved protection
   useEffect(() => {
