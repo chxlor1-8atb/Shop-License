@@ -44,6 +44,7 @@ function LicensesPageContent() {
   const [licenses, setLicenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const initialLoadDoneRef = useRef(false);
+  const deletedIdsRef = useRef(new Set());
   
   // Initialize from URL params
   const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -201,7 +202,6 @@ function LicensesPageContent() {
           return orderA - orderB;
         });
 
-        console.log("Columns sorted:", sortedColumns.map(c => `${c.name} (${c.display_order})`));
         setColumns(sortedColumns);
       } else {
         setColumns(baseCols);
@@ -237,10 +237,14 @@ function LicensesPageContent() {
 
       if (data.success) {
         // Flatten custom_fields
-        const formattedLicenses = data.licenses.map((l) => ({
+        let formattedLicenses = data.licenses.map((l) => ({
           ...l,
           ...(l.custom_fields || {}),
         }));
+        
+        // Filter out items that are currently being deleted locally
+        formattedLicenses = formattedLicenses.filter(l => !deletedIdsRef.current.has(l.id));
+        
         setLicenses(formattedLicenses);
         updateFromResponse(data.pagination);
       }
@@ -397,6 +401,10 @@ function LicensesPageContent() {
   };
 
   const handleRowDelete = async (rowId) => {
+    // 1. Optimistic update: Mark as deleted locally
+    deletedIdsRef.current.add(rowId);
+    setLicenses((prev) => prev.filter((l) => l.id !== rowId));
+    
     try {
       const res = await fetch(`${API_ENDPOINTS.LICENSES}?id=${rowId}`, {
         method: "DELETE",
@@ -406,15 +414,25 @@ function LicensesPageContent() {
       if (data.success) {
         showSuccess("ลบใบอนุญาตเรียบร้อย");
         notifyDataChange("licenses-sync");
-        // Optimistic update: remove license from UI immediately
-        setLicenses((prev) => prev.filter((l) => l.id !== rowId));
+        
         // Revalidate SWR cache to update other components
         mutate(() => true, undefined, { revalidate: true });
+        
+        // Remove from deletedIdsRef after a delay
+        setTimeout(() => {
+            if (deletedIdsRef.current.has(rowId)) {
+                deletedIdsRef.current.delete(rowId);
+            }
+        }, 5000);
       } else {
         showError(data.message);
+        // Revert: Remove from deletedIds list and re-fetch
+        deletedIdsRef.current.delete(rowId);
         fetchLicenses();
       }
     } catch (error) {
+      // Revert: Remove from deletedIds list and re-fetch
+      deletedIdsRef.current.delete(rowId);
       showError(error.message);
       fetchLicenses();
     }

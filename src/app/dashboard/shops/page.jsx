@@ -80,14 +80,24 @@ function ShopsPageContent() {
 
   // Local state for optimistic updates
   const [localShops, setLocalShops] = useState([]);
+  const [deletedIds, setDeletedIds] = useState(new Set());
   
   // Safely compute display shops
   const displayShops = useMemo(() => {
-    if (localShops.length > 0) {
-      return localShops;
+    let mergedShops = [];
+    if (!shops) {
+      mergedShops = localShops;
+    } else {
+      // Filter out local shops that are now present in server data to avoid duplicates
+      const serverShopIds = new Set(shops.map(s => s.id));
+      const uniqueLocalShops = localShops.filter(s => !serverShopIds.has(s.id));
+      // Merge: New local shops first, then server shops
+      mergedShops = [...uniqueLocalShops, ...shops];
     }
-    return shops || [];
-  }, [localShops, shops]);
+    
+    // Filter out items marked as deleted
+    return mergedShops.filter(s => !deletedIds.has(s.id));
+  }, [localShops, shops, deletedIds]);
 
   // Modal states
   const [selectedShop, setSelectedShop] = useState(null);
@@ -293,25 +303,50 @@ function ShopsPageContent() {
     if (rowId.toString().startsWith("id_")) {
       return;
     }
+    
+    // Optimistic delete: Hide immediately
+    setDeletedIds(prev => {
+      const next = new Set(prev);
+      next.add(rowId);
+      return next;
+    });
 
     try {
       const res = await fetch(`${API_ENDPOINTS.SHOPS}?id=${rowId}`, {
         method: "DELETE",
         credentials: "include",
-      });
+        });
       const data = await res.json();
       if (data.success) {
         showSuccess("ลบร้านค้าเรียบร้อย");
         notifyDataChange("shops-sync");
         mutate('/api/shops/dropdown'); // Update dropdown data
-        // No need to call fetchShops() - SWR will handle revalidation
+        
+        // Remove from deletedIds after a delay to allow server sync
+        setTimeout(() => {
+          setDeletedIds(prev => {
+            const next = new Set(prev);
+            next.delete(rowId);
+            return next;
+          });
+        }, 5000);
       } else {
         showError(data.message);
-        fetchShops(); // Revert only on error
+        // Revert optimistic delete on error
+        setDeletedIds(prev => {
+          const next = new Set(prev);
+          next.delete(rowId);
+          return next;
+        });
       }
     } catch (error) {
       showError(error.message);
-      fetchShops();
+      // Revert optimistic delete on error
+      setDeletedIds(prev => {
+        const next = new Set(prev);
+        next.delete(rowId);
+        return next;
+      });
     }
   };
 
@@ -556,10 +591,8 @@ function ShopsPageContent() {
       // Update local state immediately for instant UI feedback
       setLocalShops(prev => [newShop, ...prev]);
       
-      // Clear optimistic updates after a short delay since SWR handles revalidation
-      setTimeout(() => {
-        setLocalShops([]);
-      }, 500); // Reduced from 2s to 500ms for faster UI response
+      // Removed the setTimeout that clears localShops too early
+      // Data will naturally deduplicate in displayShops when server data arrives
       
       // Targeted cache invalidation
       try {
