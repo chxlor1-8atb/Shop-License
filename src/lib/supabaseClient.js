@@ -1,9 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+/**
+ * Supabase Client - DISABLED
+ * 
+ * This project now uses Neon database instead of Supabase
+ * Supabase client is disabled to prevent connection errors
+ */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// Only create the client if the environment variables are set
-export const supabase = (supabaseUrl && supabaseKey)
-    ? createClient(supabaseUrl, supabaseKey)
-    : null;
+// Export null to prevent import errors
+export const supabase = null;

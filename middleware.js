@@ -204,8 +204,9 @@ export async function middleware(request) {
     response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
 
     // CSP for page routes - allow self + inline for Next.js hydration, restrict external sources
+    // Remove Supabase domains since we're now using Neon (no WebSocket needed)
     response.headers.set('Content-Security-Policy',
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com data:; img-src 'self' data: blob:; connect-src 'self' wss://*.supabase.co https://*.supabase.co; frame-ancestors 'none';"
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com data:; img-src 'self' data: blob:; connect-src 'self' https://challenges.cloudflare.com https://*.cloudflare.com https://va.vercel-scripts.com https://vitals.vercel-insights.com; frame-ancestors 'none';"
     );
 
     // HSTS - Force HTTPS (2 years with preload)

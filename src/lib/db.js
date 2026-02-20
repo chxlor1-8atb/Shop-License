@@ -3,16 +3,16 @@ import pg from 'pg';
 const { Pool } = pg;
 
 /**
- * Database Configuration — PostgreSQL via Supabase
+ * Database Configuration — PostgreSQL via Neon
  * 
- * เชื่อมต่อ Supabase ผ่าน PostgreSQL connection string โดยตรง
+ * เชื่อมต่อ Neon ผ่าน PostgreSQL connection string โดยตรง
  * ใช้ pg library กับ connection pooling สำหรับ performance ที่ดี
  * 
  * Security Features:
  * - Parameterized queries only (SQL injection prevention)
  * - Connection pooling with limits
  * - Query timeout protection (30s)
- * - SSL/TLS encryption
+ * - SSL/TLS encryption (Neon requires proper SSL)
  * - Sensitive data sanitization in production logs
  */
 
@@ -42,7 +42,7 @@ function getPool() {
             idleTimeoutMillis: 30000,      // Close idle connections after 30s
             connectionTimeoutMillis: 10000, // Timeout waiting for connection: 10s
             ssl: {
-                rejectUnauthorized: false   // Required for Supabase
+                rejectUnauthorized: true    // Neon requires proper SSL verification
             }
         });
 
