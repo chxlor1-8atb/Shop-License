@@ -321,6 +321,9 @@ export async function DELETE(request) {
 
         // Check for licenses first? Usually constraints handle this, but let's just create generic logic.
         // Assuming cascade or check logic. For now just delete.
+        // Also delete associated custom field values from the separate table if any exist (for backward compatibility or hybrid usage)
+        await executeQuery('DELETE FROM custom_field_values WHERE entity_type = $1 AND entity_id = $2', ['shops', id]);
+
         await executeQuery('DELETE FROM shops WHERE id = $1', [id]);
 
         // Log activity

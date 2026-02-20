@@ -144,6 +144,9 @@ export async function DELETE(request) {
             return NextResponse.json({ success: false, message: 'ไม่สามารถลบได้ เนื่องจากมีการใช้งานอยู่' }, { status: 400 });
         }
 
+        // Delete associated custom field values first (prevent orphans)
+        await executeQuery('DELETE FROM custom_field_values WHERE entity_type = $1 AND entity_id = $2', ['license_types', id]);
+
         await executeQuery('DELETE FROM license_types WHERE id = $1', [id]);
 
         // Log activity
