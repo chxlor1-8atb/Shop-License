@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange, useRealtime } from "@/hooks";
 import { API_ENDPOINTS, STATUS_OPTIONS, STATUS_FILTER_OPTIONS } from "@/constants";
 import Swal from "sweetalert2";
-import { showSuccess, showError } from "@/utils/alerts";
+import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
 import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -417,41 +417,60 @@ function LicensesPageContent() {
   };
 
   const handleRowDelete = async (rowId) => {
-    // 1. Optimistic update: Mark as deleted locally
-    deletedIdsRef.current.add(rowId);
-    setLicenses((prev) => prev.filter((l) => l.id !== rowId));
+    // Find license for display name
+    const license = licenses.find(l => l.id === rowId);
+    const licenseName = license?.license_number || `ใบอนุญาต #${rowId}`;
+    const shopName = license?.shop_name || 'ร้านค้า';
     
-    try {
-      const res = await fetch(`${API_ENDPOINTS.LICENSES}?id=${rowId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.success) {
-        showSuccess("ลบใบอนุญาตเรียบร้อย");
-        notifyDataChange("licenses-sync");
-        
-        // Revalidate SWR cache to update other components
-        mutate(() => true, undefined, { revalidate: true });
-        
-        // Remove from deletedIdsRef after a delay
-        setTimeout(() => {
-            if (deletedIdsRef.current.has(rowId)) {
-                deletedIdsRef.current.delete(rowId);
-            }
-        }, 5000);
-      } else {
-        showError(data.message);
-        // Revert: Remove from deletedIds list and re-fetch
+    // Show pending delete toast with undo option
+    pendingDelete({
+      itemName: `${licenseName} (${shopName})`,
+      duration: 5000,
+      onDelete: async () => {
+        // Execute actual delete after timer expires
+        try {
+          const res = await fetch(`${API_ENDPOINTS.LICENSES}?id=${rowId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+          const data = await res.json();
+          
+          if (data.success) {
+            showSuccess("ลบใบอนุญาตเรียบร้อย");
+            notifyDataChange("licenses-sync");
+            
+            // Revalidate SWR cache to update other components
+            mutate(() => true, undefined, { revalidate: true });
+            
+            // Remove from deletedIdsRef after a delay
+            setTimeout(() => {
+                if (deletedIdsRef.current.has(rowId)) {
+                    deletedIdsRef.current.delete(rowId);
+                }
+            }, 5000);
+          } else {
+            // Delete failed - restore the item
+            showError(data.message);
+            deletedIdsRef.current.delete(rowId);
+            fetchLicenses();
+          }
+        } catch (error) {
+          // Delete failed - restore the item
+          showError(error.message);
+          deletedIdsRef.current.delete(rowId);
+          fetchLicenses();
+        }
+      },
+      onCancel: () => {
+        // User cancelled - restore the item
         deletedIdsRef.current.delete(rowId);
         fetchLicenses();
       }
-    } catch (error) {
-      // Revert: Remove from deletedIds list and re-fetch
-      deletedIdsRef.current.delete(rowId);
-      showError(error.message);
-      fetchLicenses();
-    }
+    });
+    
+    // 1. Optimistic update: Mark as deleted locally
+    deletedIdsRef.current.add(rowId);
+    setLicenses((prev) => prev.filter((l) => l.id !== rowId));
   };
 
   const handleRowAdd = (newRow) => {

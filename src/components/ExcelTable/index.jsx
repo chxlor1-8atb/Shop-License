@@ -143,21 +143,8 @@ export default function ExcelTable({
   };
 
   const handleDeleteRow = (rowId) => {
-    // Temp rows (unsaved) - always delete from internal state directly
-    if (rowId.toString().startsWith("id_")) {
-      deleteRow(rowId);
-      if (onRowDelete) onRowDelete(rowId);
-      return;
-    }
-    
-    if (onRowDelete) {
-      // For real rows: let parent handler manage deletion entirely
-      // Parent controls data via initialRows prop which syncs back to ExcelTable
-      onRowDelete(rowId);
-    } else {
-      // No parent handler - just delete from internal state
-      deleteRow(rowId);
-    }
+    deleteRow(rowId);
+    if (onRowDelete) onRowDelete(rowId);
   };
 
   const handleDuplicateRow = (rowId) => {

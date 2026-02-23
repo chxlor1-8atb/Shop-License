@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange, useShops, useRealtime } from "@/hooks";
 import { API_ENDPOINTS } from "@/constants";
-import { showSuccess, showError } from "@/utils/alerts";
+import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
 import Pagination from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/FilterRow";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -68,40 +68,11 @@ function ShopsPageContent() {
   const [search, setSearch] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
 
-  // Use SWR hook for shops data
-  const { shops, isLoading, error, refresh: fetchShops } = useShops({
-    search: debouncedSearch,
-    page,
-    limit,
-    has_license: filterHasLicense,
-    license_status: filterLicenseStatus,
-    license_type: filterLicenseType,
-  });
-
-  // Local state for optimistic updates
-  const [localShops, setLocalShops] = useState([]);
+  // Use useState + manual fetch (same pattern as licenses page)
+  const [shops, setShops] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const initialLoadDoneRef = useRef(false);
   const deletedIdsRef = useRef(new Set());
-  
-  // Force re-render counter for deletedIds changes (since useRef doesn't trigger re-render)
-  const [deleteCounter, setDeleteCounter] = useState(0);
-  
-  // Safely compute display shops
-  const displayShops = useMemo(() => {
-    let mergedShops = [];
-    if (!shops) {
-      mergedShops = localShops;
-    } else {
-      // Filter out local shops that are now present in server data to avoid duplicates
-      const serverShopIds = new Set(shops.map(s => s.id));
-      const uniqueLocalShops = localShops.filter(s => !serverShopIds.has(s.id));
-      // Merge: New local shops first, then server shops
-      mergedShops = [...uniqueLocalShops, ...shops];
-    }
-    
-    // Filter out items marked as deleted
-    return mergedShops.filter(s => !deletedIdsRef.current.has(s.id));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localShops, shops, deleteCounter]);
 
   // Modal states
   const [selectedShop, setSelectedShop] = useState(null);
@@ -116,10 +87,7 @@ function ShopsPageContent() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Track if columns have been fetched to prevent infinite loop
-  const columnsLoadedRef = useRef(false);
-
-  // Define fetchCustomColumns before useEffect that uses it
+  // Define fetchCustomColumns
   const fetchCustomColumns = useCallback(async () => {
     try {
       const res = await fetch(
@@ -165,25 +133,52 @@ function ShopsPageContent() {
     }
   }, []);
 
-  // Fetch custom columns only once on mount
-  useEffect(() => {
-    if (!columnsLoadedRef.current) {
-      fetchCustomColumns();
-      columnsLoadedRef.current = true;
+  // Fetch shops data (same pattern as fetchLicenses in licenses page)
+  const fetchShops = useCallback(async () => {
+    if (!initialLoadDoneRef.current) {
+      setIsLoading(true);
     }
-  }, [fetchCustomColumns]);
+    try {
+      const params = new URLSearchParams({
+        page: page,
+        limit: limit,
+        search: debouncedSearch,
+        has_license: filterHasLicense,
+        license_status: filterLicenseStatus,
+        license_type: filterLicenseType,
+      });
+
+      const response = await fetch(`${API_ENDPOINTS.SHOPS}?${params}`, { credentials: "include" });
+      const data = await response.json();
+
+      if (data.success) {
+        // Filter out items that are currently being deleted locally
+        const filteredShops = (data.shops || []).filter(s => !deletedIdsRef.current.has(s.id));
+        setShops(filteredShops);
+        updateFromResponse(data.pagination);
+      }
+    } catch (error) {
+      console.error("Failed to fetch shops:", error);
+      showError("โหลดข้อมูลร้านค้าล้มเหลว");
+    } finally {
+      setIsLoading(false);
+      initialLoadDoneRef.current = true;
+    }
+  }, [updateFromResponse, page, limit, debouncedSearch, filterHasLicense, filterLicenseStatus, filterLicenseType]);
+
+  // Initial data fetch and refetch when filters change
+  useEffect(() => {
+    fetchCustomColumns();
+    fetchShops();
+  }, [fetchCustomColumns, fetchShops]);
 
   // Auto-refresh: sync data every 5s + on tab focus + cross-tab
   useAutoRefresh(fetchShops, { interval: 5000, channel: "shops-sync" });
 
   // Supabase Realtime: Listen for DB changes
-  useRealtime('shops', (payload) => {
-    // console.log("[Realtime] Shops updated:", payload);
-    // Refresh list
+  useRealtime('shops', () => {
     fetchShops(); 
-    // Refresh dropdowns everywhere
     mutate('/api/shops/dropdown');
-    mutate((key) => typeof key === 'string' && key.startsWith('/api/shops'));
   });
 
   // --- Row Handlers ---
@@ -201,8 +196,6 @@ function ShopsPageContent() {
       notes: updatedRow.notes || "",
     };
 
-    // Determine custom fields
-    // Everything in updatedRow that is NOT a standard field and NOT id/created_at/etc.
     const customValues = {};
     Object.keys(updatedRow).forEach((key) => {
       if (
@@ -239,39 +232,8 @@ function ShopsPageContent() {
         if (data.success) {
           showSuccess("สร้างร้านค้าเรียบร้อย");
           notifyDataChange("shops-sync");
-          
-          // Optimistic update: Replace temp row with real data from server
-          if (data.shop) {
-             // Update local state - replace temp ID with real shop object
-             setLocalShops(prev => 
-               prev.map(shop => 
-                 shop.id === updatedRow.id 
-                   ? data.shop
-                   : shop
-               )
-             );
-
-             // Update SWR cache immediately
-             fetchShops(currentData => ({
-               ...currentData,
-               shops: [data.shop, ...(currentData?.shops || [])]
-             }), { revalidate: false });
-            
-            // Clear optimistic updates after a short delay
-            setTimeout(() => {
-              setLocalShops(prev => prev.filter(s => s.id !== data.shop.id));
-            }, 1000);
-          } else {
-             // Fallback if no shop returned
-             fetchShops();
-          }
-          
-          // Targeted cache invalidation
-          try {
-            mutate('/api/shops/dropdown');
-          } catch (err) {
-            console.error('Failed to mutate dropdown:', err);
-          }
+          fetchShops();
+          mutate('/api/shops/dropdown');
         } else {
           showError(data.message || "ไม่สามารถสร้างร้านค้าได้");
         }
@@ -295,22 +257,14 @@ function ShopsPageContent() {
           notifyDataChange("shops-sync");
           mutate('/api/shops/dropdown');
           
-          // Real-time update: Update SWR cache immediately
           if (data.shop) {
-             fetchShops(currentData => ({
-                ...currentData,
-                shops: currentData?.shops?.map(s => s.id === updatedRow.id ? data.shop : s) || []
-             }), { revalidate: false });
+             setShops(prev => prev.map(s => s.id === updatedRow.id ? data.shop : s));
           } else {
-             // Fallback
-             fetchShops(currentData => ({
-                ...currentData,
-                shops: currentData?.shops?.map(s => s.id === updatedRow.id ? updatedRow : s) || []
-             }), { revalidate: false });
+             setShops(prev => prev.map(s => s.id === updatedRow.id ? updatedRow : s));
           }
         } else {
           showError(data.message || "ไม่สามารถอัปเดตร้านค้าได้");
-          fetchShops(); // Revert only on error
+          fetchShops(); 
         }
       }
     } catch (error) {
@@ -321,59 +275,62 @@ function ShopsPageContent() {
   };
 
   const handleRowDelete = async (rowId) => {
-    // Skip API call for unsaved temp rows
-    if (rowId.toString().startsWith("id_")) {
-      return;
-    }
+    if (rowId.toString().startsWith("id_")) return;
     
-    // Check if shop has licenses bound - prevent delete like license-types page
-    const shop = displayShops.find(s => s.id === rowId);
+    // Check if shop has licenses bound
+    const shop = shops.find(s => s.id === rowId);
     if (shop && parseInt(shop.license_count || 0) > 0) {
       showError(`ไม่สามารถลบร้านค้าได้ (มีใบอนุญาต ${shop.license_count} ใบผูกอยู่)`);
       return;
     }
     
-    // 1. Optimistic update: Mark as deleted locally first
-    deletedIdsRef.current.add(rowId);
-    setDeleteCounter(n => n + 1); // Trigger re-render to update displayShops
-
-    try {
-      const res = await fetch(`${API_ENDPOINTS.SHOPS}?id=${rowId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.success) {
-        showSuccess("ลบร้านค้าเรียบร้อย");
-        notifyDataChange("shops-sync");
-        mutate('/api/shops/dropdown'); // Update dropdown data
-        
-        // Update SWR cache effectively
-        fetchShops(currentData => ({
-            ...currentData,
-            shops: currentData?.shops?.filter(s => s.id !== rowId) || []
-        }), { revalidate: true });
-
-        // Remove from deletedIdsRef after a delay to allow server sync
-        setTimeout(() => {
-          if (deletedIdsRef.current.has(rowId)) {
+    // Show pending delete toast with undo option
+    pendingDelete({
+      itemName: `ร้านค้า "${shop?.shop_name || 'ร้านนี้'}"`,
+      duration: 5000,
+      onDelete: async () => {
+        // Execute actual delete after timer expires
+        try {
+          const res = await fetch(`${API_ENDPOINTS.SHOPS}?id=${rowId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+          const data = await res.json();
+          
+          if (data.success) {
+            showSuccess("ลบร้านค้าเรียบร้อย");
+            notifyDataChange("shops-sync");
+            mutate('/api/shops/dropdown');
+            
+            // Clean up deleted IDs tracking
+            setTimeout(() => {
+              if (deletedIdsRef.current.has(rowId)) {
+                deletedIdsRef.current.delete(rowId);
+              }
+            }, 5000);
+          } else {
+            // Delete failed - restore the item
+            showError(data.message || "ลบร้านค้าล้มเหลว");
             deletedIdsRef.current.delete(rowId);
+            fetchShops();
           }
-        }, 5000);
-      } else {
-        showError(data.message);
-        // Revert optimistic delete on error
+        } catch (error) {
+          // Delete failed - restore the item
+          showError(error.message || "ลบร้านค้าล้มเหลว");
+          deletedIdsRef.current.delete(rowId);
+          fetchShops();
+        }
+      },
+      onCancel: () => {
+        // User cancelled - restore the item
         deletedIdsRef.current.delete(rowId);
-        setDeleteCounter(n => n + 1);
-        fetchShops(); // Re-fetch to restore data
+        fetchShops();
       }
-    } catch (error) {
-      showError(error.message);
-      // Revert optimistic delete on error
-      deletedIdsRef.current.delete(rowId);
-      setDeleteCounter(n => n + 1);
-      fetchShops(); // Re-fetch to restore data
-    }
+    });
+    
+    // 1. Optimistic update - remove from UI immediately
+    deletedIdsRef.current.add(rowId);
+    setShops(prev => prev.filter(s => s.id !== rowId));
   };
 
   const handleRowAdd = (newRow) => {
@@ -590,51 +547,13 @@ function ShopsPageContent() {
         }
       }
 
-      // Optimistic update: Add new shop to UI immediately
-      // Handle different response formats between local and production
-      const newShopId = shopData.shop?.id || shopData.shop_id || shopData.id || shopData.data?.id;
-      
-      // Debug logging for production
-      if (process.env.NODE_ENV === 'production') {
-        console.log('Shop creation response:', shopData);
-        console.log('Extracted shop ID:', newShopId);
-      }
-      
-      const newShop = {
-        id: newShopId || `temp_${Date.now()}`, // Fallback ID for UI
-        shop_name: formData.shop_name?.trim() || "",
-        owner_name: formData.owner_name?.trim() || "",
-        phone: formData.phone?.trim() || "",
-        address: formData.address?.trim() || "",
-        email: formData.email?.trim() || "",
-        notes: formData.notes?.trim() || "",
-        license_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        ...(formData.custom_fields || {})
-      };
-
-      // Update local state immediately for instant UI feedback
-      setLocalShops(prev => [newShop, ...prev]);
-      
-      // Update SWR cache immediately
-      fetchShops(currentData => ({
-        ...currentData,
-        shops: [newShop, ...(currentData?.shops || [])]
-      }), { revalidate: false });
-      
-      // Removed the setTimeout that clears localShops too early
-      // Data will naturally deduplicate in displayShops when server data arrives
-      
-      // Targeted cache invalidation
-      try {
-        mutate('/api/shops/dropdown');
-      } catch (err) {
-        console.error('Failed to mutate dropdown:', err);
-      }
+      showSuccess("เพิ่มร้านค้าเรียบร้อย");
+      setShowQuickAdd(false);
+      fetchShops();
+      mutate('/api/shops/dropdown');
     } catch (error) {
       console.error('Quick add shop error:', error);
-      throw error; // Re-throw to let QuickAddModal handle the error display
+      throw error; 
     }
   };
 
@@ -743,7 +662,7 @@ function ShopsPageContent() {
             <ExcelTable
               key={`shops-table-${isLoading}`}
               initialColumns={columns}
-              initialRows={displayShops}
+              initialRows={shops}
               onRowUpdate={handleRowUpdate}
               onRowDelete={handleRowDelete}
               onRowAdd={handleRowAdd}

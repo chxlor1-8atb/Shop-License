@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { API_ENDPOINTS } from "@/constants";
-import { showSuccess, showError } from "@/utils/alerts";
+import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
 import { useAutoRefresh, notifyDataChange, useRealtime } from "@/hooks";
 import { mutate } from "swr";
 import TableSkeleton from "@/components/ui/TableSkeleton";
@@ -475,44 +475,62 @@ export default function LicenseTypesPage() {
   };
 
   const deleteType = async (id) => {
+    // Find type for display name
+    const type = types.find((t) => t.id === id);
+    const typeName = type?.name || `ประเภท #${id}`;
+    
+    // Show pending delete toast with undo option
+    pendingDelete({
+      itemName: `ประเภทใบอนุญาต "${typeName}"`,
+      duration: 5000,
+      onDelete: async () => {
+        // Execute actual delete after timer expires
+        try {
+          const response = await fetch(`${API_ENDPOINTS.LICENSE_TYPES}?id=${id}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+          const data = await response.json();
+          if (!data.success) {
+            throw new Error(data.message || "เกิดข้อผิดพลาด");
+          }
+          
+          showSuccess("ลบประเภทใบอนุญาตเรียบร้อย");
+          notifyDataChange("license-types-sync");
+          
+          // Targeted SWR cache invalidation
+          mutate('/api/license-types/dropdown');
+          mutate('/api/license-types');
+          
+          // Remove from deletedIdsRef after a delay
+          setTimeout(() => {
+            if (deletedIdsRef.current.has(id)) {
+               deletedIdsRef.current.delete(id);
+            }
+          }, 5000);
+          
+          // Force refresh to ensure UI is in sync with server
+          shouldSkipFetchRef.current = false;
+          await fetchData();
+        } catch (error) {
+          // Delete failed - restore the item
+          deletedIdsRef.current.delete(id);
+          showError(error.message);
+          fetchData();
+          shouldSkipFetchRef.current = false;
+        }
+      },
+      onCancel: () => {
+        // User cancelled - restore the item
+        deletedIdsRef.current.delete(id);
+        fetchData();
+        shouldSkipFetchRef.current = false;
+      }
+    });
+    
     // 1. Optimistic update: Mark as deleted locally first
     deletedIdsRef.current.add(id);
     setTypes((prev) => prev.filter((t) => t.id !== id));
-    
-    try {
-      const response = await fetch(`${API_ENDPOINTS.LICENSE_TYPES}?id=${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || "เกิดข้อผิดพลาด");
-      }
-      
-      showSuccess("ลบประเภทใบอนุญาตเรียบร้อย");
-      notifyDataChange("license-types-sync");
-      
-      // Targeted SWR cache invalidation
-      mutate('/api/license-types/dropdown');
-      mutate('/api/license-types');
-      
-      // Remove from deletedIdsRef after a delay
-      setTimeout(() => {
-        if (deletedIdsRef.current.has(id)) {
-           deletedIdsRef.current.delete(id);
-        }
-      }, 5000);
-      
-      // Force refresh to ensure UI is in sync with server
-      shouldSkipFetchRef.current = false;
-      await fetchData();
-    } catch (error) {
-      // Revert: Remove from deletedIds list and re-fetch
-      deletedIdsRef.current.delete(id);
-      showError(error.message);
-      fetchData();
-      shouldSkipFetchRef.current = false;
-    }
   };
 
   const handleRowDelete = (rowId) => {
