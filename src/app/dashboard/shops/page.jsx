@@ -82,10 +82,10 @@ function ShopsPageContent() {
   const [localShops, setLocalShops] = useState([]);
   const deletedIdsRef = useRef(new Set());
   
-  // Safely compute display shops
   // Force re-render counter for deletedIds changes (since useRef doesn't trigger re-render)
-  const [, forceUpdate] = useState(0);
+  const [deleteCounter, setDeleteCounter] = useState(0);
   
+  // Safely compute display shops
   const displayShops = useMemo(() => {
     let mergedShops = [];
     if (!shops) {
@@ -101,7 +101,7 @@ function ShopsPageContent() {
     // Filter out items marked as deleted
     return mergedShops.filter(s => !deletedIdsRef.current.has(s.id));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localShops, shops]);
+  }, [localShops, shops, deleteCounter]);
 
   // Modal states
   const [selectedShop, setSelectedShop] = useState(null);
@@ -326,9 +326,16 @@ function ShopsPageContent() {
       return;
     }
     
+    // Check if shop has licenses bound - prevent delete like license-types page
+    const shop = displayShops.find(s => s.id === rowId);
+    if (shop && parseInt(shop.license_count || 0) > 0) {
+      showError(`ไม่สามารถลบร้านค้าได้ (มีใบอนุญาต ${shop.license_count} ใบผูกอยู่)`);
+      return;
+    }
+    
     // 1. Optimistic update: Mark as deleted locally first
     deletedIdsRef.current.add(rowId);
-    forceUpdate(n => n + 1); // Trigger re-render to update displayShops
+    setDeleteCounter(n => n + 1); // Trigger re-render to update displayShops
 
     try {
       const res = await fetch(`${API_ENDPOINTS.SHOPS}?id=${rowId}`, {
@@ -357,14 +364,14 @@ function ShopsPageContent() {
         showError(data.message);
         // Revert optimistic delete on error
         deletedIdsRef.current.delete(rowId);
-        forceUpdate(n => n + 1);
+        setDeleteCounter(n => n + 1);
         fetchShops(); // Re-fetch to restore data
       }
     } catch (error) {
       showError(error.message);
       // Revert optimistic delete on error
       deletedIdsRef.current.delete(rowId);
-      forceUpdate(n => n + 1);
+      setDeleteCounter(n => n + 1);
       fetchShops(); // Re-fetch to restore data
     }
   };
@@ -734,7 +741,7 @@ function ShopsPageContent() {
         {!isLoading ? (
           <div style={{ overflow: "auto", maxHeight: "600px" }}>
             <ExcelTable
-              key={`shops-${displayShops.length}-${isLoading}`}
+              key={`shops-table-${isLoading}`}
               initialColumns={columns}
               initialRows={displayShops}
               onRowUpdate={handleRowUpdate}

@@ -148,9 +148,10 @@ export async function GET(request) {
         const limitParamIndex = paramIndex;
         const offsetParamIndex = paramIndex + 1;
 
-        // Simple query without expensive subqueries for dropdown use
+        // Include license_count so frontend can check before delete
         const query = `
-            SELECT s.*
+            SELECT s.*,
+                (SELECT COUNT(*) FROM licenses l WHERE l.shop_id = s.id) as license_count
             FROM shops s
             ${whereSQL}
             ORDER BY s.id DESC
@@ -322,9 +323,9 @@ export async function DELETE(request) {
         // Check for licenses first - prevent deletion if shop has licenses
         const licenseCount = await fetchOne('SELECT COUNT(*) as count FROM licenses WHERE shop_id = $1', [id]);
         if (licenseCount && parseInt(licenseCount.count) > 0) {
-            return NextResponse.json({ 
-                success: false, 
-                message: `ไม่สามารถลบร้านค้าได้ (มีใบอนุญาต ${licenseCount.count} ใบผูกอยู่)` 
+            return NextResponse.json({
+                success: false,
+                message: `ไม่สามารถลบร้านค้าได้ (มีใบอนุญาต ${licenseCount.count} ใบผูกอยู่)`
             }, { status: 400 });
         }
 
