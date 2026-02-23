@@ -80,9 +80,12 @@ function ShopsPageContent() {
 
   // Local state for optimistic updates
   const [localShops, setLocalShops] = useState([]);
-  const [deletedIds, setDeletedIds] = useState(new Set());
+  const deletedIdsRef = useRef(new Set());
   
   // Safely compute display shops
+  // Force re-render counter for deletedIds changes (since useRef doesn't trigger re-render)
+  const [, forceUpdate] = useState(0);
+  
   const displayShops = useMemo(() => {
     let mergedShops = [];
     if (!shops) {
@@ -96,8 +99,9 @@ function ShopsPageContent() {
     }
     
     // Filter out items marked as deleted
-    return mergedShops.filter(s => !deletedIds.has(s.id));
-  }, [localShops, shops, deletedIds]);
+    return mergedShops.filter(s => !deletedIdsRef.current.has(s.id));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localShops, shops]);
 
   // Modal states
   const [selectedShop, setSelectedShop] = useState(null);
@@ -322,18 +326,15 @@ function ShopsPageContent() {
       return;
     }
     
-    // Optimistic delete: Hide immediately
-    setDeletedIds(prev => {
-      const next = new Set(prev);
-      next.add(rowId);
-      return next;
-    });
+    // 1. Optimistic update: Mark as deleted locally first
+    deletedIdsRef.current.add(rowId);
+    forceUpdate(n => n + 1); // Trigger re-render to update displayShops
 
     try {
       const res = await fetch(`${API_ENDPOINTS.SHOPS}?id=${rowId}`, {
         method: "DELETE",
         credentials: "include",
-        });
+      });
       const data = await res.json();
       if (data.success) {
         showSuccess("ลบร้านค้าเรียบร้อย");
@@ -344,33 +345,27 @@ function ShopsPageContent() {
         fetchShops(currentData => ({
             ...currentData,
             shops: currentData?.shops?.filter(s => s.id !== rowId) || []
-        }), { revalidate: false });
+        }), { revalidate: true });
 
-        // Remove from deletedIds after a delay to allow server sync
+        // Remove from deletedIdsRef after a delay to allow server sync
         setTimeout(() => {
-          setDeletedIds(prev => {
-            const next = new Set(prev);
-            next.delete(rowId);
-            return next;
-          });
+          if (deletedIdsRef.current.has(rowId)) {
+            deletedIdsRef.current.delete(rowId);
+          }
         }, 5000);
       } else {
         showError(data.message);
         // Revert optimistic delete on error
-        setDeletedIds(prev => {
-          const next = new Set(prev);
-          next.delete(rowId);
-          return next;
-        });
+        deletedIdsRef.current.delete(rowId);
+        forceUpdate(n => n + 1);
+        fetchShops(); // Re-fetch to restore data
       }
     } catch (error) {
       showError(error.message);
       // Revert optimistic delete on error
-      setDeletedIds(prev => {
-        const next = new Set(prev);
-        next.delete(rowId);
-        return next;
-      });
+      deletedIdsRef.current.delete(rowId);
+      forceUpdate(n => n + 1);
+      fetchShops(); // Re-fetch to restore data
     }
   };
 
