@@ -86,6 +86,16 @@ export default function ExcelTable({
 
   // Wrappers to notify parent
   const handleCellChange = (rowId, colId, value) => {
+    // Debug logging สำหรับการแก้ไข custom fields
+    if (colId.startsWith('cf_')) {
+      console.log(`🔧 ExcelTable handleCellChange:`, {
+        rowId,
+        colId,
+        value,
+        isCustomField: colId.startsWith('cf_'),
+        timestamp: new Date().toISOString()
+      });
+    }
     updateCell(rowId, colId, value);
     // NOTE: We probably don't want to call API on every keystroke, but on Blur.
     // However, we are updating local state here.
@@ -93,20 +103,41 @@ export default function ExcelTable({
 
   const handleCellBlur = async (rowId, colId) => {
     setEditingCell(null);
+    
+    // Debug logging สำหรับการ blur ใน custom fields
+    if (colId.startsWith('cf_')) {
+      console.log(`🔧 Custom Field Blur Check:`, {
+        rowId,
+        colId,
+        columnName: columns.find(c => c.id === colId)?.name || 'Unknown',
+        currentValue: getRows().find(r => r.id === rowId)?.[colId] || 'NOT_FOUND'
+      });
+    }
+    
     if (onRowUpdate) {
       // Use getRows() to get the most up-to-date data
       const currentRows = getRows();
       const row = currentRows.find((r) => r.id === rowId);
       if (row) {
+        // Debug logging สำหรับการส่งข้อมูลไป backend
+        if (colId.startsWith('cf_')) {
+          console.log(`🔧 Custom Field Sending to Backend:`, {
+            rowId,
+            colId,
+            columnName: columns.find(c => c.id === colId)?.name || 'Unknown',
+            currentValue: row[colId],
+            hasValue: row[col.id] !== undefined && row[col.id] !== null && row[col.id] !== ''
+          });
+        }
+        
         // Mark as pending save to prevent sync override
         setPendingSave(true);
         try {
           await onRowUpdate(row);
+        } catch (error) {
+          console.error('❌ Update failed:', error);
         } finally {
-          // Allow sync after a short delay
-          setTimeout(() => {
-            setPendingSave(false);
-          }, 500);
+          setPendingSave(false);
         }
       }
     }

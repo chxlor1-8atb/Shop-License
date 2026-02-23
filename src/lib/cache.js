@@ -74,11 +74,16 @@ export const getCachedShops = unstable_cache(
 
 /**
  * Helper: Get warning days from notification_settings (not cached by unstable_cache)
+ * ใช้ค่า default 30 วันเนื่องจากตาราง notification_settings ยังไม่ถูกสร้าง
  */
 export async function getWarningDays() {
     try {
-        const settings = await fetchOne('SELECT days_before_expiry FROM notification_settings WHERE id = 1');
-        return parseInt(settings?.days_before_expiry) || 30;
+        // ตอนนี้ใช้ค่า default 30 วันก่อน จนกว่าจะมีการสร้างตาราง notification_settings
+        return 30;
+        
+        // TODO: เมื่อมีตาราง notification_settings แล้ว สามารถเปิดใช้งานโค้ดด้านล่าง
+        // const settings = await fetchOne('SELECT days_before_expiry FROM notification_settings WHERE id = 1');
+        // return parseInt(settings?.days_before_expiry) || 30;
     } catch {
         return 30;
     }

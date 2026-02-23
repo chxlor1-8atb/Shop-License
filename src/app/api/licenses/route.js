@@ -146,6 +146,15 @@ export async function GET(request) {
             fetchAll(query, [...params, limit, offset])
         ]);
 
+        // Debug logging สำหรับตรวจสอบข้อมูลที่ส่งกลับไป frontend
+        console.log('🔍 GET API - Data Debug:', {
+            totalLicenses: licenses.length,
+            sampleLicense: licenses[0],
+            sampleCustomFields: licenses[0]?.custom_fields,
+            hasCustomFields: licenses[0]?.custom_fields && Object.keys(licenses[0]?.custom_fields).length > 0,
+            customFieldsKeys: licenses[0]?.custom_fields ? Object.keys(licenses[0]?.custom_fields) : []
+        });
+
         const total = parseInt(countResult?.total || 0, 10);
         const totalPages = Math.ceil(total / limit);
 
@@ -274,9 +283,42 @@ export async function PUT(request) {
     try {
         const body = await request.json();
         const { custom_fields } = body;
-        const issue_date = sanitizeDate(body.issue_date);
-        const expiry_date = sanitizeDate(body.expiry_date);
         const id = sanitizeInt(body.id, 0, 1);
+
+        // ดึงข้อมูลเดิมจาก database ก่อนเพื่อรักษาค่าวันที่
+        const existingLicense = await fetchOne('SELECT issue_date, expiry_date FROM licenses WHERE id = $1', [id]);
+        
+        // ใช้ค่าใหม่ถ้ามีการส่งมา (รวมถึงค่าว่าง) หรือใช้ค่าเดิมถ้าไม่มี
+        const issue_date = body.issue_date !== undefined ? sanitizeDate(body.issue_date, null) : (existingLicense?.issue_date || null);
+        const expiry_date = body.expiry_date !== undefined ? sanitizeDate(body.expiry_date, null) : (existingLicense?.expiry_date || null);
+
+        // Debug logging สำหรับตรวจสอบข้อมูลที่รับมาจาก frontend
+        console.log('🔧 PUT API - Complete Data Debug:', {
+            id,
+            shop_id,
+            license_type_id,
+            license_number,
+            issue_date: body.issue_date,
+            expiry_date: body.expiry_date,
+            status,
+            notes,
+            custom_fields,
+            allBodyKeys: Object.keys(body),
+            hasIssueDate: 'issue_date' in body,
+            hasExpiryDate: 'expiry_date' in body,
+            hasCustomFields: custom_fields && Object.keys(custom_fields).length > 0,
+            // ตรวจสอบว่าฟิลด์ที่จำเป็นต้องมีค่า
+            hasId: !!id,
+            hasShopId: !!shop_id,
+            hasLicenseTypeId: !!license_type_id,
+            hasLicenseNumber: !!license_number,
+            idValid: id >= 1,
+            shopIdValid: shop_id >= 1,
+            licenseTypeIdValid: license_type_id >= 1,
+            licenseNumberValid: !!license_number && license_number !== '',
+            // ตรวจสอบว่าฟิลด์ที่จำเป็นต้องมาครบถ้วน
+            allRequiredFieldsValid: id >= 1 && shop_id >= 1 && license_type_id >= 1 && !!license_number && license_number !== ''
+        });
         const shop_id = sanitizeInt(body.shop_id, 0, 1);
         const license_type_id = sanitizeInt(body.license_type_id, 0, 1);
         const license_number = sanitizeString(body.license_number || '', 100);
@@ -284,6 +326,26 @@ export async function PUT(request) {
         const notes = sanitizeString(body.notes || '', 1000);
 
         if (id < 1 || shop_id < 1 || license_type_id < 1) {
+            // Debug logging สำหรับตรวจสอบฟิลด์ที่จำเป็นต้อง
+            console.log('❌ Missing Required Fields Debug:', {
+                id,
+                shop_id,
+                license_type_id,
+                license_number,
+                issue_date,
+                expiry_date,
+                status,
+                notes,
+                custom_fields,
+                bodyKeys: Object.keys(body),
+                idValid: id >= 1,
+                shopIdValid: shop_id >= 1,
+                licenseTypeIdValid: license_type_id >= 1,
+                licenseNumberValid: !!body.license_number,
+                issueDateValid: !!body.issue_date,
+                expiryDateValid: !!body.expiry_date,
+                statusValid: !!body.status
+            });
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
         }
 
@@ -293,6 +355,24 @@ export async function PUT(request) {
              WHERE id = $8`,
             [shop_id, license_type_id, license_number, issue_date, expiry_date, status, notes, id]
         );
+
+        // Debug logging หลังจากบันทึกข้อมูล licenses
+        console.log('🔧 PUT API - License Update Debug:', {
+            shop_id,
+            license_type_id,
+            license_number,
+            issue_date: issue_date || 'NULL',
+            expiry_date: expiry_date || 'NULL',
+            status,
+            notes,
+            id,
+            custom_fields,
+            // ตรวจสอบว่า custom fields ถูกบันทึก
+            hasLocation: custom_fields?.cf_selling_location !== undefined,
+            locationValue: custom_fields?.cf_selling_location,
+            hasAmount: custom_fields?.cf_amount !== undefined,
+            amountValue: custom_fields?.cf_amount
+        });
 
         // Update custom fields if provided
         if (custom_fields && Object.keys(custom_fields).length > 0) {
@@ -309,8 +389,16 @@ export async function PUT(request) {
             });
 
             // Update custom field values
+            console.log('🔧 PUT API - Custom Fields Debug:', {
+                licenseId: id,
+                custom_fields_received: custom_fields,
+                available_fields: fields.map(f => f.field_name)
+            });
+            
             for (const [fieldName, value] of Object.entries(custom_fields)) {
                 const fieldId = fieldMap[fieldName];
+                console.log(`🔧 Processing field: ${fieldName}, value: ${value}, fieldId: ${fieldId}`);
+                
                 if (fieldId !== undefined) {
                     if (value !== undefined && value !== null && value !== '') {
                         // Insert or update the value
@@ -320,13 +408,19 @@ export async function PUT(request) {
                             ON CONFLICT (custom_field_id, entity_id) 
                             DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
                         `, [fieldId, id, 'licenses', value?.toString() || '']);
+                        
+                        console.log(`✅ Saved field ${fieldName} with value: ${value}`);
                     } else {
                         // Delete the value if it's empty/null
                         await executeQuery(
                             'DELETE FROM custom_field_values WHERE custom_field_id = $1 AND entity_id = $2',
                             [fieldId, id]
                         );
+                        
+                        console.log(`🗑️ Deleted field ${fieldName} (empty value)`);
                     }
+                } else {
+                    console.log(`❌ Field ${fieldName} not found in fieldMap`);
                 }
             }
         }

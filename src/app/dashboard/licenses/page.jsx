@@ -32,6 +32,15 @@ function LicensesPageContent() {
   const searchParams = useSearchParams();
   const { shopOptions, typeOptions, shops, error: dropdownError } = useDropdownData(); // Use hook for dropdown data
   
+  // Debug logging สำหรับตรวจสอบปัญหา
+  console.log('🔧 LicensesPageContent Initialized:', {
+    shopOptionsCount: shopOptions?.length || 0,
+    typeOptionsCount: typeOptions?.length || 0,
+    shopsCount: shops?.length || 0,
+    hasDropdownError: !!dropdownError,
+    searchParams: Object.fromEntries(searchParams)
+  });
+  
   useEffect(() => {
     if (dropdownError) {
       console.error("Dropdown data error:", dropdownError);
@@ -181,18 +190,33 @@ function LicensesPageContent() {
         // Get pure custom columns with proper ordering
         const pureCustomCols = apiFields
           .filter((f) => !baseCols.find((bc) => bc.id === f.field_name))
-          .map((f) => ({
-            id: f.field_name,
-            name: f.field_label,
-            type: f.field_type || "text",
-            width: 150,
-            align: "center",
-            isCustom: true,
-            db_id: f.id,
-            display_order: f.display_order !== undefined && f.display_order !== null 
-              ? Number(f.display_order) 
-              : 99,
-          }));
+          .map((f) => {
+            const customCol = {
+              id: f.field_name,
+              name: f.field_label,
+              type: f.field_type || "text",
+              width: 150,
+              align: "center",
+              isCustom: true,
+              db_id: f.id,
+              display_order: f.display_order !== undefined && f.display_order !== null 
+                ? Number(f.display_order) 
+                : 99,
+              readOnly: false, // ตรวจสอบว่า custom fields สามารถแก้ไขได้
+            };
+            
+            // Debug logging สำหรับการสร้างคอลัมน์ custom fields
+            console.log(`🔧 Creating Custom Column:`, {
+              field_name: f.field_name,
+              field_label: f.field_label,
+              field_type: f.field_type,
+              display_order: f.display_order,
+              is_active: f.is_active,
+              columnProps: customCol
+            });
+            
+            return customCol;
+          });
 
         // Combine and sort all columns by display_order
         const allColumns = [...updatedBaseCols, ...pureCustomCols];
@@ -200,6 +224,34 @@ function LicensesPageContent() {
           const orderA = a.display_order !== undefined ? a.display_order : 999;
           const orderB = b.display_order !== undefined ? b.display_order : 999;
           return orderA - orderB;
+        });
+
+        // Debug logging คอลัมน์ทั้งหมด
+        console.log('📊 Column Management Debug:', {
+          baseColsCount: baseCols.length,
+          customColsCount: pureCustomCols.length,
+          totalColsCount: sortedColumns.length,
+          baseCols: baseCols.map(c => ({ id: c.id, name: c.name, order: c.display_order })),
+          customCols: pureCustomCols.map(c => ({ id: c.id, name: c.name, order: c.display_order })),
+          finalCols: sortedColumns.map(c => ({ id: c.id, name: c.name, order: c.display_order })),
+          // ตรวจสอบคอลัมน์ที่เราสนใจโดยเฉพาะ
+          hasLocation: sortedColumns.some(c => c.id === 'cf_selling_location'),
+          hasAmount: sortedColumns.some(c => c.id === 'cf_amount'),
+          locationCol: sortedColumns.find(c => c.id === 'cf_selling_location'),
+          amountCol: sortedColumns.find(c => c.id === 'cf_amount'),
+          // ตรวจสอบว่าคอลัมน์มี properties ครบถ้วน
+          locationColProps: sortedColumns.find(c => c.id === 'cf_selling_location') ? {
+            id: sortedColumns.find(c => c.id === 'cf_selling_location').id,
+            name: sortedColumns.find(c => c.id === 'cf_selling_location').name,
+            type: sortedColumns.find(c => c.id === 'cf_selling_location').type,
+            isCustom: sortedColumns.find(c => c.id === 'cf_selling_location').isCustom
+          } : null,
+          amountColProps: sortedColumns.find(c => c.id === 'cf_amount') ? {
+            id: sortedColumns.find(c => c.id === 'cf_amount').id,
+            name: sortedColumns.find(c => c.id === 'cf_amount').name,
+            type: sortedColumns.find(c => c.id === 'cf_amount').type,
+            isCustom: sortedColumns.find(c => c.id === 'cf_amount').isCustom
+          } : null
         });
 
         setColumns(sortedColumns);
@@ -222,6 +274,18 @@ function LicensesPageContent() {
     if (!initialLoadDoneRef.current) {
       setLoading(true);
     }
+    
+    // Debug logging
+    console.log('🔄 fetchLicenses called:', {
+      initialLoadDone: initialLoadDoneRef.current,
+      page,
+      limit,
+      debouncedSearch,
+      filterType,
+      filterStatus,
+      filterShop
+    });
+    
     try {
       const params = new URLSearchParams({
         page: page,
@@ -237,38 +301,79 @@ function LicensesPageContent() {
 
       if (data.success) {
         // Flatten custom_fields
-        let formattedLicenses = data.licenses.map((l) => ({
-          ...l,
-          ...(l.custom_fields || {}),
-        }));
+        let formattedLicenses = data.licenses.map((l, index) => {
+          const flattened = {
+            ...l,
+            ...(l.custom_fields || {}),
+          };
+          
+          // Debug การ flatten custom fields สำหรับ license แรก
+          if (index === 0) {
+            console.log('🔍 Custom Fields Flatten Debug:', {
+              licenseId: l.id,
+              originalCustomFields: l.custom_fields,
+              flattenedFields: Object.keys(flattened).filter(key => 
+                !['id', 'shop_id', 'license_type_id', 'license_number', 'issue_date', 'expiry_date', 'status', 'notes', 'shop_name', 'type_name', 'original_status', 'created_at', 'updated_at'].includes(key)
+              ),
+              hasLocation: 'cf_selling_location' in flattened,
+              hasAmount: 'cf_amount' in flattened,
+              locationValue: flattened.cf_selling_location,
+              amountValue: flattened.cf_amount,
+              allKeys: Object.keys(flattened),
+              issueDate: flattened.issue_date,
+              expiryDate: flattened.expiry_date
+            });
+          }
+          
+          return flattened;
+        });
         
         // Filter out items that are currently being deleted locally
         formattedLicenses = formattedLicenses.filter(l => !deletedIdsRef.current.has(l.id));
         
+        console.log('📊 fetchLicenses result:', {
+          totalLicenses: formattedLicenses.length,
+          deletedIds: Array.from(deletedIdsRef.current),
+          sampleFormattedLicense: formattedLicenses[0],
+          sampleFormattedKeys: formattedLicenses[0] ? Object.keys(formattedLicenses[0]) : [],
+          sampleHasLocation: formattedLicenses[0] ? 'cf_selling_location' in formattedLicenses[0] : false,
+          sampleHasAmount: formattedLicenses[0] ? 'cf_amount' in formattedLicenses[0] : false
+        });
+        
         setLicenses(formattedLicenses);
+        // เรียก updateFromResponse ตรงๆ แทนที่จะเป็น dependency
         updateFromResponse(data.pagination);
+      } else {
+        console.error('❌ fetchLicenses failed:', data.message);
+        showError("โหลดข้อมูลใบอนุญาตล้มเหลว");
       }
     } catch (error) {
-      console.error("Failed to fetch licenses:", error);
+      console.error('❌ fetchLicenses error:', error);
       showError("โหลดข้อมูลใบอนุญาตล้มเหลว");
     } finally {
       setLoading(false);
       initialLoadDoneRef.current = true;
     }
-  }, [updateFromResponse, page, limit, debouncedSearch, filterType, filterStatus, filterShop]);
+  }, [page, limit, debouncedSearch, filterType, filterStatus, filterShop]);
 
   // Initial license data fetch and refetch when filters change
   useEffect(() => {
     fetchLicenses();
-  }, [fetchLicenses]);
+  }, [page, limit, debouncedSearch, filterType, filterStatus, filterShop]);
 
   // Auto-refresh: sync data every 5s + on tab focus + cross-tab
-  useAutoRefresh(fetchLicenses, { interval: 5000, channel: "licenses-sync" });
+  // ปิดชั่วคราวเพื่อแก้ไขปัญหาการเพิ่มข้อมูลซ้ำ
+  // useAutoRefresh(fetchLicenses, { interval: 5000, channel: "licenses-sync" });
 
   // Supabase Realtime: Listen for DB changes
   useRealtime('licenses', (payload) => {
     // console.log("[Realtime] Licenses updated:", payload);
-    // Refresh list
+    // ตรวจสอบว่าเป็นการเพิ่มข้อมูลหรือไม่ ถ้าใช่ไม่ต้องโหลดทับ
+    if (payload.eventType === 'INSERT') {
+      // สำหรับการเพิ่มข้อมูลใหม่ ไม่ต้องโหลดทับเพราะมี optimistic update อยู่แล้ว
+      return;
+    }
+    // Refresh list for other events (UPDATE, DELETE)
     fetchLicenses();
     // Refresh global states
     mutate('/api/dashboard?action=stats');
@@ -281,8 +386,29 @@ function LicensesPageContent() {
   // --- Row Handlers ---
 
   const handleRowUpdate = async (updatedRow) => {
+    // Debug logging สำหรับตรวจสอบว่ามีการเรียกใช handleRowUpdate
+    console.log('🔧 handleRowUpdate Called:', {
+      licenseId: updatedRow.id,
+      isNew: updatedRow.id.toString().startsWith("id_"),
+      allKeys: Object.keys(updatedRow),
+      shopIdValue: updatedRow.shop_id,
+      licenseTypeIdValue: updatedRow.license_type_id,
+      licenseNumberValue: updatedRow.license_number,
+      hasShopId: 'shop_id' in updatedRow,
+      hasLicenseTypeId: 'license_type_id' in updatedRow,
+      hasLicenseNumber: 'license_number' in updatedRow,
+      // ตรวจจอบว่ามี custom fields
+      hasCustomFields: Object.keys(updatedRow).some(key => key.startsWith('cf_')),
+      customFieldKeys: Object.keys(updatedRow).filter(key => key.startsWith('cf_')),
+      customFieldValues: Object.keys(updatedRow).filter(key => key.startsWith('cf_')).reduce((acc, key) => {
+        acc[key] = updatedRow[key];
+        return acc;
+      }, {})
+    });
+
     // Check if user selected "Create New Shop" option
     if (updatedRow.shop_id === CREATE_NEW_SHOP_VALUE) {
+      console.log('🔧 Create New Shop selected, opening modal');
       setShowQuickAddShop(true);
       // Reset the shop_id so it doesn't show the special value
       return;
@@ -298,21 +424,40 @@ function LicensesPageContent() {
       "issue_date",
       "expiry_date",
       "status",
-      "notes",
+      "notes"
     ];
 
-    const standardData = {
-      shop_id: updatedRow.shop_id,
-      license_type_id: updatedRow.license_type_id,
-      license_number: updatedRow.license_number,
-      issue_date: updatedRow.issue_date,
-      expiry_date: updatedRow.expiry_date,
-      status: updatedRow.status,
-      notes: updatedRow.notes,
-    };
+    // Extract standard data - ดึงค่าเดิมจาก license ที่มีอยู่ก่อน แล้วอัปเดตเฉพาะที่เปลี่ยน
+    const existingLicense = licenses.find(l => l.id === updatedRow.id);
+    
+    // สร้าง standard data โดยส่งเฉพาะฟิลด์ที่เปลี่ยนแปลงจริงๆ (รวมถึงค่าว่าง)
+    const standardData = {};
+    
+    // ตรวจจอบและส่งเฉพาะฟิลด์ที่เปลี่ยนแปลง (รวมถึงค่าว่าง)
+    if (updatedRow.shop_id !== existingLicense?.shop_id) {
+      standardData.shop_id = updatedRow.shop_id;
+    }
+    if (updatedRow.license_type_id !== existingLicense?.license_type_id) {
+      standardData.license_type_id = updatedRow.license_type_id;
+    }
+    if (updatedRow.license_number !== existingLicense?.license_number) {
+      standardData.license_number = updatedRow.license_number;
+    }
+    // ส่งวันที่เสมอเสมอเมื่อมีการเปลี่ยนแปลง (รวมถึงค่าว่างและ undefined)
+    if (updatedRow.issue_date !== existingLicense?.issue_date) {
+      standardData.issue_date = updatedRow.issue_date;
+    }
+    if (updatedRow.expiry_date !== existingLicense?.expiry_date) {
+      standardData.expiry_date = updatedRow.expiry_date;
+    }
+    if (updatedRow.status !== existingLicense?.status) {
+      standardData.status = updatedRow.status;
+    }
+    if (updatedRow.notes !== existingLicense?.notes) {
+      standardData.notes = updatedRow.notes;
+    }
 
-    // Extract custom fields - use same pattern as shops page
-    // Everything in updatedRow that is NOT a standard field and NOT id/created_at/etc.
+    // Extract custom fields - ส่งเฉพาะที่เปลี่ยนแปลงจริงๆ (รวมถึงค่าว่าง)
     const customValues = {};
     Object.keys(updatedRow).forEach((key) => {
       if (
@@ -325,8 +470,106 @@ function LicensesPageContent() {
         key !== "type_name" &&
         key !== "original_status"
       ) {
-        customValues[key] = updatedRow[key];
+        // ส่งเฉพาะ custom fields ที่เปลี่ยนแปลง (รวมถึงค่าว่าง)
+        if (updatedRow[key] !== existingLicense?.[key]) {
+          customValues[key] = updatedRow[key];
+        }
       }
+    });
+
+    // ถ้ามีการแก้ไข custom fields ให้ส่งฟิลด์ที่จำเป็นต้องไปด้วย
+    if (Object.keys(customValues).length > 0) {
+      console.log('🔧 Custom fields changed, ensuring required fields are sent');
+      
+      // ถ้าไม่มีการเปลี่ยนแปลงในฟิลด์ที่จำเป็นต้อง ให้ส่งค่าเดิมไปด้วย
+      if (Object.keys(standardData).length === 0) {
+        console.log('🔧 No standard fields changed, sending required fields to prevent error');
+        standardData.id = updatedRow.id;
+        standardData.shop_id = existingLicense?.shop_id || updatedRow.shop_id;
+        standardData.license_type_id = existingLicense?.license_type_id || updatedRow.license_type_id;
+        standardData.license_number = existingLicense?.license_number || updatedRow.license_number;
+      }
+    }
+
+    // Debug logging สำหรับตรวจสอบฟิลด์ที่จำเป็นต้อง
+    console.log('🔍 Required Fields Validation:', {
+      licenseId: updatedRow.id,
+      hasValidId: updatedRow.id !== undefined && updatedRow.id !== null && updatedRow.id !== '',
+      hasValidShopId: updatedRow.shop_id !== undefined && updatedRow.shop_id !== null && updatedRow.shop_id !== 0,
+      hasValidLicenseTypeId: updatedRow.license_type_id !== undefined && updatedRow.license_type_id !== null && updatedRow.license_type_id !== 0,
+      hasValidLicenseNumber: updatedRow.license_number !== undefined && updatedRow.license_number !== null && updatedRow.license_number !== '',
+      shopIdValue: updatedRow.shop_id,
+      licenseTypeIdValue: updatedRow.license_type_id,
+      licenseNumberValue: updatedRow.license_number,
+      allKeys: Object.keys(updatedRow),
+      standardDataKeys: Object.keys(standardData),
+      customValuesKeys: Object.keys(customValues),
+      hasCustomFieldChanges: Object.keys(customValues).length > 0,
+      hasStandardFieldChanges: Object.keys(standardData).length > 0
+    });
+
+    // ตรวจสอบว่าฟิลด์ที่จำเป็นต้องมีค่าก่อนส่งข้อมูล
+    const requiredFieldsValid = 
+      updatedRow.id !== undefined && updatedRow.id !== null && updatedRow.id !== '' &&
+      (standardData.shop_id !== undefined ? standardData.shop_id : (existingLicense?.shop_id || updatedRow.shop_id)) !== undefined &&
+      (standardData.shop_id !== undefined ? standardData.shop_id : (existingLicense?.shop_id || updatedRow.shop_id)) !== null &&
+      (standardData.shop_id !== undefined ? standardData.shop_id : (existingLicense?.shop_id || updatedRow.shop_id)) !== 0 &&
+      (standardData.license_type_id !== undefined ? standardData.license_type_id : (existingLicense?.license_type_id || updatedRow.license_type_id)) !== undefined &&
+      (standardData.license_type_id !== undefined ? standardData.license_type_id : (existingLicense?.license_type_id || updatedRow.license_type_id)) !== null &&
+      (standardData.license_type_id !== undefined ? standardData.license_type_id : (existingLicense?.license_type_id || updatedRow.license_type_id)) !== 0 &&
+      (standardData.license_number !== undefined ? standardData.license_number : (existingLicense?.license_number || updatedRow.license_number)) !== undefined &&
+      (standardData.license_number !== undefined ? standardData.license_number : (existingLicense?.license_number || updatedRow.license_number)) !== null &&
+      (standardData.license_number !== undefined ? standardData.license_number : (existingLicense?.license_number || updatedRow.license_number)) !== '';
+
+    if (!requiredFieldsValid) {
+      console.error('❌ Required fields validation failed:', {
+        licenseId: updatedRow.id,
+        shopId: standardData.shop_id || (existingLicense?.shop_id || updatedRow.shop_id),
+        licenseTypeId: standardData.license_type_id || (existingLicense?.license_type_id || updatedRow.license_type_id),
+        licenseNumber: standardData.license_number || (existingLicense?.license_number || updatedRow.license_number)
+      });
+      showError("กรุณากรอกข้อมูลที่จำเป็นต้อนให้ครบถ้วน");
+      return;
+    }
+
+    // Debug logging สำหรับตรวจสอบ custom fields ที่เปลี่ยนแปลง
+    console.log('🔍 Custom Fields Update Debug:', {
+      licenseId: updatedRow.id,
+      existingCustomFields: Object.keys(existingLicense || {}).filter(key => key.startsWith('cf_')),
+      updatedCustomFields: Object.keys(updatedRow).filter(key => key.startsWith('cf_')),
+      changedCustomFields: Object.keys(customValues),
+      customValues,
+      // ตรวจสอบค่าที่อาจเป็นว่าง
+      locationValue: updatedRow.cf_selling_location,
+      amountValue: updatedRow.cf_amount,
+      existingLocationValue: existingLicense?.cf_selling_location,
+      existingAmountValue: existingLicense?.cf_amount
+    });
+
+    // Debug logging
+    console.log('🔍 License Update Debug:', {
+      isNew,
+      standardData,
+      customValues,
+      updatedRowKeys: Object.keys(updatedRow),
+      columnsIds: columns.map(c => c.id),
+      issueDateValue: updatedRow.issue_date,
+      expiryDateValue: updatedRow.expiry_date,
+      issueDateType: typeof updatedRow.issue_date,
+      expiryDateType: typeof updatedRow.expiry_date,
+      // ตรวจสอบค่าของ custom fields ที่น่าจะเป็น "สถานที่จำหน่าย" และ "จำนวนเงิน"
+      locationValue: updatedRow['cf_selling_location'],
+      amountValue: updatedRow['cf_amount'],
+      allCustomFields: Object.keys(updatedRow).filter(key => 
+        !STANDARD_COLUMNS_IDS.includes(key) && 
+        key !== "id" && 
+        key !== "custom_fields" && 
+        key !== "created_at" && 
+        key !== "updated_at" && 
+        key !== "shop_name" && 
+        key !== "type_name" && 
+        key !== "original_status"
+      )
     });
 
     try {
@@ -341,6 +584,12 @@ function LicensesPageContent() {
           ...standardData,
           custom_fields: customValues,
         };
+
+        console.log('📤 Frontend Sending POST Payload:', {
+          payload,
+          customValuesKeys: Object.keys(customValues),
+          customValuesData: customValues
+        });
 
         const res = await fetch(API_ENDPOINTS.LICENSES, {
           method: "POST",
@@ -386,6 +635,32 @@ function LicensesPageContent() {
           custom_fields: customValues,
         };
 
+        console.log('📤 Frontend Sending PUT Payload (Complete):', {
+          payload,
+          customValuesKeys: Object.keys(customValues),
+          customValuesData: customValues,
+          updatedRowId: updatedRow.id,
+          // ตรวจจอบว่ามีการเปลี่ยนแปลงจริงๆ
+          hasChanges: Object.keys(standardData).length > 0 || Object.keys(customValues).length > 0,
+          standardDataChanges: Object.keys(standardData),
+          customFieldChanges: Object.keys(customValues),
+          // ตรวจสอบค่าที่ส่งไป backend
+          sentId: payload.id,
+          sentShopId: payload.shop_id,
+          sentLicenseTypeId: payload.license_type_id,
+          sentLicenseNumber: payload.license_number,
+          sentIssueDate: payload.issue_date,
+          sentExpiryDate: payload.expiry_date,
+          sentLocation: payload.custom_fields?.cf_selling_location,
+          sentAmount: payload.custom_fields?.cf_amount,
+          // ตรวจสอบว่าฟิลด์ที่จำเป็นต้องมีค่า
+          hasRequiredFields: !!(payload.id && payload.shop_id && payload.license_type_id && payload.license_number),
+          requiredFieldsValid: !!(payload.id && payload.shop_id > 0 && payload.license_type_id > 0 && payload.license_number),
+          // ตรวจสอบว่าข้อมูลที่ส่งไป backend มีค่า
+          payloadKeys: Object.keys(payload),
+          payloadValues: Object.values(payload)
+        });
+
         const res = await fetch(API_ENDPOINTS.LICENSES, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -394,17 +669,55 @@ function LicensesPageContent() {
         });
         const data = await res.json();
 
+        console.log('📥 Backend PUT Response:', {
+          success: data.success,
+          license: data.license,
+          message: data.message,
+          licenseCustomFields: data.license?.custom_fields
+        });
+
         if (data.success) {
+          showSuccess("อัปเดตใบอนุญาตเรียบร้อย");
           notifyDataChange("licenses-sync");
           
+          // ใช้ optimistic update แทนการรีเฟรชทันที
+          console.log('🔧 Using optimistic update instead of refresh');
+          
           if (data.license) {
-             setLicenses(prev => prev.map(l => l.id === updatedRow.id ? data.license : l));
+            console.log('🔧 Backend Response License:', data.license);
+            console.log('🔧 Backend Response has location:', 'cf_selling_location' in (data.license || {}));
+            console.log('🔧 Backend Response location value:', data.license?.cf_selling_location || 'NOT_FOUND');
+            setLicenses(prev => prev.map(l => l.id === updatedRow.id ? data.license : l));
           } else {
-             // Fallback: Optimistic update
-             setLicenses((prev) =>
-               prev.map((l) => (l.id === updatedRow.id ? updatedRow : l))
-             );
+            // Fallback: สร้าง license ที่อัปเดตจากข้อมูลที่ส่งไป
+            const updatedLicense = {
+              ...existingLicense,
+              ...standardData,
+              ...customValues,
+              // รักษา custom fields ทั้งหมดจาก updatedRow (รวมถึงค่าว่าง)
+              ...Object.keys(updatedRow).filter(key => key.startsWith('cf_')).reduce((acc, key) => {
+                acc[key] = updatedRow[key];
+                return acc;
+              }, {}),
+              // รักษาฟิลด์อื่นๆ ที่ไม่ได้แก้ไขไว้
+              ...Object.keys(existingLicense || {}).reduce((acc, key) => {
+                if (!standardData[key] && !customValues[key]) {
+                  acc[key] = existingLicense[key];
+                }
+                return acc;
+              }, {})
+            };
+            console.log('🔧 Fallback Updated License:', updatedLicense);
+            console.log('🔧 Fallback has location:', 'cf_selling_location' in (updatedLicense || {}));
+            console.log('🔧 Fallback location value:', updatedLicense?.cf_selling_location || 'NOT_FOUND');
+            setLicenses(prev => prev.map(l => l.id === updatedRow.id ? updatedLicense : l));
           }
+          
+          // รีเฟรชหลังจาก optimistic update เล็กน้อยเพื่อความถูกต้อง
+          setTimeout(() => {
+            console.log('🔧 Delayed refresh to ensure data consistency');
+            fetchLicenses();
+          }, 500);
         } else {
           showError(data.message);
           fetchLicenses(); // Revert on error
@@ -474,7 +787,8 @@ function LicensesPageContent() {
   };
 
   const handleRowAdd = (newRow) => {
-    // UI only
+    // Add the new row to the local state immediately
+    setLicenses(prev => [...prev, newRow]);
   };
 
   const handleColumnAdd = async (newCol) => {
@@ -829,6 +1143,21 @@ function LicensesPageContent() {
           </div>
         </div>
         </div>
+
+        {/* Debug logging ก่อนส่งข้อมูลไป ExcelTable */}
+        {(() => {
+          console.log('📊 ExcelTable Input Debug:', {
+            columnsCount: columns.length,
+            licensesCount: licenses.length,
+            sampleLicense: licenses[0],
+            sampleLicenseKeys: licenses[0] ? Object.keys(licenses[0]) : [],
+            sampleHasLocation: licenses[0] ? 'cf_selling_location' in licenses[0] : false,
+            sampleHasAmount: licenses[0] ? 'cf_amount' in licenses[0] : false,
+            sampleLocationValue: licenses[0] ? licenses[0].cf_selling_location : 'N/A',
+            sampleAmountValue: licenses[0] ? licenses[0].cf_amount : 'N/A'
+          });
+          return null;
+        })()}
 
         {!loading ? (
           <div style={{ overflow: "auto", maxHeight: "600px" }}>

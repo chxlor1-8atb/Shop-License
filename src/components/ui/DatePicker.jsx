@@ -96,9 +96,7 @@ export default function DatePicker({
         if (disabled) return;
 
         const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-        // Adjust for timezone offset to prevent off-by-one errors when converting to string
-        // Actually toISOString() is UTC. We want YYYY-MM-DD in local?
-        // Let's use simple formatting to avoid TZ issues
+        // Format as YYYY-MM-DD using local time to avoid timezone issues
         const year = newDate.getFullYear();
         const month = String(newDate.getMonth() + 1).padStart(2, '0');
         const d = String(day).padStart(2, '0');

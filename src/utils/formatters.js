@@ -15,8 +15,28 @@
 const toDate = (date) => {
     if (!date) return null;
     let d = date;
-    if (typeof d === 'string' && d.includes('T') && !d.endsWith('Z') && !d.includes('+')) {
-        d += 'Z';
+    if (typeof d === 'string') {
+        // Handle YYYY-MM-DD format (from date inputs)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+            // Parse as local date to avoid timezone shifts
+            const parts = d.split('-');
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // JavaScript months are 0-indexed
+            const day = parseInt(parts[2], 10);
+            const localDate = new Date(year, month, day);
+            
+            // Check if the date is valid (e.g., not 2024-02-30)
+            if (localDate.getFullYear() === year && 
+                localDate.getMonth() === month && 
+                localDate.getDate() === day) {
+                return localDate;
+            }
+            return null;
+        }
+        // Handle ISO strings with timezone
+        if (d.includes('T') && !d.endsWith('Z') && !d.includes('+')) {
+            d += 'Z';
+        }
     }
     return new Date(d);
 };
