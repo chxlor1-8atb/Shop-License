@@ -86,13 +86,14 @@ export default function ExcelTable({
 
   // Wrappers to notify parent
   const handleCellChange = (rowId, colId, value) => {
-    // Debug logging สำหรับการแก้ไข custom fields
-    if (colId.startsWith('cf_')) {
+    // Debug logging สำหรับการแก้ไข fields
+    if (colId.startsWith('cf_') || colId === 'notes') {
       console.log(`🔧 ExcelTable handleCellChange:`, {
         rowId,
         colId,
         value,
         isCustomField: colId.startsWith('cf_'),
+        isNotesField: colId === 'notes',
         timestamp: new Date().toISOString()
       });
     }
@@ -104,13 +105,15 @@ export default function ExcelTable({
   const handleCellBlur = async (rowId, colId) => {
     setEditingCell(null);
     
-    // Debug logging สำหรับการ blur ใน custom fields
-    if (colId.startsWith('cf_')) {
-      console.log(`🔧 Custom Field Blur Check:`, {
+    // Debug logging สำหรับการ blur ใน fields
+    if (colId.startsWith('cf_') || colId === 'notes') {
+      console.log(`🔧 Field Blur Check:`, {
         rowId,
         colId,
         columnName: columns.find(c => c.id === colId)?.name || 'Unknown',
-        currentValue: getRows().find(r => r.id === rowId)?.[colId] || 'NOT_FOUND'
+        currentValue: getRows().find(r => r.id === rowId)?.[colId] || 'NOT_FOUND',
+        isCustomField: colId.startsWith('cf_'),
+        isNotesField: colId === 'notes'
       });
     }
     
@@ -120,13 +123,15 @@ export default function ExcelTable({
       const row = currentRows.find((r) => r.id === rowId);
       if (row) {
         // Debug logging สำหรับการส่งข้อมูลไป backend
-        if (colId.startsWith('cf_')) {
-          console.log(`🔧 Custom Field Sending to Backend:`, {
+        if (colId.startsWith('cf_') || colId === 'notes') {
+          console.log(`🔧 Field Sending to Backend:`, {
             rowId,
             colId,
             columnName: columns.find(c => c.id === colId)?.name || 'Unknown',
             currentValue: row[colId],
-            hasValue: row[col.id] !== undefined && row[col.id] !== null && row[col.id] !== ''
+            hasValue: row[colId] !== undefined && row[colId] !== null && row[colId] !== '',
+            isCustomField: colId.startsWith('cf_'),
+            isNotesField: colId === 'notes'
           });
         }
         

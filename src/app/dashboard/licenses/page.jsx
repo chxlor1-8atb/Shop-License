@@ -394,16 +394,22 @@ function LicensesPageContent() {
       shopIdValue: updatedRow.shop_id,
       licenseTypeIdValue: updatedRow.license_type_id,
       licenseNumberValue: updatedRow.license_number,
+      notesValue: updatedRow.notes,
       hasShopId: 'shop_id' in updatedRow,
       hasLicenseTypeId: 'license_type_id' in updatedRow,
       hasLicenseNumber: 'license_number' in updatedRow,
+      hasNotes: 'notes' in updatedRow,
       // ตรวจจอบว่ามี custom fields
       hasCustomFields: Object.keys(updatedRow).some(key => key.startsWith('cf_')),
       customFieldKeys: Object.keys(updatedRow).filter(key => key.startsWith('cf_')),
       customFieldValues: Object.keys(updatedRow).filter(key => key.startsWith('cf_')).reduce((acc, key) => {
         acc[key] = updatedRow[key];
         return acc;
-      }, {})
+      }, {}),
+      // ตรวจจอบว่ามีการเปลี่ยนแปลงใน notes
+      notesChanged: updatedRow.notes !== existingLicense?.notes,
+      oldNotesValue: existingLicense?.notes,
+      newNotesValue: updatedRow.notes
     });
 
     // Check if user selected "Create New Shop" option

@@ -118,8 +118,8 @@ export const TableRow = memo(function TableRow({
         }}
         onDoubleClick={() => {
           // Debug logging สำหรับการดับเบิลคลิก
-          if (col.id.startsWith('cf_')) {
-            console.log(`🔍 Custom Field Double Click:`, {
+          if (col.id.startsWith('cf_') || col.id === 'notes') {
+            console.log(`🔍 Field Double Click:`, {
               rowId: row.id,
               columnId: col.id,
               columnName: col.name,
@@ -129,7 +129,9 @@ export const TableRow = memo(function TableRow({
               allRowKeys: Object.keys(row),
               hasShopId: 'shop_id' in row,
               hasLicenseTypeId: 'license_type_id' in row,
-              hasLicenseNumber: 'license_number' in row
+              hasLicenseNumber: 'license_number' in row,
+              hasNotes: 'notes' in row,
+              isNotesField: col.id === 'notes'
             });
           }
           onCellClick(row.id, col.id);
@@ -163,9 +165,9 @@ export const TableRow = memo(function TableRow({
                   className="cell-input"
                   value={row[col.id] || ""}
                   onChange={(e) => {
-                    // Debug logging สำหรับการแก้ไข custom fields
-                    if (col.id.startsWith('cf_')) {
-                      console.log(`🔧 Custom Field Input Change:`, {
+                    // Debug logging สำหรับการแก้ไข fields
+                    if (col.id.startsWith('cf_') || col.id === 'notes') {
+                      console.log(`🔧 Field Input Change:`, {
                         rowId: row.id,
                         columnId: col.id,
                         columnName: col.name,
@@ -176,7 +178,10 @@ export const TableRow = memo(function TableRow({
                         hasShopId: 'shop_id' in row,
                         hasLicenseTypeId: 'license_type_id' in row,
                         hasLicenseNumber: 'license_number' in row,
-                        isEditing: true
+                        hasNotes: 'notes' in row,
+                        isEditing: true,
+                        isNotesField: col.id === 'notes',
+                        isCustomField: col.id.startsWith('cf_')
                       });
                     }
                     onCellChange(row.id, col.id, e.target.value);
