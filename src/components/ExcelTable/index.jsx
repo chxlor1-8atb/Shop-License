@@ -355,8 +355,53 @@ export default function ExcelTable({
           const newRow = addRow(id, defaultRowValues);
           if (onRowAdd) onRowAdd(newRow);
         }}
-        onDuplicateRow={(rowId) => {
-          duplicateRow(rowId);
+        onDuplicateRow={async (rowId) => {
+          // Get the row to duplicate
+          const currentRows = getRows();
+          const rowToDuplicate = currentRows.find((r) => r.id === rowId);
+          
+          if (rowToDuplicate && onRowUpdate) {
+            // Create a new row based on the original (like creating new record)
+            const newRow = {
+              shop_id: rowToDuplicate.shop_id,
+              license_type_id: rowToDuplicate.license_type_id,
+              license_number: `COPY-${Date.now()}`, // Generate new license number
+              issue_date: new Date().toISOString().split('T')[0], // Today's date
+              expiry_date: rowToDuplicate.expiry_date, // Keep same expiry or calculate new
+              status: 'active', // Default to active
+              notes: rowToDuplicate.notes ? `(คัดลอกจาก #${rowId}) ${rowToDuplicate.notes}` : `(คัดลอกจาก #${rowId})`,
+            };
+            
+            // Copy custom fields
+            const customFields = {};
+            Object.keys(rowToDuplicate).forEach(key => {
+              if (key.startsWith('cf_')) {
+                customFields[key] = rowToDuplicate[key];
+              }
+            });
+            
+            console.log('🔄 Creating New Row from Duplicate:', {
+              originalRowId: rowId,
+              newRow: newRow,
+              customFields,
+              hasShopId: !!newRow.shop_id,
+              hasLicenseTypeId: !!newRow.license_type_id,
+              hasLicenseNumber: !!newRow.license_number
+            });
+            
+            try {
+              // Call handleRowUpdate which will handle POST (new record)
+              await onRowUpdate({
+                ...newRow,
+                ...customFields // Include custom fields
+              });
+            } catch (error) {
+              console.error('❌ Duplicate failed:', error);
+            }
+          } else {
+            // Fallback: just duplicate in UI
+            duplicateRow(rowId);
+          }
         }}
         onDeleteRow={handleDeleteRow}
         onEditCell={(rowId, colId) => {

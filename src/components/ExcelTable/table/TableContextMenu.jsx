@@ -51,7 +51,7 @@ export function TableContextMenu({
               onClose();
             }}
           >
-            <i className="fas fa-copy"></i> ทำซ้ำแถว
+            <i className="fas fa-copy"></i> คัดลอกข้อมูล
           </div>
           {customContextMenuItems.length > 0 && (
             <>
@@ -102,7 +102,7 @@ export function TableContextMenu({
               onClose();
             }}
           >
-            <i className="fas fa-copy"></i> ทำซ้ำแถว
+            <i className="fas fa-copy"></i> คัดลอกข้อมูล
           </div>
           {customContextMenuItems.length > 0 && (
             <>
