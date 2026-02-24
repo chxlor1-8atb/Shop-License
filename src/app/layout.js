@@ -36,7 +36,10 @@ export const metadata = {
         telephone: false,
     },
     icons: {
-        icon: '/image/favicon.png',
+        icon: [
+            { url: '/image/favicon.png', type: 'image/png' },
+            { url: '/favicon.ico', sizes: 'any' }
+        ],
         shortcut: '/image/favicon.png',
         apple: '/image/favicon.png',
     },

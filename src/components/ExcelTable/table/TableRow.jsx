@@ -162,9 +162,29 @@ export const TableRow = memo(function TableRow({
               ) : col.type === "date" ? (
                 <DatePicker
                   value={row[col.id] || ""}
-                  onChange={(e) => onCellChange(row.id, col.id, e.target.value)}
+                  onChange={(e) => {
+                    // Debug logging สำหรับการแก้ไขวันที่
+                    console.log(`🗓️ Date Field Change:`, {
+                      rowId: row.id,
+                      columnId: col.id,
+                      columnName: col.name,
+                      oldValue: row[col.id],
+                      newValue: e.target.value,
+                      hasValue: !!e.target.value,
+                      isEmpty: e.target.value === ''
+                    });
+                    onCellChange(row.id, col.id, e.target.value);
+                  }}
                   autoFocus={true}
-                  onBlur={() => onCellBlur(row.id, col.id)}
+                  onBlur={() => {
+                    console.log(`🗓️ Date Field Blur:`, {
+                      rowId: row.id,
+                      columnId: col.id,
+                      columnName: col.name,
+                      currentValue: row[col.id]
+                    });
+                    onCellBlur(row.id, col.id);
+                  }}
                   className="cell-input-custom"
                 />
               ) : (

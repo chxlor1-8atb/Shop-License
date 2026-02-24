@@ -5,6 +5,8 @@
  * Centralized auth functions for the application
  */
 
+import Swal from 'sweetalert2';
+
 /**
  * Logout the current user
  * Uses window.location.replace() with cache-busting to ensure full fresh page load
@@ -21,7 +23,6 @@ export async function logout(options = {}) {
 
     // Show confirmation dialog if requested
     if (showConfirmation) {
-        const Swal = (await import('sweetalert2')).default;
         
         const result = await Swal.fire({
             title: 'ยืนยันการออกจากระบบ',
@@ -188,7 +189,6 @@ export async function requireAuth(router = null) {
  * Shows a message and redirects to login
  */
 export async function handleSessionExpired() {
-    const Swal = (await import('sweetalert2')).default;
     
     await Swal.fire({
         title: 'เซสชันหมดอายุ',
