@@ -27,18 +27,19 @@ const STANDARD_COLUMNS = [
     width: 100,
     align: "center",
     readOnly: true,
-    render: (value, row) => (
-      parseInt(value) > 0 ? (
+    render: (value, row) => {
+      const count = parseInt(value) || 0;
+      return count > 0 ? (
         <Link 
           href={`/dashboard/licenses?license_type=${row.id}`}
           className="text-primary hover:underline font-medium"
         >
-          {value} <i className="fas fa-external-link-alt" style={{ fontSize: '0.7em' }}></i>
+          {count} <i className="fas fa-external-link-alt" style={{ fontSize: '0.7em' }}></i>
         </Link>
       ) : (
          <span className="text-muted">0</span>
-      )
-    ),
+      );
+    },
   },
 ];
 
@@ -57,23 +58,26 @@ export default function LicenseTypesPage() {
   // Helper to check if server data has real changes we should accept
   const hasRealDataChanges = useCallback((localTypes, serverTypes) => {
     if (!localTypes || !serverTypes) return true;
+    if (localTypes.length !== serverTypes.length) return true;
     
-    // Check if server has new IDs we don't have locally
-    const localIds = new Set(localTypes.map(t => t.id));
-    const serverIds = new Set(serverTypes.map(t => t.id));
-    
-    // If server has IDs we don't have, accept the update
-    for (const id of serverIds) {
-      if (!localIds.has(id)) return true;
+    // Check if any row has changed values (essential for stats like license_count)
+    for (let i = 0; i < serverTypes.length; i++) {
+      const s = serverTypes[i];
+      const l = localTypes.find(t => t.id === s.id);
+      
+      if (!l) return true; // New row
+      
+      // Compare key fields that affect UI/Stats
+      if (s.name !== l.name) return true;
+      if (s.license_count != l.license_count) return true;
+      if (s.validity_days != l.validity_days) return true;
+      
+      // Check if any custom fields changed
+      const sKeys = Object.keys(s).filter(k => k.startsWith('cf_'));
+      for (const k of sKeys) {
+        if (s[k] != l[k]) return true;
+      }
     }
-    
-    // If local has IDs that server doesn't have (deleted), accept the update
-    for (const id of localIds) {
-      if (!serverIds.has(id)) return true;
-    }
-    
-    // If lengths differ significantly, accept the update
-    if (Math.abs(localTypes.length - serverTypes.length) > 1) return true;
     
     return false;
   }, []);
@@ -119,6 +123,14 @@ export default function LicenseTypesPage() {
           ...t,
           ...(valuesByEntity[t.id] || {}),
         }));
+        
+        // Debug: ตรวจสอบค่า license_count
+        console.log('🔍 License Types Debug:', mergedTypes.map(t => ({
+          id: t.id,
+          name: t.name,
+          license_count: t.license_count,
+          license_count_type: typeof t.license_count
+        })));
         
         // Filter out items that are currently being deleted locally
         mergedTypes = mergedTypes.filter(t => !deletedIdsRef.current.has(t.id));
@@ -353,7 +365,9 @@ export default function LicenseTypesPage() {
     const customValues = {};
     if (customFields.length > 0) {
       customFields.forEach((field) => {
-        if (updatedRow[field.field_name] !== undefined) {
+        // Only send non-system custom fields to the custom-field-values API
+        // System fields (name, description, license_count, etc.) are handled by standard API endpoints
+        if (updatedRow[field.field_name] !== undefined && !field.is_system_field) {
           customValues[field.field_name] = updatedRow[field.field_name];
         }
       });

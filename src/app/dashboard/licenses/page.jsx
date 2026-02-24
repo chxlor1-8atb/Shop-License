@@ -173,15 +173,7 @@ function LicensesPageContent() {
         display_order: 10,
         readOnly: false,
       },
-      { 
-        id: "notes", 
-        name: "หมายเหตุ", 
-        width: 200,
-        display_order: 100, 
-        align: "center",
-        readOnly: false,
-      },
-    ];
+          ];
 
     try {
       const res = await fetch(
@@ -335,7 +327,7 @@ function LicensesPageContent() {
               licenseId: l.id,
               originalCustomFields: l.custom_fields,
               flattenedFields: Object.keys(flattened).filter(key => 
-                !['id', 'shop_id', 'license_type_id', 'license_number', 'issue_date', 'expiry_date', 'status', 'notes', 'shop_name', 'type_name', 'original_status', 'created_at', 'updated_at'].includes(key)
+                !['id', 'shop_id', 'license_type_id', 'license_number', 'issue_date', 'expiry_date', 'status', 'shop_name', 'type_name', 'original_status', 'created_at', 'updated_at'].includes(key)
               ),
               hasLocation: 'cf_selling_location' in flattened,
               hasAmount: 'cf_amount' in flattened,
@@ -421,14 +413,12 @@ function LicensesPageContent() {
       licenseNumberValue: updatedRow.license_number,
       issueDateValue: updatedRow.issue_date,
       expiryDateValue: updatedRow.expiry_date,
-      notesValue: updatedRow.notes,
-      hasShopId: 'shop_id' in updatedRow,
+            hasShopId: 'shop_id' in updatedRow,
       hasLicenseTypeId: 'license_type_id' in updatedRow,
       hasLicenseNumber: 'license_number' in updatedRow,
       hasIssueDate: 'issue_date' in updatedRow,
       hasExpiryDate: 'expiry_date' in updatedRow,
-      hasNotes: 'notes' in updatedRow,
-      // ตรวจจอบว่ามี custom fields
+            // ตรวจจอบว่ามี custom fields
       hasCustomFields: Object.keys(updatedRow).some(key => key.startsWith('cf_')),
       customFieldKeys: Object.keys(updatedRow).filter(key => key.startsWith('cf_')),
       customFieldValues: Object.keys(updatedRow).filter(key => key.startsWith('cf_')).reduce((acc, key) => {
@@ -442,13 +432,7 @@ function LicensesPageContent() {
       existingExpiryDate: existingLicense?.expiry_date ?? '',
       updatedExpiryDate: updatedRow.expiry_date ?? '',
       expiryDateChanged: (updatedRow.expiry_date ?? '') !== (existingLicense?.expiry_date ?? ''),
-      // ตรวจจอบว่ามีการเปลี่ยนแปลงใน notes (รวมถึงค่าว่างและ undefined)
-      existingNotes: existingLicense?.notes ?? '',
-      updatedNotes: updatedRow.notes ?? '',
-      notesChanged: (updatedRow.notes ?? '') !== (existingLicense?.notes ?? ''),
-      oldNotesValue: existingLicense?.notes ?? '',
-      newNotesValue: updatedRow.notes ?? ''
-    });
+          });
 
     // Check if user selected "Create New Shop" option
     if (updatedRow.shop_id === CREATE_NEW_SHOP_VALUE) {
@@ -469,8 +453,7 @@ function LicensesPageContent() {
       "license_number",
       "issue_date",
       "expiry_date",
-      "status",
-      "notes"
+      "status"
     ];
 
     // Debug logging สำหรับตรวจสอบว่ามีการเรียกใช handleRowUpdate
@@ -483,14 +466,12 @@ function LicensesPageContent() {
       licenseNumberValue: updatedRow.license_number,
       issueDateValue: updatedRow.issue_date,
       expiryDateValue: updatedRow.expiry_date,
-      notesValue: updatedRow.notes,
-      hasShopId: 'shop_id' in updatedRow,
+            hasShopId: 'shop_id' in updatedRow,
       hasLicenseTypeId: 'license_type_id' in updatedRow,
       hasLicenseNumber: 'license_number' in updatedRow,
       hasIssueDate: 'issue_date' in updatedRow,
       hasExpiryDate: 'expiry_date' in updatedRow,
-      hasNotes: 'notes' in updatedRow,
-      // ตรวจจอบว่ามี custom fields
+            // ตรวจจอบว่ามี custom fields
       hasCustomFields: Object.keys(updatedRow).some(key => key.startsWith('cf_')),
       customFieldKeys: Object.keys(updatedRow).filter(key => key.startsWith('cf_')),
       customFieldValues: Object.keys(updatedRow).filter(key => key.startsWith('cf_')).reduce((acc, key) => {
@@ -504,13 +485,7 @@ function LicensesPageContent() {
       existingExpiryDate: existingLicense?.expiry_date ?? '',
       updatedExpiryDate: updatedRow.expiry_date ?? '',
       expiryDateChanged: (updatedRow.expiry_date ?? '') !== (existingLicense?.expiry_date ?? ''),
-      // ตรวจจอบว่ามีการเปลี่ยนแปลงใน notes (รวมถึงค่าว่างและ undefined)
-      existingNotes: existingLicense?.notes ?? '',
-      updatedNotes: updatedRow.notes ?? '',
-      notesChanged: (updatedRow.notes ?? '') !== (existingLicense?.notes ?? ''),
-      oldNotesValue: existingLicense?.notes ?? '',
-      newNotesValue: updatedRow.notes ?? ''
-    });
+          });
     
     // สร้าง standard data โดยส่งเฉพาะฟิลด์ที่เปลี่ยนแปลงจริงๆ (รวมถึงค่าว่าง)
     const standardData = {};
@@ -543,31 +518,6 @@ function LicensesPageContent() {
     
     if (updatedRow.status !== existingLicense?.status) {
       standardData.status = updatedRow.status;
-    }
-    // ตรวจสอบการเปลี่ยนแปลงของ notes (รวมถึงค่าว่างและ undefined)
-    const existingNotes = existingLicense?.notes ?? '';
-    const updatedNotes = updatedRow.notes ?? '';
-    if (updatedNotes !== existingNotes) {
-      standardData.notes = updatedRow.notes;
-      console.log(`📝 Notes Field Changed:`, {
-        rowId: updatedRow.id,
-        existingNotes: `"${existingNotes}"`,
-        updatedNotes: `"${updatedNotes}"`,
-        existingType: typeof existingLicense?.notes,
-        updatedType: typeof updatedRow.notes,
-        existingIsNull: existingLicense?.notes === null,
-        updatedIsNull: updatedRow.notes === null,
-        existingIsUndefined: existingLicense?.notes === undefined,
-        updatedIsUndefined: updatedRow.notes === undefined,
-        willBeSaved: true
-      });
-    } else {
-      console.log(`📝 Notes Field Unchanged:`, {
-        rowId: updatedRow.id,
-        existingNotes: `"${existingNotes}"`,
-        updatedNotes: `"${updatedNotes}"`,
-        reason: 'Values are equal'
-      });
     }
 
     // Extract custom fields - ส่งเฉพาะที่เปลี่ยนแปลงจริงๆ (รวมถึงค่าว่าง)
@@ -619,16 +569,11 @@ function LicensesPageContent() {
       licenseNumberValue: updatedRow.license_number,
       issueDateValue: updatedRow.issue_date,
       expiryDateValue: updatedRow.expiry_date,
-      notesValue: updatedRow.notes,
-      allKeys: Object.keys(updatedRow),
+            allKeys: Object.keys(updatedRow),
       standardDataKeys: Object.keys(standardData),
       customValuesKeys: Object.keys(customValues),
       hasCustomFieldChanges: Object.keys(customValues).length > 0,
       hasStandardFieldChanges: Object.keys(standardData).length > 0,
-      // ตรวจสอบเฉพาะฟิลด์ notes
-      notesInStandardData: 'notes' in standardData,
-      notesValueInStandardData: standardData.notes,
-      notesWillBeSent: !!standardData.notes,
       finalStandardData: standardData,
       finalCustomValues: customValues
     });
@@ -1166,7 +1111,6 @@ function LicensesPageContent() {
       issue_date: formData.issue_date,
       expiry_date: formData.expiry_date,
       status: formData.status || "active",
-      notes: formData.notes,
       custom_fields: formData.custom_fields || {}, // Include custom fields
     };
 
@@ -1328,7 +1272,6 @@ function LicensesPageContent() {
                           "พื้นที่ (ตารางเมตร)",
                           "พื้นที่ (แรงม้า)",
                           "สถานะ",
-                          "หมายเหตุ",
                         ].map((header, i) => (
                           <th key={i} style={{ minWidth: "120px", textAlign: "center" }}>
                             <div className="th-content" style={{ justifyContent: "center" }}>{header}</div>
@@ -1349,8 +1292,7 @@ function LicensesPageContent() {
                       { width: "120px", center: true }, // Expiry
                       { width: "100px", center: true }, // Area Sqm
                       { width: "100px", center: true }, // Area HP
-                      { width: "120px", center: true, rounded: true }, // Status
-                      { width: "200px", center: true }, // Notes
+                      { width: "120px", center: true, rounded: true } // Status
                     ]}
                   />
                 </tbody>
