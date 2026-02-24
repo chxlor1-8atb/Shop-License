@@ -471,8 +471,20 @@ function LicensesPageContent() {
         if (data.success) {
           showSuccess("สร้างใบอนุญาตเรียบร้อย");
           const newId = data.license?.id || data.id;
-          setLicenses(prev => prev.map(l => l.id === updatedRow.id ? (data.license || { ...l, ...standardData, ...customValues, id: newId }) : l));
+          
+          let finalLicense;
+          if (data.license) {
+            finalLicense = {
+              ...data.license,
+              ...(data.license.custom_fields || {})
+            };
+          } else {
+            finalLicense = { ...updatedRow, ...standardData, ...customValues, id: newId };
+          }
+          
+          setLicenses(prev => prev.map(l => l.id === updatedRow.id ? finalLicense : l));
           notifyDataChange("licenses-sync");
+
         } else {
           showError(data.message);
           fetchLicenses();
@@ -503,7 +515,12 @@ function LicensesPageContent() {
         if (data.success) {
           showSuccess("อัปเดตใบอนุญาตเรียบร้อย");
           if (data.license) {
-            setLicenses(prev => prev.map(l => l.id === updatedRow.id ? data.license : l));
+            // Flatten custom_fields before updating state
+            const flattenedLicense = {
+              ...data.license,
+              ...(data.license.custom_fields || {})
+            };
+            setLicenses(prev => prev.map(l => l.id === updatedRow.id ? flattenedLicense : l));
           } else {
             // Fallback manual update if server doesn't return full object
             setLicenses(prev => prev.map(l => l.id === updatedRow.id ? { ...l, ...standardData, ...customValues } : l));
@@ -514,6 +531,7 @@ function LicensesPageContent() {
               fetchLicenses();
             }, 500);
           }
+
           notifyDataChange("licenses-sync");
         } else {
           showError(data.message);
