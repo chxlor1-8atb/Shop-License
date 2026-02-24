@@ -354,12 +354,12 @@ function LicensesPageContent() {
       setLoading(false);
       initialLoadDoneRef.current = true;
     }
-  }, [page, limit, debouncedSearch, filterType, filterStatus, filterShop]);
+  }, [page, limit, debouncedSearch, filterType, filterStatus, filterShop, updateFromResponse]);
 
   // Initial license data fetch and refetch when filters change
   useEffect(() => {
     fetchLicenses();
-  }, [page, limit, debouncedSearch, filterType, filterStatus, filterShop]);
+  }, [fetchLicenses]);
 
   // Auto-refresh: sync data every 5s + on tab focus + cross-tab
   // ปิดชั่วคราวเพื่อแก้ไขปัญหาการเพิ่มข้อมูลซ้ำ

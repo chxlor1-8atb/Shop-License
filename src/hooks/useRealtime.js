@@ -16,5 +16,5 @@ export function useRealtime(tableName, callback, dependencyArray = []) {
     useEffect(() => {
         // No-op - realtime features are disabled with Neon
         return () => {}; // Empty cleanup
-    }, [tableName, ...dependencyArray]);
+    }, [tableName, dependencyArray]);
 }
