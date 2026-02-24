@@ -103,38 +103,87 @@ export const TableRow = memo(function TableRow({
           onCellClick(row.id, col.id);
         }}
           >
-            {(!col.readOnly && !col.render) ? (
+            {isEditing && !col.readOnly ? (
               col.type === "select" ? (
                 <CustomSelect
                   value={row[col.id] || ""}
                   onChange={(e) => onCellChange(row.id, col.id, e.target.value)}
                   options={[{ value: "", label: "-- เลือก --" }, ...(col.options || [])]}
-                  autoFocus={isEditing}
-                  onFocus={() => !isEditing && onCellClick(row.id, col.id)}
+                  autoFocus={true}
                   onBlur={() => onCellBlur(row.id, col.id)}
                   className="cell-input-custom"
                 />
               ) : col.type === "date" ? (
                 <DatePicker
                   value={row[col.id] || ""}
-                  onChange={(e) => onCellChange(row.id, col.id, e.target.value)}
-                  autoFocus={isEditing}
-                  onFocus={() => !isEditing && onCellClick(row.id, col.id)}
-                  onBlur={() => onCellBlur(row.id, col.id)}
+                  onChange={(e) => {
+                    // Debug logging สำหรับการแก้ไขวันที่
+                    console.log(`🗓️ Date Field Change:`, {
+                      rowId: row.id,
+                      columnId: col.id,
+                      columnName: col.name,
+                      oldValue: row[col.id],
+                      newValue: e.target.value,
+                      hasValue: !!e.target.value,
+                      isEmpty: e.target.value === ''
+                    });
+                    onCellChange(row.id, col.id, e.target.value);
+                  }}
+                  autoFocus={true}
+                  onBlur={() => {
+                    console.log(`🗓️ Date Field Blur:`, {
+                      rowId: row.id,
+                      columnId: col.id,
+                      columnName: col.name,
+                      currentValue: row[col.id]
+                    });
+                    onCellBlur(row.id, col.id);
+                  }}
                   className="cell-input-custom"
                 />
               ) : (
                 <input
-                  ref={isEditing ? inputRef : null}
+                  ref={inputRef}
                   id={`cell-input-${row.id}-${col.id}`}
                   name={`cell-input-${row.id}-${col.id}`}
                   aria-label={`แก้ไข ${col.name}`}
                   type={col.type || "text"}
                   className="cell-input"
                   value={row[col.id] || ""}
-                  onChange={(e) => onCellChange(row.id, col.id, e.target.value)}
-                  onFocus={() => !isEditing && onCellClick(row.id, col.id)}
-                  onBlur={() => onCellBlur(row.id, col.id)}
+                  onChange={(e) => {
+                    // Debug logging สำหรับการแก้ไข fields
+                    if (col.id.startsWith('cf_') || col.id === 'notes') {
+                      console.log(`🔧 Field Input Change:`, {
+                        rowId: row.id,
+                        columnId: col.id,
+                        columnName: col.name,
+                        oldValue: row[col.id],
+                        newValue: e.target.value,
+                        fieldType: col.type,
+                        allRowKeys: Object.keys(row),
+                        hasShopId: 'shop_id' in row,
+                        hasLicenseTypeId: 'license_type_id' in row,
+                        hasLicenseNumber: 'license_number' in row,
+                        hasNotes: 'notes' in row,
+                        isEditing: true,
+                        isNotesField: col.id === 'notes',
+                        isCustomField: col.id.startsWith('cf_')
+                      });
+                    }
+                    onCellChange(row.id, col.id, e.target.value);
+                  }}
+                  onBlur={() => {
+                    // Debug logging สำหรับการ blur custom fields
+                    if (col.id.startsWith('cf_')) {
+                      console.log(`🔧 Custom Field Input Blur:`, {
+                        rowId: row.id,
+                        columnId: col.id,
+                        columnName: col.name,
+                        currentValue: row[col.id]
+                      });
+                    }
+                    onCellBlur(row.id, col.id);
+                  }}
                   onKeyDown={(e) => onCellKeyDown(e, row.id, col.id)}
                   style={{ textAlign: col.align || "left" }}
                 />
@@ -157,6 +206,23 @@ export const TableRow = memo(function TableRow({
                     col.render(row[col.id], row, isEditing)
                   ) : col.type === "date" && row[col.id] ? (
                     formatThaiDate(row[col.id])
+                  ) : col.type === "date" && !row[col.id] ? (
+                    "-"
+                  ) : col.type === "select" && col.options ? (
+                    col.isBadge ? (
+                      <span
+                        className={`badge badge-${row[col.id]}`}
+                        style={{ width: "fit-content" }}
+                      >
+                        {col.options.find((o) => o.value == row[col.id])?.label ||
+                          row[col.id] ||
+                          ""}
+                      </span>
+                    ) : (
+                      col.options.find((o) => o.value == row[col.id])?.label ||
+                      row[col.id] ||
+                      ""
+                    )
                   ) : (
                     row[col.id] !== undefined && row[col.id] !== null && row[col.id] !== "" ? row[col.id] : ""
                   )}

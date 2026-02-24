@@ -190,7 +190,7 @@ export function useExcelTable({
 
     // Check if initialRows actually changed from previous props
     const hasChanged = !areRowsEqual(prevInitialRowsRef.current, initialRows);
-    
+
     // Debug logging สำหรับตรวจสอบการเปลี่ยนแปลง
     console.log('🔧 ExcelTable Change Detection:', {
       hasChanged,
@@ -203,7 +203,7 @@ export function useExcelTable({
       prevLocationValue: prevInitialRowsRef.current?.[0] ? prevInitialRowsRef.current[0].cf_selling_location : 'N/A',
       newLocationValue: initialRows[0] ? initialRows[0].cf_selling_location : 'N/A'
     });
-    
+
     if (!hasChanged) {
       return;
     }
@@ -211,7 +211,7 @@ export function useExcelTable({
     // ปิดการ sync ชั่วคราวเพื่อแก้ไขปัญหา custom fields หายถาวร
     // ใช้วิธีง่ายๆ: ถ้ามีการเปลี่ยนแปลงให้ใช้ initialRows ทันที
     console.log('🔧 ExcelTable Sync DISABLED - Simple Direct Update');
-    
+
     // ตรวจสอบว่าเป็นการอัปเดตจริงหรือไม่
     if (!hasChanged || initialRows.length === 0) {
       console.log('🔧 No change detected or no data, keeping current rows');
@@ -223,7 +223,7 @@ export function useExcelTable({
     console.log('🔧 InitialRows sample:', initialRows[0]);
     console.log('🔧 InitialRows has location:', initialRows[0] ? 'cf_selling_location' in (initialRows[0] || {}) : false);
     console.log('🔧 InitialRows location value:', initialRows[0] ? (initialRows[0].cf_selling_location || 'NOT_FOUND') : 'NO_DATA');
-    
+
     setRows(initialRows);
     prevInitialRowsRef.current = initialRows;
     return;

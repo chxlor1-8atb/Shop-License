@@ -287,7 +287,13 @@ export async function PUT(request) {
 
         // ดึงข้อมูลเดิมจาก database ก่อนเพื่อรักษาค่าวันที่
         const existingLicense = await fetchOne('SELECT issue_date, expiry_date FROM licenses WHERE id = $1', [id]);
-        
+
+        const shop_id = sanitizeInt(body.shop_id, 0, 1);
+        const license_type_id = sanitizeInt(body.license_type_id, 0, 1);
+        const license_number = sanitizeString(body.license_number || '', 100);
+        const status = validateEnum(body.status, ['active', 'expired', 'pending', 'suspended', 'revoked'], 'active');
+        const notes = sanitizeString(body.notes || '', 1000);
+
         // ใช้ค่าใหม่ถ้ามีการส่งมา (รวมถึงค่าว่าง) หรือใช้ค่าเดิมถ้าไม่มี
         const issue_date = body.issue_date !== undefined ? sanitizeDate(body.issue_date, null) : (existingLicense?.issue_date || null);
         const expiry_date = body.expiry_date !== undefined ? sanitizeDate(body.expiry_date, null) : (existingLicense?.expiry_date || null);
@@ -302,6 +308,7 @@ export async function PUT(request) {
             expiry_date: body.expiry_date,
             status,
             notes,
+
             custom_fields,
             allBodyKeys: Object.keys(body),
             hasIssueDate: 'issue_date' in body,
@@ -319,11 +326,7 @@ export async function PUT(request) {
             // ตรวจสอบว่าฟิลด์ที่จำเป็นต้องมาครบถ้วน
             allRequiredFieldsValid: id >= 1 && shop_id >= 1 && license_type_id >= 1 && !!license_number && license_number !== ''
         });
-        const shop_id = sanitizeInt(body.shop_id, 0, 1);
-        const license_type_id = sanitizeInt(body.license_type_id, 0, 1);
-        const license_number = sanitizeString(body.license_number || '', 100);
-        const status = validateEnum(body.status, ['active', 'expired', 'pending', 'suspended', 'revoked'], 'active');
-        const notes = sanitizeString(body.notes || '', 1000);
+
 
         if (id < 1 || shop_id < 1 || license_type_id < 1) {
             // Debug logging สำหรับตรวจสอบฟิลด์ที่จำเป็นต้อง
@@ -394,11 +397,11 @@ export async function PUT(request) {
                 custom_fields_received: custom_fields,
                 available_fields: fields.map(f => f.field_name)
             });
-            
+
             for (const [fieldName, value] of Object.entries(custom_fields)) {
                 const fieldId = fieldMap[fieldName];
                 console.log(`🔧 Processing field: ${fieldName}, value: ${value}, fieldId: ${fieldId}`);
-                
+
                 if (fieldId !== undefined) {
                     if (value !== undefined && value !== null && value !== '') {
                         // Insert or update the value
@@ -408,7 +411,7 @@ export async function PUT(request) {
                             ON CONFLICT (custom_field_id, entity_id) 
                             DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
                         `, [fieldId, id, 'licenses', value?.toString() || '']);
-                        
+
                         console.log(`✅ Saved field ${fieldName} with value: ${value}`);
                     } else {
                         // Delete the value if it's empty/null
@@ -416,7 +419,7 @@ export async function PUT(request) {
                             'DELETE FROM custom_field_values WHERE custom_field_id = $1 AND entity_id = $2',
                             [fieldId, id]
                         );
-                        
+
                         console.log(`🗑️ Deleted field ${fieldName} (empty value)`);
                     }
                 } else {
