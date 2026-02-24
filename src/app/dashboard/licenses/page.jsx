@@ -406,10 +406,12 @@ function LicensesPageContent() {
         acc[key] = updatedRow[key];
         return acc;
       }, {}),
-      // ตรวจจอบว่ามีการเปลี่ยนแปลงใน notes
-      notesChanged: updatedRow.notes !== existingLicense?.notes,
-      oldNotesValue: existingLicense?.notes,
-      newNotesValue: updatedRow.notes
+      // ตรวจจอบว่ามีการเปลี่ยนแปลงใน notes (รวมถึงค่าว่างและ undefined)
+      existingNotes: existingLicense?.notes ?? '',
+      updatedNotes: updatedRow.notes ?? '',
+      notesChanged: (updatedRow.notes ?? '') !== (existingLicense?.notes ?? ''),
+      oldNotesValue: existingLicense?.notes ?? '',
+      newNotesValue: updatedRow.notes ?? ''
     });
 
     // Check if user selected "Create New Shop" option
@@ -459,7 +461,10 @@ function LicensesPageContent() {
     if (updatedRow.status !== existingLicense?.status) {
       standardData.status = updatedRow.status;
     }
-    if (updatedRow.notes !== existingLicense?.notes) {
+    // ตรวจสอบการเปลี่ยนแปลงของ notes (รวมถึงค่าว่างและ undefined)
+    const existingNotes = existingLicense?.notes ?? '';
+    const updatedNotes = updatedRow.notes ?? '';
+    if (updatedNotes !== existingNotes) {
       standardData.notes = updatedRow.notes;
     }
 
