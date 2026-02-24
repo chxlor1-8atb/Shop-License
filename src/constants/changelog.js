@@ -5,6 +5,15 @@
 
 export const CHANGELOG = [
     {
+        version: '2.1.2',
+        date: '2026-02-24',
+        title: 'อัปเดตปรับปรุงระบบและแก้ไขปัญหา',
+        changes: [
+            { type: 'improve', text: '• อัปเดต patch notes ให้เป็นปัจจุบัน' },
+            { type: 'improve', text: '• ปรับปรุงการแสดงผล patch notes ในระบบ' }
+        ]
+    },
+    {
         version: '2.1.1',
         date: '2026-02-19',
         title: 'อัปเดตปรับปรุงระบบและแก้ไขปัญหา',
