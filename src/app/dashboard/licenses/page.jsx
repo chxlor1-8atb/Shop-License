@@ -408,6 +408,9 @@ function LicensesPageContent() {
   // --- Row Handlers ---
 
   const handleRowUpdate = async (updatedRow) => {
+    // Find existing license first
+    const existingLicense = licenses.find(l => l.id === updatedRow.id);
+    
     // Debug logging สำหรับตรวจสอบว่ามีการเรียกใช handleRowUpdate
     console.log('🔧 handleRowUpdate Called:', {
       licenseId: updatedRow.id,
@@ -458,7 +461,6 @@ function LicensesPageContent() {
     const isNew = updatedRow.id.toString().startsWith("id_");
 
     // Extract standard data - ดึงค่าเดิมจาก license ที่มีอยู่ก่อน แล้วอัปเดตเฉพาะที่เปลี่ยน
-    const existingLicense = licenses.find(l => l.id === updatedRow.id);
 
     // Define standard columns (base columns that are not custom fields)
     const STANDARD_COLUMNS_IDS = [
@@ -547,6 +549,25 @@ function LicensesPageContent() {
     const updatedNotes = updatedRow.notes ?? '';
     if (updatedNotes !== existingNotes) {
       standardData.notes = updatedRow.notes;
+      console.log(`📝 Notes Field Changed:`, {
+        rowId: updatedRow.id,
+        existingNotes: `"${existingNotes}"`,
+        updatedNotes: `"${updatedNotes}"`,
+        existingType: typeof existingLicense?.notes,
+        updatedType: typeof updatedRow.notes,
+        existingIsNull: existingLicense?.notes === null,
+        updatedIsNull: updatedRow.notes === null,
+        existingIsUndefined: existingLicense?.notes === undefined,
+        updatedIsUndefined: updatedRow.notes === undefined,
+        willBeSaved: true
+      });
+    } else {
+      console.log(`📝 Notes Field Unchanged:`, {
+        rowId: updatedRow.id,
+        existingNotes: `"${existingNotes}"`,
+        updatedNotes: `"${updatedNotes}"`,
+        reason: 'Values are equal'
+      });
     }
 
     // Extract custom fields - ส่งเฉพาะที่เปลี่ยนแปลงจริงๆ (รวมถึงค่าว่าง)
@@ -587,7 +608,7 @@ function LicensesPageContent() {
     }
 
     // Debug logging สำหรับตรวจสอบฟิลด์ที่จำเป็นต้อง
-    console.log(' Preparing to send data:', {
+    console.log('🔧 Preparing to send data:', {
       licenseId: updatedRow.id,
       hasValidId: updatedRow.id !== undefined && updatedRow.id !== null && updatedRow.id !== '',
       hasValidShopId: updatedRow.shop_id !== undefined && updatedRow.shop_id !== null && updatedRow.shop_id !== 0,
@@ -598,11 +619,16 @@ function LicensesPageContent() {
       licenseNumberValue: updatedRow.license_number,
       issueDateValue: updatedRow.issue_date,
       expiryDateValue: updatedRow.expiry_date,
+      notesValue: updatedRow.notes,
       allKeys: Object.keys(updatedRow),
       standardDataKeys: Object.keys(standardData),
       customValuesKeys: Object.keys(customValues),
       hasCustomFieldChanges: Object.keys(customValues).length > 0,
       hasStandardFieldChanges: Object.keys(standardData).length > 0,
+      // ตรวจสอบเฉพาะฟิลด์ notes
+      notesInStandardData: 'notes' in standardData,
+      notesValueInStandardData: standardData.notes,
+      notesWillBeSent: !!standardData.notes,
       finalStandardData: standardData,
       finalCustomValues: customValues
     });
