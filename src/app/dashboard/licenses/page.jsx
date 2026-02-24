@@ -86,6 +86,18 @@ function LicensesPageContent() {
   const [columns, setColumns] = useState([]);
 
   const fetchCustomColumns = useCallback(async () => {
+    // Debug logging สำหรับตรวจสอบ options ก่อนสร้างคอลัมน์
+    console.log('🔧 Column Options Debug:', {
+      typeOptions: typeOptions,
+      typeOptionsCount: typeOptions?.length || 0,
+      shopOptions: enhancedShopOptions,
+      shopOptionsCount: enhancedShopOptions?.length || 0,
+      hasTypeOptions: !!(typeOptions && typeOptions.length > 0),
+      hasShopOptions: !!(enhancedShopOptions && enhancedShopOptions.length > 0),
+      sampleTypeOption: typeOptions?.[0],
+      sampleShopOption: enhancedShopOptions?.[0]
+    });
+
     const baseCols = [
       {
         id: "shop_id",
@@ -119,7 +131,7 @@ function LicensesPageContent() {
         name: "ประเภทใบอนุญาต",
         width: 200,
         type: "select",
-        options: typeOptions,
+        options: typeOptions || [],
         display_order: 2,
         align: "center",
         readOnly: false,
@@ -404,10 +416,14 @@ function LicensesPageContent() {
       shopIdValue: updatedRow.shop_id,
       licenseTypeIdValue: updatedRow.license_type_id,
       licenseNumberValue: updatedRow.license_number,
+      issueDateValue: updatedRow.issue_date,
+      expiryDateValue: updatedRow.expiry_date,
       notesValue: updatedRow.notes,
       hasShopId: 'shop_id' in updatedRow,
       hasLicenseTypeId: 'license_type_id' in updatedRow,
       hasLicenseNumber: 'license_number' in updatedRow,
+      hasIssueDate: 'issue_date' in updatedRow,
+      hasExpiryDate: 'expiry_date' in updatedRow,
       hasNotes: 'notes' in updatedRow,
       // ตรวจจอบว่ามี custom fields
       hasCustomFields: Object.keys(updatedRow).some(key => key.startsWith('cf_')),
@@ -416,6 +432,13 @@ function LicensesPageContent() {
         acc[key] = updatedRow[key];
         return acc;
       }, {}),
+      // ตรวจจอบว่ามีการเปลี่ยนแปลงในวันที่
+      existingIssueDate: existingLicense?.issue_date ?? '',
+      updatedIssueDate: updatedRow.issue_date ?? '',
+      issueDateChanged: (updatedRow.issue_date ?? '') !== (existingLicense?.issue_date ?? ''),
+      existingExpiryDate: existingLicense?.expiry_date ?? '',
+      updatedExpiryDate: updatedRow.expiry_date ?? '',
+      expiryDateChanged: (updatedRow.expiry_date ?? '') !== (existingLicense?.expiry_date ?? ''),
       // ตรวจจอบว่ามีการเปลี่ยนแปลงใน notes (รวมถึงค่าว่างและ undefined)
       existingNotes: existingLicense?.notes ?? '',
       updatedNotes: updatedRow.notes ?? '',
@@ -461,13 +484,22 @@ function LicensesPageContent() {
     if (updatedRow.license_number !== existingLicense?.license_number) {
       standardData.license_number = updatedRow.license_number;
     }
-    // ส่งวันที่เสมอเสมอเมื่อมีการเปลี่ยนแปลง (รวมถึงค่าว่างและ undefined)
-    if (updatedRow.issue_date !== existingLicense?.issue_date) {
+    
+    // ตรวจสอบการเปลี่ยนแปลงของวันที่ (รองรับ null, undefined, ค่าว่าง)
+    const existingIssueDate = existingLicense?.issue_date ?? '';
+    const updatedIssueDate = updatedRow.issue_date ?? '';
+    if (updatedIssueDate !== existingIssueDate) {
       standardData.issue_date = updatedRow.issue_date;
+      console.log(`📅 Issue Date Changed: "${existingIssueDate}" → "${updatedIssueDate}"`);
     }
-    if (updatedRow.expiry_date !== existingLicense?.expiry_date) {
+    
+    const existingExpiryDate = existingLicense?.expiry_date ?? '';
+    const updatedExpiryDate = updatedRow.expiry_date ?? '';
+    if (updatedExpiryDate !== existingExpiryDate) {
       standardData.expiry_date = updatedRow.expiry_date;
+      console.log(`📅 Expiry Date Changed: "${existingExpiryDate}" → "${updatedExpiryDate}"`);
     }
+    
     if (updatedRow.status !== existingLicense?.status) {
       standardData.status = updatedRow.status;
     }
@@ -491,9 +523,12 @@ function LicensesPageContent() {
         key !== "type_name" &&
         key !== "original_status"
       ) {
-        // ส่งเฉพาะ custom fields ที่เปลี่ยนแปลง (รวมถึงค่าว่าง)
-        if (updatedRow[key] !== existingLicense?.[key]) {
+        // ส่งเฉพาะ custom fields ที่เปลี่ยนแปลง (รองรับ null, undefined, ค่าว่าง)
+        const existingValue = existingLicense?.[key] ?? '';
+        const updatedValue = updatedRow[key] ?? '';
+        if (updatedValue !== existingValue) {
           customValues[key] = updatedRow[key];
+          console.log(`🔧 Custom Field Changed [${key}]: "${existingValue}" → "${updatedValue}"`);
         }
       }
     });
@@ -513,7 +548,7 @@ function LicensesPageContent() {
     }
 
     // Debug logging สำหรับตรวจสอบฟิลด์ที่จำเป็นต้อง
-    console.log('🔍 Required Fields Validation:', {
+    console.log(' Preparing to send data:', {
       licenseId: updatedRow.id,
       hasValidId: updatedRow.id !== undefined && updatedRow.id !== null && updatedRow.id !== '',
       hasValidShopId: updatedRow.shop_id !== undefined && updatedRow.shop_id !== null && updatedRow.shop_id !== 0,
@@ -522,11 +557,15 @@ function LicensesPageContent() {
       shopIdValue: updatedRow.shop_id,
       licenseTypeIdValue: updatedRow.license_type_id,
       licenseNumberValue: updatedRow.license_number,
+      issueDateValue: updatedRow.issue_date,
+      expiryDateValue: updatedRow.expiry_date,
       allKeys: Object.keys(updatedRow),
       standardDataKeys: Object.keys(standardData),
       customValuesKeys: Object.keys(customValues),
       hasCustomFieldChanges: Object.keys(customValues).length > 0,
-      hasStandardFieldChanges: Object.keys(standardData).length > 0
+      hasStandardFieldChanges: Object.keys(standardData).length > 0,
+      finalStandardData: standardData,
+      finalCustomValues: customValues
     });
 
     // ตรวจสอบว่าฟิลด์ที่จำเป็นต้องมีค่าก่อนส่งข้อมูล

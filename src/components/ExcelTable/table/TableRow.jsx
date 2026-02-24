@@ -51,8 +51,20 @@ export const TableRow = memo(function TableRow({
           editingCell?.rowId === row.id && editingCell?.colId === col.id;
 
         // Debug logging สำหรับการแสดงผลคอลัมน์ (เฉพาะแถวแรกและแถวใหม่)
-        if (row.id === 'row1' || row.id?.toString().startsWith('id_')) {
+        if (row.id === 'row1' && (col.id === 'license_type_id' || col.id === 'license_number' || col.id === 'notes')) {
           console.log(`🔍 Cell Debug - Row: ${row.id}, Col: ${col.id} (${col.name}), Value:`, row[col.id]);
+        }
+
+        // Debug logging พิเศษสำหรับฟิลด์ที่มีปัญหา (เฉพาะแถวแรก)
+        if (row.id === 'row1' && (col.id === 'license_type_id' || col.id === 'license_number' || col.id === 'notes')) {
+          console.log(`🚨 Problem Field Check:`, {
+            isEditing,
+            isReadOnly: col.readOnly,
+            canEdit: !col.readOnly,
+            columnType: col.type,
+            currentValue: row[col.id],
+            willShowInput: isEditing && !col.readOnly
+          });
         }
 
         return (
@@ -75,21 +87,17 @@ export const TableRow = memo(function TableRow({
           onContextMenu(e, "cell", row.id, col.id);
         }}
         onDoubleClick={() => {
-          // Debug logging สำหรับการดับเบิลคลิก
-          if (col.id.startsWith('cf_') || col.id === 'notes') {
-            console.log(`🔍 Field Double Click:`, {
+          // Debug logging สำหรับการดับเบิลคลิก (เฉพาะฟิลด์ที่มีปัญหาและแถวแรก)
+          if (row.id === 'row1' && (col.id === 'license_type_id' || col.id === 'license_number' || col.id === 'notes')) {
+            console.log(`🚨 Problem Field Double Click:`, {
               rowId: row.id,
               columnId: col.id,
               columnName: col.name,
               currentValue: row[col.id],
               isEditable: !col.readOnly,
               willStartEditing: !col.readOnly,
-              allRowKeys: Object.keys(row),
-              hasShopId: 'shop_id' in row,
-              hasLicenseTypeId: 'license_type_id' in row,
-              hasLicenseNumber: 'license_number' in row,
-              hasNotes: 'notes' in row,
-              isNotesField: col.id === 'notes'
+              columnType: col.type,
+              columnOptions: col.options
             });
           }
           onCellClick(row.id, col.id);
