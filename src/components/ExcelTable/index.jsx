@@ -62,7 +62,7 @@ export default function ExcelTable({
     // Save state helpers
     getRows,
     setPendingSave,
-  } = useExcelTable({ initialColumns, initialRows, preserveTempRows });
+  } = useExcelTable({ initialColumns, initialRows, preserveTempRows, onCellBlur: handleCellBlur });
   // Refs for Focus Management (View Logic)
   const tableRef = useRef(null);
   const inputRef = useRef(null);

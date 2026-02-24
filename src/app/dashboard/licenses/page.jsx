@@ -95,7 +95,11 @@ function LicensesPageContent() {
         options: enhancedShopOptions,
         display_order: 1,
         align: "center",
-        render: (value, row) => {
+        readOnly: false,
+        render: (value, row, isEditing) => {
+          // ถ้ากำลังแก้ไข ไม่ต้องแสดง render function
+          if (isEditing) return null;
+          
           const shopName = enhancedShopOptions.find((o) => o.value == value)?.label || row.shop_name || value;
           if (!value || value === CREATE_NEW_SHOP_VALUE) return <span className="text-muted">-</span>;
           return (
@@ -118,13 +122,15 @@ function LicensesPageContent() {
         options: typeOptions,
         display_order: 2,
         align: "center",
+        readOnly: false,
       },
-      { 
+      {
         id: "license_number", 
         name: "เลขที่ใบอนุญาต", 
         width: 200,
         display_order: 5,
         align: "center",
+        readOnly: false,
       },
       {
         id: "issue_date",
@@ -133,6 +139,7 @@ function LicensesPageContent() {
         type: "date",
         align: "center",
         display_order: 6,
+        readOnly: false,
       },
       {
         id: "expiry_date",
@@ -141,6 +148,7 @@ function LicensesPageContent() {
         type: "date",
         align: "center",
         display_order: 7,
+        readOnly: false,
       },
       {
         id: "status",
@@ -151,6 +159,7 @@ function LicensesPageContent() {
         options: STATUS_OPTIONS,
         isBadge: true,
         display_order: 10,
+        readOnly: false,
       },
       { 
         id: "notes", 
@@ -158,6 +167,7 @@ function LicensesPageContent() {
         width: 200,
         display_order: 100, 
         align: "center",
+        readOnly: false,
       },
     ];
 

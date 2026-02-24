@@ -55,6 +55,18 @@ export const TableRow = memo(function TableRow({
           console.log(`🔍 Cell Debug - Row: ${row.id}, Col: ${col.id} (${col.name}), Value:`, row[col.id]);
         }
 
+        // Debug logging สำหรับทุกคอลัมน์เพื่อตรวจสอบการแก้ไข
+        console.log(`🔍 Column Editable Check - Row: ${row.id}, Col: ${col.id} (${col.name}):`, {
+          isEditing,
+          isReadOnly: col.readOnly,
+          canEdit: !col.readOnly,
+          hasRender: !!col.render,
+          columnType: col.type,
+          currentValue: row[col.id],
+          willShowInput: isEditing && !col.readOnly,
+          willShowRender: !isEditing || (col.render && !isEditing)
+        });
+
         // Debug logging สำหรับการแสดงผลคอลัมน์
         if (col.id === 'cf_selling_location' || col.id === 'cf_amount' || col.id === 'issue_date' || col.id === 'expiry_date') {
           console.log(`🔍 Cell Display Debug - Row: ${row.id}, Col: ${col.id} (${col.name}), Value:`, row[col.id], 'Type:', col.type);
@@ -217,7 +229,7 @@ export const TableRow = memo(function TableRow({
               >
                 <span className="cell-text" style={{ flex: "0 1 auto" }}>
                   {col.render ? (
-                    col.render(row[col.id], row)
+                    col.render(row[col.id], row, isEditing)
                   ) : col.type === "date" && row[col.id] ? (
                     formatThaiDate(row[col.id])
                   ) : col.type === "date" && !row[col.id] ? (

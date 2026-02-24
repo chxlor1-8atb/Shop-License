@@ -65,6 +65,7 @@ export function useExcelTable({
   initialColumns = defaultColumns,
   initialRows = defaultRows,
   preserveTempRows = true,
+  onCellBlur,
 } = {}) {
   const [columns, setColumns] = useState(initialColumns);
   const [rows, setRows] = useState(initialRows);
@@ -293,6 +294,10 @@ export function useExcelTable({
           setEditingCell({ rowId: rows[rowIndex + 1].id, colId });
         } else {
           setEditingCell(null);
+          // เรียก onCellBlur เพื่อบันทึกข้อมูลเมื่อไปถึงแถวสุดท้าย
+          if (onCellBlur) {
+            onCellBlur(rowId, colId);
+          }
         }
       } else if (e.key === "Tab") {
         e.preventDefault();
@@ -305,13 +310,26 @@ export function useExcelTable({
         } else {
           if (colIndex < columns.length - 1) {
             setEditingCell({ rowId, colId: columns[colIndex + 1].id });
+          } else {
+            // ถ้าเป็นคอลัมน์สุดท้าย ให้ไปแถวถัดไป
+            const rowIndex = rows.findIndex((r) => r.id === rowId);
+            if (rowIndex < rows.length - 1) {
+              setEditingCell({ rowId: rows[rowIndex + 1].id, colId: columns[0].id });
+            } else {
+              setEditingCell(null);
+              // เรียก onCellBlur เพื่อบันทึกข้อมูลเมื่อไปถึงท้ายสุด
+              if (onCellBlur) {
+                onCellBlur(rowId, colId);
+              }
+            }
           }
         }
       } else if (e.key === "Escape") {
         setEditingCell(null);
+        // ไม่เรียก onCellBlur เมื่อกด Escape (ยกเลิกการแก้ไข)
       }
     },
-    [rows, columns]
+    [rows, columns, onCellBlur]
   );
 
   const updateHeader = useCallback((colId, value) => {
