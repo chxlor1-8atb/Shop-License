@@ -457,6 +457,9 @@ function LicensesPageContent() {
 
     const isNew = updatedRow.id.toString().startsWith("id_");
 
+    // Extract standard data - ดึงค่าเดิมจาก license ที่มีอยู่ก่อน แล้วอัปเดตเฉพาะที่เปลี่ยน
+    const existingLicense = licenses.find(l => l.id === updatedRow.id);
+
     // Define standard columns (base columns that are not custom fields)
     const STANDARD_COLUMNS_IDS = [
       "shop_id",
@@ -468,8 +471,44 @@ function LicensesPageContent() {
       "notes"
     ];
 
-    // Extract standard data - ดึงค่าเดิมจาก license ที่มีอยู่ก่อน แล้วอัปเดตเฉพาะที่เปลี่ยน
-    const existingLicense = licenses.find(l => l.id === updatedRow.id);
+    // Debug logging สำหรับตรวจสอบว่ามีการเรียกใช handleRowUpdate
+    console.log('🔧 handleRowUpdate Called:', {
+      licenseId: updatedRow.id,
+      isNew: updatedRow.id.toString().startsWith("id_"),
+      allKeys: Object.keys(updatedRow),
+      shopIdValue: updatedRow.shop_id,
+      licenseTypeIdValue: updatedRow.license_type_id,
+      licenseNumberValue: updatedRow.license_number,
+      issueDateValue: updatedRow.issue_date,
+      expiryDateValue: updatedRow.expiry_date,
+      notesValue: updatedRow.notes,
+      hasShopId: 'shop_id' in updatedRow,
+      hasLicenseTypeId: 'license_type_id' in updatedRow,
+      hasLicenseNumber: 'license_number' in updatedRow,
+      hasIssueDate: 'issue_date' in updatedRow,
+      hasExpiryDate: 'expiry_date' in updatedRow,
+      hasNotes: 'notes' in updatedRow,
+      // ตรวจจอบว่ามี custom fields
+      hasCustomFields: Object.keys(updatedRow).some(key => key.startsWith('cf_')),
+      customFieldKeys: Object.keys(updatedRow).filter(key => key.startsWith('cf_')),
+      customFieldValues: Object.keys(updatedRow).filter(key => key.startsWith('cf_')).reduce((acc, key) => {
+        acc[key] = updatedRow[key];
+        return acc;
+      }, {}),
+      // ตรวจจอบว่ามีการเปลี่ยนแปลงในวันที่
+      existingIssueDate: existingLicense?.issue_date ?? '',
+      updatedIssueDate: updatedRow.issue_date ?? '',
+      issueDateChanged: (updatedRow.issue_date ?? '') !== (existingLicense?.issue_date ?? ''),
+      existingExpiryDate: existingLicense?.expiry_date ?? '',
+      updatedExpiryDate: updatedRow.expiry_date ?? '',
+      expiryDateChanged: (updatedRow.expiry_date ?? '') !== (existingLicense?.expiry_date ?? ''),
+      // ตรวจจอบว่ามีการเปลี่ยนแปลงใน notes (รวมถึงค่าว่างและ undefined)
+      existingNotes: existingLicense?.notes ?? '',
+      updatedNotes: updatedRow.notes ?? '',
+      notesChanged: (updatedRow.notes ?? '') !== (existingLicense?.notes ?? ''),
+      oldNotesValue: existingLicense?.notes ?? '',
+      newNotesValue: updatedRow.notes ?? ''
+    });
     
     // สร้าง standard data โดยส่งเฉพาะฟิลด์ที่เปลี่ยนแปลงจริงๆ (รวมถึงค่าว่าง)
     const standardData = {};
