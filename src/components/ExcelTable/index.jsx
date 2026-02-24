@@ -34,6 +34,10 @@ export default function ExcelTable({
   customContextMenuItems = [],
   preserveTempRows = true,
 }) {
+  // Refs for Focus Management (View Logic)
+  const tableRef = useRef(null);
+  const inputRef = useRef(null);
+
   // Logic & State management extracted to custom hook
   const {
     columns,
@@ -62,10 +66,56 @@ export default function ExcelTable({
     // Save state helpers
     getRows,
     setPendingSave,
-  } = useExcelTable({ initialColumns, initialRows, preserveTempRows, onCellBlur: handleCellBlur });
-  // Refs for Focus Management (View Logic)
-  const tableRef = useRef(null);
-  const inputRef = useRef(null);
+  } = useExcelTable({ initialColumns, initialRows, preserveTempRows, onCellBlur: null });
+
+  // Define handleCellBlur after we have access to hook functions
+  const handleCellBlur = async (rowId, colId) => {
+    setEditingCell(null);
+    
+    // Debug logging สำหรับการ blur ใน fields
+    if (colId.startsWith('cf_') || colId === 'notes') {
+      console.log(`🔧 Field Blur Check:`, {
+        rowId,
+        colId,
+        columnName: columns.find(c => c.id === colId)?.name || 'Unknown',
+        currentValue: getRows().find(r => r.id === rowId)?.[colId] || 'NOT_FOUND',
+        isCustomField: colId.startsWith('cf_'),
+        isNotesField: colId === 'notes'
+      });
+    }
+    
+    if (onRowUpdate && typeof onRowUpdate === 'function') {
+      // Use getRows() to get the most up-to-date data
+      if (getRows && typeof getRows === 'function') {
+        const currentRows = getRows();
+        const row = currentRows.find((r) => r.id === rowId);
+        if (row) {
+          // Debug logging สำหรับการส่งข้อมูลไป backend
+          if (colId.startsWith('cf_') || colId === 'notes') {
+            console.log(`🔧 Field Sending to Backend:`, {
+              rowId,
+              colId,
+              columnName: columns.find(c => c.id === colId)?.name || 'Unknown',
+              currentValue: row[col.id],
+              hasValue: row[col.id] !== undefined && row[col.id] !== null && row[col.id] !== '',
+              isCustomField: colId.startsWith('cf_'),
+              isNotesField: colId === 'notes'
+            });
+          }
+          
+          // Mark as pending save to prevent sync override
+          setPendingSave(true);
+          try {
+            await onRowUpdate(row);
+          } catch (error) {
+            console.error('❌ Update failed:', error);
+          } finally {
+            setPendingSave(false);
+          }
+        }
+      }
+    }
+  };
 
   // Focus input when editing cell changes
   useEffect(() => {
@@ -100,52 +150,6 @@ export default function ExcelTable({
     updateCell(rowId, colId, value);
     // NOTE: We probably don't want to call API on every keystroke, but on Blur.
     // However, we are updating local state here.
-  };
-
-  const handleCellBlur = async (rowId, colId) => {
-    setEditingCell(null);
-    
-    // Debug logging สำหรับการ blur ใน fields
-    if (colId.startsWith('cf_') || colId === 'notes') {
-      console.log(`🔧 Field Blur Check:`, {
-        rowId,
-        colId,
-        columnName: columns.find(c => c.id === colId)?.name || 'Unknown',
-        currentValue: getRows().find(r => r.id === rowId)?.[colId] || 'NOT_FOUND',
-        isCustomField: colId.startsWith('cf_'),
-        isNotesField: colId === 'notes'
-      });
-    }
-    
-    if (onRowUpdate) {
-      // Use getRows() to get the most up-to-date data
-      const currentRows = getRows();
-      const row = currentRows.find((r) => r.id === rowId);
-      if (row) {
-        // Debug logging สำหรับการส่งข้อมูลไป backend
-        if (colId.startsWith('cf_') || colId === 'notes') {
-          console.log(`🔧 Field Sending to Backend:`, {
-            rowId,
-            colId,
-            columnName: columns.find(c => c.id === colId)?.name || 'Unknown',
-            currentValue: row[colId],
-            hasValue: row[colId] !== undefined && row[colId] !== null && row[colId] !== '',
-            isCustomField: colId.startsWith('cf_'),
-            isNotesField: colId === 'notes'
-          });
-        }
-        
-        // Mark as pending save to prevent sync override
-        setPendingSave(true);
-        try {
-          await onRowUpdate(row);
-        } catch (error) {
-          console.error('❌ Update failed:', error);
-        } finally {
-          setPendingSave(false);
-        }
-      }
-    }
   };
 
   // Wrapper for handleCellKeyDown to save data when Enter/Tab is pressed

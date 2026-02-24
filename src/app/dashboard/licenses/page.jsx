@@ -1165,8 +1165,8 @@ function LicensesPageContent() {
         </div>
         </div>
 
-        {/* Debug logging ก่อนส่งข้อมูลไป ExcelTable */}
-        {(() => {
+        {/* Debug logging ก่อนส่งข้อมูลไป ExcelTable (เฉพาะ development) */}
+        {process.env.NODE_ENV === 'development' && (() => {
           console.log('📊 ExcelTable Input Debug:', {
             columnsCount: columns.length,
             licensesCount: licenses.length,
