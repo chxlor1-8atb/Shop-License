@@ -146,9 +146,14 @@ function ShopsPageContent() {
         has_license: filterHasLicense,
         license_status: filterLicenseStatus,
         license_type: filterLicenseType,
+        // Add cache-busting timestamp
+        _t: Date.now()
       });
 
-      const response = await fetch(`${API_ENDPOINTS.SHOPS}?${params}`, { credentials: "include" });
+      const response = await fetch(`${API_ENDPOINTS.SHOPS}?${params}`, { 
+        credentials: "include",
+        cache: "no-store" // Force no caching
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -326,12 +331,14 @@ function ShopsPageContent() {
             showSuccess("ลบร้านค้าเรียบร้อย");
             notifyDataChange("shops-sync");
             
-            // Invalidate SWR cache to update other components immediately
-            mutate(() => true, undefined, { revalidate: true });
-            mutate('/api/shops/dropdown');
+            // Clear ALL SWR cache aggressively
+            mutate(() => true, undefined, { revalidate: false });
+            mutate('/api/shops/dropdown', undefined, { revalidate: false });
             
-            // Fetch fresh data immediately to ensure server state is reflected
-            fetchShops();
+            // Force clear browser cache and fetch fresh data after a short delay
+            setTimeout(() => {
+              fetchShops();
+            }, 100);
             
             // Clean up deleted IDs tracking
             setTimeout(() => {
