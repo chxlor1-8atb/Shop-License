@@ -170,11 +170,17 @@ function ShopsPageContent() {
     fetchShops();
   }, [fetchCustomColumns, fetchShops]);
 
-  // Auto-refresh: sync data every 5s + on tab focus + cross-tab
-  useAutoRefresh(fetchShops, { interval: 5000, channel: "shops-sync" });
+  // Auto-refresh: ปิดชั่วคราวเพื่อแก้ไขปัญหาการแสดงข้อมูลซ้ำ (เหมือน licenses page)
+// useAutoRefresh(fetchShops, { interval: 30000, channel: "shops-sync" });
 
   // Supabase Realtime: Listen for DB changes
-  useRealtime('shops', () => {
+  useRealtime('shops', (payload) => {
+    // ตรวจสอบว่าเป็นการเพิ่มข้อมูลหรือไม่ ถ้าใช่ไม่ต้องโหลดทับ
+    if (payload && payload.eventType === 'INSERT') {
+      // สำหรับการเพิ่มข้อมูลใหม่ ไม่ต้องโหลดทับเพราะมี optimistic update อยู่แล้ว
+      return;
+    }
+    // Refresh list for other events (UPDATE, DELETE)
     fetchShops(); 
     mutate('/api/shops/dropdown');
   });
@@ -243,6 +249,9 @@ function ShopsPageContent() {
           
           setShops(prev => prev.map(s => s.id === updatedRow.id ? finalShop : s));
           notifyDataChange("shops-sync");
+          
+          // Invalidate SWR cache to update other components immediately
+          mutate(() => true, undefined, { revalidate: true });
           mutate('/api/shops/dropdown');
         } else {
           showError(data.message || "ไม่สามารถสร้างร้านค้าได้");
@@ -266,6 +275,9 @@ function ShopsPageContent() {
         if (data.success) {
           showSuccess("อัปเดตร้านค้าเรียบร้อย");
           notifyDataChange("shops-sync");
+          
+          // Invalidate SWR cache to update other components immediately
+          mutate(() => true, undefined, { revalidate: true });
           mutate('/api/shops/dropdown');
           
           if (data.shop) {
@@ -311,8 +323,10 @@ function ShopsPageContent() {
           if (data.success) {
             showSuccess("ลบร้านค้าเรียบร้อย");
             notifyDataChange("shops-sync");
+            
+            // Invalidate SWR cache to update other components immediately
+            mutate(() => true, undefined, { revalidate: true });
             mutate('/api/shops/dropdown');
-            fetchShops(); // เรียก fetchShops() เพื่อโหลดข้อมูลใหม่หลังลบสำเร็จ
             
             // Clean up deleted IDs tracking
             setTimeout(() => {
