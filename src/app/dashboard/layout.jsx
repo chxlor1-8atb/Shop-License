@@ -40,6 +40,7 @@ export default function DashboardLayout({ children }) {
   });
   const [expiringCount, setExpiringCount] = useState(0);
   const [showPatchNotes, setShowPatchNotes] = useState(false);
+  const [newVersionAvailable, setNewVersionAvailable] = useState(false);
 
   // Load Font Awesome CSS non-blocking with preload for faster start
   const faLoadedRef = useRef(false);
@@ -74,6 +75,21 @@ export default function DashboardLayout({ children }) {
     }
   }, []);
 
+  // Check for new version and show patch notes automatically
+  const checkNewVersion = useCallback(() => {
+    const lastSeenVersion = localStorage.getItem('lastSeenVersion');
+    const currentVersion = '2.1.3'; // Current version from changelog
+    
+    if (lastSeenVersion !== currentVersion) {
+      setNewVersionAvailable(true);
+      // Auto-show patch notes for new version
+      setTimeout(() => {
+        setShowPatchNotes(true);
+        localStorage.setItem('lastSeenVersion', currentVersion);
+      }, 1000); // Wait 1 second after page load
+    }
+  }, []);
+
   const updateDateTime = useCallback(() => {
     const d = new Date();
     const weekday = d.toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", weekday: "long" });
@@ -104,13 +120,15 @@ export default function DashboardLayout({ children }) {
         checkAuth(),
         fetchExpiringCount()
       ]);
+      // Check for new version after auth and data loaded
+      checkNewVersion();
       // Note: checkAuth itself handles the redirect if not authenticated
     };
     init();
     updateDateTime();
     const timer = setInterval(updateDateTime, 60000);
     return () => clearInterval(timer);
-  }, [checkAuth, fetchExpiringCount, updateDateTime]);
+  }, [checkAuth, fetchExpiringCount, updateDateTime, checkNewVersion]);
 
   // Use centralized logout function
   const handleLogout = () => logout();
@@ -313,6 +331,24 @@ export default function DashboardLayout({ children }) {
           </div>
           <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <VersionBadge onClick={() => setShowPatchNotes(true)} />
+            {newVersionAvailable && (
+              <span 
+                style={{ 
+                  background: "var(--primary)", 
+                  color: "white", 
+                  padding: "4px 8px", 
+                  borderRadius: "12px", 
+                  fontSize: "11px", 
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  animation: "pulse 2s infinite"
+                }}
+                onClick={() => setShowPatchNotes(true)}
+                title="คลิกเพื่อดู Patch Notes"
+              >
+                🆕 มีอัปเดตใหม่!
+              </span>
+            )}
             <div style={{ minWidth: "200px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
               {currentDate ? (
                 <span>{currentDate}</span>
