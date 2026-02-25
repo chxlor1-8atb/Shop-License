@@ -74,17 +74,6 @@ export function useExcelTable({
   const [contextMenu, setContextMenu] = useState(null); // { x, y, type, rowId?, colId? }
   const [selectedRow, setSelectedRow] = useState(null);
 
-  // Debug logging เมื่อเริ่มต้น
-  console.log('🔧 ExcelTable Init Debug:', {
-    initialColumnsCount: initialColumns.length,
-    initialRowsCount: initialRows.length,
-    sampleInitialRow: initialRows[0],
-    initialHasLocation: initialRows[0] ? 'cf_selling_location' in initialRows[0] : false,
-    initialHasAmount: initialRows[0] ? 'cf_amount' in initialRows[0] : false,
-    initialLocationValue: initialRows[0] ? initialRows[0].cf_selling_location : 'N/A',
-    initialAmountValue: initialRows[0] ? initialRows[0].cf_amount : 'N/A'
-  });
-
   // Track if user is currently editing to prevent override
   const isEditingRef = useRef(false);
   // Track previous initialRows to detect actual data changes
@@ -124,17 +113,13 @@ export function useExcelTable({
         return currentRows;
       }
 
-      // Debug logging สำหรับตรวจสอบการ sync
-      console.log('🔧 ExcelTable Sync Debug:', {
-        currentRowsCount: currentRows.length,
-        newRowsCount: newRows.length,
-        sampleCurrentRow: currentRows[0],
-        sampleNewRow: newRows[0],
-        currentHasLocation: currentRows[0] ? 'cf_selling_location' in currentRows[0] : false,
-        newHasLocation: newRows[0] ? 'cf_selling_location' in newRows[0] : false,
-        currentLocationValue: currentRows[0] ? currentRows[0].cf_selling_location : 'N/A',
-        newLocationValue: newRows[0] ? newRows[0].cf_selling_location : 'N/A'
-      });
+      const currentRowsCount = currentRows.length;
+      const newRowsCount = newRows.length;
+
+      // If new data is empty, keep current data (avoid clearing table during loading)
+      if (newRowsCount === 0) {
+        return currentRows;
+      }
 
       // Clear recently modified refs since we're doing a full sync after save
       recentlyModifiedRef.current.clear();
@@ -153,17 +138,6 @@ export function useExcelTable({
       if (tempRows.length > 0) {
         return [...newRows, ...tempRows];
       }
-
-      // Debug logging ก่อน return newRows
-      console.log('🔧 ExcelTable Sync Result:', {
-        returningNewRows: true,
-        newRowsCount: newRows.length,
-        sampleNewRow: newRows[0],
-        newHasLocation: newRows[0] ? 'cf_selling_location' in newRows[0] : false,
-        newHasAmount: newRows[0] ? 'cf_amount' in newRows[0] : false,
-        newLocationValue: newRows[0] ? newRows[0].cf_selling_location : 'N/A',
-        newAmountValue: newRows[0] ? newRows[0].cf_amount : 'N/A'
-      });
 
       return newRows;
     });
@@ -191,39 +165,19 @@ export function useExcelTable({
     // Check if initialRows actually changed from previous props
     const hasChanged = !areRowsEqual(prevInitialRowsRef.current, initialRows);
 
-    // Debug logging สำหรับตรวจสอบการเปลี่ยนแปลง
-    console.log('🔧 ExcelTable Change Detection:', {
-      hasChanged,
-      prevRowsCount: prevInitialRowsRef.current?.length || 0,
-      newRowsCount: initialRows.length,
-      prevSampleRow: prevInitialRowsRef.current?.[0],
-      newSampleRow: initialRows[0],
-      prevHasLocation: prevInitialRowsRef.current?.[0] ? 'cf_selling_location' in prevInitialRowsRef.current[0] : false,
-      newHasLocation: initialRows[0] ? 'cf_selling_location' in initialRows[0] : false,
-      prevLocationValue: prevInitialRowsRef.current?.[0] ? prevInitialRowsRef.current[0].cf_selling_location : 'N/A',
-      newLocationValue: initialRows[0] ? initialRows[0].cf_selling_location : 'N/A'
-    });
-
     if (!hasChanged) {
       return;
     }
 
     // ปิดการ sync ชั่วคราวเพื่อแก้ไขปัญหา custom fields หายถาวร
     // ใช้วิธีง่ายๆ: ถ้ามีการเปลี่ยนแปลงให้ใช้ initialRows ทันที
-    console.log('🔧 ExcelTable Sync DISABLED - Simple Direct Update');
 
     // ตรวจสอบว่าเป็นการอัปเดตจริงหรือไม่
     if (!hasChanged || initialRows.length === 0) {
-      console.log('🔧 No change detected or no data, keeping current rows');
       return;
     }
 
     // ใช้ initialRows โดยตรงเพื่อรักษาข้อมูลทั้งหมด
-    console.log('🔧 Direct update - using initialRows to preserve all data');
-    console.log('🔧 InitialRows sample:', initialRows[0]);
-    console.log('🔧 InitialRows has location:', initialRows[0] ? 'cf_selling_location' in (initialRows[0] || {}) : false);
-    console.log('🔧 InitialRows location value:', initialRows[0] ? (initialRows[0].cf_selling_location || 'NOT_FOUND') : 'NO_DATA');
-
     setRows(initialRows);
     prevInitialRowsRef.current = initialRows;
     return;
