@@ -152,7 +152,9 @@ function ShopsPageContent() {
       const data = await response.json();
 
       if (data.success) {
-        setShops(data.shops || []);
+        // Filter out items that are currently being deleted locally (เหมือน licenses page)
+        const filteredShops = (data.shops || []).filter(s => !deletedIdsRef.current.has(s.id));
+        setShops(filteredShops);
         updateFromResponse(data.pagination);
       }
     } catch (error) {
@@ -327,6 +329,9 @@ function ShopsPageContent() {
             // Invalidate SWR cache to update other components immediately
             mutate(() => true, undefined, { revalidate: true });
             mutate('/api/shops/dropdown');
+            
+            // Fetch fresh data immediately to ensure server state is reflected
+            fetchShops();
             
             // Clean up deleted IDs tracking
             setTimeout(() => {
