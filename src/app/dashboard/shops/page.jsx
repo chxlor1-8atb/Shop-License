@@ -172,14 +172,14 @@ function ShopsPageContent() {
     fetchShops();
   }, [fetchCustomColumns, fetchShops]);
 
-  // Auto-refresh: sync data every 30s + on tab focus + cross-tab (reduced frequency)
-  useAutoRefresh(fetchShops, { interval: 30000, channel: "shops-sync" });
+  // Auto-refresh: sync data every 5s + on tab focus + cross-tab
+  useAutoRefresh(fetchShops, { interval: 5000, channel: "shops-sync" });
 
-  // Supabase Realtime: Listen for DB changes (disabled to prevent deleted items from reappearing)
-  // useRealtime('shops', () => {
-  //   fetchShops(); 
-  //   mutate('/api/shops/dropdown');
-  // });
+  // Supabase Realtime: Listen for DB changes
+  useRealtime('shops', () => {
+    fetchShops(); 
+    mutate('/api/shops/dropdown');
+  });
 
   // --- Row Handlers ---
 
@@ -231,11 +231,24 @@ function ShopsPageContent() {
 
         if (data.success) {
           showSuccess("สร้างร้านค้าเรียบร้อย");
+          const newId = data.shop?.id || data.id;
+          
+          let finalShop;
+          if (data.shop) {
+            finalShop = {
+              ...data.shop,
+              ...(data.shop.custom_fields || {})
+            };
+          } else {
+            finalShop = { ...updatedRow, ...standardData, ...customValues, id: newId };
+          }
+          
+          setShops(prev => prev.map(s => s.id === updatedRow.id ? finalShop : s));
           notifyDataChange("shops-sync");
-          fetchShops();
           mutate('/api/shops/dropdown');
         } else {
           showError(data.message || "ไม่สามารถสร้างร้านค้าได้");
+          fetchShops();
         }
       } else {
         const payload = {
@@ -301,6 +314,7 @@ function ShopsPageContent() {
             showSuccess("ลบร้านค้าเรียบร้อย");
             notifyDataChange("shops-sync");
             mutate('/api/shops/dropdown');
+            fetchShops(); // เรียก fetchShops() เพื่อโหลดข้อมูลใหม่หลังลบสำเร็จ
             
             // Clean up deleted IDs tracking
             setTimeout(() => {
