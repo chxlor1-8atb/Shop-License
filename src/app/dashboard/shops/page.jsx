@@ -172,14 +172,14 @@ function ShopsPageContent() {
     fetchShops();
   }, [fetchCustomColumns, fetchShops]);
 
-  // Auto-refresh: sync data every 5s + on tab focus + cross-tab
-  useAutoRefresh(fetchShops, { interval: 5000, channel: "shops-sync" });
+  // Auto-refresh: sync data every 30s + on tab focus + cross-tab (reduced frequency)
+  useAutoRefresh(fetchShops, { interval: 30000, channel: "shops-sync" });
 
-  // Supabase Realtime: Listen for DB changes
-  useRealtime('shops', () => {
-    fetchShops(); 
-    mutate('/api/shops/dropdown');
-  });
+  // Supabase Realtime: Listen for DB changes (disabled to prevent deleted items from reappearing)
+  // useRealtime('shops', () => {
+  //   fetchShops(); 
+  //   mutate('/api/shops/dropdown');
+  // });
 
   // --- Row Handlers ---
 
