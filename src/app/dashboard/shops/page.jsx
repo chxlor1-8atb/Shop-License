@@ -622,6 +622,9 @@ function ShopsPageContent() {
           </span>
         </h3>
         <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button type="button" className="btn btn-outline-primary btn-sm" onClick={fetchShops} title="รีเฟรชข้อมูล">
+            <i className="fas fa-sync-alt"></i> รีเฟรช
+          </button>
           <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowQuickAdd(true)}>
             <i className="fas fa-plus"></i> สร้างร้านค้าใหม่
           </button>

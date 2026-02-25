@@ -805,9 +805,14 @@ function LicensesPageContent() {
             คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข | คลิกขวาเพื่อเปิดเมนู
           </span>
         </h3>
-        <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowQuickAddLicense(true)}>
-          <i className="fas fa-plus"></i> เพิ่มใบอนุญาต
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button type="button" className="btn btn-outline-primary btn-sm" onClick={fetchLicenses} title="รีเฟรชข้อมูล">
+            <i className="fas fa-sync-alt"></i> รีเฟรช
+          </button>
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowQuickAddLicense(true)}>
+            <i className="fas fa-plus"></i> เพิ่มใบอนุญาต
+          </button>
+        </div>
       </div>
       <div className="card-body">
         <div className="mb-4">
