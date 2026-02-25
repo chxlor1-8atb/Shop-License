@@ -487,11 +487,11 @@ export async function DELETE(request) {
         const license = await fetchOne('SELECT license_number FROM licenses WHERE id = $1', [id]);
 
         // Delete custom field values first (to prevent orphans)
-        await executeQuery('DELETE FROM custom_field_values WHERE entity_type = $1 AND entity_id = $2', ['licenses', id]);
+        const deleteCustomFieldsResult = await executeQuery('DELETE FROM custom_field_values WHERE entity_type = $1 AND entity_id = $2', ['licenses', id]);
 
         await executeQuery('DELETE FROM licenses WHERE id = $1', [id]);
 
-        // Log activity
+        // Log activity for license deletion
         const currentUser = await getCurrentUser();
         await logActivity({
             userId: currentUser?.id || null,
@@ -501,12 +501,24 @@ export async function DELETE(request) {
             details: `ลบใบอนุญาตหมายเลข: ${license?.license_number || id}`
         });
 
+        // Log activity for custom field values deletion
+        if (deleteCustomFieldsResult.length > 0) {
+            await logActivity({
+                userId: currentUser?.id || null,
+                action: ACTIVITY_ACTIONS.DELETE,
+                entityType: 'CUSTOM_FIELD_VALUE',
+                entityId: id,
+                details: `ลบ custom field values ${deleteCustomFieldsResult.length} รายการของใบอนุญาต: ${license?.license_number || id}`
+            });
+        }
+
         // Revalidate cache so sidebar badge updates immediately
         revalidateTag(CACHE_TAGS.LICENSES);
         revalidateTag(CACHE_TAGS.DASHBOARD_STATS);
 
         return NextResponse.json({ success: true, message: 'ลบใบอนุญาตเรียบร้อยแล้ว' });
     } catch (err) {
-        return NextResponse.json({ success: false, message: 'ไม่สามารถลบได้' }, { status: 500 });
+        console.error('Error deleting license:', err);
+        return NextResponse.json({ success: false, message: 'ไม่สามารถลบได้: ' + safeErrorMessage(err) }, { status: 500 });
     }
 }
