@@ -152,9 +152,7 @@ function ShopsPageContent() {
       const data = await response.json();
 
       if (data.success) {
-        // Filter out items that are currently being deleted locally
-        const filteredShops = (data.shops || []).filter(s => !deletedIdsRef.current.has(s.id));
-        setShops(filteredShops);
+        setShops(data.shops || []);
         updateFromResponse(data.pagination);
       }
     } catch (error) {
