@@ -352,7 +352,7 @@
 }
 
 /* Header Actions - Soft Pill Style, Inline After Text */
-.header-actions {
+.excel-table th .header-actions {
     display: inline-flex !important;
     align-items: center !important;
     gap: 4px !important;

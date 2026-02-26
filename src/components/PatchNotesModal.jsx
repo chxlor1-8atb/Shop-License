@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { CHANGELOG, getChangeTypeBadge, getLatestVersion } from '@/constants/changelog';
+import { CHANGELOG, getChangeTypeBadge } from '@/constants/changelog';
 import { formatThaiDate, formatThaiDateFull } from '@/utils/formatters';
 
 /**
  * PatchNotesModal Component
- * แสดง Modal Patch Notes/Changelog ให้ผู้ใช้เห็นว่ามีอะไรอัปเดตบ้าง
+ * Minimal Modern Glassmorphism Design
  */
 export default function PatchNotesModal({ isOpen, onClose }) {
     const [selectedVersion, setSelectedVersion] = useState(null);
@@ -18,16 +18,12 @@ export default function PatchNotesModal({ isOpen, onClose }) {
         }
     }, [isOpen]);
 
-    // Prevent body scroll when modal is open
-    // Prevent body scroll when modal is open
     useEffect(() => {
         if (isOpen) {
             const originalStyle = window.getComputedStyle(document.body).overflow;
             const originalHtmlStyle = window.getComputedStyle(document.documentElement).overflow;
-            
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
-            
             return () => {
                 document.body.style.overflow = originalStyle;
                 document.documentElement.style.overflow = originalHtmlStyle;
@@ -38,135 +34,92 @@ export default function PatchNotesModal({ isOpen, onClose }) {
     if (!isOpen) return null;
 
     const selectedChangelog = CHANGELOG.find(c => c.version === selectedVersion) || CHANGELOG[0];
-    
-    // Safety check for document
     if (typeof document === 'undefined') return null;
 
     return createPortal(
-        <div className="modal-overlay show">
+        <div className="modal-overlay show" onClick={onClose}>
             <div
-                className="modal modal-xl patch-notes-modal-content"
+                className="modal modal-xl pn-modal"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="modal-header">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <i className="fas fa-clipboard-list" style={{ fontSize: '1.5rem', color: '#ea580c' }}></i>
+                <div className="modal-header pn-modal-header">
+                    <div className="pn-modal-header-left">
+                        <div className="pn-modal-icon">
+                            <i className="fas fa-scroll"></i>
+                        </div>
                         <div>
-                            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Patch Notes</h2>
-                            <p style={{ margin: 0, opacity: 0.7, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                ประวัติการอัปเดตและแก้ไขบั๊ก
-                            </p>
+                            <h2 className="pn-modal-title">Changelog</h2>
+                            <p className="pn-modal-subtitle">ประวัติการอัปเดตระบบ</p>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="modal-close"
-                    >
+                    <button onClick={onClose} className="modal-close" aria-label="ปิด">
                         <i className="fas fa-times"></i>
                     </button>
                 </div>
 
-                {/* Content */}
-                <div className="patch-notes-container modal-body" style={{ padding: 0, display: 'flex', overflow: 'hidden' }}>
-                    {/* Version List Sidebar */}
-                    <div className="patch-notes-sidebar">
-                        {CHANGELOG.map(log => (
-                            <button
-                                key={log.version}
-                                onClick={() => setSelectedVersion(log.version)}
-                                className={`patch-notes-version-btn ${selectedVersion === log.version ? 'active' : ''}`}
-                            >
-                                <div style={{ fontSize: '0.9375rem', fontWeight: '600' }}>
-                                    v{log.version}
-                                </div>
-                                <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
-                                    {formatThaiDate(log.date)}
-                                </div>
-                            </button>
-                        ))}
+                {/* Body */}
+                <div className="modal-body pn-modal-body">
+                    {/* Timeline Sidebar */}
+                    <div className="pn-modal-sidebar">
+                        <div className="pn-timeline-label">เวอร์ชัน</div>
+                        <div className="pn-modal-sidebar-list">
+                            {CHANGELOG.map((log, idx) => (
+                                <button
+                                    key={log.version}
+                                    onClick={() => setSelectedVersion(log.version)}
+                                    className={`pn-timeline-item ${selectedVersion === log.version ? 'active' : ''}`}
+                                >
+                                    <div className="pn-timeline-dot"></div>
+                                    <div className="pn-timeline-content">
+                                        <span className="pn-timeline-ver">v{log.version}</span>
+                                        <span className="pn-timeline-date">{formatThaiDate(log.date)}</span>
+                                    </div>
+                                    {idx === 0 && <span className="pn-new-dot"></span>}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Change Details */}
-                    <div className="patch-notes-detail">
+                    {/* Detail */}
+                    <div className="pn-modal-detail">
                         {selectedChangelog && (
                             <>
-                                <div style={{ marginBottom: '2rem' }}>
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.75rem',
-                                        marginBottom: '0.5rem',
-                                        flexWrap: 'wrap'
-                                    }}>
-                                        <span style={{
-                                            background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                                            color: 'white',
-                                            padding: '0.25rem 0.75rem',
-                                            borderRadius: '20px',
-                                            fontSize: '0.875rem',
-                                            fontWeight: '600',
-                                            boxShadow: '0 2px 8px rgba(249, 115, 22, 0.3)'
-                                        }}>
-                                            v{selectedChangelog.version}
-                                        </span>
-                                        <span style={{ color: '#64748b', fontSize: '0.9375rem' }}>
+                                <div className="pn-content-header">
+                                    <div className="pn-content-meta">
+                                        <span className="pn-ver-pill">v{selectedChangelog.version}</span>
+                                        <span className="pn-content-date">
+                                            <i className="far fa-calendar-alt"></i>
                                             {formatThaiDateFull(selectedChangelog.date)}
                                         </span>
                                     </div>
-                                    <h3 style={{
-                                        margin: 0,
-                                        fontSize: '1.5rem',
-                                        color: '#1e293b',
-                                        fontWeight: '700'
-                                    }}>
-                                        {selectedChangelog.title}
-                                    </h3>
+                                    <h3 className="pn-content-title">{selectedChangelog.title}</h3>
                                 </div>
 
-                                <ul style={{
-                                    listStyle: 'none',
-                                    padding: 0,
-                                    margin: 0,
-                                    display: 'flex',
-                                    flexDirection: 'column'
-                                }}>
+                                <div className="pn-changes">
                                     {selectedChangelog.changes.map((change, idx) => {
                                         const badge = getChangeTypeBadge(change.type);
                                         return (
-                                            <li
+                                            <div
                                                 key={idx}
-                                                className="patch-change-item"
+                                                className="pn-change-card"
+                                                style={{ animationDelay: `${idx * 0.04}s` }}
                                             >
-                                                <span className={`badge ${badge.class}`} style={{
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.35rem',
-                                                    fontSize: '0.75rem',
-                                                    whiteSpace: 'nowrap',
-                                                    padding: '0.35rem 0.75rem',
-                                                    flexShrink: 0
-                                                }}>
+                                                <span className={`pn-change-badge pn-badge-${change.type}`}>
                                                     <i className={badge.icon}></i>
                                                     {badge.label}
                                                 </span>
-                                                <span style={{ color: '#334155', fontSize: '1rem', lineHeight: '1.5' }}>
-                                                    {change.text}
-                                                </span>
-                                            </li>
+                                                <span className="pn-change-desc">{change.text}</span>
+                                            </div>
                                         );
                                     })}
-                                </ul>
+                                </div>
                             </>
                         )}
                     </div>
                 </div>
-
-
             </div>
         </div>,
         document.body
     );
 }
-
-
