@@ -78,7 +78,7 @@ export default function DashboardLayout({ children }) {
   // Check for new version and show patch notes automatically
   const checkNewVersion = useCallback(() => {
     const lastSeenVersion = localStorage.getItem('lastSeenVersion');
-    const currentVersion = '2.1.3'; // Current version from changelog
+    const currentVersion = '2.1.4'; // Current version from changelog
     
     if (lastSeenVersion !== currentVersion) {
       setNewVersionAvailable(true);
