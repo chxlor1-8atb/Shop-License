@@ -528,10 +528,11 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
 
     // Generate and download PDF
     try {
-        downloadPdfBlob(pdfMake, docDefinition, `licenses_${new Date().toISOString().split('T')[0]}.pdf`);
+        await downloadPdfBlob(pdfMake, docDefinition, `licenses_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (e) {
         console.error('PDF Download Error:', e);
         alert('เกิดข้อผิดพลาดในการดาวน์โหลด PDF');
+        throw e;
     }
 }
 
@@ -670,14 +671,16 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
     };
 
     try {
-        downloadPdfBlob(
+        await downloadPdfBlob(
             pdfMake,
             docDefinition,
             `expiring_licenses_${new Date().toISOString().split('T')[0]}.pdf`
         );
     } catch (e) {
         console.error('PDF Download Error:', e);
-        alert('เกิดข้อผิดพลาดในการดาวน์โหลด PDF');
+        // โยน error ต่อเพื่อให้ caller (handleExportPDF ในหน้า expiring) จับและ showError ได้ถูกต้อง
+        // แทนที่จะกลืน error + Swal success ผิดเพี้ยน
+        throw e;
     }
 }
 
@@ -782,7 +785,7 @@ export async function exportShopsToPDF(shops) {
         styles: getStyles()
     };
 
-    downloadPdfBlob(pdfMake, docDefinition, `shops_${new Date().toISOString().split('T')[0]}.pdf`);
+    return downloadPdfBlob(pdfMake, docDefinition, `shops_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 /**
@@ -840,7 +843,7 @@ export async function exportUsersToPDF(users) {
         styles: getStyles()
     };
 
-    downloadPdfBlob(pdfMake, docDefinition, `users_${new Date().toISOString().split('T')[0]}.pdf`);
+    return downloadPdfBlob(pdfMake, docDefinition, `users_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 
@@ -950,7 +953,7 @@ export async function exportUserCredentialsPDF(userData) {
         }
     };
 
-    downloadPdfBlob(pdfMake, docDefinition, `credential_${userData.username}.pdf`);
+    return downloadPdfBlob(pdfMake, docDefinition, `credential_${userData.username}.pdf`);
 }
 
 /**
@@ -1037,35 +1040,50 @@ export async function exportActivityLogsToPDF(logs, filters = {}) {
         styles: getStyles()
     };
 
-    downloadPdfBlob(pdfMake, docDefinition, `activity_logs_${new Date().toISOString().split('T')[0]}.pdf`);
+    return downloadPdfBlob(pdfMake, docDefinition, `activity_logs_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 /**
  * Helper to download PDF as Blob with correct type
  * Ensures the file is treated as PDF by the browser
+ *
+ * ✅ Returns a Promise that resolves AFTER `link.click()` fires.
+ *    สำคัญ: pdfMake.getBlob() เป็น callback-based → ถ้าไม่ wrap Promise
+ *    caller จะไม่สามารถ await การ download จริงได้ ทำให้:
+ *      • Swal success modal ถูกเปิดก่อน link.click() → บังคับ Chrome block download
+ *      • user-gesture chain (onClick → await → click) หลุด → browser block
+ *    แก้โดย wrap เป็น Promise → ทุก caller `await` ได้ถูกต้อง
  */
 function downloadPdfBlob(pdfMake, docDefinition, filename) {
-    try {
-        const pdfDocGenerator = pdfMake.createPdf(docDefinition);
-        pdfDocGenerator.getBlob((blob) => {
-            // Create a new Blob with explicit PDF MIME type
-            const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-            const url = URL.createObjectURL(pdfBlob);
+    return new Promise((resolve, reject) => {
+        try {
+            const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+            pdfDocGenerator.getBlob((blob) => {
+                try {
+                    // Create a new Blob with explicit PDF MIME type
+                    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+                    const url = URL.createObjectURL(pdfBlob);
 
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
 
-            // Clean up - increase timeout to prevent "Site - Failed - Network" error
-            setTimeout(() => {
-                URL.revokeObjectURL(url);
-            }, 60000);
-        });
-    } catch (e) {
-        console.error('Download Error:', e);
-        alert('เกิดข้อผิดพลาดในการดาวน์โหลด: ' + e.message);
-    }
+                    // Clean up - increase timeout to prevent "Site - Failed - Network" error
+                    setTimeout(() => {
+                        URL.revokeObjectURL(url);
+                    }, 60000);
+
+                    resolve();
+                } catch (innerErr) {
+                    reject(innerErr);
+                }
+            });
+        } catch (e) {
+            console.error('Download Error:', e);
+            reject(e);
+        }
+    });
 }

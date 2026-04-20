@@ -132,7 +132,15 @@ export const CHANGELOG = [
             { type: 'improve', text: '• `/api/dropdowns` เพิ่ม `address` ใน SELECT shops (เดิม: id/shop_name/owner_name/phone)' },
             { type: 'improve', text: '• `shopOptionsDetailed` เพิ่ม field `address` + รวมใน `searchText` → ค้นเจอจากที่อยู่ได้ด้วย (เช่น พิมพ์ "สุขุมวิท" เจอทุกสาขา)' },
             { type: 'improve', text: '• `CustomSelect` รองรับ prop `opt.optionLabel` (ReactNode) — สำหรับการแสดงผลแบบ custom JSX ใน list โดย fallback เป็น `label/name` string เหมือนเดิม (backward compatible)' },
-            { type: 'improve', text: '• `QuickAddModal` สร้าง `shopOptionsWithDisplay` ที่มี `optionLabel` เป็น JSX 2 บรรทัด — trigger ยังใช้ `label` string เดิม (ไม่ล้น)' }
+            { type: 'improve', text: '• `QuickAddModal` สร้าง `shopOptionsWithDisplay` ที่มี `optionLabel` เป็น JSX 2 บรรทัด — trigger ยังใช้ `label` string เดิม (ไม่ล้น)' },
+            // ─────────────────────────────────────────────
+            // Bug Fix — Export PDF ในหน้า /dashboard/expiring ไม่ download
+            // ─────────────────────────────────────────────
+            { type: 'fix', text: '🐛 แก้ปัญหา**กด "ส่งออก PDF" ในหน้า `/dashboard/expiring` แล้วไม่ได้ไฟล์** (เงียบ ไม่มี error)' },
+            { type: 'fix', text: '• **Root cause**: `downloadPdfBlob()` ใน `pdfExportSafe.js` ใช้ `pdfMake.getBlob(callback)` แบบ sync + callback → function return ก่อน `link.click()` จะ trigger → `await exportExpiringLicensesToPDF(...)` resolve ทันที → Swal success modal ถูกเปิดก่อน → เมื่อ callback มาทีหลัง, Chrome block download เพราะหลุด user-gesture chain + มี modal ซ้อน' },
+            { type: 'fix', text: '• **Fix**: wrap `downloadPdfBlob()` เป็น **Promise** ที่ resolve หลัง `link.click()` ทำงานจริงๆ → caller `await` ได้ถูกต้อง → รอ download เสร็จก่อนค่อยขึ้น Swal success (เทคนิคเดียวกับที่ `/dashboard/export` ใช้อยู่แล้ว)' },
+            { type: 'fix', text: '• ปรับ `exportLicensesToPDF` / `exportExpiringLicensesToPDF` ให้ `await downloadPdfBlob(...)` และ `throw` error ต่อให้ caller จับได้ (เดิมกลืน error ด้วย `alert` อย่างเดียว → caller คิดว่าสำเร็จ)' },
+            { type: 'fix', text: '• ปรับ `exportShopsToPDF` / `exportUsersToPDF` / `exportUserCredentialsPDF` / `exportActivityLogsToPDF` ให้ `return downloadPdfBlob(...)` เพื่อให้ consistent และ caller await ได้ครบทุกตัว' }
         ]
     },
     {
