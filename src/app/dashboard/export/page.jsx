@@ -331,7 +331,7 @@ export default function ExportPage() {
                 alignItems: "flex-end",
               }}
             >
-              <div className="form-group" style={{ flex: "1 1 220px", minWidth: "200px" }}>
+              <div className="form-group" style={{ flex: "0 1 260px", minWidth: "220px", margin: 0 }}>
                 <label htmlFor="export-data-type">เลือกประเภทข้อมูล *</label>
                 <CustomSelect
                   id="export-data-type"
@@ -350,7 +350,7 @@ export default function ExportPage() {
               {type === "licenses" && (
                 <div
                   className="form-group"
-                  style={{ flex: "1 1 220px", minWidth: "200px" }}
+                  style={{ flex: "0 1 260px", minWidth: "220px", margin: 0 }}
                 >
                   <label htmlFor="export-data-license-type">เลือกประเภทใบอนุญาต</label>
                   <CustomSelect
