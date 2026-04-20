@@ -89,7 +89,8 @@ export const CHANGELOG = [
             { type: 'improve', text: '• Auto-correct เมื่อ `page` เกิน `totalPages` จาก response (เช่น filter ลดข้อมูลลง) — จะย้อนกลับหน้าสุดท้ายอัตโนมัติ' },
             { type: 'fix', text: '🐛 แก้ bug `usePagination.updateFromResponse` ที่เรียก `setState` 2 ครั้ง → รวมเป็น single setState เพื่อลด re-render' },
             { type: 'fix', text: '🐛 แก้ bug `Pagination` component: **Global keyboard listener** (Arrow Left/Right) ที่ attach บน `window` ทำให้ Pagination หลายตัวในหน้าเดียว (เช่น modal + page ข้างหลัง) ตอบ key พร้อมกัน — เพิ่ม prop `enableKeyboardNav` (default true) + skip key ถ้า target อยู่ใน dialog/modal/SweetAlert' },
-            { type: 'fix', text: '🐛 แก้ dead code ใน `generatePageNumbers()` ของ `Pagination` — เงื่อนไข `else if (leftSiblingIndex > 2)` ไม่มีวันจริงเพราะซ้ำกับ `if (showLeftDots)` — เปลี่ยนเป็น `else` ปกติเพื่อให้เลขหน้าช่วงกลางแสดงถูกต้องเมื่อไม่มี ellipsis' }
+            { type: 'fix', text: '🐛 แก้ dead code ใน `generatePageNumbers()` ของ `Pagination` — เงื่อนไข `else if (leftSiblingIndex > 2)` ไม่มีวันจริงเพราะซ้ำกับ `if (showLeftDots)` — เปลี่ยนเป็น `else` ปกติเพื่อให้เลขหน้าช่วงกลางแสดงถูกต้องเมื่อไม่มี ellipsis' },
+            { type: 'fix', text: '🎨 ปรับความสูง/padding ของกล่อง "ค้นหา" ในตัวกรอง (licenses + shops) ให้เท่ากับ dropdown (height: 42px, padding: 0 1rem, border: 1.5px, font-size: 0.9375rem) — ก่อนหน้านี้ `SearchInput` รับ style จาก `.form-group input` (padding 0.875rem 1rem → สูงกว่า ~44-46px) ทำให้เห็นขนาดไม่เสมอกับ `CustomSelect`' }
         ]
     },
     {
