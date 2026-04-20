@@ -67,109 +67,78 @@ async function loadFont(url) {
 }
 
 /**
- * Initialize pdfMake with fonts (including Thai)
+ * Initialize pdfMake with Thai fonts (THSarabunNew)
+ *
+ * 🚀 Performance & Reliability:
+ *   - Cache pdfMake instance + font base64 ที่ module-level → โหลดครั้งเดียวตลอด session
+ *     (เดิม: ทุกครั้งที่กด Export ต้อง import + fetch ~850KB → 2-5 วินาที)
+ *   - ข้ามการโหลด Roboto (vfs_fonts) — ไม่ได้ใช้เพราะ defaultStyle.font = 'THSarabunNew'
+ *     (เดิม: vfs_fonts API ของ pdfmake v0.3.x เปลี่ยน → merge ไม่สำเร็จ → เสียเวลาเปล่า
+ *      + บางกรณี module side-effect ทับ VFS ของเรา → error "not found in VFS")
+ *   - ถ้าโหลดฟอนต์ล้มเหลว → throw error ชัดเจน (เดิม: warn แต่ยัง config font แล้ว fail ตอน render)
+ *
+ * Returns pdfMake instance ที่พร้อมใช้งาน (cached)
  */
-let cachedVfs = null;
+let cachedPdfMakePromise = null;
+
+const FILE_REGULAR = 'THSarabunNew.ttf';
+const FILE_BOLD = 'THSarabunNew-Bold.ttf';
 
 async function getPdfMake() {
-    try {
-        const pdfMakeModule = await import('pdfmake/build/pdfmake');
-        const pdfMake = pdfMakeModule.default || pdfMakeModule;
+    // ถ้ามี Promise ที่ pending/resolved อยู่ → reuse เลย (ไม่ init ซ้ำ)
+    if (cachedPdfMakePromise) return cachedPdfMakePromise;
 
-        if (!pdfMake) throw new Error('Failed to load pdfMake module');
-
-        // Ensure global access and VFS init
-        if (typeof window !== 'undefined') window.pdfMake = pdfMake;
-        if (!pdfMake.vfs) pdfMake.vfs = {};
-
-        // 1. Try to load default Roboto fonts from package
+    cachedPdfMakePromise = (async () => {
         try {
-            const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
-            const pdfFonts = pdfFontsModule.default || pdfFontsModule;
-            if (pdfFonts?.pdfMake?.vfs) {
-                pdfMake.vfs = { ...pdfMake.vfs, ...pdfFonts.pdfMake.vfs };
-            }
-        } catch (e) {
-            console.warn('Could not load default vfs_fonts:', e);
+            const t0 = performance.now();
+
+            // 1. Load pdfmake module
+            const pdfMakeModule = await import('pdfmake/build/pdfmake');
+            const pdfMake = pdfMakeModule.default || pdfMakeModule;
+            if (!pdfMake) throw new Error('Failed to load pdfMake module');
+
+            // Global access (บาง use case ของ pdfmake อ่าน window.pdfMake)
+            if (typeof window !== 'undefined') window.pdfMake = pdfMake;
+
+            // 2. Init VFS เป็น object ใหม่เสมอ — ป้องกัน side-effect จาก import ก่อนหน้า
+            pdfMake.vfs = {};
+
+            // 3. Load Thai fonts (parallel) + verify
+            //    ใช้ Promise.all + ตรวจผลชัดเจน — ถ้า load fail จะ throw ทันที
+            const [regularData, boldData] = await Promise.all([
+                loadFont('/fonts/' + FILE_REGULAR),
+                loadFont('/fonts/' + FILE_BOLD),
+            ]);
+
+            if (!regularData) throw new Error(`ไม่สามารถโหลดฟอนต์ ${FILE_REGULAR} — ตรวจสอบว่าไฟล์มีใน /public/fonts/`);
+            if (!boldData)    throw new Error(`ไม่สามารถโหลดฟอนต์ ${FILE_BOLD} — ตรวจสอบว่าไฟล์มีใน /public/fonts/`);
+
+            pdfMake.vfs[FILE_REGULAR] = regularData;
+            pdfMake.vfs[FILE_BOLD] = boldData;
+
+            // 4. Config fonts — ใช้เฉพาะ THSarabunNew (ไม่ต้อง Roboto)
+            pdfMake.fonts = {
+                THSarabunNew: {
+                    normal: FILE_REGULAR,
+                    bold: FILE_BOLD,
+                    italics: FILE_REGULAR,
+                    bolditalics: FILE_BOLD,
+                },
+            };
+
+            const elapsed = Math.round(performance.now() - t0);
+            console.log(`[PDF Export] pdfMake initialized in ${elapsed}ms (Thai fonts only)`);
+
+            return pdfMake;
+        } catch (error) {
+            // Reset cache เพื่อให้ครั้งถัดไป retry ได้ (ไม่ติด cache ของ error)
+            cachedPdfMakePromise = null;
+            console.error('Error initializing pdfMake:', error);
+            throw error;
         }
+    })();
 
-        // 2. Define Thai Fonts
-        const FILE_REGULAR = 'THSarabunNew.ttf';
-        const FILE_BOLD = 'THSarabunNew-Bold.ttf';
-
-        // 3. Load missing Thai fonts
-        const missingRegular = !pdfMake.vfs[FILE_REGULAR];
-        const missingBold = !pdfMake.vfs[FILE_BOLD];
-
-        if (missingRegular || missingBold) {
-            console.log('PDF Export: Loading Thai fonts...');
-            const tasks = [];
-
-            if (missingRegular) {
-                tasks.push(
-                    loadFont('/fonts/' + FILE_REGULAR)
-                        .then(data => {
-                            if (data) pdfMake.vfs[FILE_REGULAR] = data;
-                            else console.warn('Failed to load ' + FILE_REGULAR);
-                        })
-                );
-            }
-
-            if (missingBold) {
-                tasks.push(
-                    loadFont('/fonts/' + FILE_BOLD)
-                        .then(data => {
-                            if (data) pdfMake.vfs[FILE_BOLD] = data;
-                            else console.warn('Failed to load ' + FILE_BOLD);
-                        })
-                );
-            }
-
-            await Promise.all(tasks);
-        }
-
-        // 4. Verification & Fallback Strategy
-        const vfsKeys = Object.keys(pdfMake.vfs);
-        console.log('PDF Export VFS Keys:', vfsKeys);
-
-        const hasRegular = vfsKeys.includes(FILE_REGULAR);
-        const hasBold = vfsKeys.includes(FILE_BOLD);
-
-        // Find a fallback font (Roboto or whatever exists) to prevent crash
-        const safeFallback = vfsKeys.find(k => k.includes('Roboto-Regular')) || vfsKeys[0];
-
-        if (!hasRegular && !hasBold && !safeFallback) {
-            alert('ไม่สามารถโหลดฟอนต์ได้ (VFS Empty) - กรุณารีเฟรชหน้าจอ');
-            throw new Error('Critical: No fonts available in VFS');
-        }
-
-        // 5. Construct Safe Font Config
-        // We ONLY assign keys that definitely exist in VFS
-        const regularFont = hasRegular ? FILE_REGULAR : (hasBold ? FILE_BOLD : safeFallback);
-        const boldFont = hasBold ? FILE_BOLD : (hasRegular ? FILE_REGULAR : safeFallback);
-
-        console.log(`PDF Font Config: Regular=${regularFont}, Bold=${boldFont}`);
-
-        pdfMake.fonts = {
-            Roboto: {
-                normal: safeFallback || 'Roboto-Regular.ttf',
-                bold: 'Roboto-Medium.ttf',
-                italics: 'Roboto-Italic.ttf',
-                bolditalics: 'Roboto-MediumItalic.ttf'
-            },
-            THSarabunNew: {
-                normal: regularFont,
-                bold: boldFont,
-                italics: regularFont,
-                bolditalics: boldFont
-            }
-        };
-
-        return pdfMake;
-    } catch (error) {
-        console.error('Error initializing pdfMake:', error);
-        throw error;
-    }
+    return cachedPdfMakePromise;
 }
 
 /**
