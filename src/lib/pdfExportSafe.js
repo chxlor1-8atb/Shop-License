@@ -97,13 +97,20 @@ async function getPdfMake() {
             const pdfMake = pdfMakeModule.default || pdfMakeModule;
             if (!pdfMake) throw new Error('Failed to load pdfMake module');
 
+            // ⚠️ pdfmake v0.3 API — VFS + fonts ต้องใช้ method ไม่ใช่ assign property
+            //    เพราะ internal เก็บไว้ใน private `virtual_fs` instance (ผ่าน writeFileSync)
+            //    ไม่ใช่ `pdfMake.vfs` public เหมือน v0.2
+            if (typeof pdfMake.addVirtualFileSystem !== 'function') {
+                throw new Error('pdfMake.addVirtualFileSystem() ไม่มีอยู่ — อาจเป็น pdfmake เวอร์ชันเก่า (<0.3)');
+            }
+            if (typeof pdfMake.addFonts !== 'function') {
+                throw new Error('pdfMake.addFonts() ไม่มีอยู่ — ตรวจสอบ pdfmake version');
+            }
+
             // Global access (บาง use case ของ pdfmake อ่าน window.pdfMake)
             if (typeof window !== 'undefined') window.pdfMake = pdfMake;
 
-            // 2. Init VFS เป็น object ใหม่เสมอ — ป้องกัน side-effect จาก import ก่อนหน้า
-            pdfMake.vfs = {};
-
-            // 3. Load Thai fonts (parallel) + verify
+            // 2. Load Thai fonts (parallel) + verify
             //    ใช้ Promise.all + ตรวจผลชัดเจน — ถ้า load fail จะ throw ทันที
             const [regularData, boldData] = await Promise.all([
                 loadFont('/fonts/' + FILE_REGULAR),
@@ -113,21 +120,25 @@ async function getPdfMake() {
             if (!regularData) throw new Error(`ไม่สามารถโหลดฟอนต์ ${FILE_REGULAR} — ตรวจสอบว่าไฟล์มีใน /public/fonts/`);
             if (!boldData)    throw new Error(`ไม่สามารถโหลดฟอนต์ ${FILE_BOLD} — ตรวจสอบว่าไฟล์มีใน /public/fonts/`);
 
-            pdfMake.vfs[FILE_REGULAR] = regularData;
-            pdfMake.vfs[FILE_BOLD] = boldData;
+            // 3. Register fonts เข้า internal VFS ผ่าน API v0.3
+            //    (เดิมใช้ `pdfMake.vfs = {...}` ซึ่ง v0.3 ไม่อ่าน → font not found error)
+            pdfMake.addVirtualFileSystem({
+                [FILE_REGULAR]: regularData,
+                [FILE_BOLD]: boldData,
+            });
 
-            // 4. Config fonts — ใช้เฉพาะ THSarabunNew (ไม่ต้อง Roboto)
-            pdfMake.fonts = {
+            // 4. Register font config ผ่าน API v0.3 (`addFonts` จะ merge เข้ากับ default client fonts)
+            pdfMake.addFonts({
                 THSarabunNew: {
                     normal: FILE_REGULAR,
                     bold: FILE_BOLD,
                     italics: FILE_REGULAR,
                     bolditalics: FILE_BOLD,
                 },
-            };
+            });
 
             const elapsed = Math.round(performance.now() - t0);
-            console.log(`[PDF Export] pdfMake initialized in ${elapsed}ms (Thai fonts only)`);
+            console.log(`[PDF Export] pdfMake initialized in ${elapsed}ms (Thai fonts via v0.3 API)`);
 
             return pdfMake;
         } catch (error) {
@@ -1016,43 +1027,30 @@ export async function exportActivityLogsToPDF(logs, filters = {}) {
  * Helper to download PDF as Blob with correct type
  * Ensures the file is treated as PDF by the browser
  *
- * ✅ Returns a Promise that resolves AFTER `link.click()` fires.
- *    สำคัญ: pdfMake.getBlob() เป็น callback-based → ถ้าไม่ wrap Promise
- *    caller จะไม่สามารถ await การ download จริงได้ ทำให้:
- *      • Swal success modal ถูกเปิดก่อน link.click() → บังคับ Chrome block download
- *      • user-gesture chain (onClick → await → click) หลุด → browser block
- *    แก้โดย wrap เป็น Promise → ทุก caller `await` ได้ถูกต้อง
+ * ✅ pdfmake v0.3: `getBlob()` เป็น async function ที่คืน Promise<Blob>
+ *    (v0.2 ใช้ callback — deprecated ใน v0.3)
+ *
+ *    Using `await` directly:
+ *      • จับ error ได้ถูกต้อง (ถ้า render fail → promise rejects → catch ทำงาน)
+ *      • ไม่เสี่ยง Swal loading ค้างเมื่อ pdfmake throw ภายใน
+ *      • user-gesture chain ครบ (onClick → await → link.click())
  */
-function downloadPdfBlob(pdfMake, docDefinition, filename) {
-    return new Promise((resolve, reject) => {
-        try {
-            const pdfDocGenerator = pdfMake.createPdf(docDefinition);
-            pdfDocGenerator.getBlob((blob) => {
-                try {
-                    // Create a new Blob with explicit PDF MIME type
-                    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-                    const url = URL.createObjectURL(pdfBlob);
+async function downloadPdfBlob(pdfMake, docDefinition, filename) {
+    const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+    // pdfmake v0.3 getBlob() returns Promise<Blob> — await ตรงๆ
+    const blob = await pdfDocGenerator.getBlob();
 
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+    // Force explicit PDF MIME type (บาง browser ใช้ generic type ถ้าไม่ระบุ)
+    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+    const url = URL.createObjectURL(pdfBlob);
 
-                    // Clean up - increase timeout to prevent "Site - Failed - Network" error
-                    setTimeout(() => {
-                        URL.revokeObjectURL(url);
-                    }, 60000);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-                    resolve();
-                } catch (innerErr) {
-                    reject(innerErr);
-                }
-            });
-        } catch (e) {
-            console.error('Download Error:', e);
-            reject(e);
-        }
-    });
+    // Clean up - delay เพื่อกัน "Network Failed" ใน Chrome เวลา blob ยังถูก stream
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
 }

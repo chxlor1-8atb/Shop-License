@@ -151,7 +151,17 @@ export const CHANGELOG = [
             { type: 'improve', text: '• Cache `pdfMake` instance + font base64 ด้วย **module-level Promise** (`cachedPdfMakePromise`) → concurrent export ก็ใช้ Promise เดียวกัน (ไม่เริ่ม init ซ้ำ)' },
             { type: 'improve', text: '• ถ้าโหลดฟอนต์ล้มเหลว → `throw` error ชัดเจน พร้อม filename (เดิม: `console.warn` แล้วยัง config ต่อ → fail ตอน render อย่างงงๆ) — caller จับแล้วแสดง "ไม่สามารถส่งออกเป็น PDF ได้" ให้ผู้ใช้เห็น' },
             { type: 'improve', text: '• ถ้า init fail → **reset cache** เพื่อให้ครั้งถัดไป retry ได้ (ไม่ติด cached error)' },
-            { type: 'improve', text: '• Log เวลาที่ใช้ init — `[PDF Export] pdfMake initialized in XXXms (Thai fonts only)` เพื่อให้ debug/monitor ได้' }
+            { type: 'improve', text: '• Log เวลาที่ใช้ init — `[PDF Export] pdfMake initialized in XXXms (Thai fonts only)` เพื่อให้ debug/monitor ได้' },
+            // ─────────────────────────────────────────────
+            // Critical Fix — pdfmake v0.3 API Migration
+            // ─────────────────────────────────────────────
+            { type: 'fix', text: '🔥 **แก้ปัญหาจริง** ของ error `File \'THSarabunNew-Bold.ttf\' not found in virtual file system` + Swal loading ค้าง' },
+            { type: 'fix', text: '• **Deep root cause**: `pdfmake@0.3.1` เปลี่ยน internal API จาก v0.2 อย่างมีนัยสำคัญ — `pdfMake.vfs = {...}` **ไม่มีผลเลย** เพราะ internal เก็บใน private `virtual_fs` instance (`writeFileSync`) ผ่าน method `addVirtualFileSystem()` เท่านั้น' },
+            { type: 'fix', text: '• **Fix #1**: เปลี่ยน `pdfMake.vfs = { ... }` → `pdfMake.addVirtualFileSystem({ [FILE]: base64Data })` ตาม API v0.3' },
+            { type: 'fix', text: '• **Fix #2**: เปลี่ยน `pdfMake.fonts = { ... }` → `pdfMake.addFonts({ THSarabunNew: {...} })` เพื่อให้ merge เข้ากับ default client fonts อย่างถูกต้อง' },
+            { type: 'fix', text: '• **Fix #3**: เพิ่มการ validate `typeof pdfMake.addVirtualFileSystem === "function"` ก่อนใช้ → ถ้า upgrade pdfmake แล้ว API เปลี่ยนอีก จะ throw ทันทีพร้อมข้อความชัด (ไม่ silent fail)' },
+            { type: 'fix', text: '• **Swal ค้าง**: pdfmake v0.3 `getBlob()` เปลี่ยนเป็น `async` ที่คืน `Promise<Blob>` แล้ว — callback style (`getBlob(cb)`) ของ v0.2 ไม่จับ error ที่ throw ภายใน render → callback ไม่เคยถูกเรียก → Promise wrap ไม่ resolve/reject → Swal loading ค้างถาวร' },
+            { type: 'fix', text: '• **Fix #4**: เปลี่ยน `downloadPdfBlob` เป็น `async` และใช้ `await pdfDocGenerator.getBlob()` ตรงๆ → error ภายใน pdfmake render จะ bubble ขึ้น → caller catch + แสดง error message ให้ผู้ใช้เห็น (ไม่ค้าง)' }
         ]
     },
     {
