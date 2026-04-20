@@ -21,6 +21,30 @@ function sanitizeCsvValue(val) {
     return val;
 }
 
+const THAI_MONTHS_SHORT = [
+    'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+    'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+];
+
+/**
+ * Format a Date object / ISO string into Thai Buddhist-era short date.
+ * Example: 2026-01-12 -> "12 ม.ค. 2569"
+ * Returns '' for null/undefined/invalid input.
+ */
+function formatThaiDate(val) {
+    if (val === null || val === undefined || val === '') return '';
+    try {
+        const d = val instanceof Date ? val : new Date(val);
+        if (isNaN(d.getTime())) return String(val);
+        const day = d.getDate();
+        const month = THAI_MONTHS_SHORT[d.getMonth()];
+        const year = d.getFullYear() + 543;
+        return `${day} ${month} ${year}`;
+    } catch {
+        return String(val);
+    }
+}
+
 export async function GET(request) {
     // Check authentication - REQUIRED for security
     const authError = await requireAuth();
@@ -64,8 +88,8 @@ export async function GET(request) {
                 { key: 'license_number', dataKey: 'license_number', label: 'เลขที่ใบอนุญาต' },
                 { key: 'shop_id', dataKey: 'shop_name', label: 'ร้านค้า' },
                 { key: 'license_type_id', dataKey: 'type_name', label: 'ประเภทใบอนุญาต' },
-                { key: 'issue_date', dataKey: 'issue_date', label: 'วันที่ออก' },
-                { key: 'expiry_date', dataKey: 'expiry_date', label: 'วันหมดอายุ' },
+                { key: 'issue_date', dataKey: 'issue_date', label: 'วันที่ออก', type: 'date' },
+                { key: 'expiry_date', dataKey: 'expiry_date', label: 'วันหมดอายุ', type: 'date' },
                 { key: 'status', dataKey: 'status', label: 'สถานะ' },
                 { key: 'notes', dataKey: 'notes', label: 'หมายเหตุ' }
             ],
@@ -73,7 +97,7 @@ export async function GET(request) {
                 { key: 'username', dataKey: 'username', label: 'ชื่อผู้ใช้' },
                 { key: 'full_name', dataKey: 'full_name', label: 'ชื่อ-นามสกุล' },
                 { key: 'role', dataKey: 'role', label: 'สิทธิ์การใช้งาน' },
-                { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง' }
+                { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง', type: 'date' }
             ]
         };
 
@@ -370,7 +394,14 @@ export async function GET(request) {
                     continue;
                 }
 
-                let stringVal = String(val);
+                let stringVal;
+
+                // Format date fields in Thai Buddhist-era (e.g. "12 ม.ค. 2569")
+                if (field.type === 'date') {
+                    stringVal = formatThaiDate(val);
+                } else {
+                    stringVal = String(val);
+                }
 
                 if (field.dataKey === 'status' && statusMap[stringVal.toLowerCase()]) {
                     stringVal = statusMap[stringVal.toLowerCase()];
@@ -394,10 +425,14 @@ export async function GET(request) {
             for (const cf of customFieldDefs) {
                 let cfValue = customFieldsData[cf.field_name];
 
-                if (cfValue === null || cfValue === undefined) {
+                if (cfValue === null || cfValue === undefined || cfValue === '') {
                     values.push('');
                 } else {
-                    let stringVal = sanitizeCsvValue(String(cfValue));
+                    // Format date-type custom fields in Thai (stored as ISO text in DB)
+                    let stringVal = (cf.field_type === 'date' || cf.field_type === 'datetime')
+                        ? formatThaiDate(cfValue)
+                        : String(cfValue);
+                    stringVal = sanitizeCsvValue(stringVal);
                     if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
                         values.push(`"${stringVal.replace(/"/g, '""')}"`);
                     } else {

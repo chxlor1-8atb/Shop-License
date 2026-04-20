@@ -36,7 +36,16 @@ export const CHANGELOG = [
             { type: 'feature', text: '👤 เพิ่มคอลัมน์ "เจ้าของร้าน" ในตารางหน้า /dashboard/licenses (ดึงจากตาราง shops อัตโนมัติตาม shop_id)' },
             { type: 'improve', text: '• คอลัมน์ใหม่วางต่อจาก "ร้านค้า" ทันที (read-only, แก้ไขได้ที่หน้าร้านค้าเท่านั้น)' },
             { type: 'improve', text: '• อัปเดต API /api/licenses (GET/POST/PUT) ให้ JOIN และ SELECT owner_name พร้อม shop_name' },
-            { type: 'improve', text: '• Fallback: ถ้า API ยังไม่ส่ง owner_name กลับมา จะ lookup จาก shops dropdown cache ให้อัตโนมัติ' }
+            { type: 'improve', text: '• Fallback: ถ้า API ยังไม่ส่ง owner_name กลับมา จะ lookup จาก shops dropdown cache ให้อัตโนมัติ' },
+            // ─────────────────────────────────────────────
+            // CSV Export Thai Date Fix (2026-04-20)
+            // ─────────────────────────────────────────────
+            { type: 'fix', text: '📅 แก้บั๊ก CSV Export หน้า /dashboard/export แสดงวันที่เป็น "Mon Jan 12 2026 00:00:00 GMT+0700" แทนที่จะเป็นวันที่ไทย' },
+            { type: 'fix', text: '• สาเหตุ: PG driver คืน issue_date/expiry_date/created_at เป็น JS Date object → String() ให้ออกมาเป็น Date.toString() default แบบอังกฤษ' },
+            { type: 'improve', text: '🇹🇭 เพิ่ม helper formatThaiDate() ใน /api/export ที่แปลงวันที่ให้เป็น พ.ศ. แบบสั้น เช่น "12 ม.ค. 2569"' },
+            { type: 'improve', text: '• Mark field เป็น type: "date" ใน baseFieldsDefinitions (issue_date, expiry_date, created_at) เพื่อ dispatch การ format อัตโนมัติ' },
+            { type: 'improve', text: '• ครอบคลุม custom field ที่มี field_type = date/datetime ให้แปลงเป็นวันที่ไทยใน CSV ด้วย' },
+            { type: 'note', text: '📝 หัวคอลัมน์ + สถานะ + role แปลงเป็นไทยอยู่แล้วตั้งแต่เดิม (ปกติ/หมดอายุ/ถูกพักใช้/แอดมิน/ผู้ใช้ทั่วไป) — บั๊กอยู่แค่วันที่' }
         ]
     },
     {
