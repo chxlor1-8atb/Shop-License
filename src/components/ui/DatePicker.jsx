@@ -40,30 +40,54 @@ export default function DatePicker({
         setMounted(true);
     }, []);
 
-    // Compute dropdown position based on trigger rect + viewport
+    // Compute dropdown position based on trigger rect + viewport.
+    // Strategy: pick the side (above/below) with MORE available space,
+    // and clamp max-height so the dropdown never overflows the viewport.
+    // Internal content scrolls if clamped.
     const updatePosition = () => {
         if (!wrapperRef.current) return;
         const rect = wrapperRef.current.getBoundingClientRect();
         const vw = window.innerWidth;
         const vh = window.innerHeight;
+        const MARGIN = 8; // minimum gap from viewport edges
+        const MIN_HEIGHT = 220; // don't shrink smaller than this if possible
 
-        // Horizontal: align left by default; flip right if overflow
+        // Horizontal: align left by default; if overflow right, shift left
+        const width = Math.min(DROPDOWN_WIDTH, vw - MARGIN * 2);
         let left = rect.left;
-        if (left + DROPDOWN_WIDTH > vw - 8) {
-            left = Math.max(8, rect.right - DROPDOWN_WIDTH);
+        if (left + width > vw - MARGIN) {
+            left = Math.max(MARGIN, rect.right - width);
+        }
+        if (left < MARGIN) left = MARGIN;
+
+        // Vertical: compare space above vs below, pick the larger side
+        const spaceBelow = vh - rect.bottom - GAP - MARGIN;
+        const spaceAbove = rect.top - GAP - MARGIN;
+        const preferBelow = spaceBelow >= DROPDOWN_HEIGHT || spaceBelow >= spaceAbove;
+
+        let top;
+        let maxHeight;
+        if (preferBelow) {
+            top = rect.bottom + GAP;
+            maxHeight = Math.max(MIN_HEIGHT, Math.min(DROPDOWN_HEIGHT, spaceBelow));
+        } else {
+            maxHeight = Math.max(MIN_HEIGHT, Math.min(DROPDOWN_HEIGHT, spaceAbove));
+            top = rect.top - GAP - maxHeight;
         }
 
-        // Vertical: below by default; flip above if overflow bottom
-        let top = rect.bottom + GAP;
-        if (top + DROPDOWN_HEIGHT > vh - 8 && rect.top - GAP - DROPDOWN_HEIGHT > 8) {
-            top = rect.top - GAP - DROPDOWN_HEIGHT;
+        // Final clamp: if viewport is so small that neither side fits MIN_HEIGHT,
+        // pin to viewport edges so nothing is cut off.
+        if (top < MARGIN) top = MARGIN;
+        if (top + maxHeight > vh - MARGIN) {
+            maxHeight = Math.max(120, vh - MARGIN - top);
         }
 
         setDropdownStyle({
             position: 'fixed',
             top: `${Math.round(top)}px`,
             left: `${Math.round(left)}px`,
-            width: `${DROPDOWN_WIDTH}px`,
+            width: `${Math.round(width)}px`,
+            maxHeight: `${Math.round(maxHeight)}px`,
             zIndex: 10050,
         });
     };

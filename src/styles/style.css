@@ -4548,9 +4548,29 @@ body:has(.sidebar.show) .mobile-toggle i {
     padding: 0;
 }
 
-/* Portal variant: position is controlled entirely by inline style. */
+/* Portal variant: position is controlled entirely by inline style.
+   Allow internal scroll when max-height clamps the dropdown near viewport edges,
+   while keeping border-radius clipping intact via overscroll-behavior. */
 .datepicker-dropdown--portal {
     max-width: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+}
+
+/* Thin, subtle scrollbar for the portal dropdown only */
+.datepicker-dropdown--portal::-webkit-scrollbar {
+    width: 6px;
+}
+.datepicker-dropdown--portal::-webkit-scrollbar-track {
+    background: transparent;
+}
+.datepicker-dropdown--portal::-webkit-scrollbar-thumb {
+    background: rgba(217, 119, 87, 0.35);
+    border-radius: 3px;
+}
+.datepicker-dropdown--portal::-webkit-scrollbar-thumb:hover {
+    background: rgba(217, 119, 87, 0.55);
 }
 
 @keyframes datepickerSlideIn {

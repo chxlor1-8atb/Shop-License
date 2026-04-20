@@ -20,10 +20,14 @@ export const CHANGELOG = [
             // ─────────────────────────────────────────────
             { type: 'fix', text: '📅 แก้ปัญหา DatePicker Dropdown ในหน้า "ส่งออกข้อมูล" ถูกตัดหายไปบางส่วน (คลิกแล้วมองไม่เห็นปฏิทิน)' },
             { type: 'fix', text: '• ย้าย Dropdown ไป render ที่ document.body ผ่าน React Portal เพื่อหลุดจาก stacking context ของ .card (backdrop-filter) และ overflow ของ .main-content' },
-            { type: 'improve', text: '• เปลี่ยนมาใช้ position: fixed + คำนวณตำแหน่งจาก getBoundingClientRect() ของ trigger' },
-            { type: 'improve', text: '• เพิ่ม Auto-flip: พลิกขึ้นบนอัตโนมัติเมื่อ Dropdown ชนขอบล่าง, จัดชิดขวาเมื่อชนขอบขวาของ viewport' },
+            { type: 'fix', text: '• แก้ปัญหา Dropdown ล้นขอบล่าง viewport (รอบแรกแก้แล้วยังเจอ) โดยเปลี่ยน auto-flip logic ให้เลือกทิศที่มี space เหลือมากกว่าเสมอ ไม่บังคับต้องมีที่พอ 420px' },
+            { type: 'fix', text: '• Clamp max-height ของ Dropdown ตาม space จริงที่เหลือใน viewport + เปิด overflow-y: auto ให้ scroll ภายในได้เมื่อที่จำกัด' },
+            { type: 'fix', text: '• Clamp ขอบบน/ล่าง + ปรับ width ให้ไม่ล้น viewport แม้หน้าจอเล็กมาก (เช่น laptop 13" + taskbar)' },
+            { type: 'improve', text: '• ใช้ position: fixed + คำนวณตำแหน่งจาก getBoundingClientRect() ของ trigger' },
+            { type: 'improve', text: '• จัดชิดขวาเมื่อ Dropdown ชนขอบขวาของ viewport' },
             { type: 'improve', text: '• อัปเดตตำแหน่ง Dropdown อัตโนมัติเมื่อ resize / scroll (รองรับ nested scroll ด้วย capture-phase listener)' },
             { type: 'improve', text: '• ปรับปรุง click-outside ให้ detect ได้ทั้ง wrapper และ dropdown ใน portal' },
+            { type: 'improve', text: '• เพิ่ม scrollbar แบบบางสีส้มกลมกลืนสำหรับ Dropdown variant ใน portal' },
             { type: 'note', text: '📝 ส่งผลกับทุกหน้าที่ใช้ DatePicker (Export, Expiring Licenses, Excel Tables ฯลฯ)' }
         ]
     },
