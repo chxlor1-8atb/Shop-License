@@ -119,7 +119,7 @@ export async function GET(request) {
         // Parallelize Count and Data Fetch
         // Computed status: ถ้า expiry_date < วันนี้ = expired, ถ้า suspended/revoked ใช้ค่าเดิม, อื่นๆ = active
         const query = `
-            SELECT l.*, s.shop_name, lt.name as type_name,
+            SELECT l.*, s.shop_name, s.owner_name, lt.name as type_name,
                    CASE 
                        WHEN l.status IN ('suspended', 'revoked') THEN l.status
                        WHEN l.expiry_date < CURRENT_DATE THEN 'expired'
@@ -136,7 +136,7 @@ export async function GET(request) {
             LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
             LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
             ${whereSQL}
-            GROUP BY l.id, s.shop_name, lt.name
+            GROUP BY l.id, s.shop_name, s.owner_name, lt.name
             ORDER BY l.id DESC
             LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}
         `;
@@ -248,7 +248,7 @@ export async function POST(request) {
 
         // Fetch the full license object to return for optimistic UI
         const newLicense = await fetchOne(`
-            SELECT l.*, s.shop_name, lt.name as type_name,
+            SELECT l.*, s.shop_name, s.owner_name, lt.name as type_name,
                    CASE 
                        WHEN l.status IN ('suspended', 'revoked') THEN l.status
                        WHEN l.expiry_date < CURRENT_DATE THEN 'expired'
@@ -265,7 +265,7 @@ export async function POST(request) {
             LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
             LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
             WHERE l.id = $1
-            GROUP BY l.id, s.shop_name, lt.name
+            GROUP BY l.id, s.shop_name, s.owner_name, lt.name
         `, [licenseId]);
 
         return NextResponse.json({ success: true, message: 'เพิ่มใบอนุญาตเรียบร้อยแล้ว', license: newLicense });
@@ -444,7 +444,7 @@ export async function PUT(request) {
 
         // Fetch the updated license object to return for optimistic UI
         const updatedLicense = await fetchOne(`
-            SELECT l.*, s.shop_name, lt.name as type_name,
+            SELECT l.*, s.shop_name, s.owner_name, lt.name as type_name,
                    CASE 
                        WHEN l.status IN ('suspended', 'revoked') THEN l.status
                        WHEN l.expiry_date < CURRENT_DATE THEN 'expired'
@@ -461,7 +461,7 @@ export async function PUT(request) {
             LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
             LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
             WHERE l.id = $1
-            GROUP BY l.id, s.shop_name, lt.name
+            GROUP BY l.id, s.shop_name, s.owner_name, lt.name
         `, [id]);
 
         return NextResponse.json({ success: true, message: 'บันทึกใบอนุญาตเรียบร้อยแล้ว', license: updatedLicense });

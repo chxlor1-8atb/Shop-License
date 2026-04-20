@@ -28,7 +28,15 @@ export const CHANGELOG = [
             { type: 'improve', text: '• อัปเดตตำแหน่ง Dropdown อัตโนมัติเมื่อ resize / scroll (รองรับ nested scroll ด้วย capture-phase listener)' },
             { type: 'improve', text: '• ปรับปรุง click-outside ให้ detect ได้ทั้ง wrapper และ dropdown ใน portal' },
             { type: 'improve', text: '• เพิ่ม scrollbar แบบบางสีส้มกลมกลืนสำหรับ Dropdown variant ใน portal' },
-            { type: 'note', text: '📝 ส่งผลกับทุกหน้าที่ใช้ DatePicker (Export, Expiring Licenses, Excel Tables ฯลฯ)' }
+            { type: 'improve', text: '🔤 ปรับ font ปุ่ม "รีเซ็ต" / "ตกลง" / ปุ่มนำทางเดือนใน DatePicker ให้ใช้ฟอนต์เดียวกับระบบ (Inter + Noto Sans Thai) แทน system font default ของ <button>' },
+            { type: 'note', text: '📝 ส่งผลกับทุกหน้าที่ใช้ DatePicker (Export, Expiring Licenses, Excel Tables ฯลฯ)' },
+            // ─────────────────────────────────────────────
+            // Licenses Page — Owner Column (2026-04-20)
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '👤 เพิ่มคอลัมน์ "เจ้าของร้าน" ในตารางหน้า /dashboard/licenses (ดึงจากตาราง shops อัตโนมัติตาม shop_id)' },
+            { type: 'improve', text: '• คอลัมน์ใหม่วางต่อจาก "ร้านค้า" ทันที (read-only, แก้ไขได้ที่หน้าร้านค้าเท่านั้น)' },
+            { type: 'improve', text: '• อัปเดต API /api/licenses (GET/POST/PUT) ให้ JOIN และ SELECT owner_name พร้อม shop_name' },
+            { type: 'improve', text: '• Fallback: ถ้า API ยังไม่ส่ง owner_name กลับมา จะ lookup จาก shops dropdown cache ให้อัตโนมัติ' }
         ]
     },
     {

@@ -106,6 +106,26 @@ function LicensesPageContent() {
         },
       },
       {
+        id: "owner_name",
+        name: "เจ้าของร้าน",
+        width: 180,
+        display_order: 1.5, // วางต่อจากร้านค้าทันที
+        align: "center",
+        readOnly: true, // ดึงจากตาราง shops อัตโนมัติ แก้ไขที่หน้าร้านค้าเท่านั้น
+        render: (value, row) => {
+          // ค่าอาจมาทั้งทาง row.owner_name (จาก API) หรือ lookup จาก shops list
+          const ownerFromRow = row.owner_name;
+          const ownerFromShops = shops?.find((s) => s.id == row.shop_id)?.owner_name;
+          const name = value || ownerFromRow || ownerFromShops || "";
+          if (!name) return <span className="text-muted">-</span>;
+          return (
+            <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }} title={name}>
+              {name}
+            </span>
+          );
+        },
+      },
+      {
         id: "license_type_id",
         name: "ประเภทใบอนุญาต",
         width: 200,
