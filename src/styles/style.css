@@ -4642,6 +4642,7 @@ body:has(.sidebar.show) .mobile-toggle i {
     border: none;
     border-radius: 50%;
     color: var(--text-secondary);
+    font-family: inherit;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -4732,6 +4733,7 @@ body:has(.sidebar.show) .mobile-toggle i {
     border: 1px solid var(--border-color);
     border-radius: 20px;
     color: var(--text-secondary);
+    font-family: inherit;
     font-weight: 500;
     font-size: 0.875rem;
     cursor: pointer;
@@ -4750,6 +4752,7 @@ body:has(.sidebar.show) .mobile-toggle i {
     border: none;
     border-radius: 20px;
     color: white;
+    font-family: inherit;
     font-weight: 600;
     font-size: 0.875rem;
     cursor: pointer;
