@@ -536,6 +536,152 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
 }
 
 /**
+ * Export Expiring Licenses to PDF
+ * สำหรับหน้า /dashboard/expiring — แสดงคอลัมน์ที่เหมาะกับการตรวจเช็คใบอนุญาตใกล้หมด
+ * รวม: ชื่อร้านค้า / ชื่อเจ้าของ / ประเภท / เลขที่ / วันหมดอายุ / คงเหลือ (วัน) / สถานะ
+ *
+ * @param {Array} licenses - ข้อมูลใบอนุญาต (ต้องมี days_until_expiry)
+ * @param {Object} filters - ตัวกรองที่ใช้ (search/filterType/statusFilter/dateFrom/dateTo)
+ */
+export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
+    const pdfMake = await getPdfMake();
+
+    const title = 'รายงานใบอนุญาตใกล้หมดอายุ';
+
+    // จัดกลุ่มตาม days_until_expiry เพื่อสร้าง stats + ระบุสี
+    const classifyExpiry = (days) => {
+        const d = parseInt(days);
+        if (isNaN(d)) return { key: 'unknown', label: '-', color: COLORS.muted };
+        if (d < 0)   return { key: 'expired',  label: 'หมดอายุแล้ว', color: COLORS.danger };
+        if (d <= 7)  return { key: 'critical', label: '≤ 7 วัน',     color: '#f97316' /* orange */ };
+        if (d <= 14) return { key: 'warning',  label: '8-14 วัน',    color: COLORS.warning };
+        return        { key: 'info',     label: '> 14 วัน',    color: COLORS.primary };
+    };
+
+    // Summary stats
+    const stats = {
+        'ทั้งหมด': licenses.length,
+        'หมดอายุแล้ว': licenses.filter(l => classifyExpiry(l.days_until_expiry).key === 'expired').length,
+        '≤ 7 วัน': licenses.filter(l => classifyExpiry(l.days_until_expiry).key === 'critical').length,
+        '8-14 วัน': licenses.filter(l => classifyExpiry(l.days_until_expiry).key === 'warning').length,
+        '> 14 วัน': licenses.filter(l => classifyExpiry(l.days_until_expiry).key === 'info').length,
+    };
+
+    // Headers
+    const headers = [
+        'ชื่อร้านค้า',
+        'ชื่อเจ้าของ',
+        'ประเภท',
+        'เลขที่ใบอนุญาต',
+        'วันหมดอายุ',
+        'คงเหลือ (วัน)',
+        'สถานะ'
+    ];
+
+    // Header row (style เหมือน createDataTable เพื่อให้ดูเหมือน PDF อื่นๆ)
+    const headerRow = headers.map(h => ({
+        text: h,
+        style: 'tableHeader',
+        fillColor: COLORS.primaryDark,
+        color: COLORS.white,
+        alignment: 'center',
+        margin: [5, 8, 5, 8]
+    }));
+
+    // Data rows (apply สีของคอลัมน์ "สถานะ" และ "คงเหลือ" ตาม classifyExpiry)
+    const dataRows = licenses.map((l, rowIndex) => {
+        const exp = classifyExpiry(l.days_until_expiry);
+        const fill = rowIndex % 2 === 0 ? COLORS.white : COLORS.light;
+        const daysNum = parseInt(l.days_until_expiry);
+        const daysText = isNaN(daysNum)
+            ? '-'
+            : (daysNum < 0 ? `${Math.abs(daysNum)} วัน (เกิน)` : `${daysNum} วัน`);
+
+        const baseCell = (text) => ({
+            text: text || '-',
+            style: 'tableCell',
+            alignment: 'center',
+            margin: [5, 6, 5, 6],
+            fillColor: fill
+        });
+
+        return [
+            baseCell(l.shop_name),
+            baseCell(l.owner_name),
+            baseCell(l.type_name),
+            baseCell(l.license_number),
+            baseCell(formatThaiDate(l.expiry_date)),
+            { ...baseCell(daysText), color: exp.color, bold: true },
+            { ...baseCell(exp.label), color: exp.color, bold: true }
+        ];
+    });
+
+    // Column widths — shop_name ให้กว้างเพราะชื่อร้านยาว
+    const columnWidths = ['*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'];
+
+    const table = {
+        table: {
+            headerRows: 1,
+            widths: columnWidths,
+            body: [headerRow, ...dataRows]
+        },
+        layout: {
+            hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5,
+            vLineWidth: () => 0.5,
+            hLineColor: (i) => i <= 1 ? COLORS.primaryDark : COLORS.border,
+            vLineColor: () => COLORS.border,
+            paddingLeft: () => 5,
+            paddingRight: () => 5
+        }
+    };
+
+    // Build document
+    const docDefinition = {
+        pageSize: 'A4',
+        pageOrientation: 'landscape',
+        pageMargins: [40, 40, 40, 60],
+        defaultStyle: { font: 'THSarabunNew' },
+
+        header: (currentPage, pageCount) => ({
+            text: `Page ${currentPage} of ${pageCount}`,
+            alignment: 'right',
+            margin: [0, 15, 40, 0],
+            style: 'pageNumber'
+        }),
+
+        footer: () => ({
+            columns: [
+                { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+            ],
+            margin: [0, 20, 0, 0]
+        }),
+
+        content: [
+            createHeader(title),
+            createSummaryBox(stats),
+            filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
+            licenses.length === 0
+                ? { text: 'ไม่พบข้อมูลที่ตรงกับเงื่อนไข', style: 'tableCell', alignment: 'center', margin: [0, 30, 0, 30] }
+                : table
+        ].filter(Boolean),
+
+        styles: getStyles()
+    };
+
+    try {
+        downloadPdfBlob(
+            pdfMake,
+            docDefinition,
+            `expiring_licenses_${new Date().toISOString().split('T')[0]}.pdf`
+        );
+    } catch (e) {
+        console.error('PDF Download Error:', e);
+        alert('เกิดข้อผิดพลาดในการดาวน์โหลด PDF');
+    }
+}
+
+/**
  * Export Shops to PDF
  */
 export async function exportShopsToPDF(shops) {

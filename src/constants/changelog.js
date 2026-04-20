@@ -90,7 +90,31 @@ export const CHANGELOG = [
             { type: 'fix', text: '🐛 แก้ bug `usePagination.updateFromResponse` ที่เรียก `setState` 2 ครั้ง → รวมเป็น single setState เพื่อลด re-render' },
             { type: 'fix', text: '🐛 แก้ bug `Pagination` component: **Global keyboard listener** (Arrow Left/Right) ที่ attach บน `window` ทำให้ Pagination หลายตัวในหน้าเดียว (เช่น modal + page ข้างหลัง) ตอบ key พร้อมกัน — เพิ่ม prop `enableKeyboardNav` (default true) + skip key ถ้า target อยู่ใน dialog/modal/SweetAlert' },
             { type: 'fix', text: '🐛 แก้ dead code ใน `generatePageNumbers()` ของ `Pagination` — เงื่อนไข `else if (leftSiblingIndex > 2)` ไม่มีวันจริงเพราะซ้ำกับ `if (showLeftDots)` — เปลี่ยนเป็น `else` ปกติเพื่อให้เลขหน้าช่วงกลางแสดงถูกต้องเมื่อไม่มี ellipsis' },
-            { type: 'fix', text: '🎨 ปรับความสูง/padding ของกล่อง "ค้นหา" ในตัวกรอง (licenses + shops) ให้เท่ากับ dropdown (height: 42px, padding: 0 1rem, border: 1.5px, font-size: 0.9375rem) — ก่อนหน้านี้ `SearchInput` รับ style จาก `.form-group input` (padding 0.875rem 1rem → สูงกว่า ~44-46px) ทำให้เห็นขนาดไม่เสมอกับ `CustomSelect`' }
+            { type: 'fix', text: '🎨 ปรับความสูง/padding ของกล่อง "ค้นหา" ในตัวกรอง (licenses + shops) ให้เท่ากับ dropdown (height: 42px, padding: 0 1rem, border: 1.5px, font-size: 0.9375rem) — ก่อนหน้านี้ `SearchInput` รับ style จาก `.form-group input` (padding 0.875rem 1rem → สูงกว่า ~44-46px) ทำให้เห็นขนาดไม่เสมอกับ `CustomSelect`' },
+            // ─────────────────────────────────────────────
+            // Expiring Page — เพิ่มคอลัมน์ชื่อเจ้าของ
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '👤 เพิ่มคอลัมน์ **ชื่อเจ้าของ** ในตาราง "ใบอนุญาตใกล้หมดอายุ" หน้า /dashboard/expiring — จะเห็นชื่อเจ้าของร้านถัดจากชื่อร้านในแต่ละแถวทันที ไม่ต้องเข้าไปดูรายละเอียด' },
+            { type: 'improve', text: '• `/api/licenses/expiring` เพิ่ม `s.owner_name` ใน SELECT เพื่อส่งข้อมูลให้ frontend' },
+            { type: 'improve', text: '• Search box ครอบคลุม `owner_name` เพิ่มเติม (เดิมค้นได้แค่ชื่อร้าน + เลขที่ใบอนุญาต)' },
+            { type: 'improve', text: '• เพิ่มตัวเลือก sort: "ชื่อเจ้าของ (ก-ฮ)" และ "ชื่อเจ้าของ (ฮ-ก)"' },
+            { type: 'improve', text: '• ปรับ `skeletonColumns` + `colSpan` "ไม่พบข้อมูล" จาก 6 → 7 ให้ตรงกับจำนวนคอลัมน์ใหม่' },
+            // ─────────────────────────────────────────────
+            // Expiring Page — Export PDF
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '📄 เพิ่มปุ่ม **"ส่งออก PDF"** ในหน้า /dashboard/expiring — ส่งออกได้ทันทีตามตัวกรองปัจจุบัน (search/ประเภท/สถานะใกล้หมด/วันหมดอายุจาก-ถึง/การเรียงลำดับ)' },
+            { type: 'feature', text: '🆕 เพิ่ม util `exportExpiringLicensesToPDF(licenses, filters)` ใน `@/lib/pdfExportSafe` — สร้าง PDF ภาษาไทย (THSarabunNew) พร้อม header/footer/page number เหมือน PDF อื่นๆ ในระบบ' },
+            { type: 'improve', text: '• คอลัมน์ PDF: ชื่อร้านค้า / **ชื่อเจ้าของ** / ประเภท / เลขที่ใบอนุญาต / วันหมดอายุ / **คงเหลือ (วัน)** / สถานะ' },
+            { type: 'improve', text: '• Summary Box ด้านบนแสดงสถิติ: ทั้งหมด / หมดอายุแล้ว / ≤ 7 วัน / 8-14 วัน / > 14 วัน' },
+            { type: 'improve', text: '• คอลัมน์ "คงเหลือ" + "สถานะ" ระบายสีตามระดับความเร่งด่วน (แดง=หมดอายุ, ส้ม=≤7 วัน, เหลือง=8-14 วัน, น้ำเงิน=>14 วัน) — เห็นทันทีว่ารายการไหนควรจัดการก่อน' },
+            { type: 'improve', text: '• ส่งออกจาก `filteredLicenses` ใน memory — ใช้ผลลัพธ์หลัง apply ทุก filter (รวม statusFilter ที่คำนวณจาก days_until_expiry) ไม่ต้องเรียก API ใหม่' },
+            { type: 'improve', text: '• Loading state: ปุ่มเปลี่ยนเป็น spinner + "กำลังสร้าง PDF..." + Swal loading dialog ระหว่างประมวลผล' },
+            // ─────────────────────────────────────────────
+            // Shops + Licenses — ปรับขนาดกล่องค้นหาให้เท่ากับ dropdown
+            // ─────────────────────────────────────────────
+            { type: 'fix', text: '🎨 แก้ปัญหา**ขนาดกล่องค้นหาไม่เท่ากับ dropdown** ในหน้า /dashboard/licenses + /dashboard/shops — ปรับ CSS `.filter-grid input` ให้ใช้ `height: 42px` + `padding: 0 1rem` + `box-sizing: border-box` ตรงกับ `.custom-select-trigger` (เดิม `padding: 0.75rem 1rem` → สูง ~38-40px ไม่เท่ากับ dropdown 42px)' },
+            { type: 'improve', text: '• Root-cause fix ที่ CSS ส่วนกลาง — ครอบคลุมทุกหน้าที่ใช้ `.filter-grid` อัตโนมัติ (licenses/shops/อื่นๆ) ไม่ต้อง inline-style ทีละหน้า' },
+            { type: 'improve', text: '• ไม่กระทบ CSS `.form-group input` (ใช้ใน Modal/Form) ที่ยังต้องการ padding สูงกว่าเพื่อการอ่านง่าย' }
         ]
     },
     {

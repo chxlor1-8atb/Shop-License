@@ -11,6 +11,8 @@ import Pagination from '@/components/ui/Pagination';
 import FilterRow, { SearchInput } from '@/components/ui/FilterRow';
 import TableSkeleton from '@/components/ui/TableSkeleton';
 import DatePicker from '@/components/ui/DatePicker';
+import Swal from 'sweetalert2';
+import { exportExpiringLicensesToPDF } from '@/lib/pdfExportSafe';
 import '@/components/ExcelTable/ExcelTable.css';
 
 // Constants - Expiry thresholds
@@ -82,6 +84,7 @@ export default function ExpiringPage() {
             const lowerSearch = search.toLowerCase();
             result = result.filter(l =>
                 (l.shop_name?.toLowerCase().includes(lowerSearch)) ||
+                (l.owner_name?.toLowerCase().includes(lowerSearch)) ||
                 (l.license_number?.toLowerCase().includes(lowerSearch))
             );
         }
@@ -126,6 +129,10 @@ export default function ExpiringPage() {
                     return (a.shop_name || '').localeCompare(b.shop_name || '', 'th');
                 case 'shop_desc':
                     return (b.shop_name || '').localeCompare(a.shop_name || '', 'th');
+                case 'owner_asc':
+                    return (a.owner_name || '').localeCompare(b.owner_name || '', 'th');
+                case 'owner_desc':
+                    return (b.owner_name || '').localeCompare(a.owner_name || '', 'th');
                 default:
                     return 0;
             }
@@ -237,12 +244,70 @@ export default function ExpiringPage() {
         setStatusFilter(prev => prev === status ? '' : status);
     };
 
+    // Export PDF — ใช้ filteredLicenses ที่ผ่าน filter แล้ว + ส่ง filters ปัจจุบันไปแสดงใน PDF
+    const [isExportingPDF, setIsExportingPDF] = useState(false);
+    const handleExportPDF = async () => {
+        if (filteredLicenses.length === 0) {
+            showInfo('ไม่มีข้อมูลที่ตรงกับเงื่อนไขสำหรับส่งออก');
+            return;
+        }
+
+        // สร้าง object filter info สำหรับแสดงใน PDF (key เป็นภาษาไทยเพื่ออ่านง่าย)
+        const pdfFilters = {};
+        if (search)     pdfFilters['คำค้นหา'] = search;
+        if (filterType) pdfFilters['ประเภทใบอนุญาต'] = filterType;
+        if (statusFilter) {
+            const f = EXPIRY_STATUS_FILTERS.find(x => x.value === statusFilter);
+            if (f) pdfFilters['สถานะ'] = f.label;
+        }
+        if (dateFrom) pdfFilters['วันหมดอายุตั้งแต่'] = formatThaiDate(dateFrom);
+        if (dateTo)   pdfFilters['วันหมดอายุถึง']    = formatThaiDate(dateTo);
+
+        const sortLabels = {
+            expiry_asc:  'วันหมดอายุ (ใกล้ → ไกล)',
+            expiry_desc: 'วันหมดอายุ (ไกล → ใกล้)',
+            shop_asc:    'ชื่อร้าน (ก-ฮ)',
+            shop_desc:   'ชื่อร้าน (ฮ-ก)',
+            owner_asc:   'ชื่อเจ้าของ (ก-ฮ)',
+            owner_desc:  'ชื่อเจ้าของ (ฮ-ก)',
+        };
+        if (sortOrder && sortOrder !== 'expiry_asc') {
+            pdfFilters['เรียงตาม'] = sortLabels[sortOrder] || sortOrder;
+        }
+
+        setIsExportingPDF(true);
+        Swal.fire({
+            title: 'กำลังสร้างไฟล์ PDF...',
+            text: 'กรุณารอสักครู่ ระบบกำลังประมวลผล',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        try {
+            await exportExpiringLicensesToPDF(filteredLicenses, pdfFilters);
+            Swal.fire({
+                title: 'สำเร็จ!',
+                text: `ดาวน์โหลดไฟล์ PDF ${filteredLicenses.length} รายการเรียบร้อยแล้ว`,
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false,
+            });
+        } catch (err) {
+            console.error('Export PDF Error:', err);
+            showError('ไม่สามารถส่งออกเป็น PDF ได้ กรุณาลองใหม่อีกครั้ง');
+        } finally {
+            setIsExportingPDF(false);
+        }
+    };
+
     const skeletonColumns = [
-        { width: '25%', center: true },
-        { width: '15%', center: true },
-        { width: '15%', center: true },
-        { width: '15%', center: true },
-        { width: '20%', center: true }
+        { width: '20%', center: true }, // ชื่อร้านค้า
+        { width: '15%', center: true }, // ชื่อเจ้าของ
+        { width: '15%', center: true }, // ประเภท
+        { width: '12%', center: true }, // เลขที่
+        { width: '13%', center: true }, // วันหมดอายุ
+        { width: '15%', center: true }, // สถานะ
+        { width: '10%', center: true }  // actions
     ];
 
     return (
@@ -320,7 +385,9 @@ export default function ExpiringPage() {
                                 { value: 'expiry_asc', label: 'วันหมดอายุ (ใกล้ -> ไกล)' },
                                 { value: 'expiry_desc', label: 'วันหมดอายุ (ไกล -> ใกล้)' },
                                 { value: 'shop_asc', label: 'ชื่อร้าน (ก-ฮ)' },
-                                { value: 'shop_desc', label: 'ชื่อร้าน (ฮ-ก)' }
+                                { value: 'shop_desc', label: 'ชื่อร้าน (ฮ-ก)' },
+                                { value: 'owner_asc', label: 'ชื่อเจ้าของ (ก-ฮ)' },
+                                { value: 'owner_desc', label: 'ชื่อเจ้าของ (ฮ-ก)' }
                             ]}
                             icon="fas fa-sort"
                             placeholder="เรียงลำดับ"
@@ -335,6 +402,28 @@ export default function ExpiringPage() {
                     >
                         <i className="fas fa-undo"></i>
                         <span>รีเซ็ตตัวกรอง</span>
+                    </button>
+
+                    <button
+                        className="btn btn-primary"
+                        onClick={handleExportPDF}
+                        disabled={isExportingPDF || filteredLicenses.length === 0}
+                        title={filteredLicenses.length === 0
+                            ? 'ไม่มีข้อมูลที่ตรงกับเงื่อนไขสำหรับส่งออก'
+                            : `ส่งออกเป็น PDF (${filteredLicenses.length} รายการ)`}
+                        style={{
+                            height: '42px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '0 16px',
+                            whiteSpace: 'nowrap',
+                            opacity: (isExportingPDF || filteredLicenses.length === 0) ? 0.6 : 1,
+                            cursor: (isExportingPDF || filteredLicenses.length === 0) ? 'not-allowed' : 'pointer'
+                        }}
+                    >
+                        <i className={isExportingPDF ? 'fas fa-spinner fa-spin' : 'fas fa-file-pdf'}></i>
+                        <span>{isExportingPDF ? 'กำลังสร้าง PDF...' : `ส่งออก PDF (${filteredLicenses.length})`}</span>
                     </button>
 
                     <button
@@ -364,6 +453,7 @@ export default function ExpiringPage() {
                             <thead>
                                 <tr>
                                     <th className="text-center">ชื่อร้านค้า</th>
+                                    <th className="text-center">ชื่อเจ้าของ</th>
                                     <th className="text-center">ประเภท</th>
                                     <th className="text-center">เลขที่</th>
                                     <th className="text-center">หมดอายุ</th>
@@ -376,7 +466,7 @@ export default function ExpiringPage() {
                                     <TableSkeleton rows={5} columns={skeletonColumns} />
                                 ) : currentData.length === 0 ? (
                                     <tr>
-                                        <td colSpan="6" className="text-center">ไม่พบข้อมูล</td>
+                                        <td colSpan="7" className="text-center">ไม่พบข้อมูล</td>
                                     </tr>
                                 ) : (
                                     currentData.map(license => (
@@ -483,6 +573,7 @@ function ExpiringLicenseRow({ license, onDelete }) {
     return (
         <tr>
             <td className="text-center">{license.shop_name}</td>
+            <td className="text-center">{license.owner_name || '-'}</td>
             <td className="text-center">{license.type_name}</td>
             <td className="text-center">{license.license_number}</td>
             <td className="text-center">{formatThaiDate(license.expiry_date)}</td>
