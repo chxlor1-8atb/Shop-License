@@ -42,32 +42,51 @@ export default function ExportPage() {
   const [shopLicenseStatus, setShopLicenseStatus] = useState("");
   const [shopLicenseType, setShopLicenseType] = useState("");
 
-  // Month options (1-12) พร้อมชื่อเดือนไทย
-  const MONTH_OPTIONS = [
-    { value: "", label: "ทุกเดือน" },
-    { value: "1", label: "มกราคม" },
-    { value: "2", label: "กุมภาพันธ์" },
-    { value: "3", label: "มีนาคม" },
-    { value: "4", label: "เมษายน" },
-    { value: "5", label: "พฤษภาคม" },
-    { value: "6", label: "มิถุนายน" },
-    { value: "7", label: "กรกฎาคม" },
-    { value: "8", label: "สิงหาคม" },
-    { value: "9", label: "กันยายน" },
-    { value: "10", label: "ตุลาคม" },
-    { value: "11", label: "พฤศจิกายน" },
-    { value: "12", label: "ธันวาคม" },
+  // Available years/months จากฐานข้อมูล (ค.ศ.) — dynamic จาก /api/licenses/expiry-years
+  const [availableYears, setAvailableYears] = useState([]);
+  const [availableMonths, setAvailableMonths] = useState([]); // [{year, month}]
+
+  // ชื่อเดือนภาษาไทย (index 1-12; index 0 เว้นไว้)
+  const THAI_MONTH_NAMES = [
+    "", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
   ];
 
-  // Year options: ปีปัจจุบัน ± 5 ปี (เก็บ ค.ศ. ภายใน, แสดง พ.ศ.)
-  const currentYearCE = new Date().getFullYear();
+  // Month options: เดือนที่มีจริงในฐานข้อมูล
+  //  - ถ้าเลือก "ทุกปี" → แสดง distinct ของทุกเดือนที่เคยมี
+  //  - ถ้าเลือกปีเฉพาะ → แสดงเฉพาะเดือนของปีนั้น
+  const relevantMonthNums = (() => {
+    const filtered = expiryYear
+      ? availableMonths.filter((r) => String(r.year) === String(expiryYear))
+      : availableMonths;
+    return [...new Set(filtered.map((r) => r.month))].sort((a, b) => a - b);
+  })();
+
+  const MONTH_OPTIONS = [
+    { value: "", label: "ทุกเดือน" },
+    ...relevantMonthNums.map((m) => ({
+      value: String(m),
+      label: THAI_MONTH_NAMES[m] || `เดือน ${m}`,
+    })),
+  ];
+
+  // Year options: ใช้ปีจริงจากฐานข้อมูล (เก็บ ค.ศ. ภายใน, แสดง พ.ศ.)
   const YEAR_OPTIONS = [
     { value: "", label: "ทุกปี" },
-    ...Array.from({ length: 11 }, (_, i) => {
-      const ce = currentYearCE + 5 - i; // ใหม่สุด → เก่าสุด
-      return { value: String(ce), label: `${ce + 543}` };
-    }),
+    ...availableYears.map((ce) => ({
+      value: String(ce),
+      label: String(ce + 543),
+    })),
   ];
+
+  // Reset expiryMonth ถ้าปีที่เปลี่ยนมาไม่มีเดือนที่เลือกไว้
+  useEffect(() => {
+    if (!expiryMonth) return;
+    if (!relevantMonthNums.includes(parseInt(expiryMonth, 10))) {
+      setExpiryMonth("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expiryYear, availableMonths]);
 
   useEffect(() => {
     loadDropdowns();
@@ -108,9 +127,10 @@ export default function ExportPage() {
 
   const loadDropdowns = async () => {
     try {
-      const [typeRes, shopRes] = await Promise.all([
+      const [typeRes, shopRes, yearsRes] = await Promise.all([
         fetch("/api/license-types"),
-        fetch("/api/shops?limit=1000")
+        fetch("/api/shops?limit=1000"),
+        fetch("/api/licenses/expiry-years"),
       ]);
       
       const typeData = await typeRes.json();
@@ -121,6 +141,12 @@ export default function ExportPage() {
       const shopData = await shopRes.json();
       if (shopData.success) {
         setShopOptions((shopData.shops || []).map(s => ({ value: s.id, label: s.shop_name })));
+      }
+
+      const yearsData = await yearsRes.json();
+      if (yearsData.success) {
+        if (Array.isArray(yearsData.years)) setAvailableYears(yearsData.years);
+        if (Array.isArray(yearsData.months)) setAvailableMonths(yearsData.months);
       }
     } catch (error) {
       console.error(error);
@@ -618,6 +644,7 @@ export default function ExportPage() {
                         })),
                       ]}
                       placeholder="ทั้งหมด"
+                      style={{ width: "100%" }}
                     />
                   </div>
                   <div style={{ flex: "1 1 150px" }}>
@@ -644,6 +671,7 @@ export default function ExportPage() {
                         { value: "revoked", label: "ถูกเพิกถอน" },
                       ]}
                       placeholder="ทั้งหมด"
+                      style={{ width: "100%" }}
                     />
                   </div>
                   <div style={{ flex: "1 1 150px" }}>
@@ -701,6 +729,7 @@ export default function ExportPage() {
                       onChange={(e) => setExpiryMonth(e.target.value)}
                       options={MONTH_OPTIONS}
                       placeholder="ทุกเดือน"
+                      style={{ width: "100%" }}
                     />
                   </div>
                   <div style={{ flex: "0 0 200px" }}>
@@ -721,6 +750,7 @@ export default function ExportPage() {
                       options={YEAR_OPTIONS}
                       placeholder="ทุกปี"
                       searchable
+                      style={{ width: "100%" }}
                     />
                   </div>
                 </div>

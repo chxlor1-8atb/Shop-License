@@ -76,7 +76,11 @@ export const CHANGELOG = [
             { type: 'improve', text: '• เดือน: ทุกเดือน / มกราคม … ธันวาคม (1-12)' },
             { type: 'improve', text: '• ปี: ทุกปี / ปีปัจจุบัน ± 5 ปี (แสดงเป็น พ.ศ. เก็บเป็น ค.ศ. ภายใน) รองรับการค้นหา' },
             { type: 'improve', text: '• ใช้ EXTRACT(MONTH/YEAR FROM l.expiry_date) ในทั้ง /api/export และ /api/export-preview — ใช้งานร่วมกับ DatePicker ช่วงวันที่ได้ (AND)' },
-            { type: 'improve', text: '• PDF Filter Info box แสดง "เดือนที่หมดอายุ: มกราคม" และ "ปีที่หมดอายุ (พ.ศ.): 2569" ให้อ่านง่าย' }
+            { type: 'improve', text: '• PDF Filter Info box แสดง "เดือนที่หมดอายุ: มกราคม" และ "ปีที่หมดอายุ (พ.ศ.): 2569" ให้อ่านง่าย' },
+            { type: 'fix', text: '🔧 ปรับ dropdown "หมดอายุปี" ให้แสดง**เฉพาะปีที่มีอยู่จริงในฐานข้อมูล** (dynamic) ไม่ใช่ ±5 ปี hardcoded อีกต่อไป — แก้ปัญหา dropdown ยาวทะลุจอ' },
+            { type: 'feature', text: '🆕 เพิ่ม API `/api/licenses/expiry-years` คืนรายการปี (ค.ศ.) + คู่ (year, month) แบบ DISTINCT จาก licenses.expiry_date เรียง DESC (ใหม่สุดก่อน)' },
+            { type: 'fix', text: '🔧 ปรับ dropdown "หมดอายุเดือน" ให้แสดง**เฉพาะเดือนที่มีข้อมูลจริง**ในระบบ — ถ้าเลือกปีเฉพาะ จะกรองเหลือเฉพาะเดือนของปีนั้นอัตโนมัติ' },
+            { type: 'improve', text: '• Auto-reset "หมดอายุเดือน" กลับเป็น "ทุกเดือน" อัตโนมัติ ถ้าปีใหม่ที่เลือกไม่มีเดือนที่เลือกไว้ — ป้องกัน query ค่าว่าง' }
         ]
     },
     {
