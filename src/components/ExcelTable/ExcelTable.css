@@ -149,12 +149,48 @@
     vertical-align: middle !important;
     box-sizing: border-box !important;
     color: var(--text-muted);
+    /* Sticky ทางซ้าย — เพื่อให้คอลัมน์ "ลำดับ" อยู่กับที่เมื่อ scroll แนวนอน
+       ผู้ใช้สามารถคลิกเปิด detail modal ได้โดยไม่ต้อง scroll กลับมาซ้าย */
+    position: sticky !important;
+    left: 0 !important;
+}
+
+.excel-table th.row-number {
+    /* z-index ต้องสูงกว่า th อื่น (1001) เพราะเป็นมุมบน-ซ้ายของตาราง (sticky 2 ทิศ) */
+    z-index: 1002 !important;
 }
 
 .excel-table td.row-number {
     padding: 1rem 0.5rem !important;
     /* Match standard td vertical padding */
     font-weight: 500;
+    /* z-index ต้องเหนือ td อื่นในแถว เพื่อไม่ให้คอลัมน์ที่ scroll มาทับ */
+    z-index: 10;
+    /* Background: solid match row (td อื่นเป็น transparent) */
+    background: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* Match zebra stripe ของแถวคู่ */
+.excel-table tbody tr:nth-child(even) td.row-number {
+    background: rgba(250, 248, 245, 0.98) !important;
+}
+
+/* Match hover state ของแถว */
+.excel-table tbody tr:hover td.row-number {
+    background: rgba(255, 252, 250, 1) !important;
+}
+
+/* Shadow เล็กๆ ด้านขวา เพื่อบอกว่าเป็นคอลัมน์ที่ sticky (depth cue) */
+.excel-table td.row-number::after,
+.excel-table th.row-number::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.05), transparent);
+    pointer-events: none;
 }
 
 .excel-table th.row-number {

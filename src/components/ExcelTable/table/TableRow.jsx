@@ -28,17 +28,17 @@ export const TableRow = memo(function TableRow({
       className={selectedRow === row.id ? "selected-row" : ""}
       onContextMenu={(e) => onContextMenu(e, "row", row.id)}
     >
-      {/* ลำดับแถว - คลิกเพื่อดูรายละเอียด */}
-      <td 
-        className="row-number" 
+      {/* ลำดับแถว - คลิกเพื่อดูรายละเอียด
+          คอลัมน์นี้ sticky ที่ขอบซ้าย (ดู ExcelTable.css) → ผู้ใช้คลิกได้โดยไม่ต้อง scroll กลับ */}
+      <td
+        className={`row-number ${onRowClick ? 'row-number-clickable' : ''}`}
         onClick={() => onRowClick && onRowClick(row)}
-        style={{ cursor: onRowClick ? 'pointer' : 'default' }}
-        title={onRowClick ? "คลิกเพื่อดูรายละเอียด" : undefined}
+        title={onRowClick ? "คลิกเพื่อดูรายละเอียดแถวนี้" : undefined}
       >
         {onRowClick ? (
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-            {rowIndex + 1}
-            <i className="fas fa-external-link-alt" style={{ fontSize: '0.65rem', opacity: 0.5 }}></i>
+          <span className="row-number-btn" role="button" aria-label="ดูรายละเอียดแถวนี้">
+            <span className="row-number-index">{rowIndex + 1}</span>
+            <i className="fas fa-external-link-alt row-number-icon"></i>
           </span>
         ) : (
           rowIndex + 1

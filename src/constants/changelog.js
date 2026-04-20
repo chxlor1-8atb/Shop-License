@@ -132,7 +132,18 @@ export const CHANGELOG = [
             { type: 'improve', text: '• `/api/dropdowns` เพิ่ม `address` ใน SELECT shops (เดิม: id/shop_name/owner_name/phone)' },
             { type: 'improve', text: '• `shopOptionsDetailed` เพิ่ม field `address` + รวมใน `searchText` → ค้นเจอจากที่อยู่ได้ด้วย (เช่น พิมพ์ "สุขุมวิท" เจอทุกสาขา)' },
             { type: 'improve', text: '• `CustomSelect` รองรับ prop `opt.optionLabel` (ReactNode) — สำหรับการแสดงผลแบบ custom JSX ใน list โดย fallback เป็น `label/name` string เหมือนเดิม (backward compatible)' },
-            { type: 'improve', text: '• `QuickAddModal` สร้าง `shopOptionsWithDisplay` ที่มี `optionLabel` เป็น JSX 2 บรรทัด — trigger ยังใช้ `label` string เดิม (ไม่ล้น)' }
+            { type: 'improve', text: '• `QuickAddModal` สร้าง `shopOptionsWithDisplay` ที่มี `optionLabel` เป็น JSX 2 บรรทัด — trigger ยังใช้ `label` string เดิม (ไม่ล้น)' },
+            // ─────────────────────────────────────────────
+            // Shops Table — Sticky Row Number + Detail Modal ครบทุกฟิลด์
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '📌 **คอลัมน์ "ลำดับ" ติดขอบซ้าย** (position: sticky) — เมื่อ scroll แนวนอนดูคอลัมน์อื่น ปุ่มเปิดรายละเอียดยังอยู่กับที่ → คลิกเปิด modal ได้ทันทีโดยไม่ต้อง scroll กลับมา' },
+            { type: 'feature', text: '🎯 ปุ่ม "ดูรายละเอียด" ในคอลัมน์ลำดับ **ชัดเจนขึ้น** — pill-shaped พร้อม hover effect (พื้นหลังสี primary, icon เคลื่อนไหว, shadow)' },
+            { type: 'feature', text: '📋 **Shop Detail Modal แสดงครบทุกฟิลด์** รวม custom fields — iterate จาก columns ของตาราง ทำให้เห็นข้อมูลทั้งแถวใน modal โดยไม่ต้อง scroll แนวนอน' },
+            { type: 'improve', text: '• ExcelTable.css: `.row-number` td/th ใช้ `position: sticky; left: 0` + z-index + solid background (match zebra stripe, hover state) + shadow ด้านขวาเป็น depth cue' },
+            { type: 'improve', text: '• TableRow.jsx: ใส่ class `row-number-clickable` + span `.row-number-btn` ที่มี role="button" สำหรับ a11y' },
+            { type: 'improve', text: '• ShopDetailModal.jsx: เพิ่ม prop `columns` → iterate แสดงทุกฟิลด์ที่มีค่า, รองรับทั้ง flatten fields และ nested `custom_fields.*`, format ตาม type (date → formatThaiDate, number → toLocaleString, boolean → ใช่/ไม่), auto-icon จาก ICON_MAP (fallback: `fa-tag` สำหรับ custom, `fa-info-circle` สำหรับอื่นๆ)' },
+            { type: 'improve', text: '• `HEADER_FIELDS` set — ไม่แสดง shop_name/owner_name/phone ใน grid (แสดงใน header อยู่แล้ว)' },
+            { type: 'improve', text: '• `shops/page.jsx` ส่ง `columns={columns}` เข้า `ShopDetailModal` — ทำให้ custom fields แสดงใน modal อัตโนมัติ' }
         ]
     },
     {
