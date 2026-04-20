@@ -25,7 +25,10 @@ export async function GET(request) {
             if (adminError) return adminError;
         }
         const fieldsParam = searchParams.get('fields');
-        const limit = sanitizeInt(searchParams.get('limit'), 100, 1, 1000);
+        // Pagination support — page/limit
+        const limit = sanitizeInt(searchParams.get('limit'), 20, 1, 100);
+        const page  = sanitizeInt(searchParams.get('page'), 1, 1, 10000);
+        const offset = (page - 1) * limit;
 
         let data = [];
 
@@ -191,7 +194,7 @@ export async function GET(request) {
             const countResult = await fetchAll(countQuery, params);
             const totalCount = parseInt(countResult[0]?.total || 0);
 
-            // Fetch data with limit
+            // Fetch data with pagination (LIMIT + OFFSET)
             // Computed status: คำนวณสถานะอัตโนมัติจากวันหมดอายุ
             const query = `
                 SELECT 
@@ -219,15 +222,16 @@ export async function GET(request) {
                 ${whereSQL}
                 GROUP BY l.id, l.license_number, s.shop_name, s.owner_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
                 ORDER BY l.id DESC
-                LIMIT $${paramIndex}
+                LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
             `;
-            params.push(limit);
+            params.push(limit, offset);
             data = await fetchAll(query, params);
 
             // Build preview columns in final display order: preCustom → customFields → postCustom
             const preCustom = activeBaseFields.filter(f => !f.afterCustom);
             const postCustom = activeBaseFields.filter(f => f.afterCustom);
             const customCols = customFieldDefs.map(cf => ({ key: cf.field_name, label: cf.field_label, dataKey: cf.field_name }));
+            const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
             return NextResponse.json({
                 success: true,
@@ -235,7 +239,8 @@ export async function GET(request) {
                 totalCount,
                 previewCount: data.length,
                 columns: [...preCustom, ...customCols, ...postCustom],
-                customFieldDefs
+                customFieldDefs,
+                pagination: { page, limit, total: totalCount, totalPages }
             });
 
         } else if (type === 'shops') {
@@ -318,8 +323,10 @@ export async function GET(request) {
                 ${shopWhereSQL}
                 GROUP BY s.id, s.shop_name, s.owner_name, s.phone, s.email, s.address, s.notes, s.created_at
                 ORDER BY s.id DESC
-                LIMIT $${shopParamIndex}
-            `, [...shopParams, limit]);
+                LIMIT $${shopParamIndex} OFFSET $${shopParamIndex + 1}
+            `, [...shopParams, limit, offset]);
+
+            const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
             return NextResponse.json({
                 success: true,
@@ -327,7 +334,8 @@ export async function GET(request) {
                 totalCount,
                 previewCount: data.length,
                 columns: [...activeBaseFields, ...customFieldDefs.map(cf => ({ key: cf.field_name, label: cf.field_label, dataKey: cf.field_name }))],
-                customFieldDefs
+                customFieldDefs,
+                pagination: { page, limit, total: totalCount, totalPages }
             });
 
         } else if (type === 'users') {
@@ -339,15 +347,18 @@ export async function GET(request) {
                 SELECT username, full_name, role, created_at
                 FROM users
                 ORDER BY id ASC
-                LIMIT $1
-            `, [limit]);
+                LIMIT $1 OFFSET $2
+            `, [limit, offset]);
+
+            const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
             return NextResponse.json({
                 success: true,
                 data,
                 totalCount,
                 previewCount: data.length,
-                columns: activeBaseFields
+                columns: activeBaseFields,
+                pagination: { page, limit, total: totalCount, totalPages }
             });
 
         } else {

@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import CustomSelect from "@/components/ui/CustomSelect";
 import DatePicker from "@/components/ui/DatePicker";
 import { SearchInput } from "@/components/ui/FilterRow";
+import Pagination from "@/components/ui/Pagination";
 
 export default function ExportPage() {
   const [type, setType] = useState("licenses");
@@ -24,6 +25,10 @@ export default function ExportPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [previewCount, setPreviewCount] = useState(0);
+  // Pagination state สำหรับ preview modal
+  const [previewPage, setPreviewPage] = useState(1);
+  const [previewLimit, setPreviewLimit] = useState(20);
+  const [previewTotalPages, setPreviewTotalPages] = useState(1);
 
   // Shared filters
   const [search, setSearch] = useState("");
@@ -182,14 +187,19 @@ export default function ExportPage() {
     return params;
   };
 
-  // Handle Preview
-  const handlePreview = async () => {
-    setPreviewLoading(true);
+  // Handle Preview (initial click) — เปิด modal + reset หน้า 1 (useEffect ด้านล่างจะ fetch เอง)
+  const handlePreview = () => {
+    setPreviewPage(1);
     setShowPreview(true);
+  };
 
+  // ดึง preview data ตาม page/limit — ใช้ร่วมกันทั้งตอนเปิด modal และตอนเปลี่ยนหน้า
+  const fetchPreview = async ({ page = 1, limit = previewLimit } = {}) => {
+    setPreviewLoading(true);
     try {
       const params = buildParams();
-      params.append("limit", "50"); // Preview first 50 rows
+      params.append("page", String(page));
+      params.append("limit", String(limit));
 
       const response = await fetch(`/api/export-preview?${params.toString()}`);
       const result = await response.json();
@@ -199,6 +209,14 @@ export default function ExportPage() {
         setPreviewColumns(result.columns);
         setTotalCount(result.totalCount);
         setPreviewCount(result.previewCount);
+        // Pagination info จาก API
+        if (result.pagination) {
+          setPreviewTotalPages(result.pagination.totalPages || 1);
+          // Auto-correct ถ้า API ส่ง page มาไม่ตรงกัน (เช่น filter ทำให้ข้อมูลลด)
+          if (result.pagination.page && result.pagination.page !== page) {
+            setPreviewPage(result.pagination.page);
+          }
+        }
       } else {
         Swal.fire({
           title: "เกิดข้อผิดพลาด",
@@ -219,6 +237,13 @@ export default function ExportPage() {
       setPreviewLoading(false);
     }
   };
+
+  // Refetch เมื่อเปิด modal, เปลี่ยนหน้า, หรือเปลี่ยนจำนวนรายการต่อหน้า
+  useEffect(() => {
+    if (!showPreview) return;
+    fetchPreview({ page: previewPage, limit: previewLimit });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPreview, previewPage, previewLimit]);
 
   const handleExportCSV = async () => {
     setIsExporting(true);
@@ -1239,6 +1264,31 @@ export default function ExportPage() {
               )}
             </div>
 
+            {/* Pagination (แสดงเฉพาะเมื่อมีข้อมูลและยังโหลดเสร็จแล้ว) */}
+            {!previewLoading && previewData.length > 0 && (
+              <div style={{
+                padding: "0.5rem 1.5rem",
+                borderTop: "1px solid var(--border-color)",
+                background: "var(--bg-primary)"
+              }}>
+                <Pagination
+                  currentPage={previewPage}
+                  totalPages={previewTotalPages}
+                  totalItems={totalCount}
+                  itemsPerPage={previewLimit}
+                  onPageChange={setPreviewPage}
+                  onItemsPerPageChange={(newLimit) => {
+                    setPreviewLimit(newLimit);
+                    setPreviewPage(1);
+                  }}
+                  showItemsPerPage
+                  showPageJump
+                  showTotalInfo
+                  enableKeyboardNav={false}
+                />
+              </div>
+            )}
+
             {/* Modal Footer */}
             <div style={{
               padding: "1rem 1.5rem",
@@ -1259,10 +1309,7 @@ export default function ExportPage() {
                 fontSize: "0.85rem"
               }}>
                 <i className="fas fa-info-circle"></i>
-                {totalCount > 50 
-                  ? `ไฟล์ที่ส่งออกจะมีข้อมูลครบทั้ง ${totalCount} รายการ`
-                  : `จะส่งออกข้อมูลทั้งหมด ${totalCount} รายการ`
-                }
+                {`ไฟล์ที่ส่งออกจะมีข้อมูลครบทั้ง ${totalCount} รายการ (Preview แสดงทีละหน้า)`}
               </div>
               <div style={{ display: "flex", gap: "0.75rem" }}>
                 <button

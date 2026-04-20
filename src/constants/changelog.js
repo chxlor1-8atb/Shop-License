@@ -80,7 +80,16 @@ export const CHANGELOG = [
             { type: 'fix', text: '🔧 ปรับ dropdown "หมดอายุปี" ให้แสดง**เฉพาะปีที่มีอยู่จริงในฐานข้อมูล** (dynamic) ไม่ใช่ ±5 ปี hardcoded อีกต่อไป — แก้ปัญหา dropdown ยาวทะลุจอ' },
             { type: 'feature', text: '🆕 เพิ่ม API `/api/licenses/expiry-years` คืนรายการปี (ค.ศ.) + คู่ (year, month) แบบ DISTINCT จาก licenses.expiry_date เรียง DESC (ใหม่สุดก่อน)' },
             { type: 'fix', text: '🔧 ปรับ dropdown "หมดอายุเดือน" ให้แสดง**เฉพาะเดือนที่มีข้อมูลจริง**ในระบบ — ถ้าเลือกปีเฉพาะ จะกรองเหลือเฉพาะเดือนของปีนั้นอัตโนมัติ' },
-            { type: 'improve', text: '• Auto-reset "หมดอายุเดือน" กลับเป็น "ทุกเดือน" อัตโนมัติ ถ้าปีใหม่ที่เลือกไม่มีเดือนที่เลือกไว้ — ป้องกัน query ค่าว่าง' }
+            { type: 'improve', text: '• Auto-reset "หมดอายุเดือน" กลับเป็น "ทุกเดือน" อัตโนมัติ ถ้าปีใหม่ที่เลือกไม่มีเดือนที่เลือกไว้ — ป้องกัน query ค่าว่าง' },
+            // ─────────────────────────────────────────────
+            // Export Preview — Pagination + Bug Fixes
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '📄 เพิ่มระบบ Pagination ใน Modal "ดูตัวอย่างข้อมูลก่อนส่งออก" — เปลี่ยนหน้า / ข้ามหน้า / เลือกจำนวนรายการต่อหน้า (10/20/50/100) ได้เหมือนหน้าอื่นๆ' },
+            { type: 'improve', text: '• `/api/export-preview` รองรับ `page` + `limit` + OFFSET ใน SQL ครบทั้ง 3 types (licenses/shops/users) — คืน `{ pagination: { page, limit, total, totalPages } }`' },
+            { type: 'improve', text: '• Auto-correct เมื่อ `page` เกิน `totalPages` จาก response (เช่น filter ลดข้อมูลลง) — จะย้อนกลับหน้าสุดท้ายอัตโนมัติ' },
+            { type: 'fix', text: '🐛 แก้ bug `usePagination.updateFromResponse` ที่เรียก `setState` 2 ครั้ง → รวมเป็น single setState เพื่อลด re-render' },
+            { type: 'fix', text: '🐛 แก้ bug `Pagination` component: **Global keyboard listener** (Arrow Left/Right) ที่ attach บน `window` ทำให้ Pagination หลายตัวในหน้าเดียว (เช่น modal + page ข้างหลัง) ตอบ key พร้อมกัน — เพิ่ม prop `enableKeyboardNav` (default true) + skip key ถ้า target อยู่ใน dialog/modal/SweetAlert' },
+            { type: 'fix', text: '🐛 แก้ dead code ใน `generatePageNumbers()` ของ `Pagination` — เงื่อนไข `else if (leftSiblingIndex > 2)` ไม่มีวันจริงเพราะซ้ำกับ `if (showLeftDots)` — เปลี่ยนเป็น `else` ปกติเพื่อให้เลขหน้าช่วงกลางแสดงถูกต้องเมื่อไม่มี ellipsis' }
         ]
     },
     {

@@ -22,6 +22,7 @@ export default function Pagination({
     showPageJump = true,
     showTotalInfo = true,
     siblingCount = 1, // How many pages to show on each side of current
+    enableKeyboardNav = true, // Arrow key navigation (ปิดเมื่อมี Pagination หลายตัวในหน้าเดียว)
     className = ''
 }) {
     const [jumpValue, setJumpValue] = useState('');
@@ -39,10 +40,10 @@ export default function Pagination({
         // Always show first page
         if (totalPages > 0) pages.push(1);
 
-        // Left dots
+        // Left dots — ถ้าไม่ต้องแสดง "..." ให้เติมเลขที่ขาดไป (2..leftSiblingIndex-1)
         if (showLeftDots) {
             pages.push('...');
-        } else if (leftSiblingIndex > 2) {
+        } else {
             for (let i = 2; i < leftSiblingIndex; i++) {
                 pages.push(i);
             }
@@ -55,10 +56,10 @@ export default function Pagination({
             }
         }
 
-        // Right dots
+        // Right dots — ถ้าไม่ต้องแสดง "..." ให้เติมเลขที่ขาดไป (rightSiblingIndex+1..totalPages-1)
         if (showRightDots) {
             pages.push('...');
-        } else if (rightSiblingIndex < totalPages - 1) {
+        } else {
             for (let i = rightSiblingIndex + 1; i < totalPages; i++) {
                 pages.push(i);
             }
@@ -82,10 +83,16 @@ export default function Pagination({
         setIsJumpFocused(false);
     };
 
-    // Keyboard navigation
+    // Keyboard navigation (opt-in ผ่าน enableKeyboardNav — ป้องกัน multiple instances ตอบ Arrow key พร้อมกัน)
     useEffect(() => {
+        if (!enableKeyboardNav) return;
+
         const handleKeyDown = (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            // ข้าม input / textarea / contenteditable / SweetAlert popup / modal overlay
+            const tag = e.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+            if (e.target.isContentEditable) return;
+            if (e.target.closest?.('.swal2-container, [role="dialog"], .modal, .preview-modal, .preview-modal-overlay')) return;
 
             if (e.key === 'ArrowLeft' && currentPage > 1) {
                 onPageChange(currentPage - 1);
@@ -96,7 +103,7 @@ export default function Pagination({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [currentPage, totalPages, onPageChange]);
+    }, [currentPage, totalPages, onPageChange, enableKeyboardNav]);
 
     if (totalPages <= 1 && !showTotalInfo) return null;
 

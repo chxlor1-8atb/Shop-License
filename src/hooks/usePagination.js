@@ -20,19 +20,26 @@ export function usePagination(initialLimit = PAGINATION_DEFAULTS.LIMIT) {
 
     /**
      * Updates pagination state from API response
+     * - Merges total/totalPages/page in a single setState to avoid double-render
+     * - Auto-corrects page if it exceeds totalPages (ป้องกันอยู่หน้าที่ข้อมูลว่าง
+     *   เช่น หลัง filter ทำให้ totalPages ลดลง)
      */
     const updateFromResponse = useCallback((response) => {
-        setPagination(prev => ({
-            ...prev,
-            total: response.total ?? prev.total,
-            totalPages: response.totalPages ?? prev.totalPages,
-            page: response.page ?? prev.page
-        }));
+        if (!response) return;
 
-        // Auto-correct page if out of bounds
-        if (response.page > response.totalPages && response.totalPages > 0) {
-            setPagination(prev => ({ ...prev, page: response.totalPages }));
-        }
+        setPagination(prev => {
+            const total      = response.total      ?? prev.total;
+            const totalPages = response.totalPages ?? prev.totalPages;
+            let   page       = response.page       ?? prev.page;
+
+            // Auto-correct: ถ้าหน้าปัจจุบันเกิน totalPages ให้ย้อนไปหน้าสุดท้าย
+            if (totalPages > 0 && page > totalPages) {
+                page = totalPages;
+            }
+            if (page < 1) page = 1;
+
+            return { ...prev, total, totalPages, page };
+        });
     }, []);
 
     /**
