@@ -41,13 +41,16 @@ export async function GET(request) {
                 { key: 'license_count', dataKey: 'license_count', label: 'จำนวนใบอนุญาต' }
             ],
             licenses: [
-                { key: 'license_number', dataKey: 'license_number', label: 'เลขที่ใบอนุญาต' },
-                { key: 'shop_id', dataKey: 'shop_name', label: 'ร้านค้า' },
+                // Pre-custom: ข้อมูลหลักของใบอนุญาต (จะแสดงก่อน custom fields)
+                { key: 'owner_name', dataKey: 'owner_name', label: 'ชื่อเจ้าของ' },
+                { key: 'shop_id', dataKey: 'shop_name', label: 'ชื่อร้านค้า' },
                 { key: 'license_type_id', dataKey: 'type_name', label: 'ประเภทใบอนุญาต' },
+                { key: 'license_number', dataKey: 'license_number', label: 'เลขที่ใบอนุญาต' },
                 { key: 'issue_date', dataKey: 'issue_date', label: 'วันที่ออก' },
                 { key: 'expiry_date', dataKey: 'expiry_date', label: 'วันหมดอายุ' },
-                { key: 'status', dataKey: 'status', label: 'สถานะ' },
-                { key: 'notes', dataKey: 'notes', label: 'หมายเหตุ' }
+                // Post-custom: status + notes จะแสดงท้ายสุดหลัง custom fields
+                { key: 'status', dataKey: 'status', label: 'สถานะ', afterCustom: true },
+                { key: 'notes', dataKey: 'notes', label: 'หมายเหตุ', afterCustom: true }
             ],
             users: [
                 { key: 'username', dataKey: 'username', label: 'ชื่อผู้ใช้' },
@@ -182,6 +185,7 @@ export async function GET(request) {
                 SELECT 
                     l.license_number, 
                     s.shop_name, 
+                    s.owner_name,
                     lt.name as type_name, 
                     l.issue_date, 
                     l.expiry_date, 
@@ -201,19 +205,24 @@ export async function GET(request) {
                 LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
                 LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
                 ${whereSQL}
-                GROUP BY l.id, l.license_number, s.shop_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
+                GROUP BY l.id, l.license_number, s.shop_name, s.owner_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
                 ORDER BY l.id DESC
                 LIMIT $${paramIndex}
             `;
             params.push(limit);
             data = await fetchAll(query, params);
 
+            // Build preview columns in final display order: preCustom → customFields → postCustom
+            const preCustom = activeBaseFields.filter(f => !f.afterCustom);
+            const postCustom = activeBaseFields.filter(f => f.afterCustom);
+            const customCols = customFieldDefs.map(cf => ({ key: cf.field_name, label: cf.field_label, dataKey: cf.field_name }));
+
             return NextResponse.json({
                 success: true,
                 data,
                 totalCount,
                 previewCount: data.length,
-                columns: [...activeBaseFields, ...customFieldDefs.map(cf => ({ key: cf.field_name, label: cf.field_label, dataKey: cf.field_name }))],
+                columns: [...preCustom, ...customCols, ...postCustom],
                 customFieldDefs
             });
 

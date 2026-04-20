@@ -275,46 +275,62 @@ function createLicensesDocDef(licenses, customFieldDefs, filters, activeBaseFiel
         'อื่นๆ': licenses.filter(l => !['active', 'expired'].includes(l.status)).length
     };
 
-    // Default base header definitions (Fallback)
+    // Default base header definitions (Fallback — matches /api/export definitions)
     const defaultBaseFields = [
-        { key: 'license_number', dataKey: 'license_number', label: 'เลขที่ใบอนุญาต' },
+        { key: 'owner_name', dataKey: 'owner_name', label: 'ชื่อเจ้าของ' },
         { key: 'shop_id', dataKey: 'shop_name', label: 'ชื่อร้านค้า' },
-        { key: 'license_type_id', dataKey: 'type_name', label: 'ประเภท' },
+        { key: 'license_type_id', dataKey: 'type_name', label: 'ประเภทใบอนุญาต' },
+        { key: 'license_number', dataKey: 'license_number', label: 'เลขที่ใบอนุญาต' },
         { key: 'issue_date', dataKey: 'issue_date', label: 'วันที่ออก' },
         { key: 'expiry_date', dataKey: 'expiry_date', label: 'วันหมดอายุ' },
-        { key: 'status', dataKey: 'status', label: 'สถานะ' }
+        { key: 'status', dataKey: 'status', label: 'สถานะ', afterCustom: true },
+        { key: 'notes', dataKey: 'notes', label: 'หมายเหตุ', afterCustom: true }
     ];
 
     const baseFields = activeBaseFields || defaultBaseFields;
 
-    // Construct headers
-    const baseHeaders = baseFields.map(f => f.label);
-    const customHeaders = customFieldDefs.map(cf => cf.field_label);
-    const headers = [...baseHeaders, ...customHeaders];
+    // Split into pre-custom and post-custom so custom fields appear in the middle
+    const preCustomFields = baseFields.filter(f => !f.afterCustom);
+    const postCustomFields = baseFields.filter(f => f.afterCustom);
 
-    const data = licenses.map(l => {
-        const baseData = baseFields.map(f => {
-            const val = l[f.dataKey];
-            if (f.dataKey === 'issue_date' || f.dataKey === 'expiry_date') {
-                return formatThaiDate(val);
-            }
-            if (f.dataKey === 'status') {
-                return STATUS_CONFIG[val?.toLowerCase()]?.label || val || '-';
-            }
-            return val || '-';
-        });
+    // Construct headers: [ลำดับที่, preCustom..., customFields..., postCustom...]
+    const headers = [
+        'ลำดับที่',
+        ...preCustomFields.map(f => f.label),
+        ...customFieldDefs.map(cf => cf.field_label),
+        ...postCustomFields.map(f => f.label)
+    ];
 
+    const renderBaseCell = (f, val) => {
+        if (f.dataKey === 'issue_date' || f.dataKey === 'expiry_date') {
+            return formatThaiDate(val);
+        }
+        if (f.dataKey === 'status') {
+            return STATUS_CONFIG[val?.toLowerCase()]?.label || val || '-';
+        }
+        return val || '-';
+    };
+
+    const renderCustomCell = (cf, value) => {
+        if (value === null || value === undefined) return '-';
+        if (cf.field_type === 'date' && value) return formatThaiDate(value);
+        const stringVal = String(value);
+        return stringVal.length > 30 ? stringVal.substring(0, 30) + '...' : stringVal;
+    };
+
+    const data = licenses.map((l, idx) => {
+        const preData = preCustomFields.map(f => renderBaseCell(f, l[f.dataKey]));
         const customFieldsData = l.custom_fields || {};
-        const customData = customFieldDefs.map(cf => {
-            const value = customFieldsData[cf.field_name];
-            if (value === null || value === undefined) return '-';
-            if (cf.field_type === 'date' && value) return formatThaiDate(value);
-            const stringVal = String(value);
-            return stringVal.length > 30 ? stringVal.substring(0, 30) + '...' : stringVal;
-        });
-
-        return [...baseData, ...customData];
+        const customData = customFieldDefs.map(cf => renderCustomCell(cf, customFieldsData[cf.field_name]));
+        const postData = postCustomFields.map(f => renderBaseCell(f, l[f.dataKey]));
+        return [String(idx + 1), ...preData, ...customData, ...postData];
     });
+
+    // Compute which visible column index is the status column so colorColumn still works
+    const statusIdxInPost = postCustomFields.findIndex(f => f.dataKey === 'status');
+    const statusColorColumn = statusIdxInPost >= 0
+        ? 1 + preCustomFields.length + customFieldDefs.length + statusIdxInPost
+        : undefined;
 
     const columnWidths = Array(headers.length).fill('auto');
 
@@ -342,7 +358,8 @@ function createLicensesDocDef(licenses, customFieldDefs, filters, activeBaseFiel
             // createSummaryBox(stats),
             filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
             createDataTable(headers, data, {
-                columnWidths: columnWidths // Use auto-calculated widths based on header count
+                columnWidths: columnWidths, // Use auto-calculated widths based on header count
+                colorColumn: statusColorColumn // Apply color styling to status column regardless of its new position
             })
         ].filter(Boolean),
         styles: getStyles()

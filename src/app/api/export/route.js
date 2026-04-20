@@ -85,13 +85,16 @@ export async function GET(request) {
                 { key: 'license_count', dataKey: 'license_count', label: 'จำนวนใบอนุญาต' }
             ],
             licenses: [
-                { key: 'license_number', dataKey: 'license_number', label: 'เลขที่ใบอนุญาต' },
-                { key: 'shop_id', dataKey: 'shop_name', label: 'ร้านค้า' },
+                // Pre-custom: ข้อมูลหลักของใบอนุญาต (จะแสดงก่อน custom fields)
+                { key: 'owner_name', dataKey: 'owner_name', label: 'ชื่อเจ้าของ' },
+                { key: 'shop_id', dataKey: 'shop_name', label: 'ชื่อร้านค้า' },
                 { key: 'license_type_id', dataKey: 'type_name', label: 'ประเภทใบอนุญาต' },
+                { key: 'license_number', dataKey: 'license_number', label: 'เลขที่ใบอนุญาต', preserveText: true },
                 { key: 'issue_date', dataKey: 'issue_date', label: 'วันที่ออก', type: 'date' },
                 { key: 'expiry_date', dataKey: 'expiry_date', label: 'วันหมดอายุ', type: 'date' },
-                { key: 'status', dataKey: 'status', label: 'สถานะ' },
-                { key: 'notes', dataKey: 'notes', label: 'หมายเหตุ' }
+                // Post-custom: status + notes จะแสดงท้ายสุดหลัง custom fields
+                { key: 'status', dataKey: 'status', label: 'สถานะ', afterCustom: true },
+                { key: 'notes', dataKey: 'notes', label: 'หมายเหตุ', afterCustom: true }
             ],
             users: [
                 { key: 'username', dataKey: 'username', label: 'ชื่อผู้ใช้' },
@@ -220,6 +223,7 @@ export async function GET(request) {
                 SELECT 
                     l.license_number, 
                     s.shop_name, 
+                    s.owner_name,
                     lt.name as type_name, 
                     l.issue_date, 
                     l.expiry_date, 
@@ -239,7 +243,7 @@ export async function GET(request) {
                 LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
                 LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
                 ${whereSQL}
-                GROUP BY l.id, l.license_number, s.shop_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
+                GROUP BY l.id, l.license_number, s.shop_name, s.owner_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
                 ORDER BY l.id DESC
                 LIMIT 5000
             `;
@@ -361,9 +365,11 @@ export async function GET(request) {
         }
 
         // HANDLE CSV EXPORT
-        const baseLabels = activeBaseFields.map(f => f.label);
-        const customLabels = customFieldDefs.map(cf => cf.field_label);
-        const allColumns = [...baseLabels, ...customLabels];
+
+        // Split base fields into pre-custom and post-custom groups so custom fields
+        // appear between the main info and status/notes columns (per user request).
+        const preCustomFields = activeBaseFields.filter(f => !f.afterCustom);
+        const postCustomFields = activeBaseFields.filter(f => f.afterCustom);
 
         const statusMap = {
             'active': 'ปกติ',
@@ -373,8 +379,60 @@ export async function GET(request) {
             'revoked': 'ถูกเพิกถอน'
         };
 
+        // Helper: render one base field value into a CSV-safe token
+        const renderBaseField = (field, val) => {
+            if (val === null || val === undefined) return '';
+
+            let stringVal;
+            if (field.type === 'date') {
+                stringVal = formatThaiDate(val);
+            } else {
+                stringVal = String(val);
+            }
+
+            if (field.dataKey === 'status' && statusMap[stringVal.toLowerCase()]) {
+                stringVal = statusMap[stringVal.toLowerCase()];
+            }
+            if (field.dataKey === 'role') {
+                stringVal = stringVal === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป';
+            }
+
+            // Preserve text: wrap in Excel formula ="..." to prevent auto-date conversion
+            if (field.preserveText && stringVal !== '') {
+                const escaped = stringVal.replace(/"/g, '""');
+                return `"=""${escaped}"""`;
+            }
+
+            stringVal = sanitizeCsvValue(stringVal);
+            if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
+                return `"${stringVal.replace(/"/g, '""')}"`;
+            }
+            return stringVal;
+        };
+
+        // Helper: render one custom field value into a CSV-safe token
+        const renderCustomField = (cf, cfValue) => {
+            if (cfValue === null || cfValue === undefined || cfValue === '') return '';
+            let stringVal = (cf.field_type === 'date' || cf.field_type === 'datetime')
+                ? formatThaiDate(cfValue)
+                : String(cfValue);
+            stringVal = sanitizeCsvValue(stringVal);
+            if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
+                return `"${stringVal.replace(/"/g, '""')}"`;
+            }
+            return stringVal;
+        };
+
+        // Build header row: [ลำดับที่, ...preCustom, ...custom, ...postCustom]
+        const allLabels = [
+            'ลำดับที่',
+            ...preCustomFields.map(f => f.label),
+            ...customFieldDefs.map(cf => cf.field_label),
+            ...postCustomFields.map(f => f.label)
+        ];
+
         const csvRows = [];
-        const headerRow = allColumns.map(col => {
+        const headerRow = allLabels.map(col => {
             const str = String(col);
             if (str.includes(',') || str.includes('"') || str.includes('\n')) {
                 return `"${str.replace(/"/g, '""')}"`;
@@ -383,66 +441,30 @@ export async function GET(request) {
         });
         csvRows.push(headerRow.join(','));
 
-        for (const row of data) {
+        data.forEach((row, rowIdx) => {
             const values = [];
 
-            for (const field of activeBaseFields) {
-                let val = row[field.dataKey];
+            // 1) ลำดับที่ (1-based running number)
+            values.push(String(rowIdx + 1));
 
-                if (val === null || val === undefined) {
-                    values.push('');
-                    continue;
-                }
-
-                let stringVal;
-
-                // Format date fields in Thai Buddhist-era (e.g. "12 ม.ค. 2569")
-                if (field.type === 'date') {
-                    stringVal = formatThaiDate(val);
-                } else {
-                    stringVal = String(val);
-                }
-
-                if (field.dataKey === 'status' && statusMap[stringVal.toLowerCase()]) {
-                    stringVal = statusMap[stringVal.toLowerCase()];
-                }
-
-                if (field.dataKey === 'role') {
-                    stringVal = stringVal === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป';
-                }
-
-                // Security: Prevent CSV formula injection
-                stringVal = sanitizeCsvValue(stringVal);
-
-                if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
-                    values.push(`"${stringVal.replace(/"/g, '""')}"`);
-                } else {
-                    values.push(stringVal);
-                }
+            // 2) Pre-custom base fields
+            for (const field of preCustomFields) {
+                values.push(renderBaseField(field, row[field.dataKey]));
             }
 
+            // 3) Custom fields (middle)
             const customFieldsData = row.custom_fields || {};
             for (const cf of customFieldDefs) {
-                let cfValue = customFieldsData[cf.field_name];
+                values.push(renderCustomField(cf, customFieldsData[cf.field_name]));
+            }
 
-                if (cfValue === null || cfValue === undefined || cfValue === '') {
-                    values.push('');
-                } else {
-                    // Format date-type custom fields in Thai (stored as ISO text in DB)
-                    let stringVal = (cf.field_type === 'date' || cf.field_type === 'datetime')
-                        ? formatThaiDate(cfValue)
-                        : String(cfValue);
-                    stringVal = sanitizeCsvValue(stringVal);
-                    if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
-                        values.push(`"${stringVal.replace(/"/g, '""')}"`);
-                    } else {
-                        values.push(stringVal);
-                    }
-                }
+            // 4) Post-custom base fields (status / notes)
+            for (const field of postCustomFields) {
+                values.push(renderBaseField(field, row[field.dataKey]));
             }
 
             csvRows.push(values.join(','));
-        }
+        });
 
         const csvContent = '\uFEFF' + csvRows.join('\n');
 

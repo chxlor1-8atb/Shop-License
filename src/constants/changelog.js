@@ -45,7 +45,24 @@ export const CHANGELOG = [
             { type: 'improve', text: '🇹🇭 เพิ่ม helper formatThaiDate() ใน /api/export ที่แปลงวันที่ให้เป็น พ.ศ. แบบสั้น เช่น "12 ม.ค. 2569"' },
             { type: 'improve', text: '• Mark field เป็น type: "date" ใน baseFieldsDefinitions (issue_date, expiry_date, created_at) เพื่อ dispatch การ format อัตโนมัติ' },
             { type: 'improve', text: '• ครอบคลุม custom field ที่มี field_type = date/datetime ให้แปลงเป็นวันที่ไทยใน CSV ด้วย' },
-            { type: 'note', text: '📝 หัวคอลัมน์ + สถานะ + role แปลงเป็นไทยอยู่แล้วตั้งแต่เดิม (ปกติ/หมดอายุ/ถูกพักใช้/แอดมิน/ผู้ใช้ทั่วไป) — บั๊กอยู่แค่วันที่' }
+            { type: 'note', text: '📝 หัวคอลัมน์ + สถานะ + role แปลงเป็นไทยอยู่แล้วตั้งแต่เดิม (ปกติ/หมดอายุ/ถูกพักใช้/แอดมิน/ผู้ใช้ทั่วไป) — บั๊กอยู่แค่วันที่' },
+            // ─────────────────────────────────────────────
+            // CSV Export License Number — Excel Auto-Date Fix
+            // ─────────────────────────────────────────────
+            { type: 'fix', text: '🔢 แก้ปัญหา Excel แปลง "เลขที่ใบอนุญาต" เช่น "1/42" / "23/44" ให้กลายเป็น "ม.ค.-42" / "มี.ค.-44" อัตโนมัติเวลาเปิดไฟล์ CSV' },
+            { type: 'fix', text: '• สาเหตุ: Excel regional Thai อ่าน pattern "เลข/เลข" แล้วตีความเป็นวันที่ (day/year) โดยไม่ถาม' },
+            { type: 'improve', text: '🛡️ เพิ่ม flag preserveText ให้ field เลขที่ใบอนุญาต — wrap ค่าด้วย Excel formula syntax ="..." เพื่อบังคับให้ Excel/Google Sheets/LibreOffice treat เป็น text เสมอ' },
+            { type: 'note', text: '📝 ใน Excel จะเห็น "1/42" ปกติ แต่ถ้าเปิดใน text editor (Notepad, VSCode) จะเห็น =""1/42"" — เป็นเรื่องปกติของ convention CSV สำหรับ Excel' },
+            // ─────────────────────────────────────────────
+            // Export PDF/CSV — Column Reordering + เจ้าของ + ลำดับที่
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '📊 จัดเรียงคอลัมน์รายงาน Export (PDF + CSV) ใหม่ตามลำดับ: ลำดับที่ → ชื่อเจ้าของ → ชื่อร้านค้า → ประเภทใบอนุญาต → เลขที่ใบอนุญาต → วันที่ออก → วันหมดอายุ → [custom fields] → สถานะ → หมายเหตุ' },
+            { type: 'feature', text: '🔢 เพิ่มคอลัมน์ "ลำดับที่" (running number) เป็นคอลัมน์แรกของทั้ง PDF และ CSV' },
+            { type: 'feature', text: '👤 เพิ่มคอลัมน์ "ชื่อเจ้าของ" ก่อน "ชื่อร้านค้า" ในรายงาน Export ใบอนุญาต (JOIN owner_name มาจากตาราง shops)' },
+            { type: 'improve', text: '🎯 เพิ่ม flag afterCustom ให้ status/notes เพื่อย้ายไปท้ายสุดหลัง custom fields — custom fields จะแสดงอยู่กึ่งกลางระหว่าง base info และ status/notes' },
+            { type: 'improve', text: '• อัปเดต SQL /api/export + /api/export-preview ให้ SELECT s.owner_name และ GROUP BY ด้วย' },
+            { type: 'improve', text: '• Preview modal ในหน้า /dashboard/export รับ order ใหม่อัตโนมัติ (# + preCustom + custom + postCustom)' },
+            { type: 'improve', text: '• PDF generator รักษา color coding ของคอลัมน์ "สถานะ" ให้ยังคงทำงานแม้ย้ายตำแหน่งแล้ว' }
         ]
     },
     {
