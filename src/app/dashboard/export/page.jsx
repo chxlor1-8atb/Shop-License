@@ -682,8 +682,9 @@ export default function ExportPage() {
                       placeholder="เลือกวันที่"
                     />
                   </div>
-                  {/* Quick filter: เลือกเดือน/ปีหมดอายุแยกจาก DatePicker */}
-                  <div style={{ flex: "1 1 150px" }}>
+                  {/* Quick filter: เลือกเดือน/ปีหมดอายุแยกจาก DatePicker — บังคับขึ้นบรรทัดใหม่ */}
+                  <div style={{ flexBasis: "100%", height: 0, margin: 0 }} aria-hidden="true" />
+                  <div style={{ flex: "0 0 200px" }}>
                     <label
                       htmlFor="export-expiry-month"
                       style={{
@@ -702,7 +703,7 @@ export default function ExportPage() {
                       placeholder="ทุกเดือน"
                     />
                   </div>
-                  <div style={{ flex: "1 1 150px" }}>
+                  <div style={{ flex: "0 0 200px" }}>
                     <label
                       htmlFor="export-expiry-year"
                       style={{
