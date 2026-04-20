@@ -135,11 +135,38 @@ export function useDropdownData() {
     const shops = useMemo(() => data?.shops || [], [data]);
     const licenseTypes = useMemo(() => data?.types || [], [data]);
 
-    // Pre-formatted options for CustomSelect
+    // Pre-formatted options for CustomSelect (ชื่อร้านอย่างเดียว — ใช้ใน table display/filter)
     const shopOptions = useMemo(() => shops.map(s => ({
         value: s.id,
         label: s.shop_name || s.name
     })), [shops]);
+
+    // Detailed options — รวมชื่อเจ้าของ + เบอร์ + ที่อยู่ เพื่อแยกร้านชื่อซ้ำ
+    // ใช้ใน dropdown ของ modal/form ที่ต้องเลือกร้าน (เช่น "สร้างใบอนุญาตใหม่")
+    // - label: string (สำหรับ trigger display เมื่อเลือกแล้ว) → "ชื่อร้าน — เจ้าของ (เบอร์)"
+    // - searchText: ใช้สำหรับ filter ใน CustomSelect → ค้นเจอจากชื่อร้าน, เจ้าของ, เบอร์, หรือที่อยู่
+    // - shop_name/owner_name/phone/address: raw values สำหรับ custom rendering (เช่น optionLabel JSX 2 บรรทัด)
+    const shopOptionsDetailed = useMemo(() => shops.map(s => {
+        const shopName = s.shop_name || s.name || '';
+        const ownerName = s.owner_name || '';
+        const phone = s.phone || '';
+        const address = s.address || '';
+        const labelParts = [shopName];
+        if (ownerName) labelParts.push(`— ${ownerName}`);
+        if (phone)     labelParts.push(`(${phone})`);
+        return {
+            value: s.id,
+            label: labelParts.join(' '),
+            searchText: [shopName, ownerName, phone, address, String(s.id || '')]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase(),
+            shop_name: shopName,
+            owner_name: ownerName,
+            phone,
+            address,
+        };
+    }), [shops]);
 
     const typeOptions = useMemo(() => licenseTypes.map(t => ({
         value: t.id,
@@ -155,6 +182,7 @@ export function useDropdownData() {
         shops,
         licenseTypes,
         shopOptions,
+        shopOptionsDetailed,
         typeOptions,
         refresh,
         isLoading,

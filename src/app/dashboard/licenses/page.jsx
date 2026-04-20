@@ -30,7 +30,7 @@ const CREATE_NEW_SHOP_VALUE = "__CREATE_NEW__";
 
 function LicensesPageContent() {
   const searchParams = useSearchParams();
-  const { shopOptions, typeOptions, shops, error: dropdownError } = useDropdownData(); // Use hook for dropdown data
+  const { shopOptions, shopOptionsDetailed, typeOptions, shops, error: dropdownError } = useDropdownData(); // Use hook for dropdown data
   
   useEffect(() => {
     if (dropdownError) {
@@ -67,10 +67,12 @@ function LicensesPageContent() {
   }, [search]);
 
   // Enhanced shop options with "Create New" option
+  // ใช้ shopOptionsDetailed เพื่อให้ dropdown แยกร้านชื่อซ้ำได้ (label รวมเจ้าของ + เบอร์)
+  // — cell display ใช้ shop_name (sort) ผ่าน render() ด้านล่าง
   const enhancedShopOptions = useMemo(() => [
-    { value: CREATE_NEW_SHOP_VALUE, label: "➕ สร้างร้านค้าใหม่..." },
-    ...shopOptions,
-  ], [shopOptions]);
+    { value: CREATE_NEW_SHOP_VALUE, label: "➕ สร้างร้านค้าใหม่...", shop_name: "➕ สร้างร้านค้าใหม่..." },
+    ...shopOptionsDetailed,
+  ], [shopOptionsDetailed]);
 
   // Define Standard Columns with dependencies
   // We need to recreate columns when options change
@@ -90,8 +92,11 @@ function LicensesPageContent() {
         render: (value, row, isEditing) => {
           // ถ้ากำลังแก้ไข ไม่ต้องแสดง render function
           if (isEditing) return null;
-          
-          const shopName = enhancedShopOptions.find((o) => o.value == value)?.label || row.shop_name || value;
+
+          // ใช้ shop_name (สั้น) สำหรับ cell display แทน label (detailed รวมเจ้าของ)
+          // เพื่อให้ตารางไม่กว้างเกินไป — เจ้าของมี column "เจ้าของร้าน" แยกอยู่แล้ว
+          const opt = enhancedShopOptions.find((o) => o.value == value);
+          const shopName = opt?.shop_name || row.shop_name || opt?.label || value;
           if (!value || value === CREATE_NEW_SHOP_VALUE) return <span className="text-muted">-</span>;
           return (
             <Link

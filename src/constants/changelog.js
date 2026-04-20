@@ -114,7 +114,25 @@ export const CHANGELOG = [
             // ─────────────────────────────────────────────
             { type: 'fix', text: '🎨 แก้ปัญหา**ขนาดกล่องค้นหาไม่เท่ากับ dropdown** ในหน้า /dashboard/licenses + /dashboard/shops — ปรับ CSS `.filter-grid input` ให้ใช้ `height: 42px` + `padding: 0 1rem` + `box-sizing: border-box` ตรงกับ `.custom-select-trigger` (เดิม `padding: 0.75rem 1rem` → สูง ~38-40px ไม่เท่ากับ dropdown 42px)' },
             { type: 'improve', text: '• Root-cause fix ที่ CSS ส่วนกลาง — ครอบคลุมทุกหน้าที่ใช้ `.filter-grid` อัตโนมัติ (licenses/shops/อื่นๆ) ไม่ต้อง inline-style ทีละหน้า' },
-            { type: 'improve', text: '• ไม่กระทบ CSS `.form-group input` (ใช้ใน Modal/Form) ที่ยังต้องการ padding สูงกว่าเพื่อการอ่านง่าย' }
+            { type: 'improve', text: '• ไม่กระทบ CSS `.form-group input` (ใช้ใน Modal/Form) ที่ยังต้องการ padding สูงกว่าเพื่อการอ่านง่าย' },
+            // ─────────────────────────────────────────────
+            // License Form — แยกร้านชื่อซ้ำด้วยเจ้าของ + เบอร์
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '🏪 แก้ปัญหา**ร้านชื่อซ้ำกันเลือกไม่ถูก** ใน Modal "สร้างใบอนุญาตใหม่" — dropdown ร้านค้าตอนนี้แสดง `ชื่อร้าน — เจ้าของ (เบอร์โทร)` เพื่อแยกร้านที่ชื่อเดียวกัน (เช่น 7ELEVEN หลายสาขา)' },
+            { type: 'feature', text: '🔍 ปรับ search ใน dropdown ร้านค้า — ค้นเจอได้จาก**ชื่อร้าน, ชื่อเจ้าของ, หรือเบอร์โทร** ในช่องเดียว (เดิมค้นเฉพาะชื่อร้าน)' },
+            { type: 'improve', text: '• `/api/dropdowns` เพิ่ม `phone` ใน SELECT shops เพื่อส่งให้ frontend ใช้ filter' },
+            { type: 'improve', text: '• `useDropdownData` hook expose `shopOptionsDetailed` ใหม่ — มี `label` แบบ detailed + `searchText` ครอบคลุม + raw fields (shop_name/owner_name/phone) สำหรับ custom rendering' },
+            { type: 'improve', text: '• `CustomSelect` รองรับ `opt.searchText` เพื่อให้ filter ค้นข้าม field โดยไม่ต้องเห็นใน label — general-purpose enhancement' },
+            { type: 'improve', text: '• `QuickAddModal` (สร้างใบอนุญาต) ใช้ `shopOptionsDetailed` แทน `shopOptions` เดิม' },
+            { type: 'improve', text: '• ในตาราง `/dashboard/licenses` — Excel dropdown ใช้ detailed labels เพื่อให้เลือกได้ถูกต้อง แต่ cell display ใช้ `shop_name` (สั้น) เพื่อไม่ให้ตารางกว้างเกินไป (column "เจ้าของร้าน" แยกอยู่แล้ว)' },
+            // ─────────────────────────────────────────────
+            // Shop Dropdown — เพิ่มที่อยู่ + แสดง 2 บรรทัด
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '🏠 เพิ่ม **ที่อยู่** ในตัวเลือกร้านค้าของ Modal "สร้างใบอนุญาตใหม่" — แสดงผลแบบ 2 บรรทัด:\n  • บรรทัด 1: ชื่อร้าน (ตัวหนา)\n  • บรรทัด 2: เจ้าของ · ที่อยู่ · เบอร์โทร (เล็ก สีเทา, truncate ถ้ายาว)' },
+            { type: 'improve', text: '• `/api/dropdowns` เพิ่ม `address` ใน SELECT shops (เดิม: id/shop_name/owner_name/phone)' },
+            { type: 'improve', text: '• `shopOptionsDetailed` เพิ่ม field `address` + รวมใน `searchText` → ค้นเจอจากที่อยู่ได้ด้วย (เช่น พิมพ์ "สุขุมวิท" เจอทุกสาขา)' },
+            { type: 'improve', text: '• `CustomSelect` รองรับ prop `opt.optionLabel` (ReactNode) — สำหรับการแสดงผลแบบ custom JSX ใน list โดย fallback เป็น `label/name` string เหมือนเดิม (backward compatible)' },
+            { type: 'improve', text: '• `QuickAddModal` สร้าง `shopOptionsWithDisplay` ที่มี `optionLabel` เป็น JSX 2 บรรทัด — trigger ยังใช้ `label` string เดิม (ไม่ล้น)' }
         ]
     },
     {

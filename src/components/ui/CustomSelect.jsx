@@ -30,13 +30,20 @@ export default function CustomSelect({
     );
 
     // Filter options based on search term - memoized for performance
+    // รองรับ `opt.searchText` เพื่อให้ค้นข้าม field (เช่น ชื่อร้าน + เจ้าของ + เบอร์)
+    // โดยไม่ต้องเห็น field เหล่านั้นใน label
     const filteredOptions = useMemo(() => {
         if (!searchTerm) return options;
-        
+
         const lowerSearchTerm = searchTerm.toLowerCase();
         return options.filter(opt => {
-            const label = (opt.label || opt.name || '').toLowerCase();
-            return label.includes(lowerSearchTerm);
+            const haystack = (
+                opt.searchText ||
+                opt.label ||
+                opt.name ||
+                ''
+            ).toString().toLowerCase();
+            return haystack.includes(lowerSearchTerm);
         });
     }, [options, searchTerm]);
 
@@ -209,7 +216,10 @@ export default function CustomSelect({
                                 }
                             }}
                         >
-                            {opt.label || opt.name}
+                            {/* รองรับ optionLabel (ReactNode) สำหรับการแสดงผลแบบ custom
+                                เช่น 2 บรรทัด — ชื่อร้าน + เจ้าของ/ที่อยู่/เบอร์
+                                fallback เป็น label/name string ปกติ */}
+                            {opt.optionLabel || opt.label || opt.name}
                         </div>
                     ))}
                     {filteredOptions.length === 0 && searchTerm && (

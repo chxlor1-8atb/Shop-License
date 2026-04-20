@@ -17,7 +17,7 @@ export async function GET(request) {
         // Parallel fetch both datasets in a single API call
         const [shops, types] = await Promise.all([
             fetchAll(
-                'SELECT id, shop_name, owner_name FROM shops ORDER BY shop_name ASC LIMIT $1',
+                'SELECT id, shop_name, owner_name, phone, address FROM shops ORDER BY shop_name ASC LIMIT $1',
                 [limit]
             ),
             fetchAll(

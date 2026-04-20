@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import CustomSelect from "./CustomSelect";
 import DatePicker from "./DatePicker";
@@ -30,7 +30,45 @@ export default function QuickAddModal({
   prefillData = DEFAULT_PREFILL,
   onSubmit,
 }) {
-  const { shopOptions, typeOptions, refresh } = useDropdownData();
+  const { shopOptions, shopOptionsDetailed, typeOptions, refresh } = useDropdownData();
+
+  // สร้าง option label แบบ 2 บรรทัดสำหรับ dropdown ร้านค้า:
+  //   บรรทัด 1: ชื่อร้าน (ตัวหนา)
+  //   บรรทัด 2: เจ้าของ · ที่อยู่ · เบอร์ (เล็ก, สีเทา, truncate ถ้ายาว)
+  // ช่วยแยกร้านชื่อซ้ำ (เช่น 7ELEVEN หลายสาขา) ได้ชัดเจนขึ้น
+  const shopOptionsWithDisplay = useMemo(() => {
+    return shopOptionsDetailed.map(opt => {
+      const subParts = [];
+      if (opt.owner_name) subParts.push(opt.owner_name);
+      if (opt.address)    subParts.push(opt.address);
+      if (opt.phone)      subParts.push(opt.phone);
+      const subText = subParts.join(' · ');
+
+      return {
+        ...opt,
+        optionLabel: (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+            <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>
+              {opt.shop_name || '(ไม่ระบุชื่อร้าน)'}
+            </div>
+            {subText && (
+              <div style={{
+                fontSize: '0.8125rem',
+                color: 'var(--text-secondary)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100%',
+              }} title={subText}>
+                {subText}
+              </div>
+            )}
+          </div>
+        ),
+      };
+    });
+  }, [shopOptionsDetailed]);
+
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -449,9 +487,9 @@ export default function QuickAddModal({
                 id="shop_id"
                 value={formData.shop_id || ""}
                 onChange={(e) => handleChange("shop_id", e.target.value)}
-                options={[{ value: "", label: "-- เลือกร้านค้า --" }, ...shopOptions]}
+                options={[{ value: "", label: "-- เลือกร้านค้า --" }, ...shopOptionsWithDisplay]}
                 searchable={true}
-                searchPlaceholder="🔍 ค้นหาร้านค้า..."
+                searchPlaceholder="🔍 ค้นหาจากชื่อร้าน, เจ้าของ, ที่อยู่, หรือเบอร์โทร..."
               />
             </div>
 
