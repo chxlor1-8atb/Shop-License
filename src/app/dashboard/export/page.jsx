@@ -643,7 +643,20 @@ export default function ExportPage() {
                       value={search}
                       onChange={setSearch}
                       placeholder="ระบุคำค้นหา..."
-                      style={{ width: "100%", boxSizing: "border-box" }}
+                      style={{
+                        width: "100%",
+                        height: "42px",
+                        padding: "0 1rem",
+                        fontSize: "0.9375rem",
+                        fontWeight: 500,
+                        border: "1.5px solid var(--border-color)",
+                        borderRadius: "var(--border-radius)",
+                        background: "#FFFFFF",
+                        color: "var(--text-primary)",
+                        fontFamily: "inherit",
+                        boxSizing: "border-box",
+                        transition: "all var(--transition)",
+                      }}
                     />
                   </div>
                   <div style={{ flex: "1 1 150px" }}>
@@ -821,7 +834,20 @@ export default function ExportPage() {
                       value={search}
                       onChange={setSearch}
                       placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร..."
-                      style={{ width: "100%", boxSizing: "border-box" }}
+                      style={{
+                        width: "100%",
+                        height: "42px",
+                        padding: "0 1rem",
+                        fontSize: "0.9375rem",
+                        fontWeight: 500,
+                        border: "1.5px solid var(--border-color)",
+                        borderRadius: "var(--border-radius)",
+                        background: "#FFFFFF",
+                        color: "var(--text-primary)",
+                        fontFamily: "inherit",
+                        boxSizing: "border-box",
+                        transition: "all var(--transition)",
+                      }}
                     />
                   </div>
                   <div style={{ flex: "0 1 220px" }}>
