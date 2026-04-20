@@ -1,60 +1,21 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError } from "@/utils/alerts";
-import { formatThaiDate } from "@/utils/formatters";
 import CustomSelect from "./CustomSelect";
 import DatePicker from "./DatePicker";
 import "./ShopDetailModal.css";
 
-// Fields ที่แสดงใน header อยู่แล้ว — ไม่ต้องแสดงซ้ำใน grid
-const HEADER_FIELDS = new Set(["id", "shop_name", "owner_name", "phone", "license_count", "active_license_count"]);
-
-// Format ค่าตาม type ของ column — กลับเป็น ReactNode/string
-function formatValue(value, type) {
-  if (value === null || value === undefined || value === "") return null;
-  if (type === "date") return formatThaiDate(value);
-  if (type === "number") return Number(value).toLocaleString("th-TH");
-  if (type === "boolean") return value ? "ใช่" : "ไม่";
-  return String(value);
-}
-
-// ดึงค่าจาก shop row รองรับทั้ง flatten และ nested custom_fields
-function resolveValue(shop, colId) {
-  if (!shop) return undefined;
-  if (shop[colId] !== undefined && shop[colId] !== null && shop[colId] !== "") {
-    return shop[colId];
-  }
-  if (shop.custom_fields && typeof shop.custom_fields === "object") {
-    return shop.custom_fields[colId];
-  }
-  return undefined;
-}
-
-// Icon map ตาม column id มาตรฐาน (fallback เป็น icon ทั่วไปถ้าไม่พบ)
-const ICON_MAP = {
-  address: "fa-map-marker-alt",
-  email: "fa-envelope",
-  notes: "fa-sticky-note",
-  phone: "fa-phone",
-  owner_name: "fa-user",
-  shop_name: "fa-store",
-  created_at: "fa-calendar-plus",
-  updated_at: "fa-calendar-check",
-};
-
 /**
  * Shop Detail Modal - Shows shop info with its licenses
- * @param {Array} columns - (optional) Column definitions จาก ExcelTable — ถ้าส่งมา จะแสดงทุกฟิลด์รวม custom fields
  */
 export default function ShopDetailModal({
   isOpen,
   onClose,
   shop,
   typeOptions = [],
-  columns = [],
   onLicenseCreated,
 }) {
   const [licenses, setLicenses] = useState([]);
@@ -160,39 +121,6 @@ export default function ShopDetailModal({
     });
   };
 
-  // สร้าง list ของ detail items จาก columns (ถ้าส่งมา) — ครอบคลุมทั้ง standard + custom fields
-  // ถ้าไม่มี columns ให้ fallback เป็น fields มาตรฐาน 3 ตัว (address, email, notes) เหมือนเดิม
-  const detailItems = useMemo(() => {
-    if (!shop) return [];
-
-    // มี columns จาก ExcelTable → iterate ทุก column
-    if (columns && columns.length > 0) {
-      return columns
-        .filter((col) => !HEADER_FIELDS.has(col.id))
-        .map((col) => {
-          const rawValue = resolveValue(shop, col.id);
-          const formatted = formatValue(rawValue, col.type);
-          return {
-            id: col.id,
-            label: col.name || col.id,
-            icon: ICON_MAP[col.id] || (col.isCustom ? "fa-tag" : "fa-info-circle"),
-            value: formatted,
-          };
-        })
-        .filter((item) => item.value !== null && item.value !== undefined && item.value !== "");
-    }
-
-    // Fallback — ไม่ได้ส่ง columns มา: แสดงฟิลด์มาตรฐาน
-    const fallbackFields = [
-      { id: "address", label: "ที่อยู่", icon: "fa-map-marker-alt" },
-      { id: "email", label: "อีเมล", icon: "fa-envelope" },
-      { id: "notes", label: "หมายเหตุ", icon: "fa-sticky-note" },
-    ];
-    return fallbackFields
-      .map((f) => ({ ...f, value: shop[f.id] }))
-      .filter((item) => item.value);
-  }, [shop, columns]);
-
   if (!isOpen || !shop) return null;
 
   return createPortal(
@@ -217,19 +145,27 @@ export default function ShopDetailModal({
         </div>
 
         <div className="modal-body">
-          {/* Shop Details — ครอบคลุมทุก column (รวม custom fields) ถ้ามี columns ส่งมา */}
-          {detailItems.length > 0 && (
-            <div className="shop-details-grid">
-              {detailItems.map((item) => (
-                <div key={item.id} className="detail-item">
-                  <span className="detail-label">
-                    <i className={`fas ${item.icon}`}></i> {item.label}
-                  </span>
-                  <span className="detail-value">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Shop Details */}
+          <div className="shop-details-grid">
+            {shop.address && (
+              <div className="detail-item">
+                <span className="detail-label"><i className="fas fa-map-marker-alt"></i> ที่อยู่</span>
+                <span className="detail-value">{shop.address}</span>
+              </div>
+            )}
+            {shop.email && (
+              <div className="detail-item">
+                <span className="detail-label"><i className="fas fa-envelope"></i> อีเมล</span>
+                <span className="detail-value">{shop.email}</span>
+              </div>
+            )}
+            {shop.notes && (
+              <div className="detail-item">
+                <span className="detail-label"><i className="fas fa-sticky-note"></i> หมายเหตุ</span>
+                <span className="detail-value">{shop.notes}</span>
+              </div>
+            )}
+          </div>
 
           {/* Licenses Section */}
           <div className="licenses-section">

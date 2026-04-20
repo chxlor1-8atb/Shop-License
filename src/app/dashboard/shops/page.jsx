@@ -767,8 +767,7 @@ function ShopsPageContent() {
         </div>
       </div>
 
-      {/* Shop Detail Modal — ส่ง columns เข้าไปเพื่อให้ modal แสดง custom fields ครบ
-          ผู้ใช้คลิก "ลำดับ" ของแถว → เห็นข้อมูลทั้งแถวใน modal ไม่ต้อง scroll แนวนอน */}
+      {/* Shop Detail Modal */}
       <ShopDetailModal
         isOpen={showDetailModal}
         onClose={() => {
@@ -777,7 +776,6 @@ function ShopsPageContent() {
         }}
         shop={selectedShop}
         typeOptions={typeOptions}
-        columns={columns}
         onLicenseCreated={fetchShops}
       />
 
