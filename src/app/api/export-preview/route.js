@@ -109,6 +109,9 @@ export async function GET(request) {
             const search = sanitizeString(searchParams.get('search') || '', 100);
             const expiry_from = sanitizeDate(searchParams.get('expiry_from'));
             const expiry_to = sanitizeDate(searchParams.get('expiry_to'));
+            // Quick filter: เดือน (1-12) และปี (ค.ศ.) ของ expiry_date
+            const expiry_month = sanitizeInt(searchParams.get('expiry_month'), 0, 1, 12);
+            const expiry_year = sanitizeInt(searchParams.get('expiry_year'), 0, 1900, 2999);
 
             let whereClauses = [];
             let params = [];
@@ -164,6 +167,15 @@ export async function GET(request) {
             if (expiry_to) {
                 whereClauses.push(`l.expiry_date <= $${paramIndex++}`);
                 params.push(expiry_to);
+            }
+            // Quick filter: Month / Year of expiry_date
+            if (expiry_month > 0) {
+                whereClauses.push(`EXTRACT(MONTH FROM l.expiry_date) = $${paramIndex++}`);
+                params.push(expiry_month);
+            }
+            if (expiry_year > 0) {
+                whereClauses.push(`EXTRACT(YEAR FROM l.expiry_date) = $${paramIndex++}`);
+                params.push(expiry_year);
             }
 
             const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';

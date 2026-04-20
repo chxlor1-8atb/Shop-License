@@ -33,12 +33,41 @@ export default function ExportPage() {
   const [status, setStatus] = useState("");
   const [expiryFrom, setExpiryFrom] = useState("");
   const [expiryTo, setExpiryTo] = useState("");
+  const [expiryMonth, setExpiryMonth] = useState(""); // 1-12 (เดือนหมดอายุแบบ quick filter)
+  const [expiryYear, setExpiryYear] = useState("");   // ค.ศ. (เก็บเป็น ค.ศ. ภายใน แต่ label แสดง พ.ศ.)
   const [filterShop, setFilterShop] = useState("");
 
   // Shop filters
   const [shopHasLicense, setShopHasLicense] = useState("");
   const [shopLicenseStatus, setShopLicenseStatus] = useState("");
   const [shopLicenseType, setShopLicenseType] = useState("");
+
+  // Month options (1-12) พร้อมชื่อเดือนไทย
+  const MONTH_OPTIONS = [
+    { value: "", label: "ทุกเดือน" },
+    { value: "1", label: "มกราคม" },
+    { value: "2", label: "กุมภาพันธ์" },
+    { value: "3", label: "มีนาคม" },
+    { value: "4", label: "เมษายน" },
+    { value: "5", label: "พฤษภาคม" },
+    { value: "6", label: "มิถุนายน" },
+    { value: "7", label: "กรกฎาคม" },
+    { value: "8", label: "สิงหาคม" },
+    { value: "9", label: "กันยายน" },
+    { value: "10", label: "ตุลาคม" },
+    { value: "11", label: "พฤศจิกายน" },
+    { value: "12", label: "ธันวาคม" },
+  ];
+
+  // Year options: ปีปัจจุบัน ± 5 ปี (เก็บ ค.ศ. ภายใน, แสดง พ.ศ.)
+  const currentYearCE = new Date().getFullYear();
+  const YEAR_OPTIONS = [
+    { value: "", label: "ทุกปี" },
+    ...Array.from({ length: 11 }, (_, i) => {
+      const ce = currentYearCE + 5 - i; // ใหม่สุด → เก่าสุด
+      return { value: String(ce), label: `${ce + 543}` };
+    }),
+  ];
 
   useEffect(() => {
     loadDropdowns();
@@ -114,6 +143,8 @@ export default function ExportPage() {
       if (status) params.append("status", status);
       if (expiryFrom) params.append("expiry_from", expiryFrom);
       if (expiryTo) params.append("expiry_to", expiryTo);
+      if (expiryMonth) params.append("expiry_month", expiryMonth);
+      if (expiryYear) params.append("expiry_year", expiryYear);
       if (filterShop) params.append("shop_id", filterShop);
     }
 
@@ -291,20 +322,53 @@ export default function ExportPage() {
               handleExport();
             }}
           >
-            {/* Data Type Selection */}
-            <div className="form-group">
-              <label htmlFor="export-data-type">เลือกประเภทข้อมูล *</label>
-              <CustomSelect
-                id="export-data-type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                options={[
-                  { value: "licenses", label: "ใบอนุญาต" },
-                  { value: "shops", label: "ร้านค้า" },
-                  { value: "users", label: "ผู้ใช้งาน" },
-                ]}
-                placeholder="เลือกประเภทข้อมูล"
-              />
+            {/* Data Type + License Type (quick filter) Row */}
+            <div
+              style={{
+                display: "flex",
+                gap: "1rem",
+                flexWrap: "wrap",
+                alignItems: "flex-end",
+              }}
+            >
+              <div className="form-group" style={{ flex: "1 1 220px", minWidth: "200px" }}>
+                <label htmlFor="export-data-type">เลือกประเภทข้อมูล *</label>
+                <CustomSelect
+                  id="export-data-type"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  options={[
+                    { value: "licenses", label: "ใบอนุญาต" },
+                    { value: "shops", label: "ร้านค้า" },
+                    { value: "users", label: "ผู้ใช้งาน" },
+                  ]}
+                  placeholder="เลือกประเภทข้อมูล"
+                />
+              </div>
+
+              {/* License type quick-filter — ใช้ state เดียวกับ licenseType ใน Advanced Filters */}
+              {type === "licenses" && (
+                <div
+                  className="form-group"
+                  style={{ flex: "1 1 220px", minWidth: "200px" }}
+                >
+                  <label htmlFor="export-data-license-type">เลือกประเภทใบอนุญาต</label>
+                  <CustomSelect
+                    id="export-data-license-type"
+                    value={licenseType}
+                    onChange={(e) => setLicenseType(e.target.value)}
+                    options={[
+                      { value: "", label: "ทั้งหมด" },
+                      ...typesList.map((t) => ({
+                        value: t.id,
+                        label: t.name,
+                      })),
+                    ]}
+                    placeholder="ทั้งหมด"
+                    searchable={typesList.length > 8}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Format Selection */}
@@ -616,6 +680,46 @@ export default function ExportPage() {
                       value={expiryTo}
                       onChange={(e) => setExpiryTo(e.target.value)}
                       placeholder="เลือกวันที่"
+                    />
+                  </div>
+                  {/* Quick filter: เลือกเดือน/ปีหมดอายุแยกจาก DatePicker */}
+                  <div style={{ flex: "1 1 150px" }}>
+                    <label
+                      htmlFor="export-expiry-month"
+                      style={{
+                        fontSize: "0.875rem",
+                        marginBottom: "0.5rem",
+                        display: "block",
+                      }}
+                    >
+                      หมดอายุเดือน
+                    </label>
+                    <CustomSelect
+                      id="export-expiry-month"
+                      value={expiryMonth}
+                      onChange={(e) => setExpiryMonth(e.target.value)}
+                      options={MONTH_OPTIONS}
+                      placeholder="ทุกเดือน"
+                    />
+                  </div>
+                  <div style={{ flex: "1 1 150px" }}>
+                    <label
+                      htmlFor="export-expiry-year"
+                      style={{
+                        fontSize: "0.875rem",
+                        marginBottom: "0.5rem",
+                        display: "block",
+                      }}
+                    >
+                      หมดอายุปี (พ.ศ.)
+                    </label>
+                    <CustomSelect
+                      id="export-expiry-year"
+                      value={expiryYear}
+                      onChange={(e) => setExpiryYear(e.target.value)}
+                      options={YEAR_OPTIONS}
+                      placeholder="ทุกปี"
+                      searchable
                     />
                   </div>
                 </div>

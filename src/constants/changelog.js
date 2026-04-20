@@ -62,7 +62,21 @@ export const CHANGELOG = [
             { type: 'improve', text: '🎯 เพิ่ม flag afterCustom ให้ status/notes เพื่อย้ายไปท้ายสุดหลัง custom fields — custom fields จะแสดงอยู่กึ่งกลางระหว่าง base info และ status/notes' },
             { type: 'improve', text: '• อัปเดต SQL /api/export + /api/export-preview ให้ SELECT s.owner_name และ GROUP BY ด้วย' },
             { type: 'improve', text: '• Preview modal ในหน้า /dashboard/export รับ order ใหม่อัตโนมัติ (# + preCustom + custom + postCustom)' },
-            { type: 'improve', text: '• PDF generator รักษา color coding ของคอลัมน์ "สถานะ" ให้ยังคงทำงานแม้ย้ายตำแหน่งแล้ว' }
+            { type: 'improve', text: '• PDF generator รักษา color coding ของคอลัมน์ "สถานะ" ให้ยังคงทำงานแม้ย้ายตำแหน่งแล้ว' },
+            // ─────────────────────────────────────────────
+            // Export Page — Quick License Type Filter
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '🎯 เพิ่ม dropdown "เลือกประเภทใบอนุญาต" ข้างๆ dropdown "เลือกประเภทข้อมูล" ในหน้า /dashboard/export เพื่อให้กรองก่อนส่งออกได้ง่ายขึ้น (ไม่ต้องเลื่อนลงไป Advanced Filters)' },
+            { type: 'improve', text: '• แสดงเฉพาะเมื่อเลือก "ประเภทข้อมูล = ใบอนุญาต" + sync state กับ filter ใน Advanced Filters (เปลี่ยนที่ไหนก็ตรงกัน)' },
+            { type: 'improve', text: '• รองรับการค้นหาใน dropdown อัตโนมัติเมื่อมีประเภทใบอนุญาตมากกว่า 8 รายการ' },
+            // ─────────────────────────────────────────────
+            // Export Page — Quick Month/Year Filter (expiry_date)
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '📅 เพิ่ม dropdown "หมดอายุเดือน" และ "หมดอายุปี (พ.ศ.)" ในตัวกรองใบอนุญาตหน้า /dashboard/export เป็นตัวกรองแยกจาก DatePicker (วันหมดอายุจาก/ถึง)' },
+            { type: 'improve', text: '• เดือน: ทุกเดือน / มกราคม … ธันวาคม (1-12)' },
+            { type: 'improve', text: '• ปี: ทุกปี / ปีปัจจุบัน ± 5 ปี (แสดงเป็น พ.ศ. เก็บเป็น ค.ศ. ภายใน) รองรับการค้นหา' },
+            { type: 'improve', text: '• ใช้ EXTRACT(MONTH/YEAR FROM l.expiry_date) ในทั้ง /api/export และ /api/export-preview — ใช้งานร่วมกับ DatePicker ช่วงวันที่ได้ (AND)' },
+            { type: 'improve', text: '• PDF Filter Info box แสดง "เดือนที่หมดอายุ: มกราคม" และ "ปีที่หมดอายุ (พ.ศ.): 2569" ให้อ่านง่าย' }
         ]
     },
     {

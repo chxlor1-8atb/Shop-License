@@ -193,8 +193,15 @@ const FILTER_LABELS = {
     'License Type ID': 'ประเภทใบอนุญาต',
     'Status': 'สถานะ',
     'Expiry From': 'วันหมดอายุ (เริ่มต้น)',
-    'Expiry To': 'วันหมดอายุ (สิ้นสุด)'
+    'Expiry To': 'วันหมดอายุ (สิ้นสุด)',
+    'Expiry Month': 'เดือนที่หมดอายุ',
+    'Expiry Year': 'ปีที่หมดอายุ (พ.ศ.)'
 };
+
+const THAI_MONTH_NAMES = [
+    '', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+];
 
 function createFilterInfo(filters) {
     if (!filters || Object.keys(filters).length === 0) return null;
@@ -213,8 +220,18 @@ function createFilterInfo(filters) {
                 }
             }
 
-            // Format Dates
-            if (key.includes('Expiry') && value) {
+            // Format Month (1-12 → ชื่อเดือนไทย)
+            if (key === 'Expiry Month') {
+                const m = parseInt(value, 10);
+                displayValue = THAI_MONTH_NAMES[m] || value;
+            }
+            // Format Year (ค.ศ. → พ.ศ.)
+            else if (key === 'Expiry Year') {
+                const y = parseInt(value, 10);
+                displayValue = !isNaN(y) ? String(y + 543) : value;
+            }
+            // Format Date range values
+            else if (key.includes('Expiry') && value) {
                 displayValue = formatThaiDate(value);
             }
 
