@@ -14,7 +14,17 @@ export const CHANGELOG = [
             { type: 'fix', text: '• แก้ไข DashboardSkeleton ให้ใช้ responsive CSS เดียวกับจริง' },
             { type: 'fix', text: '• แก้ไข Dashboard Grid Skeleton จาก 2 คอลัมน์เป็น 1 คอลัมน์ตาม layout จริง' },
             { type: 'improve', text: '• เพิ่ม gap ที่เหมาะสมสำหรับแต่ละขนาดหน้าจอ' },
-            { type: 'note', text: '📝 แก้ไขปัญหา layout ไม่สมดุจบนมือถือที่ผู้ใช้รายงาน' }
+            { type: 'note', text: '📝 แก้ไขปัญหา layout ไม่สมดุจบนมือถือที่ผู้ใช้รายงาน' },
+            // ─────────────────────────────────────────────
+            // DatePicker Dropdown Fix (2026-04-20)
+            // ─────────────────────────────────────────────
+            { type: 'fix', text: '📅 แก้ปัญหา DatePicker Dropdown ในหน้า "ส่งออกข้อมูล" ถูกตัดหายไปบางส่วน (คลิกแล้วมองไม่เห็นปฏิทิน)' },
+            { type: 'fix', text: '• ย้าย Dropdown ไป render ที่ document.body ผ่าน React Portal เพื่อหลุดจาก stacking context ของ .card (backdrop-filter) และ overflow ของ .main-content' },
+            { type: 'improve', text: '• เปลี่ยนมาใช้ position: fixed + คำนวณตำแหน่งจาก getBoundingClientRect() ของ trigger' },
+            { type: 'improve', text: '• เพิ่ม Auto-flip: พลิกขึ้นบนอัตโนมัติเมื่อ Dropdown ชนขอบล่าง, จัดชิดขวาเมื่อชนขอบขวาของ viewport' },
+            { type: 'improve', text: '• อัปเดตตำแหน่ง Dropdown อัตโนมัติเมื่อ resize / scroll (รองรับ nested scroll ด้วย capture-phase listener)' },
+            { type: 'improve', text: '• ปรับปรุง click-outside ให้ detect ได้ทั้ง wrapper และ dropdown ใน portal' },
+            { type: 'note', text: '📝 ส่งผลกับทุกหน้าที่ใช้ DatePicker (Export, Expiring Licenses, Excel Tables ฯลฯ)' }
         ]
     },
     {
