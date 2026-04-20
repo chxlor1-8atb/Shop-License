@@ -4456,12 +4456,7 @@ body:has(.sidebar.show) .mobile-toggle i {
 .datepicker-wrapper {
     position: relative;
     display: inline-block;
-
-}
-
-/* When calendar is open, bring to front */
-.datepicker-wrapper:has(.datepicker-dropdown) {
-    z-index: 10000;
+    width: 100%;
 }
 
 .datepicker-wrapper.disabled {
@@ -4535,22 +4530,17 @@ body:has(.sidebar.show) .mobile-toggle i {
     transform: rotate(180deg);
 }
 
-/* Dropdown Calendar - Modern Re-design (Material 3 Inspired) */
+/* Dropdown Calendar - Modern Re-design (Material 3 Inspired)
+   Note: Dropdown is rendered via React Portal to document.body with
+   position: fixed + inline top/left/width to avoid being clipped by
+   ancestor stacking contexts / overflow (e.g. .card backdrop-filter,
+   .main-content overflow:hidden). */
 .datepicker-dropdown {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    right: auto;
-    /* Default align left */
-
     min-width: 320px;
-    max-width: calc(100vw - 2rem);
-    /* Ensure it doesn't overflow viewport */
     background: #FFFFFF !important;
     border: 1px solid var(--border-color);
     border-radius: 20px;
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
-    z-index: 10005 !important;
     overflow: hidden;
     animation: datepickerSlideIn 0.2s ease;
     display: flex;
@@ -4558,9 +4548,9 @@ body:has(.sidebar.show) .mobile-toggle i {
     padding: 0;
 }
 
-.datepicker-dropdown.align-right {
-    left: auto;
-    right: 0;
+/* Portal variant: position is controlled entirely by inline style. */
+.datepicker-dropdown--portal {
+    max-width: none;
 }
 
 @keyframes datepickerSlideIn {
@@ -4753,10 +4743,9 @@ body:has(.sidebar.show) .mobile-toggle i {
 
 /* Mobile Responsive */
 @media (max-width: 480px) {
-    .datepicker-dropdown {
-        min-width: 100%;
-        left: 0;
-        right: 0;
+    .datepicker-dropdown--portal {
+        /* JS clamps position to viewport; narrow min-width on small screens */
+        min-width: 280px;
     }
 
     .datepicker-day {

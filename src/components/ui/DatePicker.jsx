@@ -1,11 +1,20 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { formatThaiDateShort } from '@/utils/formatters';
 
 const DAYS_TH = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 const DAYS_EN = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTHS_TH = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
     'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+const DROPDOWN_WIDTH = 320;
+const DROPDOWN_HEIGHT = 420; // approximate height for flip detection
+const GAP = 8;
+
+// Use useLayoutEffect only on client to avoid SSR warnings
+const useIsomorphicLayoutEffect =
+    typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 export default function DatePicker({
     value,
@@ -21,23 +30,54 @@ export default function DatePicker({
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(value ? new Date(value) : new Date());
-    const [position, setPosition] = useState('left');
+    const [dropdownStyle, setDropdownStyle] = useState({});
+    const [mounted, setMounted] = useState(false);
     const wrapperRef = useRef(null);
+    const dropdownRef = useRef(null);
 
-    // Auto-detect position to prevent overflow
+    // Track mount for SSR-safe portal
     useEffect(() => {
-        if (isOpen && wrapperRef.current) {
-            const rect = wrapperRef.current.getBoundingClientRect();
-            const spaceRight = window.innerWidth - rect.left;
-            const minWidth = 320; // Approx dropdown width
-            
-            // If space on right is less than minWidth, try to align right (expand to left)
-            if (spaceRight < minWidth) {
-                setPosition('right');
-            } else {
-                setPosition('left');
-            }
+        setMounted(true);
+    }, []);
+
+    // Compute dropdown position based on trigger rect + viewport
+    const updatePosition = () => {
+        if (!wrapperRef.current) return;
+        const rect = wrapperRef.current.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // Horizontal: align left by default; flip right if overflow
+        let left = rect.left;
+        if (left + DROPDOWN_WIDTH > vw - 8) {
+            left = Math.max(8, rect.right - DROPDOWN_WIDTH);
         }
+
+        // Vertical: below by default; flip above if overflow bottom
+        let top = rect.bottom + GAP;
+        if (top + DROPDOWN_HEIGHT > vh - 8 && rect.top - GAP - DROPDOWN_HEIGHT > 8) {
+            top = rect.top - GAP - DROPDOWN_HEIGHT;
+        }
+
+        setDropdownStyle({
+            position: 'fixed',
+            top: `${Math.round(top)}px`,
+            left: `${Math.round(left)}px`,
+            width: `${DROPDOWN_WIDTH}px`,
+            zIndex: 10050,
+        });
+    };
+
+    useIsomorphicLayoutEffect(() => {
+        if (!isOpen) return;
+        updatePosition();
+        const handle = () => updatePosition();
+        window.addEventListener('resize', handle);
+        window.addEventListener('scroll', handle, true); // capture to catch nested scroll containers
+        return () => {
+            window.removeEventListener('resize', handle);
+            window.removeEventListener('scroll', handle, true);
+        };
     }, [isOpen]);
 
     const selectedDate = value ? new Date(value) : null;
@@ -51,11 +91,10 @@ export default function DatePicker({
 
     useEffect(() => {
         function handleClickOutside(event) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+            const insideWrapper = wrapperRef.current && wrapperRef.current.contains(event.target);
+            const insideDropdown = dropdownRef.current && dropdownRef.current.contains(event.target);
+            if (!insideWrapper && !insideDropdown) {
                 setIsOpen(false);
-                // Call onBlur when clicking outside if currently open or purely based on focus logic?
-                // Actually the onBlur handler on div handles focus loss. 
-                // But clicking outside closes the dropdown.
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -181,10 +220,12 @@ export default function DatePicker({
                 <i className={`fas fa-chevron-down arrow ${isOpen ? 'open' : ''}`}></i>
             </button>
 
-            {/* Calendar Dropdown */}
-            {isOpen && (
-                <div 
-                    className={`datepicker-dropdown ${position === 'right' ? 'align-right' : ''}`}
+            {/* Calendar Dropdown rendered via Portal to escape stacking/overflow of ancestors */}
+            {isOpen && mounted && typeof document !== 'undefined' && createPortal(
+                <div
+                    ref={dropdownRef}
+                    className="datepicker-dropdown datepicker-dropdown--portal"
+                    style={dropdownStyle}
                     onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
                 >
                     {/* Top Display (Selected Date) */}
@@ -250,7 +291,8 @@ export default function DatePicker({
                             ตกลง
                         </button>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
