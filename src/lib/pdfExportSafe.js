@@ -383,7 +383,11 @@ function createDataTable(headers, data, options = {}) {
         table: {
             headerRows: 1,
             widths: columnWidths || Array(headers.length).fill('*'),
-            body: [headerRow, ...dataRows]
+            body: [headerRow, ...dataRows],
+            // 🛡️ กันแถวถูกแบ่งครึ่งระหว่างหน้า (orphan rows)
+            //    + ให้ header ติดกับ data row แรกของแต่ละหน้า
+            dontBreakRows: true,
+            keepWithHeaderRows: 1
         },
         layout: {
             hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5,
@@ -710,7 +714,14 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
     //                                         ↑ statusColumnIndex
     const statusColumnIndex = 1 + preCustomHeaders.length + customFieldDefs.length;
 
-    const columnWidths = Array(headers.length).fill('auto');
+    // 📏 Column widths — fixed pt สำหรับตัวเลข/วันที่/สถานะ, '*' สำหรับ text
+    // 🛠 กัน bug "column width fluctuate ระหว่างหน้า" (ดู expiring)
+    //   pre-custom order: [ชื่อเจ้าของ, ชื่อร้าน, ประเภท, เลขที่, วันที่ออก, วันหมดอายุ]
+    //   post-custom order: [สถานะ, หมายเหตุ]
+    const preCustomWidths = ['*', '*', '*', 65, 65, 65];
+    const customWidths = customFieldDefs.map(() => '*');
+    const postCustomWidths = [65, '*'];
+    const columnWidths = [30, ...preCustomWidths, ...customWidths, ...postCustomWidths];
 
     const docDefinition = {
         pageSize: 'A4',
@@ -843,14 +854,33 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
         ];
     });
 
-    // Column widths — ลำดับที่ แคบ, ชื่อร้าน กว้าง, อื่นๆ auto
-    const columnWidths = ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'];
+    // 📏 Column widths — ใช้ **fixed pt** สำหรับคอลัมน์ตัวเลข/วันที่/สถานะ
+    //   + '*' สำหรับ text columns ที่ยืดหยุ่น (ชื่อร้าน/เจ้าของ/ประเภท)
+    //
+    // 🛠 เหตุผล: ถ้าใช้ 'auto' ทั้งหมด → pdfmake จะ re-calculate width แยกแต่ละหน้า
+    //   ตาม content ของหน้านั้นๆ → **คอลัมน์เดียวกันกว้างไม่เท่ากันระหว่างหน้า**
+    //   (bug: "ลำดับที่" หน้า 2 แคบกว่าหน้า 1 เพราะเลข 10-13 ไม่ยาวกว่า 6-9 มาก)
+    //
+    //   ใช้ fixed pt → pdfmake ไม่คิด per-page → widths stable ทุกหน้า
+    const columnWidths = [
+        30,    // ลำดับที่ — 2-3 digits
+        '*',   // ชื่อร้านค้า — flexible
+        '*',   // ชื่อเจ้าของ — flexible
+        '*',   // ประเภท — flexible
+        65,    // เลขที่ใบอนุญาต — "XXXX/XX"
+        70,    // วันหมดอายุ — "DD/MM/YYYY"
+        75,    // คงเหลือ (วัน) — "XXX วัน (เกิน)"
+        70,    // สถานะ — "หมดอายุแล้ว"
+    ];
 
     const table = {
         table: {
             headerRows: 1,
             widths: columnWidths,
-            body: [headerRow, ...dataRows]
+            body: [headerRow, ...dataRows],
+            // 🛡️ กันแถวถูกแบ่งครึ่งระหว่างหน้า (orphan rows)
+            dontBreakRows: true,
+            keepWithHeaderRows: 1
         },
         layout: {
             hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5,
@@ -997,7 +1027,12 @@ export async function exportShopsToPDF(shops, filters = {}) {
         return [String(idx + 1), ...baseData, ...customData];
     });
 
-    const columnWidths = Array(headers.length).fill('auto');
+    // 📏 Column widths — fixed pt สำหรับคอลัมน์ตัวเลข/วันที่, '*' สำหรับ text
+    // 🛠 กัน bug "column width fluctuate ระหว่างหน้า"
+    //   base order: [ชื่อร้าน, เจ้าของ, โทร, อีเมล, ที่อยู่, หมายเหตุ, จำนวนใบอนุญาต, วันที่สร้าง]
+    const baseWidths = ['*', '*', 70, '*', '*', '*', 50, 70];
+    const customWidthsArr = customFieldDefs.map(() => '*');
+    const columnWidths = [30, ...baseWidths, ...customWidthsArr];
 
     const docDefinition = {
         pageSize: 'A4',
