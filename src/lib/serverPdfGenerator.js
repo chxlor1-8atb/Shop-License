@@ -138,22 +138,25 @@ function createSummaryBox(stats) {
 function createDataTable(headers, data, options = {}) {
     const { columnWidths, colorColumn } = options;
 
+    // 📏 Padding [5, 10, 5, 10] — header ต้องเด่น + breathing room พอ
     const headerRow = headers.map(h => ({
         text: h,
         style: 'tableHeader',
         fillColor: COLORS.primaryDark,
         color: COLORS.white,
         alignment: 'center',
-        margin: [5, 8, 5, 8]
+        margin: [5, 10, 5, 10]
     }));
 
+    // 📏 Padding [5, 8, 5, 8] (จาก 6) — ลด differential ของ row heights
+    // ที่เกิดจาก character metrics ต่างกัน (ตัว ฎ/ฏ/ญ) + content wrap → ตารางดู uniform
     const dataRows = data.map((row, rowIndex) => {
         return row.map((cell, colIndex) => {
             let cellStyle = {
                 text: cell || '-',
                 style: 'tableCell',
                 alignment: 'center',
-                margin: [5, 6, 5, 6],
+                margin: [5, 8, 5, 8],
                 fillColor: rowIndex % 2 === 0 ? COLORS.white : COLORS.light
             };
 

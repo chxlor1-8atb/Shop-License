@@ -189,7 +189,15 @@ export const CHANGELOG = [
             { type: 'improve', text: '• **Page number / Footer** 8pt → **10pt** — footer เอกสารราชการต้องอ่านได้โดยไม่ต้องซูม' },
             { type: 'improve', text: '• **Legacy header** (ใช้ใน `exportLicensesToPDF` / `exportShopsToPDF` ฯลฯ) 18/14/10pt → **20/16/12pt**' },
             { type: 'improve', text: '• **Sync ทั้ง 2 ไฟล์**: `pdfExportSafe.js` (client) + `serverPdfGenerator.js` (server) ใช้ค่าเดียวกัน → รายงานทุกแหล่งดูเหมือนกันหมด (expiring / licenses / shops / users)' },
-            { type: 'improve', text: '• A4 landscape usable area ≈ 762 × 495 pt — body 12pt รองรับได้สบาย รวมทั้ง `licenses` ที่มี custom fields เพิ่ม (pdfmake จะ wrap text อัตโนมัติถ้าเกิน)' }
+            { type: 'improve', text: '• A4 landscape usable area ≈ 762 × 495 pt — body 12pt รองรับได้สบาย รวมทั้ง `licenses` ที่มี custom fields เพิ่ม (pdfmake จะ wrap text อัตโนมัติถ้าเกิน)' },
+            // ─────────────────────────────────────────────
+            // แก้ row height ไม่สม่ำเสมอใน PDF
+            // ─────────────────────────────────────────────
+            { type: 'fix', text: '📐 **แก้ความสูงแถวใน PDF ไม่สม่ำเสมอ — บางแถวช่องดูเล็ก บางแถวช่องดูใหญ่**' },
+            { type: 'fix', text: '• **Root cause**: (1) pdfmake auto-size row height ตาม content → ชื่อสั้น/`-` vs ชื่อยาว/มีอักษรไทยพิเศษ (ฎ, ฏ, ญ, ฐ) → character metrics ต่าง → height ต่าง  (2) cell padding บางเกินไป (`margin: [5, 6, 5, 6]`) → differential 2-3pt relative กับ row 24pt = เห็นต่าง ~10% → ตาสังเกตได้ชัด' },
+            { type: 'fix', text: '• **แก้**: เพิ่ม cell padding แนวตั้ง **6pt → 8pt** (+33%) และ header padding **8pt → 10pt** (+25%) → มี whitespace รอบ text มากขึ้น → differential ของ row heights **relative น้อยลง** → ตารางดู uniform' },
+            { type: 'fix', text: '• apply ทั้ง 3 จุด: `createDataTable` ใน `pdfExportSafe.js` + inline cells ใน `exportExpiringLicensesToPDF` + `createDataTable` ใน `serverPdfGenerator.js` → ทุกรายงาน (expiring / licenses / shops / users จาก /api/export) ได้ประโยชน์พร้อมกัน' },
+            { type: 'fix', text: '• **ไม่ใช้ fixed row height** — เพราะ pdfmake ถ้า content overflow จะ clip ข้อมูลหาย → เลือกเพิ่ม padding แทน ซึ่งปลอดภัยและ proportional' }
         ]
     },
     {

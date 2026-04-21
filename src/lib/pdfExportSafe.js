@@ -256,23 +256,26 @@ function createDataTable(headers, data, options = {}) {
     const { columnWidths, colorColumn } = options;
 
     // Table header row
+    // 📏 Padding [5, 10, 5, 10] — font 13pt + ~7.5pt ว่าง บน/ล่าง = row ~28pt สบายตา
     const headerRow = headers.map(h => ({
         text: h,
         style: 'tableHeader',
         fillColor: COLORS.primaryDark,
         color: COLORS.white,
         alignment: 'center',
-        margin: [5, 8, 5, 8]
+        margin: [5, 10, 5, 10]
     }));
 
     // Table data rows
+    // 📏 Padding [5, 8, 5, 8] (จาก 6 → 8) — ลด relative differential ของ row heights
+    // ที่เกิดจาก character metrics ต่างกัน + content wrap → ตารางดู uniform ขึ้น
     const dataRows = data.map((row, rowIndex) => {
         return row.map((cell, colIndex) => {
             let cellStyle = {
                 text: cell || '-',
                 style: 'tableCell',
                 alignment: 'center',
-                margin: [5, 6, 5, 6],
+                margin: [5, 8, 5, 8],
                 fillColor: rowIndex % 2 === 0 ? COLORS.white : COLORS.light
             };
 
@@ -705,16 +708,19 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
     ];
 
     // Header row (สี primaryDark + ตัวหนังสือสีขาว — match /api/export)
+    // 📏 Padding [5, 10, 5, 10] — header ต้องเด่น + breathing room พอ
     const headerRow = headers.map(h => ({
         text: h,
         style: 'tableHeader',
         fillColor: COLORS.primaryDark,
         color: COLORS.white,
         alignment: 'center',
-        margin: [5, 8, 5, 8]
+        margin: [5, 10, 5, 10]
     }));
 
     // Data rows — มีลำดับที่ + zebra stripes + สีของ "คงเหลือ" / "สถานะ" ตาม classifyExpiry
+    // 📏 Padding [5, 8, 5, 8] (จาก 6) — ลด differential ของ row heights ที่เกิดจาก
+    // character metrics ต่างกัน (เช่น ตัว ฎ/ฏ/ญ) → ตารางดู uniform ขึ้น
     const dataRows = licenses.map((l, rowIndex) => {
         const exp = classifyExpiry(l.days_until_expiry);
         const fill = rowIndex % 2 === 0 ? COLORS.white : COLORS.light;
@@ -727,7 +733,7 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
             text: text || '-',
             style: 'tableCell',
             alignment: 'center',
-            margin: [5, 6, 5, 6],
+            margin: [5, 8, 5, 8],
             fillColor: fill
         });
 
