@@ -913,8 +913,10 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
 
 /**
  * Export Shops to PDF
+ * @param {Array} shops - ข้อมูลร้านค้า
+ * @param {Object} filters - ตัวกรองที่ใช้ (แสดงเป็น filter info box ใน PDF) — optional
  */
-export async function exportShopsToPDF(shops) {
+export async function exportShopsToPDF(shops, filters = {}) {
     const pdfMake = await getPdfMake();
 
     const title = 'รายงานร้านค้า';
@@ -991,6 +993,8 @@ export async function exportShopsToPDF(shops) {
         content: [
             createHeader(title),
             createSummaryBox(stats),
+            // 🏷️ Filter info box — แสดงเมื่อ caller ส่ง filters มา (เช่น handleExport หน้า shops)
+            filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
             customFieldDefs.length > 0 ? {
                 text: `Custom Fields: ${customFieldDefs.map(cf => cf.field_label).join(', ')}`,
                 style: 'filterText',
