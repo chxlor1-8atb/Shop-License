@@ -49,16 +49,100 @@ const STATUS_CONFIG = {
 
 // Utils
 function formatThaiDate(dateStr) {
-    if (!dateStr) return '-';
+    if (dateStr === null || dateStr === undefined || dateStr === '') return '-';
     try {
         const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return String(dateStr);
         const day = date.getDate();
         const month = date.getMonth() + 1;
         const year = date.getFullYear() + 543;
         return `${day}/${month}/${year}`;
     } catch {
-        return dateStr;
+        return String(dateStr);
     }
+}
+
+/**
+ * Format Thai datetime: `วว/ดด/ปปปป HH:mm`
+ * ใช้กับ custom field type = 'datetime'
+ */
+function formatThaiDateTime(dateStr) {
+    if (dateStr === null || dateStr === undefined || dateStr === '') return '-';
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return String(dateStr);
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear() + 543;
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mm = String(date.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hh}:${mm}`;
+    } catch {
+        return String(dateStr);
+    }
+}
+
+/**
+ * 🛡️ Safe string coercion — คืน fallback เฉพาะเมื่อ null/undefined/empty string
+ * **ไม่ทำ falsy trap** (0, false, NaN ถือว่าเป็นค่าที่ valid ต้องแสดง)
+ *
+ * ⚠️ เดิมใช้ `val || '-'` ซึ่งจะทำให้:
+ *    - `license_count: 0` → '-' (ร้านไม่มีใบอนุญาต)
+ *    - `active: false` → '-' (boolean)
+ *    - `notes: ''` → '-' (OK แต่ตั้งใจหรือเปล่า?)
+ * ตอนนี้จัดการแบบ explicit
+ */
+function safeStr(val, fallback = '-') {
+    if (val === null || val === undefined) return fallback;
+    const s = String(val);
+    return s === '' ? fallback : s;
+}
+
+/**
+ * Safe status label — รองรับ val ที่ไม่ใช่ string (เช่น number/null)
+ * คืน label ไทยถ้า match, ถ้าไม่ match คืน raw value หรือ '-'
+ */
+function formatStatus(val) {
+    if (val === null || val === undefined || val === '') return '-';
+    const key = String(val).toLowerCase();
+    return STATUS_CONFIG[key]?.label || String(val);
+}
+
+/**
+ * 🧬 Format custom field value ตาม `field_type`
+ * - date / datetime → Thai date format
+ * - boolean → ใช่/ไม่ใช่
+ * - multiselect (array or comma-string) → "a, b, c"
+ * - object (JSON) → JSON.stringify
+ * - null/undefined/empty → '-'
+ * - อื่น → String(value)
+ *
+ * ⚠️ ไม่ truncate — ให้ pdfmake wrap text อัตโนมัติตาม column width
+ *    เดิม truncate 30 chars → **ข้อมูลหายแบบเงียบ**
+ */
+function formatCustomValue(cf, value) {
+    if (value === null || value === undefined || value === '') return '-';
+
+    const type = cf?.field_type;
+
+    if (type === 'date') return formatThaiDate(value);
+    if (type === 'datetime') return formatThaiDateTime(value);
+
+    if (type === 'boolean') {
+        if (value === true || value === 'true' || value === 1 || value === '1') return 'ใช่';
+        if (value === false || value === 'false' || value === 0 || value === '0') return 'ไม่ใช่';
+        return String(value);
+    }
+
+    if (Array.isArray(value)) {
+        return value.map(v => String(v)).join(', ');
+    }
+
+    if (typeof value === 'object') {
+        try { return JSON.stringify(value); } catch { return '[object]'; }
+    }
+
+    return String(value);
 }
 
 function getCurrentThaiDate() {
@@ -150,10 +234,12 @@ function createDataTable(headers, data, options = {}) {
 
     // 📏 Padding [5, 8, 5, 8] (จาก 6) — ลด differential ของ row heights
     // ที่เกิดจาก character metrics ต่างกัน (ตัว ฎ/ฏ/ญ) + content wrap → ตารางดู uniform
+    // 🛡️ ใช้ safeStr() แทน `cell || '-'` เพื่อกัน falsy trap (0, false → '-' เดิม = bug)
     const dataRows = data.map((row, rowIndex) => {
         return row.map((cell, colIndex) => {
+            const cellText = safeStr(cell);
             let cellStyle = {
-                text: cell || '-',
+                text: cellText,
                 style: 'tableCell',
                 alignment: 'center',
                 margin: [5, 8, 5, 8],
@@ -161,8 +247,10 @@ function createDataTable(headers, data, options = {}) {
             };
 
             if (colorColumn !== undefined && colIndex === colorColumn) {
+                // 🛡️ safe toLowerCase — เดิมถ้า cell ไม่ใช่ string อาจ crash
+                const cellLower = typeof cell === 'string' ? cell.toLowerCase() : '';
                 const statusKey = Object.keys(STATUS_CONFIG).find(
-                    key => STATUS_CONFIG[key].label === cell || key === cell?.toLowerCase()
+                    key => STATUS_CONFIG[key].label === cellText || key === cellLower
                 );
                 if (statusKey) {
                     cellStyle.color = STATUS_CONFIG[statusKey].color;
@@ -336,22 +424,17 @@ function createLicensesDocDef(licenses, customFieldDefs, filters, activeBaseFiel
         ...postCustomFields.map(f => f.label)
     ];
 
+    // 🛡️ Safe renderer — ใช้ safeStr (ไม่ทำ falsy trap) + รองรับ type-based formatting
     const renderBaseCell = (f, val) => {
-        if (f.dataKey === 'issue_date' || f.dataKey === 'expiry_date') {
+        if (f.type === 'date' || f.dataKey === 'issue_date' || f.dataKey === 'expiry_date' || f.dataKey === 'created_at') {
             return formatThaiDate(val);
         }
-        if (f.dataKey === 'status') {
-            return STATUS_CONFIG[val?.toLowerCase()]?.label || val || '-';
-        }
-        return val || '-';
+        if (f.dataKey === 'status') return formatStatus(val);
+        return safeStr(val);
     };
 
-    const renderCustomCell = (cf, value) => {
-        if (value === null || value === undefined) return '-';
-        if (cf.field_type === 'date' && value) return formatThaiDate(value);
-        const stringVal = String(value);
-        return stringVal.length > 30 ? stringVal.substring(0, 30) + '...' : stringVal;
-    };
+    // Custom cell — ไม่ truncate (ให้ pdfmake wrap), รองรับ date/datetime/boolean/array/object
+    const renderCustomCell = (cf, value) => formatCustomValue(cf, value);
 
     const data = licenses.map((l, idx) => {
         const preData = preCustomFields.map(f => renderBaseCell(f, l[f.dataKey]));
@@ -401,46 +484,43 @@ function createLicensesDocDef(licenses, customFieldDefs, filters, activeBaseFiel
     };
 }
 
-function createShopsDocDef(shops, customFieldDefs, activeBaseFields = null) {
+function createShopsDocDef(shops, customFieldDefs, activeBaseFields = null, filters = {}) {
     const title = 'รายงานร้านค้า';
     const stats = {
         'ร้านค้าทั้งหมด': shops.length
     };
 
-    // Default Fallback
+    // Default Fallback — ✅ match /api/export: เพิ่ม notes + license_count
+    // ⚠️ ก่อนหน้าขาด 2 field นี้ → ถ้า activeBaseFields = null → ข้อมูลจะหาย
     const defaultBaseFields = [
-        { key: 'shop_name', dataKey: 'shop_name', label: 'ชื่อร้านค้า' },
-        { key: 'owner_name', dataKey: 'owner_name', label: 'เจ้าของ' },
-        { key: 'phone', dataKey: 'phone', label: 'เบอร์โทรศัพท์' },
-        { key: 'email', dataKey: 'email', label: 'อีเมล' },
-        { key: 'address', dataKey: 'address', label: 'ที่อยู่' },
-        { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง' }
+        { key: 'shop_name',  dataKey: 'shop_name',  label: 'ชื่อร้านค้า' },
+        { key: 'owner_name', dataKey: 'owner_name', label: 'ชื่อเจ้าของ' },
+        { key: 'phone',      dataKey: 'phone',      label: 'เบอร์โทรศัพท์' },
+        { key: 'email',      dataKey: 'email',      label: 'อีเมล' },
+        { key: 'address',    dataKey: 'address',    label: 'ที่อยู่' },
+        { key: 'notes',      dataKey: 'notes',      label: 'หมายเหตุ' },
+        { key: 'license_count', dataKey: 'license_count', label: 'จำนวนใบอนุญาต' },
+        { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง', type: 'date' }
     ];
 
     const baseFields = activeBaseFields || defaultBaseFields;
 
+    // Construct headers: [ลำดับที่, base..., custom...]
     const baseHeaders = baseFields.map(f => f.label);
     const customHeaders = customFieldDefs.map(cf => cf.field_label);
-    const headers = [...baseHeaders, ...customHeaders];
+    const headers = ['ลำดับที่', ...baseHeaders, ...customHeaders];
 
-    const data = shops.map(s => {
-        const baseData = baseFields.map(f => {
-            const val = s[f.dataKey];
-            if (f.dataKey === 'created_at') return formatThaiDate(val);
-            if (f.dataKey === 'address') return ((val || '') + '').substring(0, 30) + (val?.length > 30 ? '...' : '') || '-';
-            return val || '-';
-        });
+    // 🛡️ Safe renderer (ไม่ truncate + ไม่ falsy trap)
+    const renderBaseCell = (f, val) => {
+        if (f.type === 'date' || f.dataKey === 'created_at') return formatThaiDate(val);
+        return safeStr(val);
+    };
 
+    const data = shops.map((s, idx) => {
+        const baseData = baseFields.map(f => renderBaseCell(f, s[f.dataKey]));
         const customFieldsData = s.custom_fields || {};
-        const customData = customFieldDefs.map(cf => {
-            const value = customFieldsData[cf.field_name];
-            if (value === null || value === undefined) return '-';
-            if (cf.field_type === 'date' && value) return formatThaiDate(value);
-            const stringVal = String(value);
-            return stringVal.length > 30 ? stringVal.substring(0, 30) + '...' : stringVal;
-        });
-
-        return [...baseData, ...customData];
+        const customData = customFieldDefs.map(cf => formatCustomValue(cf, customFieldsData[cf.field_name]));
+        return [String(idx + 1), ...baseData, ...customData];
     });
 
     const columnWidths = Array(headers.length).fill('auto');
@@ -466,12 +546,8 @@ function createShopsDocDef(shops, customFieldDefs, activeBaseFields = null) {
         }),
         content: [
             createHeader(title),
-            // createSummaryBox(stats),
-            customFieldDefs.length > 0 ? {
-                text: `Custom Fields: ${customFieldDefs.map(cf => cf.field_label).join(', ')}`,
-                style: 'filterText',
-                margin: [0, 0, 0, 10]
-            } : null,
+            // ✅ แสดง filter info box เหมือน licenses (เดิม shops ไม่มี → inconsistent)
+            filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
             createDataTable(headers, data, { columnWidths })
         ].filter(Boolean),
         styles: getStyles()
@@ -486,40 +562,31 @@ function createUsersDocDef(users, activeBaseFields = null) {
         'ผู้ใช้ทั่วไป': users.filter(u => u.role === 'user').length
     };
 
+    // ✅ Match /api/export definition exactly (username, full_name, role, created_at)
     const defaultBaseFields = [
-        { key: 'username', dataKey: 'username', label: 'ชื่อผู้ใช้' },
-        //        { key: 'full_name', dataKey: 'full_name', label: 'ชื่อ-นามสกุล' },
-        { key: 'role', dataKey: 'role', label: 'สิทธิ์การใช้งาน' },
-        { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง' }
-    ];
-    // Add full_name back if it exists in API def, just mirroring default structural idea
-    // Checking API def again: { key: 'username', ... }, { key: 'full_name', ... }, { key: 'role', ... }, { key: 'created_at', ... }
-
-    // Re-defining default to match API exactly just in case activeBaseFields is null
-    const defaultBaseFieldsFull = [
-        { key: 'username', dataKey: 'username', label: 'ชื่อผู้ใช้' },
-        { key: 'full_name', dataKey: 'full_name', label: 'ชื่อ-นามสกุล' },
-        { key: 'role', dataKey: 'role', label: 'สิทธิ์การใช้งาน' },
-        { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง' }
+        { key: 'username',   dataKey: 'username',   label: 'ชื่อผู้ใช้' },
+        { key: 'full_name',  dataKey: 'full_name',  label: 'ชื่อ-นามสกุล' },
+        { key: 'role',       dataKey: 'role',       label: 'สิทธิ์การใช้งาน' },
+        { key: 'created_at', dataKey: 'created_at', label: 'วันที่สร้าง', type: 'date' }
     ];
 
-    const baseFields = activeBaseFields || defaultBaseFieldsFull;
-    const headers = baseFields.map(f => f.label);
+    const baseFields = activeBaseFields || defaultBaseFields;
+    // เพิ่ม "ลำดับที่" นำหน้าเพื่อ consistent กับ licenses/shops
+    const headers = ['ลำดับที่', ...baseFields.map(f => f.label)];
 
-    const data = users.map((u, index) => {
-        // Note: index + 1 (Order) is not in baseFieldsDefinition, so we might lose "No." column if we purely use activeBaseFields.
-        // But usually "No." is a display thing.
-        // If we want to strictly follow "Only selected fields", we should just show selected fields.
-        // However, standard reports often have a running number.
-        // Currently, other reports don't seem to have a running number column in their definitions?
-        // Let's stick to the activeBaseFields to be consistent with the "what you see is what you get" philosophy.
+    // 🛡️ Safe renderer — ใช้ safeStr + handle role mapping safely
+    const renderUserCell = (f, val) => {
+        if (f.type === 'date' || f.dataKey === 'created_at') return formatThaiDate(val);
+        if (f.dataKey === 'role') {
+            if (val === null || val === undefined || val === '') return '-';
+            return String(val) === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป';
+        }
+        return safeStr(val);
+    };
 
-        return baseFields.map(f => {
-            const val = u[f.dataKey];
-            if (f.dataKey === 'created_at') return formatThaiDate(val);
-            if (f.dataKey === 'role') return val === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป';
-            return val || '-';
-        });
+    const data = users.map((u, idx) => {
+        const row = baseFields.map(f => renderUserCell(f, u[f.dataKey]));
+        return [String(idx + 1), ...row];
     });
 
     const columnWidths = Array(headers.length).fill('*');
@@ -608,7 +675,8 @@ export async function generatePdf(type, data, customFieldDefs = [], filters = {}
     if (type === 'licenses') {
         docDefinition = createLicensesDocDef(data, customFieldDefs, filters, activeBaseFields);
     } else if (type === 'shops') {
-        docDefinition = createShopsDocDef(data, customFieldDefs, activeBaseFields);
+        // ✅ Pass filters → shops PDF จะแสดง filter info box เหมือน licenses
+        docDefinition = createShopsDocDef(data, customFieldDefs, activeBaseFields, filters);
     } else if (type === 'users') {
         docDefinition = createUsersDocDef(data, activeBaseFields);
     } else {

@@ -197,7 +197,33 @@ export const CHANGELOG = [
             { type: 'fix', text: '• **Root cause**: (1) pdfmake auto-size row height ตาม content → ชื่อสั้น/`-` vs ชื่อยาว/มีอักษรไทยพิเศษ (ฎ, ฏ, ญ, ฐ) → character metrics ต่าง → height ต่าง  (2) cell padding บางเกินไป (`margin: [5, 6, 5, 6]`) → differential 2-3pt relative กับ row 24pt = เห็นต่าง ~10% → ตาสังเกตได้ชัด' },
             { type: 'fix', text: '• **แก้**: เพิ่ม cell padding แนวตั้ง **6pt → 8pt** (+33%) และ header padding **8pt → 10pt** (+25%) → มี whitespace รอบ text มากขึ้น → differential ของ row heights **relative น้อยลง** → ตารางดู uniform' },
             { type: 'fix', text: '• apply ทั้ง 3 จุด: `createDataTable` ใน `pdfExportSafe.js` + inline cells ใน `exportExpiringLicensesToPDF` + `createDataTable` ใน `serverPdfGenerator.js` → ทุกรายงาน (expiring / licenses / shops / users จาก /api/export) ได้ประโยชน์พร้อมกัน' },
-            { type: 'fix', text: '• **ไม่ใช้ fixed row height** — เพราะ pdfmake ถ้า content overflow จะ clip ข้อมูลหาย → เลือกเพิ่ม padding แทน ซึ่งปลอดภัยและ proportional' }
+            { type: 'fix', text: '• **ไม่ใช้ fixed row height** — เพราะ pdfmake ถ้า content overflow จะ clip ข้อมูลหาย → เลือกเพิ่ม padding แทน ซึ่งปลอดภัยและ proportional' },
+            // ─────────────────────────────────────────────
+            // 🛡️ Critical Data Loss Audit & Fix — PDF Export
+            // ─────────────────────────────────────────────
+            { type: 'fix', text: '🛡️ **Audit ครบทุก PDF exporter — แก้ bug 9 จุดที่ทำให้ข้อมูลตกหล่น/เพี้ยน**' },
+            // Data loss bugs (HIGH)
+            { type: 'fix', text: '• 🔴 **[HIGH] Truncate 30 chars** — custom fields + address ถูกตัดเงียบๆ ที่ 30 ตัวอักษร + ต่อด้วย "..." → **ข้อมูลหายแบบเงียบ** (ที่อยู่ยาว / comment ยาว / note ยาว)  **แก้**: เอา truncation ออกทั้งหมด → ให้ pdfmake wrap text อัตโนมัติตาม column width' },
+            { type: 'fix', text: '• 🔴 **[HIGH] Falsy trap `val \|\| \'-\'`** — ถ้า value เป็น `0`, `false`, `""` จะถูกแทนที่ด้วย `-` → เช่น `license_count: 0` (ร้านยังไม่มีใบอนุญาต) แสดงเป็น `-` แทน `0` = **ข้อมูลผิด** + boolean `false` → `-`  **แก้**: สร้าง helper `safeStr(val)` ที่เช็คเฉพาะ `null/undefined/""` → แทนที่ `|| \'-\'` ทั้งไฟล์ (>15 จุด ใน `createDataTable`, `exportLicensesToPDF`, `exportShopsToPDF`, `exportUsersToPDF`, `exportExpiringLicensesToPDF`, `exportActivityLogsToPDF`, `exportUserCredentialsPDF`, `createLicensesDocDef`, `createShopsDocDef`, `createUsersDocDef`)' },
+            // Medium bugs
+            { type: 'fix', text: '• 🟠 **[MEDIUM] Custom field `datetime` ไม่ format** — check เฉพาะ `\'date\'` → datetime field แสดงเป็น ISO string `2026-01-12T03:45:00.000Z` แทน `12/1/2569 10:45` (CSV รองรับแต่ PDF ไม่)  **แก้**: เพิ่ม `formatThaiDateTime()` + logic ใน `formatCustomValue()` รองรับทั้ง `date` และ `datetime`' },
+            { type: 'fix', text: '• 🟠 **[MEDIUM] `createShopsDocDef` ขาด default fields `notes` + `license_count`** — ถ้า `activeBaseFields = null` (fallback case) → **ข้อมูล 2 ฟิลด์นี้จะหายจากรายงาน** แม้ `/api/export` มีส่งมา  **แก้**: เพิ่ม 2 fields ใน default + mark `created_at` เป็น `type: "date"`' },
+            { type: 'fix', text: '• 🟠 **[MEDIUM] `createShopsDocDef` ไม่รับ/แสดง filters** — PDF รายงานร้านค้าไม่แสดง filter info box ขณะที่ licenses แสดง = inconsistent  **แก้**: เพิ่ม param `filters` + แสดง `createFilterInfo(filters)` + `generatePdf()` pass filters ไป shops ด้วย' },
+            { type: 'fix', text: '• 🟠 **[MEDIUM] Typo `Asia/Bangk ok`** (มีช่องว่าง) ใน footer ของ `exportUsersToPDF` → `toLocaleString` throw `RangeError` → footer render ไม่ได้  **แก้**: `Asia/Bangkok` ถูกต้อง' },
+            { type: 'fix', text: '• 🟠 **[MEDIUM] `val?.toLowerCase()` ไม่ safe** — ถ้า status เป็น `number` หรือ non-string → crash  **แก้**: สร้าง `formatStatus(val)` + check `typeof === "string"` ก่อน lowercase' },
+            // Low bug
+            { type: 'fix', text: '• 🟡 **[LOW] Custom field types `boolean` / `array` / `object` แสดงแย่** — `String(true)` = `"true"`, `String([...])` = `"a,b"`, `String({...})` = `"[object Object]"` (ไม่ readable)  **แก้**: `formatCustomValue()` รองรับ:\n  - `boolean` → `"ใช่" / "ไม่ใช่"`\n  - array (multiselect) → `"a, b, c"` (join comma+space)\n  - object (JSON) → `JSON.stringify()`' },
+            // Helpers สรุป
+            { type: 'improve', text: '🧬 **สร้าง helpers ใหม่ 4 ตัวใน ทั้ง `pdfExportSafe.js` + `serverPdfGenerator.js`** (sync logic ทั้ง client + server): `safeStr(val)`, `formatStatus(val)`, `formatCustomValue(cf, value)`, `formatThaiDateTime(dateStr)` → ใช้ซ้ำทุก exporter แทน inline logic กระจัดกระจาย' },
+            { type: 'improve', text: '• **Defensive date parsing** — เพิ่ม `isNaN(date.getTime())` check ใน `formatThaiDate()` + `formatThaiDateTime()` → ถ้า date string ผิด format → fallback `String(val)` แทน return invalid date' },
+            { type: 'note', text: '📝 Impact: รายงาน PDF ทั้งระบบ (expiring / licenses / shops / users / activity logs / credentials) แสดงข้อมูลครบถ้วน ไม่มีการตัด/กลืนค่า falsy อีก — สำคัญเฉพาะกับเอกสารราชการที่ต้องการความถูกต้อง 100%' },
+            // ─────────────────────────────────────────────
+            // 🏷️ Watermark dynamic — เฉพาะ /dashboard/expiring
+            // ─────────────────────────────────────────────
+            { type: 'improve', text: '🏷️ **เปลี่ยน watermark ของ PDF หน้า `/dashboard/expiring` ให้ dynamic ตามเนื้อหารายงาน** (แทนที่ข้อความ "ใบอนุญาตประกอบการค้า" แบบเดิมที่ไม่ตรงกับบริบท)' },
+            { type: 'improve', text: '• **"ใบอนุญาตหมดอายุ"** — เมื่อ user filter สถานะ = "หมดอายุแล้ว" หรือเมื่อทุกรายการในรายงานหมดอายุไปแล้ว (days < 0 ทุกตัว)' },
+            { type: 'improve', text: '• **"ใบอนุญาตใกล้หมดอายุ"** — default สำหรับกรณีอื่น (ไม่ filter / filter ช่วงวัน / mixed content)' },
+            { type: 'note', text: '📝 ผลกระทบเฉพาะ `exportExpiringLicensesToPDF` ใน `pdfExportSafe.js` — PDF อื่นๆ (licenses / shops / users จาก `/api/export`) ยังใช้ watermark "ใบอนุญาตประกอบการค้า" เหมือนเดิม' }
         ]
     },
     {

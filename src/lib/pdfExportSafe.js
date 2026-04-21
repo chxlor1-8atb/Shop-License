@@ -156,16 +156,98 @@ async function getPdfMake() {
  * Format date to Thai format
  */
 function formatThaiDate(dateStr) {
-    if (!dateStr) return '-';
+    if (dateStr === null || dateStr === undefined || dateStr === '') return '-';
     try {
         const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return String(dateStr);
         const day = date.getDate();
         const month = date.getMonth() + 1;
         const year = date.getFullYear() + 543; // Buddhist year
         return `${day}/${month}/${year}`;
     } catch {
-        return dateStr;
+        return String(dateStr);
     }
+}
+
+/**
+ * Format Thai datetime: `วว/ดด/ปปปป HH:mm` (ใช้กับ custom field type = 'datetime')
+ */
+function formatThaiDateTime(dateStr) {
+    if (dateStr === null || dateStr === undefined || dateStr === '') return '-';
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return String(dateStr);
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear() + 543;
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mm = String(date.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hh}:${mm}`;
+    } catch {
+        return String(dateStr);
+    }
+}
+
+/**
+ * 🛡️ Safe string coercion — คืน fallback เฉพาะเมื่อ null/undefined/empty string
+ * **ไม่ทำ falsy trap** (0, false, NaN ถือว่าเป็นค่าที่ valid ต้องแสดง)
+ *
+ * ⚠️ เดิมทั้งไฟล์ใช้ `val || '-'` ซึ่งจะทำให้:
+ *    - `license_count: 0` → '-' (ร้านไม่มีใบอนุญาต = ข้อมูลผิด!)
+ *    - `value: false` → '-' (boolean)
+ *    - `value: 0` → '-' (number 0)
+ * ใช้ safeStr() แทนทุกที่เพื่อกัน data loss
+ */
+function safeStr(val, fallback = '-') {
+    if (val === null || val === undefined) return fallback;
+    const s = String(val);
+    return s === '' ? fallback : s;
+}
+
+/**
+ * Safe status label — รองรับ val ที่ไม่ใช่ string (number/null/undefined)
+ */
+function formatStatus(val) {
+    if (val === null || val === undefined || val === '') return '-';
+    const key = String(val).toLowerCase();
+    return STATUS_CONFIG[key]?.label || String(val);
+}
+
+/**
+ * 🧬 Format custom field value ตาม `field_type` (sync logic กับ serverPdfGenerator.js)
+ * - date / datetime → Thai date format
+ * - boolean → ใช่/ไม่ใช่
+ * - array (multiselect) → "a, b, c"
+ * - object → JSON.stringify
+ * - null/undefined/empty → '-'
+ * - อื่น → String(value)
+ *
+ * ⚠️ ไม่ truncate — ให้ pdfmake wrap text อัตโนมัติตาม column width
+ *    เดิม truncate 30 chars → **ข้อมูลหายแบบเงียบ**
+ */
+function formatCustomValue(cf, value) {
+    if (value === null || value === undefined || value === '') return '-';
+
+    const type = cf?.field_type;
+
+    if (type === 'date') return formatThaiDate(value);
+    if (type === 'datetime') return formatThaiDateTime(value);
+
+    if (type === 'boolean') {
+        if (value === true || value === 'true' || value === 1 || value === '1') return 'ใช่';
+        if (value === false || value === 'false' || value === 0 || value === '0') return 'ไม่ใช่';
+        return String(value);
+    }
+
+    if (Array.isArray(value)) {
+        return value.map(v => String(v)).join(', ');
+    }
+
+    if (typeof value === 'object') {
+        try { return JSON.stringify(value); } catch { return '[object]'; }
+    }
+
+    return String(value);
 }
 
 /**
@@ -269,10 +351,12 @@ function createDataTable(headers, data, options = {}) {
     // Table data rows
     // 📏 Padding [5, 8, 5, 8] (จาก 6 → 8) — ลด relative differential ของ row heights
     // ที่เกิดจาก character metrics ต่างกัน + content wrap → ตารางดู uniform ขึ้น
+    // 🛡️ ใช้ safeStr() แทน `cell || '-'` เพื่อกัน falsy trap (0, false → '-' เดิม = bug)
     const dataRows = data.map((row, rowIndex) => {
         return row.map((cell, colIndex) => {
+            const cellText = safeStr(cell);
             let cellStyle = {
-                text: cell || '-',
+                text: cellText,
                 style: 'tableCell',
                 alignment: 'center',
                 margin: [5, 8, 5, 8],
@@ -281,8 +365,9 @@ function createDataTable(headers, data, options = {}) {
 
             // Apply status color if this is the status column
             if (colorColumn !== undefined && colIndex === colorColumn) {
+                const cellLower = typeof cell === 'string' ? cell.toLowerCase() : '';
                 const statusKey = Object.keys(STATUS_CONFIG).find(
-                    key => STATUS_CONFIG[key].label === cell || key === cell?.toLowerCase()
+                    key => STATUS_CONFIG[key].label === cellText || key === cellLower
                 );
                 if (statusKey) {
                     cellStyle.color = STATUS_CONFIG[statusKey].color;
@@ -579,31 +664,20 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
     const headers = [...baseHeaders, ...customHeaders];
 
     // Build data rows dynamically
+    // 🛡️ ใช้ safeStr/formatStatus/formatCustomValue — กัน falsy trap + ไม่ truncate
     const data = licenses.map(l => {
         const baseData = [
-            l.license_number || '-',
-            l.shop_name || '-',
-            l.type_name || '-',
+            safeStr(l.license_number),
+            safeStr(l.shop_name),
+            safeStr(l.type_name),
             formatThaiDate(l.issue_date),
             formatThaiDate(l.expiry_date),
-            STATUS_CONFIG[l.status?.toLowerCase()]?.label || l.status || '-'
+            formatStatus(l.status)
         ];
 
-        // Add custom field values
+        // Add custom field values — รองรับ date/datetime/boolean/array/object, ไม่ truncate
         const customFieldsData = l.custom_fields || {};
-        const customData = customFieldDefs.map(cf => {
-            const value = customFieldsData[cf.field_name];
-            if (value === null || value === undefined) return '-';
-
-            // Format based on field type
-            if (cf.field_type === 'date' && value) {
-                return formatThaiDate(value);
-            }
-
-            const stringVal = String(value);
-            // Truncate long text
-            return stringVal.length > 30 ? stringVal.substring(0, 30) + '...' : stringVal;
-        });
+        const customData = customFieldDefs.map(cf => formatCustomValue(cf, customFieldsData[cf.field_name]));
 
         return [...baseData, ...customData];
     });
@@ -729,8 +803,9 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
             ? '-'
             : (daysNum < 0 ? `${Math.abs(daysNum)} วัน (เกิน)` : `${daysNum} วัน`);
 
+        // 🛡️ ใช้ safeStr แทน `text || '-'` เพื่อกัน falsy trap
         const baseCell = (text) => ({
-            text: text || '-',
+            text: safeStr(text),
             style: 'tableCell',
             alignment: 'center',
             margin: [5, 8, 5, 8],
@@ -768,9 +843,22 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
         }
     };
 
+    // 🏷️ Watermark text — dynamic ตาม filter/content ของรายงาน:
+    //   • ถ้า user filter สถานะ = "หมดอายุแล้ว" → "ใบอนุญาตหมดอายุ"
+    //   • ถ้าทุกรายการในรายงานหมดอายุแล้ว (days < 0) → "ใบอนุญาตหมดอายุ"
+    //   • อื่นๆ (default สำหรับหน้า expiring) → "ใบอนุญาตใกล้หมดอายุ"
+    const isAllExpired = licenses.length > 0
+        && licenses.every(l => {
+            const d = parseInt(l.days_until_expiry);
+            return !isNaN(d) && d < 0;
+        });
+    const watermarkText = (filters['สถานะ'] === 'หมดอายุแล้ว' || isAllExpired)
+        ? 'ใบอนุญาตหมดอายุ'
+        : 'ใบอนุญาตใกล้หมดอายุ';
+
     // Build document — layout แบบ /api/export
     //   • official 2-column header (สำนักงาน/ระบบ/ที่อยู่ | ORIGINAL/title/date)
-    //   • watermark "ใบอนุญาตประกอบการค้า"
+    //   • watermark dynamic (ดู logic ข้างบน)
     //   • Thai page number "หน้า X จาก Y"
     //   • Thai footer "เอกสารนี้จัดทำโดยระบบคอมพิวเตอร์..." + "พิมพ์เมื่อ..."
     //   • filter info ใช้ label ภาษาไทย + แปลงเดือน/ปี/วันที่
@@ -778,7 +866,7 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
-        watermark: { text: 'ใบอนุญาตประกอบการค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
+        watermark: { text: watermarkText, color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
 
         header: (currentPage, pageCount) => ({
@@ -851,31 +939,21 @@ export async function exportShopsToPDF(shops) {
     const headers = [...baseHeaders, ...customHeaders];
 
     // Build data rows dynamically
+    // 🛡️ ใช้ safeStr — กัน falsy trap (0, false, '' เดิม → '-' = bug)
+    // 🛡️ ไม่ truncate address 30 chars — ให้ pdfmake wrap text แทน (ข้อมูลครบ)
     const data = shops.map(s => {
         const baseData = [
-            s.shop_name || '-',
-            s.owner_name || '-',
-            s.phone || '-',
-            s.email || '-',
-            s.address?.substring(0, 30) + (s.address?.length > 30 ? '...' : '') || '-',
+            safeStr(s.shop_name),
+            safeStr(s.owner_name),
+            safeStr(s.phone),
+            safeStr(s.email),
+            safeStr(s.address),
             formatThaiDate(s.created_at)
         ];
 
-        // Add custom field values
+        // Add custom field values — รองรับ date/datetime/boolean/array/object, ไม่ truncate
         const customFieldsData = s.custom_fields || {};
-        const customData = customFieldDefs.map(cf => {
-            const value = customFieldsData[cf.field_name];
-            if (value === null || value === undefined) return '-';
-
-            // Format based on field type
-            if (cf.field_type === 'date' && value) {
-                return formatThaiDate(value);
-            }
-
-            const stringVal = String(value);
-            // Truncate long text
-            return stringVal.length > 30 ? stringVal.substring(0, 30) + '...' : stringVal;
-        });
+        const customData = customFieldDefs.map(cf => formatCustomValue(cf, customFieldsData[cf.field_name]));
 
         return [...baseData, ...customData];
     });
@@ -940,11 +1018,12 @@ export async function exportUsersToPDF(users) {
     };
 
     const headers = ['ลำดับ', 'ชื่อผู้ใช้งาน', 'ชื่อ-นามสกุล', 'สิทธิ์การใช้งาน', 'วันที่สร้าง'];
+    // 🛡️ ใช้ safeStr + handle role ตรงๆ (ถ้า role null → '-' แทนที่จะตอบ "ผู้ใช้ทั่วไป" ผิด)
     const data = users.map((u, index) => [
         (index + 1).toString(),
-        u.username || '-',
-        u.full_name || '-',
-        u.role === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป',
+        safeStr(u.username),
+        safeStr(u.full_name),
+        u.role === 'admin' ? 'แอดมิน' : (u.role ? 'ผู้ใช้ทั่วไป' : '-'),
         formatThaiDate(u.created_at)
     ]);
 
@@ -964,7 +1043,7 @@ export async function exportUsersToPDF(users) {
         footer: () => ({
             columns: [
                 { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangk ok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
@@ -1028,15 +1107,16 @@ export async function exportUserCredentialsPDF(userData) {
                     body: [
                         [
                             { text: 'ชื่อ-นามสกุล', style: 'labelCell' },
-                            { text: userData.full_name || '-', style: 'valueCell' }
+                            { text: safeStr(userData.full_name), style: 'valueCell' }
                         ],
                         [
                             { text: 'สิทธิ์การใช้งาน', style: 'labelCell' },
-                            { text: userData.role === 'admin' ? 'แอดมิน' : 'ผู้ใช้ทั่วไป', style: 'valueCell' }
+                            // ✅ handle role null → '-' (เดิม null จะแสดง "ผู้ใช้ทั่วไป" ผิด)
+                            { text: userData.role === 'admin' ? 'แอดมิน' : (userData.role ? 'ผู้ใช้ทั่วไป' : '-'), style: 'valueCell' }
                         ],
                         [
                             { text: 'ชื่อผู้ใช้', style: 'labelCell' },
-                            { text: userData.username, style: 'valueCellBold' }
+                            { text: safeStr(userData.username), style: 'valueCellBold' }
                         ],
                         [
                             { text: 'รหัสผ่าน', style: 'labelCell' },
@@ -1119,29 +1199,15 @@ export async function exportActivityLogsToPDF(logs, filters = {}) {
 
     const headers = ['เวลา', 'ผู้ใช้งาน', 'กิจกรรม', 'หมวดหมู่', 'รายละเอียด', 'IP'];
 
-    // Helper to format datetime
-    function formatThaiDateTime(dateStr) {
-        if (!dateStr) return '-';
-        try {
-            const date = new Date(dateStr);
-            const day = date.getDate();
-            const month = date.getMonth() + 1;
-            const year = date.getFullYear() + 543;
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            return `${day}/${month}/${year} ${hours}:${minutes}`;
-        } catch {
-            return dateStr;
-        }
-    }
-
+    // 🛡️ ใช้ module-level formatThaiDateTime + safeStr แทน `|| '-'` (กัน falsy trap)
+    //     ACTION_LABELS ยังใช้ `|| l.action` เพราะเป็น string แน่นอน (enum) — แต่ wrap ด้วย safeStr
     const data = logs.map(l => [
         formatThaiDateTime(l.created_at),
-        l.user_name || l.username || '-',
-        ACTION_LABELS[l.action] || l.action || '-',
-        l.entity_type || '-',
-        l.details || '-',
-        l.ip_address || '-'
+        safeStr(l.user_name ?? l.username),
+        safeStr(ACTION_LABELS[l.action] ?? l.action),
+        safeStr(l.entity_type),
+        safeStr(l.details),
+        safeStr(l.ip_address)
     ]);
 
     const docDefinition = {
