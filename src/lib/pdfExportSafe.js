@@ -632,19 +632,21 @@ function getStyles() {
 
 /**
  * Export Licenses to PDF
+ *
+ * 🏛️ Official Document Layout — ตรงกับ /dashboard/export (serverPdfGenerator.js):
+ *   • Header ราชการ 2 คอลัมน์ (ชื่อสำนักงาน/ที่อยู่ | ชื่อเอกสาร/วันที่)
+ *   • ไม่มี Summary box (ตัดตาม server)
+ *   • Filter info box ภาษาไทย + แปลง label/เดือน/ปี
+ *   • Page number: "หน้า X จาก Y"
+ *   • Footer: "เอกสารอิเล็กทรอนิกส์ออกโดยระบบ · สำนักงานเทศบาลเมืองนางรอง" + "พิมพ์เมื่อ:"
+ *   • Watermark: "ใบอนุญาตประกอบการค้า"
+ *   • Headers: [ลำดับที่, ชื่อเจ้าของ, ชื่อร้านค้า, ประเภท, เลขที่, วันที่ออก, วันหมดอายุ,
+ *              ...custom fields, สถานะ, หมายเหตุ]
  */
 export async function exportLicensesToPDF(licenses, filters = {}) {
     const pdfMake = await getPdfMake();
 
     const title = 'รายงานใบอนุญาต';
-
-    // Calculate statistics
-    const stats = {
-        'ทั้งหมด': licenses.length,
-        'ใช้งานปกติ': licenses.filter(l => l.status === 'active').length,
-        'หมดอายุ': licenses.filter(l => l.status === 'expired').length,
-        'อื่นๆ': licenses.filter(l => !['active', 'expired'].includes(l.status)).length
-    };
 
     // Fetch custom field definitions for licenses
     let customFieldDefs = [];
@@ -658,46 +660,54 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
         console.warn('Failed to fetch custom fields for licenses:', error);
     }
 
-    // Build headers dynamically
-    const baseHeaders = ['เลขที่ใบอนุญาต', 'ชื่อร้านค้า', 'ประเภท', 'วันที่ออก', 'วันหมดอายุ', 'สถานะ'];
+    // Header structure (ตรงกับ serverPdfGenerator — createLicensesDocDef)
+    // pre-custom: ลำดับที่ → ชื่อเจ้าของ → ชื่อร้าน → ประเภท → เลขที่ → วันที่ออก → วันหมดอายุ
+    // custom fields: inserted ตรงกลาง
+    // post-custom: สถานะ → หมายเหตุ
+    const preCustomHeaders = ['ชื่อเจ้าของ', 'ชื่อร้านค้า', 'ประเภทใบอนุญาต', 'เลขที่ใบอนุญาต', 'วันที่ออก', 'วันหมดอายุ'];
+    const postCustomHeaders = ['สถานะ', 'หมายเหตุ'];
     const customHeaders = customFieldDefs.map(cf => cf.field_label);
-    const headers = [...baseHeaders, ...customHeaders];
+    const headers = ['ลำดับที่', ...preCustomHeaders, ...customHeaders, ...postCustomHeaders];
 
-    // Build data rows dynamically
-    // 🛡️ ใช้ safeStr/formatStatus/formatCustomValue — กัน falsy trap + ไม่ truncate
-    const data = licenses.map(l => {
-        const baseData = [
-            safeStr(l.license_number),
+    // Build data rows — match โครงสร้าง header (pre → custom → post)
+    // 🛡️ safeStr/formatStatus/formatThaiDate — กัน falsy trap + ไม่ truncate
+    const data = licenses.map((l, idx) => {
+        const preData = [
+            safeStr(l.owner_name),
             safeStr(l.shop_name),
             safeStr(l.type_name),
+            safeStr(l.license_number),
             formatThaiDate(l.issue_date),
-            formatThaiDate(l.expiry_date),
-            formatStatus(l.status)
+            formatThaiDate(l.expiry_date)
         ];
 
-        // Add custom field values — รองรับ date/datetime/boolean/array/object, ไม่ truncate
         const customFieldsData = l.custom_fields || {};
         const customData = customFieldDefs.map(cf => formatCustomValue(cf, customFieldsData[cf.field_name]));
 
-        return [...baseData, ...customData];
+        const postData = [
+            formatStatus(l.status),
+            safeStr(l.notes)
+        ];
+
+        return [String(idx + 1), ...preData, ...customData, ...postData];
     });
 
-    // Calculate column widths dynamically
-    const baseWidths = ['auto', '*', 'auto', 'auto', 'auto', 'auto'];
-    const customWidths = customFieldDefs.map(() => 'auto');
-    const columnWidths = [...baseWidths, ...customWidths];
+    // Compute status column index (สำหรับ colorColumn) — ตำแหน่งใหม่ที่อยู่ post-custom
+    // [ลำดับที่, 6 pre-custom, N custom, สถานะ, หมายเหตุ]
+    //                                         ↑ statusColumnIndex
+    const statusColumnIndex = 1 + preCustomHeaders.length + customFieldDefs.length;
 
-    // Build document
+    const columnWidths = Array(headers.length).fill('auto');
+
     const docDefinition = {
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
-        // 🏷️ Watermark "ใบอนุญาต" — สำหรับหน้า /dashboard/licenses
-        watermark: { text: 'ใบอนุญาต', color: 'gray', opacity: 0.08, bold: true, italics: false },
+        watermark: { text: 'ใบอนุญาตประกอบการค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
 
         header: (currentPage, pageCount) => ({
-            text: `Page ${currentPage} of ${pageCount}`,
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
             alignment: 'right',
             margin: [0, 15, 40, 0],
             style: 'pageNumber'
@@ -705,36 +715,30 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
 
         footer: () => ({
             columns: [
-                { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: 'เอกสารอิเล็กทรอนิกส์ออกโดยระบบ  ·  สำนักงานเทศบาลเมืองนางรอง', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
 
         content: [
-            createHeader(title),
-            createSummaryBox(stats),
-            filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
-            customFieldDefs.length > 0 ? {
-                text: `Custom Fields: ${customFieldDefs.map(cf => cf.field_label).join(', ')}`,
-                style: 'filterText',
-                margin: [0, 0, 0, 10]
-            } : null,
-            createDataTable(headers, data, {
-                columnWidths: columnWidths,
-                colorColumn: 5 // Status column index
-            })
+            createOfficialHeader(title),
+            filters && Object.keys(filters).length > 0 ? createOfficialFilterInfo(filters) : null,
+            licenses.length === 0
+                ? { text: 'ไม่พบข้อมูลที่ตรงกับเงื่อนไข', style: 'tableCell', alignment: 'center', margin: [0, 30, 0, 30] }
+                : createDataTable(headers, data, {
+                    columnWidths: columnWidths,
+                    colorColumn: statusColumnIndex
+                })
         ].filter(Boolean),
 
         styles: getStyles()
     };
 
-    // Generate and download PDF
     try {
         await downloadPdfBlob(pdfMake, docDefinition, `licenses_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (e) {
         console.error('PDF Download Error:', e);
-        alert('เกิดข้อผิดพลาดในการดาวน์โหลด PDF');
         throw e;
     }
 }
@@ -913,6 +917,14 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
 
 /**
  * Export Shops to PDF
+ *
+ * 🏛️ Official Document Layout — ตรงกับ /dashboard/export (serverPdfGenerator.js):
+ *   • Header ราชการ 2 คอลัมน์
+ *   • Filter info box ภาษาไทย
+ *   • Page number/Footer ภาษาไทย + watermark "ใบอนุญาตประกอบการค้า"
+ *   • Headers: [ลำดับที่, ชื่อร้าน, ชื่อเจ้าของ, เบอร์โทร, อีเมล, ที่อยู่, หมายเหตุ,
+ *              จำนวนใบอนุญาต, วันที่สร้าง, ...custom fields]
+ *
  * @param {Array} shops - ข้อมูลร้านค้า
  * @param {Object} filters - ตัวกรองที่ใช้ (แสดงเป็น filter info box ใน PDF) — optional
  */
@@ -920,10 +932,6 @@ export async function exportShopsToPDF(shops, filters = {}) {
     const pdfMake = await getPdfMake();
 
     const title = 'รายงานร้านค้า';
-
-    const stats = {
-        'ร้านค้าทั้งหมด': shops.length
-    };
 
     // Fetch custom field definitions for shops
     let customFieldDefs = [];
@@ -937,46 +945,43 @@ export async function exportShopsToPDF(shops, filters = {}) {
         console.warn('Failed to fetch custom fields for shops:', error);
     }
 
-    // Build headers dynamically
-    const baseHeaders = ['ชื่อร้านค้า', 'เจ้าของ', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่', 'วันที่สร้าง'];
+    // Base headers (match serverPdfGenerator — createShopsDocDef default)
+    // ✅ เพิ่ม "หมายเหตุ" + "จำนวนใบอนุญาต" ที่เคยขาดหาย
+    const baseHeaders = ['ชื่อร้านค้า', 'ชื่อเจ้าของ', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่', 'หมายเหตุ', 'จำนวนใบอนุญาต', 'วันที่สร้าง'];
     const customHeaders = customFieldDefs.map(cf => cf.field_label);
-    const headers = [...baseHeaders, ...customHeaders];
+    const headers = ['ลำดับที่', ...baseHeaders, ...customHeaders];
 
-    // Build data rows dynamically
-    // 🛡️ ใช้ safeStr — กัน falsy trap (0, false, '' เดิม → '-' = bug)
-    // 🛡️ ไม่ truncate address 30 chars — ให้ pdfmake wrap text แทน (ข้อมูลครบ)
-    const data = shops.map(s => {
+    // Build data rows — เพิ่ม index column นำหน้า
+    // 🛡️ safeStr — กัน falsy trap (เช่น license_count: 0 จะแสดง "0" แทน "-")
+    const data = shops.map((s, idx) => {
         const baseData = [
             safeStr(s.shop_name),
             safeStr(s.owner_name),
             safeStr(s.phone),
             safeStr(s.email),
             safeStr(s.address),
+            safeStr(s.notes),
+            safeStr(s.license_count),
             formatThaiDate(s.created_at)
         ];
 
-        // Add custom field values — รองรับ date/datetime/boolean/array/object, ไม่ truncate
         const customFieldsData = s.custom_fields || {};
         const customData = customFieldDefs.map(cf => formatCustomValue(cf, customFieldsData[cf.field_name]));
 
-        return [...baseData, ...customData];
+        return [String(idx + 1), ...baseData, ...customData];
     });
 
-    // Calculate column widths dynamically
-    const baseWidths = ['*', 'auto', 'auto', 'auto', '*', 'auto'];
-    const customWidths = customFieldDefs.map(() => 'auto');
-    const columnWidths = [...baseWidths, ...customWidths];
+    const columnWidths = Array(headers.length).fill('auto');
 
     const docDefinition = {
         pageSize: 'A4',
-        pageOrientation: customFieldDefs.length > 2 ? 'landscape' : 'landscape', // Always landscape for shops
+        pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
-        // 🏷️ Watermark "รายการร้านค้า" — สำหรับหน้า /dashboard/shops
-        watermark: { text: 'รายการร้านค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
+        watermark: { text: 'ใบอนุญาตประกอบการค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
 
         header: (currentPage, pageCount) => ({
-            text: `Page ${currentPage} of ${pageCount}`,
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
             alignment: 'right',
             margin: [0, 15, 40, 0],
             style: 'pageNumber'
@@ -984,25 +989,18 @@ export async function exportShopsToPDF(shops, filters = {}) {
 
         footer: () => ({
             columns: [
-                { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: 'เอกสารอิเล็กทรอนิกส์ออกโดยระบบ  ·  สำนักงานเทศบาลเมืองนางรอง', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
 
         content: [
-            createHeader(title),
-            createSummaryBox(stats),
-            // 🏷️ Filter info box — แสดงเมื่อ caller ส่ง filters มา (เช่น handleExport หน้า shops)
-            filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
-            customFieldDefs.length > 0 ? {
-                text: `Custom Fields: ${customFieldDefs.map(cf => cf.field_label).join(', ')}`,
-                style: 'filterText',
-                margin: [0, 0, 0, 10]
-            } : null,
-            createDataTable(headers, data, {
-                columnWidths: columnWidths
-            })
+            createOfficialHeader(title),
+            filters && Object.keys(filters).length > 0 ? createOfficialFilterInfo(filters) : null,
+            shops.length === 0
+                ? { text: 'ไม่พบข้อมูลที่ตรงกับเงื่อนไข', style: 'tableCell', alignment: 'center', margin: [0, 30, 0, 30] }
+                : createDataTable(headers, data, { columnWidths })
         ].filter(Boolean),
 
         styles: getStyles()
