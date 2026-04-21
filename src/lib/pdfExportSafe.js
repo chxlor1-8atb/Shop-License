@@ -342,55 +342,199 @@ function createFilterInfo(filters) {
     };
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+ * Official Layout Helpers (ลอกจาก /api/export → serverPdfGenerator.js)
+ * ใช้ใน exportExpiringLicensesToPDF เพื่อให้รูปแบบ PDF
+ * เป็นแนวเดียวกับรายงานที่ออกจากหน้า /dashboard/export
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/**
+ * Official header แบบ 2 คอลัมน์ (เหมือน /api/export)
+ *   - ซ้าย: ชื่อสำนักงาน / ระบบ / ที่อยู่
+ *   - ขวา: ต้นฉบับ ORIGINAL / ชื่อเอกสาร / วันที่ไทย
+ *   - เส้นล่างสีเข้ม (2pt)
+ */
+function createOfficialHeader(title, subtitle) {
+    return {
+        table: {
+            widths: ['*'],
+            body: [
+                [{
+                    columns: [
+                        {
+                            stack: [
+                                { text: 'สำนักงานเทศบาลเมืองนางรอง', style: 'brandName' },
+                                { text: 'ระบบจัดการใบอนุญาตประกอบกิจการ', style: 'brandSub' },
+                                { text: '906 ถนนโชคชัย-เดชอุดม ตำบลนางรอง อำเภอนางรอง จังหวัดบุรีรัมย์ 31110', style: 'brandAddress' }
+                            ],
+                            alignment: 'left'
+                        },
+                        {
+                            stack: [
+                                { text: title, style: 'docTitle', alignment: 'right' },
+                                { text: subtitle || `วันที่: ${formatThaiDate(new Date().toISOString())}`, style: 'docDate', alignment: 'right' }
+                            ],
+                            alignment: 'right'
+                        }
+                    ],
+                    margin: [0, 5, 0, 15]
+                }]
+            ]
+        },
+        layout: {
+            hLineWidth: (i) => i === 1 ? 2 : 0,
+            vLineWidth: () => 0,
+            hLineColor: () => '#1e293b'
+        },
+        margin: [0, 0, 0, 20]
+    };
+}
+
+// Filter label map (ภาษาไทย) — ใช้กับ createOfficialFilterInfo
+const FILTER_LABELS_TH = {
+    'License Type ID': 'ประเภทใบอนุญาต',
+    'Status': 'สถานะ',
+    'Expiry From': 'วันหมดอายุ (เริ่มต้น)',
+    'Expiry To': 'วันหมดอายุ (สิ้นสุด)',
+    'Expiry Month': 'เดือนที่หมดอายุ',
+    'Expiry Year': 'ปีที่หมดอายุ (พ.ศ.)',
+};
+
+const THAI_MONTH_NAMES = [
+    '', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+];
+
+/**
+ * Official filter info box (เหมือน /api/export)
+ *   - หัวข้อ "เงื่อนไขการกรองข้อมูล" สีส้มเข้ม
+ *   - พื้นสีเหลืองอ่อน + เส้นขอบสีเหลือง
+ *   - แปลง label อังกฤษ → ไทย
+ *   - แปลง Expiry Month (1-12) → ชื่อเดือนไทย
+ *   - แปลง Expiry Year (ค.ศ.) → พ.ศ.
+ *   - แปลง date values → วันที่ไทย
+ */
+function createOfficialFilterInfo(filters) {
+    if (!filters || Object.keys(filters).length === 0) return null;
+
+    const filterTexts = Object.entries(filters)
+        .filter(([_, value]) => value !== null && value !== undefined && value !== '')
+        .map(([key, value]) => {
+            const label = FILTER_LABELS_TH[key] || key;
+            let displayValue = value;
+
+            if (key === 'Status') {
+                const statusKey = Object.keys(STATUS_CONFIG).find(k => k === String(value).toLowerCase());
+                if (statusKey) displayValue = STATUS_CONFIG[statusKey].label;
+            } else if (key === 'Expiry Month') {
+                const m = parseInt(value, 10);
+                displayValue = THAI_MONTH_NAMES[m] || value;
+            } else if (key === 'Expiry Year') {
+                const y = parseInt(value, 10);
+                displayValue = !isNaN(y) ? String(y + 543) : value;
+            } else if (key.toLowerCase().includes('expiry') && value) {
+                // Expiry From / Expiry To → format Thai date
+                displayValue = formatThaiDate(value);
+            }
+
+            return `${label}: ${displayValue}`;
+        });
+
+    if (filterTexts.length === 0) return null;
+
+    return {
+        table: {
+            widths: ['*'],
+            body: [[{
+                stack: [
+                    { text: 'เงื่อนไขการกรองข้อมูล', style: 'filterTitleOfficial' },
+                    { text: filterTexts.join(' | '), style: 'filterTextOfficial' }
+                ],
+                margin: [10, 8, 10, 8]
+            }]]
+        },
+        layout: {
+            fillColor: () => '#fef3c7',
+            hLineWidth: () => 1,
+            vLineWidth: () => 1,
+            hLineColor: () => '#fcd34d',
+            vLineColor: () => '#fcd34d'
+        },
+        margin: [0, 0, 0, 15]
+    };
+}
+
 /**
  * Get common document styles
  */
 function getStyles() {
+    /* 📏 Font size rationale (A4 landscape + THSarabunNew)
+     *   • THSarabunNew render เล็กกว่า Helvetica/Arial ขนาดเดียวกัน ~20% → ต้อง compensate
+     *   • มาตรฐานเอกสารราชการไทย (TH SarabunPSK/THSarabunNew):
+     *       - Body text: 14-16pt  | ในรายงาน PDF/ตาราง: 12pt อ่านชัดสบายตา
+     *       - Table header: 13-14pt bold
+     *       - Page title: 20-22pt bold
+     *   • A4 landscape usable area ≈ 762 × 495 pt → รองรับ body 12pt สบายๆ
+     */
     return {
+        // ── Legacy header (ใช้โดย exportLicensesToPDF / shops / users ฯลฯ) ──
         headerTitle: {
-            fontSize: 18,
+            fontSize: 20,
             bold: true,
             color: COLORS.white
         },
         headerSubtitle: {
-            fontSize: 14,
+            fontSize: 16,
             color: COLORS.white
         },
         headerDate: {
-            fontSize: 10,
+            fontSize: 12,
             color: 'rgba(255,255,255,0.8)'
         },
+        // ── Official header (ลอกจาก /api/export — ใช้โดย exportExpiringLicensesToPDF) ──
+        brandName:    { fontSize: 18, bold: true, color: COLORS.dark },
+        brandSub:     { fontSize: 14, color: COLORS.secondary },
+        brandAddress: { fontSize: 11, color: COLORS.muted, margin: [0, 2, 0, 0] },
+        docTitle:     { fontSize: 22, bold: true, color: COLORS.primaryDark },
+        docDate:      { fontSize: 12, color: COLORS.dark },
+        // ── Summary / Stats ──
         statValue: {
-            fontSize: 20,
+            fontSize: 22,
             bold: true,
             color: COLORS.primary
         },
         statLabel: {
-            fontSize: 9,
+            fontSize: 12,
             color: COLORS.secondary
         },
+        // ── Table (body 12pt, header 13pt — มาตรฐานรายงานราชการ) ──
         tableHeader: {
-            fontSize: 10,
+            fontSize: 13,
             bold: true
         },
         tableCell: {
-            fontSize: 9
+            fontSize: 12
         },
+        // ── Filter box (legacy) ──
         filterTitle: {
-            fontSize: 9,
+            fontSize: 12,
             bold: true,
             color: COLORS.warning
         },
         filterText: {
-            fontSize: 8,
+            fontSize: 11,
             color: COLORS.secondary
         },
+        // ── Filter box (official — สีส้มเข้ม match backend) ──
+        filterTitleOfficial: { fontSize: 13, bold: true, color: '#92400e' },
+        filterTextOfficial:  { fontSize: 12, color: '#b45309' },
+        // ── Page number / Footer ──
         pageNumber: {
-            fontSize: 8,
+            fontSize: 10,
             color: COLORS.muted
         },
         footer: {
-            fontSize: 8,
+            fontSize: 10,
             color: COLORS.muted
         }
     };
@@ -548,8 +692,9 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
         '> 14 วัน': licenses.filter(l => classifyExpiry(l.days_until_expiry).key === 'info').length,
     };
 
-    // Headers
+    // Headers — เพิ่มคอลัมน์ "ลำดับที่" นำหน้า (ตามแบบ /api/export)
     const headers = [
+        'ลำดับที่',
         'ชื่อร้านค้า',
         'ชื่อเจ้าของ',
         'ประเภท',
@@ -559,7 +704,7 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
         'สถานะ'
     ];
 
-    // Header row (style เหมือน createDataTable เพื่อให้ดูเหมือน PDF อื่นๆ)
+    // Header row (สี primaryDark + ตัวหนังสือสีขาว — match /api/export)
     const headerRow = headers.map(h => ({
         text: h,
         style: 'tableHeader',
@@ -569,7 +714,7 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
         margin: [5, 8, 5, 8]
     }));
 
-    // Data rows (apply สีของคอลัมน์ "สถานะ" และ "คงเหลือ" ตาม classifyExpiry)
+    // Data rows — มีลำดับที่ + zebra stripes + สีของ "คงเหลือ" / "สถานะ" ตาม classifyExpiry
     const dataRows = licenses.map((l, rowIndex) => {
         const exp = classifyExpiry(l.days_until_expiry);
         const fill = rowIndex % 2 === 0 ? COLORS.white : COLORS.light;
@@ -587,6 +732,7 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
         });
 
         return [
+            baseCell(String(rowIndex + 1)),
             baseCell(l.shop_name),
             baseCell(l.owner_name),
             baseCell(l.type_name),
@@ -597,8 +743,8 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
         ];
     });
 
-    // Column widths — shop_name ให้กว้างเพราะชื่อร้านยาว
-    const columnWidths = ['*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'];
+    // Column widths — ลำดับที่ แคบ, ชื่อร้าน กว้าง, อื่นๆ auto
+    const columnWidths = ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'];
 
     const table = {
         table: {
@@ -616,15 +762,21 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
         }
     };
 
-    // Build document
+    // Build document — layout แบบ /api/export
+    //   • official 2-column header (สำนักงาน/ระบบ/ที่อยู่ | ORIGINAL/title/date)
+    //   • watermark "ใบอนุญาตประกอบการค้า"
+    //   • Thai page number "หน้า X จาก Y"
+    //   • Thai footer "เอกสารนี้จัดทำโดยระบบคอมพิวเตอร์..." + "พิมพ์เมื่อ..."
+    //   • filter info ใช้ label ภาษาไทย + แปลงเดือน/ปี/วันที่
     const docDefinition = {
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
+        watermark: { text: 'ใบอนุญาตประกอบการค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
 
         header: (currentPage, pageCount) => ({
-            text: `Page ${currentPage} of ${pageCount}`,
+            text: `หน้า ${currentPage} จาก ${pageCount}`,
             alignment: 'right',
             margin: [0, 15, 40, 0],
             style: 'pageNumber'
@@ -632,16 +784,15 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
 
         footer: () => ({
             columns: [
-                { text: 'License Management System', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
-                { text: `Printed: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: 'เอกสารอิเล็กทรอนิกส์ออกโดยระบบ  ·  สำนักงานเทศบาลเมืองนางรอง', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
         }),
 
         content: [
-            createHeader(title),
-            createSummaryBox(stats),
-            filters && Object.keys(filters).length > 0 ? createFilterInfo(filters) : null,
+            createOfficialHeader(title),
+            filters && Object.keys(filters).length > 0 ? createOfficialFilterInfo(filters) : null,
             licenses.length === 0
                 ? { text: 'ไม่พบข้อมูลที่ตรงกับเงื่อนไข', style: 'tableCell', alignment: 'center', margin: [0, 30, 0, 30] }
                 : table

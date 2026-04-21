@@ -91,7 +91,6 @@ function createHeader(title, subtitle) {
                         },
                         {
                             stack: [
-                                { text: 'ต้นฉบับ / ORIGINAL', style: 'officialTag', alignment: 'right' },
                                 { text: title, style: 'docTitle', alignment: 'right' },
                                 { text: subtitle || `วันที่: ${formatThaiDate(new Date().toISOString())}`, style: 'docDate', alignment: 'right' }
                             ],
@@ -263,22 +262,38 @@ function createFilterInfo(filters) {
 }
 
 function getStyles() {
+    /* 📏 Font size rationale (A4 landscape + THSarabunNew)
+     *   • THSarabunNew render เล็กกว่า Helvetica/Arial ขนาดเดียวกัน ~20% → ต้อง compensate
+     *   • มาตรฐานเอกสารราชการไทย (TH SarabunPSK/THSarabunNew):
+     *       - Body text: 14-16pt  | ในรายงาน PDF/ตาราง: 12pt อ่านชัดสบายตา
+     *       - Table header: 13-14pt bold
+     *       - Page title: 20-22pt bold
+     *   • A4 landscape usable area ≈ 762 × 495 pt → รองรับ body 12pt สบายๆ
+     *   • ต้อง sync ค่ากับ pdfExportSafe.js (ฝั่ง client) เพื่อความ consistent
+     */
     return {
-        brandName: { fontSize: 16, bold: true, color: COLORS.dark },
-        brandSub: { fontSize: 12, color: COLORS.secondary },
-        brandAddress: { fontSize: 9, color: COLORS.muted, margin: [0, 2, 0, 0] },
-        docTitle: { fontSize: 22, bold: true, color: COLORS.primaryDark },
-        officialTag: { fontSize: 8, color: COLORS.muted, bold: true, margin: [0, 0, 0, 2] },
-        docDate: { fontSize: 10, color: COLORS.dark },
+        // ── Official header ──
+        brandName:    { fontSize: 18, bold: true, color: COLORS.dark },
+        brandSub:     { fontSize: 14, color: COLORS.secondary },
+        brandAddress: { fontSize: 11, color: COLORS.muted, margin: [0, 2, 0, 0] },
+        docTitle:     { fontSize: 22, bold: true, color: COLORS.primaryDark },
+        docDate:      { fontSize: 12, color: COLORS.dark },
 
-        statValue: { fontSize: 20, bold: true, color: COLORS.primary },
-        statLabel: { fontSize: 9, color: COLORS.secondary },
-        tableHeader: { fontSize: 10, bold: true },
-        tableCell: { fontSize: 9 },
-        filterTitle: { fontSize: 10, bold: true, color: '#92400e' }, // dark orange
-        filterText: { fontSize: 9, color: '#b45309' },
-        pageNumber: { fontSize: 8, color: COLORS.muted },
-        footer: { fontSize: 8, color: COLORS.muted }
+        // ── Summary / Stats ──
+        statValue: { fontSize: 22, bold: true, color: COLORS.primary },
+        statLabel: { fontSize: 12, color: COLORS.secondary },
+
+        // ── Table (body 12pt, header 13pt — มาตรฐานรายงานราชการ) ──
+        tableHeader: { fontSize: 13, bold: true },
+        tableCell:   { fontSize: 12 },
+
+        // ── Filter box (สีส้มเข้ม) ──
+        filterTitle: { fontSize: 13, bold: true, color: '#92400e' },
+        filterText:  { fontSize: 12, color: '#b45309' },
+
+        // ── Page number / Footer ──
+        pageNumber: { fontSize: 10, color: COLORS.muted },
+        footer:     { fontSize: 10, color: COLORS.muted }
     };
 }
 
@@ -365,7 +380,7 @@ function createLicensesDocDef(licenses, customFieldDefs, filters, activeBaseFiel
         }),
         footer: () => ({
             columns: [
-                { text: 'เอกสารนี้จัดทำโดยระบบคอมพิวเตอร์ (License Management System)', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: 'เอกสารอิเล็กทรอนิกส์ออกโดยระบบ  ·  สำนักงานเทศบาลเมืองนางรอง', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
                 { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
@@ -441,7 +456,7 @@ function createShopsDocDef(shops, customFieldDefs, activeBaseFields = null) {
         }),
         footer: () => ({
             columns: [
-                { text: 'เอกสารนี้จัดทำโดยระบบคอมพิวเตอร์ (License Management System)', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: 'เอกสารอิเล็กทรอนิกส์ออกโดยระบบ  ·  สำนักงานเทศบาลเมืองนางรอง', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
                 { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]
@@ -520,7 +535,7 @@ function createUsersDocDef(users, activeBaseFields = null) {
         }),
         footer: () => ({
             columns: [
-                { text: 'เอกสารนี้จัดทำโดยระบบคอมพิวเตอร์ (License Management System)', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
+                { text: 'เอกสารอิเล็กทรอนิกส์ออกโดยระบบ  ·  สำนักงานเทศบาลเมืองนางรอง', style: 'footer', alignment: 'left', margin: [40, 0, 0, 0] },
                 { text: `พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`, style: 'footer', alignment: 'right', margin: [0, 0, 40, 0] }
             ],
             margin: [0, 20, 0, 0]

@@ -161,7 +161,35 @@ export const CHANGELOG = [
             { type: 'fix', text: '• **Fix #2**: เปลี่ยน `pdfMake.fonts = { ... }` → `pdfMake.addFonts({ THSarabunNew: {...} })` เพื่อให้ merge เข้ากับ default client fonts อย่างถูกต้อง' },
             { type: 'fix', text: '• **Fix #3**: เพิ่มการ validate `typeof pdfMake.addVirtualFileSystem === "function"` ก่อนใช้ → ถ้า upgrade pdfmake แล้ว API เปลี่ยนอีก จะ throw ทันทีพร้อมข้อความชัด (ไม่ silent fail)' },
             { type: 'fix', text: '• **Swal ค้าง**: pdfmake v0.3 `getBlob()` เปลี่ยนเป็น `async` ที่คืน `Promise<Blob>` แล้ว — callback style (`getBlob(cb)`) ของ v0.2 ไม่จับ error ที่ throw ภายใน render → callback ไม่เคยถูกเรียก → Promise wrap ไม่ resolve/reject → Swal loading ค้างถาวร' },
-            { type: 'fix', text: '• **Fix #4**: เปลี่ยน `downloadPdfBlob` เป็น `async` และใช้ `await pdfDocGenerator.getBlob()` ตรงๆ → error ภายใน pdfmake render จะ bubble ขึ้น → caller catch + แสดง error message ให้ผู้ใช้เห็น (ไม่ค้าง)' }
+            { type: 'fix', text: '• **Fix #4**: เปลี่ยน `downloadPdfBlob` เป็น `async` และใช้ `await pdfDocGenerator.getBlob()` ตรงๆ → error ภายใน pdfmake render จะ bubble ขึ้น → caller catch + แสดง error message ให้ผู้ใช้เห็น (ไม่ค้าง)' },
+            // ─────────────────────────────────────────────
+            // รายงานใบอนุญาตใกล้หมดอายุ — ใช้แบบฟอร์มเดียวกับ /dashboard/export
+            // ─────────────────────────────────────────────
+            { type: 'feature', text: '📄 **รายงาน PDF "ใบอนุญาตใกล้หมดอายุ" ใช้แบบฟอร์มเดียวกับ `/dashboard/export`** — ดูเป็นทางการและ consistent กับรายงานอื่นๆ ของระบบ' },
+            { type: 'improve', text: '• **Header แบบทางการ** 2 คอลัมน์ — ซ้าย: "สำนักงานเทศบาลเมืองนางรอง / ระบบจัดการใบอนุญาตประกอบกิจการ / ที่อยู่" | ขวา: ชื่อเอกสาร, วันที่ไทย — พร้อมเส้นขอบล่างสีเข้ม (แทนที่ header indigo แบบเดิม)' },
+            { type: 'improve', text: '• เอา label "ต้นฉบับ / ORIGINAL" ออก — เพราะระบบไม่มีการแยก "สำเนา" vs "ต้นฉบับ" → ใส่ไว้เป็น placeholder เปล่าๆ ไม่ให้ข้อมูลที่มีประโยชน์ + ลบ style `officialTag` ที่ไม่ใช้แล้วทิ้ง (sync ทั้ง `pdfExportSafe.js` และ `serverPdfGenerator.js`)' },
+            { type: 'improve', text: '• **Watermark** "ใบอนุญาตประกอบการค้า" สีเทาโปร่งใสตรงกลางหน้า (match รายงานอื่น)' },
+            { type: 'improve', text: '• **คอลัมน์ "ลำดับที่"** นำหน้าตาราง (1, 2, 3, ...) ตามแบบ `/api/export`' },
+            { type: 'improve', text: '• **Page header** เปลี่ยนจาก `Page X of Y` → `หน้า X จาก Y` (ภาษาไทย)' },
+            { type: 'improve', text: '• **Footer** เปลี่ยนเป็น `เอกสารอิเล็กทรอนิกส์ออกโดยระบบ · สำนักงานเทศบาลเมืองนางรอง / พิมพ์เมื่อ: ...` — ดูเป็นทางการแบบเอกสารราชการ (sync ทั้ง `pdfExportSafe.js` และ `serverPdfGenerator.js` เพื่อให้ทุกรายงาน — expiring / licenses / shops / users — ใช้ข้อความเดียวกัน)' },
+            { type: 'improve', text: '• **Filter info box** หัวข้อเปลี่ยนจาก "Filters Applied" → "เงื่อนไขการกรองข้อมูล" สีส้มเข้ม + พื้นเหลืองอ่อน (match backend)' },
+            { type: 'improve', text: '• เพิ่ม helper functions ใหม่ใน `pdfExportSafe.js`: `createOfficialHeader()`, `createOfficialFilterInfo()`, `FILTER_LABELS_TH`, `THAI_MONTH_NAMES` — ใช้ร่วมกับ style keys ใหม่ (`brandName`, `brandSub`, `brandAddress`, `docTitle`, `officialTag`, `docDate`, `filterTitleOfficial`, `filterTextOfficial`)' },
+            { type: 'improve', text: '• exporter อื่นๆ (`exportLicensesToPDF`, `exportShopsToPDF`, `exportUsersToPDF` ฯลฯ) **ยังใช้ layout เดิม** ไม่กระทบ — ผู้ใช้ขอเฉพาะหน้า expiring' },
+            // ─────────────────────────────────────────────
+            // ปรับขนาดตัวอักษร PDF ให้พอดีกับ A4 landscape + THSarabunNew
+            // ─────────────────────────────────────────────
+            { type: 'improve', text: '🔤 **ปรับขนาดตัวอักษร PDF ทุกรายงานให้พอดีกับ A4 landscape + ฟอนต์ THSarabunNew**' },
+            { type: 'improve', text: '• **เหตุผล**: `THSarabunNew` render เล็กกว่า Helvetica/Arial ขนาดเดียวกัน ~20% → body 9pt เดิม = **เล็กมากอ่านยาก** (≈ Arial 7pt) + ไม่เป็นไปตามมาตรฐานรายงานราชการไทย (body ควร 12-14pt)' },
+            { type: 'improve', text: '• **Table body** 9pt → **12pt** (+33%) — อ่านสบายตา เหมาะกับเอกสารราชการไทย' },
+            { type: 'improve', text: '• **Table header** 10pt → **13pt** bold — เด่นขึ้น แยกจากแถวข้อมูลชัดเจน' },
+            { type: 'improve', text: '• **Brand name / ที่อยู่** (header ซ้าย) 16/12/9pt → **18/14/11pt** — อ่านง่ายขึ้น proportion สวย' },
+            { type: 'improve', text: '• **Doc title** (header ขวา) คง 22pt แต่เพิ่ม **docDate** 10 → 12pt ให้อ่านได้ชัด' },
+            { type: 'improve', text: '• **Filter info box** 9-10pt → **12-13pt** — label กับ value อ่านชัดไม่ต้องเพ่ง' },
+            { type: 'improve', text: '• **Stats summary** 9/20pt → **12/22pt** — ตัวเลขสถิติโดดเด่น label อ่านง่าย' },
+            { type: 'improve', text: '• **Page number / Footer** 8pt → **10pt** — footer เอกสารราชการต้องอ่านได้โดยไม่ต้องซูม' },
+            { type: 'improve', text: '• **Legacy header** (ใช้ใน `exportLicensesToPDF` / `exportShopsToPDF` ฯลฯ) 18/14/10pt → **20/16/12pt**' },
+            { type: 'improve', text: '• **Sync ทั้ง 2 ไฟล์**: `pdfExportSafe.js` (client) + `serverPdfGenerator.js` (server) ใช้ค่าเดียวกัน → รายงานทุกแหล่งดูเหมือนกันหมด (expiring / licenses / shops / users)' },
+            { type: 'improve', text: '• A4 landscape usable area ≈ 762 × 495 pt — body 12pt รองรับได้สบาย รวมทั้ง `licenses` ที่มี custom fields เพิ่ม (pdfmake จะ wrap text อัตโนมัติถ้าเกิน)' }
         ]
     },
     {
