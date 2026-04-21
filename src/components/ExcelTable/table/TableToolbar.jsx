@@ -10,8 +10,12 @@ export function TableToolbar({
     return null;
   }
 
+  // Compact mode: มีแค่ปุ่ม export → ไม่แสดง background/padding เต็มแถบ
+  // (กัน toolbar ยาวโล่งๆ ตลอดความกว้างเมื่อมีปุ่มเดียว)
+  const isCompact = !onClear && !onReset && onExport;
+
   return (
-    <div className="table-toolbar">
+    <div className={`table-toolbar${isCompact ? " table-toolbar--compact" : ""}`}>
       <div className="toolbar-group">
         {onClear && (
           <button type="button" className="btn btn-ghost" onClick={onClear}>

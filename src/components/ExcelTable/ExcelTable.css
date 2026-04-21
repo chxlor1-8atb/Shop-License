@@ -431,6 +431,20 @@ th.row-number .header-actions {
     min-height: auto;
 }
 
+/* Compact mode: มีแค่ปุ่ม Export (ไม่มี clear/reset) → ไม่ต้องการแถบเต็ม
+   ทำให้เป็น container โปร่งใส ชิดขวา — กัน toolbar โล่งๆ ยาวเต็มหน้า */
+.table-toolbar--compact {
+    background: transparent !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    padding: 0 !important;
+    margin-bottom: 0.5rem;
+}
+.table-toolbar--compact .toolbar-group:empty {
+    display: none;
+}
+
 /* Help Tip Compact Styling */
 .help-tip {
     display: flex;
