@@ -7905,6 +7905,385 @@ img {
     }
 }
 
+/* ========================================
+   Version Badge (Header — คลิกเปิด Release Notes)
+   ======================================== */
+.version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem 0.375rem 0.625rem;
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    border: 1px solid rgba(253, 186, 116, 0.6);
+    border-radius: 999px;
+    color: #9a3412;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(217, 119, 87, 0.08);
+}
+
+.version-badge:hover {
+    background: linear-gradient(135deg, #ffedd5, #fed7aa);
+    border-color: rgba(251, 146, 60, 0.75);
+    color: #7c2d12;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(217, 119, 87, 0.18);
+}
+
+.version-badge:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(217, 119, 87, 0.1);
+}
+
+.version-badge:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.version-badge-icon {
+    font-size: 0.8125rem;
+    color: #c2410c;
+}
+
+.version-badge-label {
+    font-weight: 500;
+    opacity: 0.85;
+    letter-spacing: 0.01em;
+}
+
+.version-badge-number {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+@media (max-width: 640px) {
+    .version-badge-label {
+        display: none;
+    }
+
+    .version-badge {
+        padding: 0.375rem 0.625rem;
+    }
+}
+
+/* ========================================
+   Professional Release Notes — Additional Styles
+   (Summary, Highlights, Stats, Section Heading, Doc Footer)
+   ======================================== */
+
+/* Latest pill — ป้าย "ล่าสุด" ที่ sidebar */
+.pn-latest-pill {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark, #c15d3e));
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 6px rgba(217, 119, 87, 0.3);
+    animation: pn-pulse-soft 2.5s ease-in-out infinite;
+}
+
+@keyframes pn-pulse-soft {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(0.96); }
+}
+
+/* Sidebar footer — จัดทำโดย */
+.pn-sidebar-footer {
+    padding: 0.875rem 1.25rem;
+    border-top: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.015);
+}
+
+.pn-sidebar-footer-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.25rem;
+}
+
+.pn-sidebar-footer-value {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    line-height: 1.3;
+}
+
+/* Content header refinements */
+.pn-content-header .pn-content-meta {
+    margin-bottom: 0.75rem;
+}
+
+.pn-content-title {
+    font-size: 1.375rem !important;
+    line-height: 1.35;
+    font-weight: 700;
+    margin-bottom: 1rem !important;
+}
+
+/* Summary Box — บทสรุป */
+.pn-summary-box {
+    background: linear-gradient(135deg, rgba(217, 119, 87, 0.04), rgba(217, 119, 87, 0.01));
+    border-left: 3px solid var(--primary);
+    border-radius: 8px;
+    padding: 1rem 1.125rem;
+    margin-bottom: 1rem;
+}
+
+.pn-summary-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+}
+
+.pn-summary-label i {
+    font-size: 0.75rem;
+}
+
+.pn-summary-text {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    text-align: justify;
+    text-indent: 0.5rem;
+}
+
+/* Stat Badges — นับจำนวนการเปลี่ยนแปลง */
+.pn-stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.pn-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.3rem 0.625rem;
+    border-radius: 6px;
+    line-height: 1;
+    letter-spacing: 0.01em;
+}
+
+.pn-stat i {
+    font-size: 0.6875rem;
+}
+
+.pn-stat-feature { background: rgba(16, 185, 129, 0.1); color: #047857; }
+.pn-stat-improve { background: rgba(99, 102, 241, 0.1); color: #4338ca; }
+.pn-stat-fix { background: rgba(239, 68, 68, 0.1); color: #b91c1c; }
+.pn-stat-perf { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+.pn-stat-security { background: rgba(245, 158, 11, 0.12); color: #b45309; }
+
+/* Section Titles — ภายใน content */
+.pn-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+    margin: 0 0 0.875rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(217, 119, 87, 0.15);
+}
+
+.pn-section-title i {
+    color: var(--primary);
+    font-size: 0.875rem;
+}
+
+/* Highlights Section — จุดสำคัญ */
+.pn-highlights {
+    margin-top: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding: 1.125rem 1.25rem;
+    background: linear-gradient(180deg, rgba(217, 119, 87, 0.03), rgba(217, 119, 87, 0.01));
+    border: 1px solid rgba(217, 119, 87, 0.12);
+    border-radius: 10px;
+}
+
+.pn-highlight-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.pn-highlight-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed rgba(217, 119, 87, 0.15);
+    line-height: 1.6;
+}
+
+.pn-highlight-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.pn-highlight-num {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 0.125rem;
+    box-shadow: 0 1px 3px rgba(217, 119, 87, 0.3);
+}
+
+.pn-highlight-text {
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.65;
+}
+
+/* Changes Section — รายละเอียดการเปลี่ยนแปลง */
+.pn-changes-section {
+    margin-top: 1.75rem;
+}
+
+/* Section Heading ภายใน changes list */
+.pn-change-section-heading {
+    display: flex;
+    align-items: center;
+    margin: 1.25rem 0 0.625rem 0;
+    padding: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.pn-change-section-heading:first-child {
+    margin-top: 0;
+}
+
+.pn-change-section-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.875rem;
+    background: rgba(217, 119, 87, 0.08);
+    border-radius: 6px;
+    color: var(--primary);
+}
+
+.pn-change-section-text::before {
+    content: '\00a7';
+    font-weight: 900;
+    font-size: 0.875rem;
+    opacity: 0.7;
+}
+
+/* Badge consistency — fixed width + centered for professional look */
+.pn-change-badge {
+    min-width: 115px;
+    justify-content: center;
+}
+
+/* Additional badge variants */
+.pn-badge-perf {
+    background: rgba(34, 197, 94, 0.1);
+    color: #15803d;
+}
+
+.pn-badge-note {
+    background: rgba(148, 163, 184, 0.12);
+    color: #475569;
+}
+
+/* Document Footer — ท้ายเอกสารทางการ */
+.pn-doc-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+}
+
+.pn-doc-footer-line {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(217, 119, 87, 0.25), transparent);
+    margin-bottom: 0.875rem;
+}
+
+.pn-doc-footer-text {
+    margin: 0;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    font-style: italic;
+}
+
+/* Mobile responsive adjustments for new elements */
+@media (max-width: 768px) {
+    .pn-content-title {
+        font-size: 1.125rem !important;
+    }
+
+    .pn-summary-text {
+        font-size: 0.875rem;
+        text-indent: 0;
+    }
+
+    .pn-highlight-text {
+        font-size: 0.8125rem;
+    }
+
+    .pn-stat {
+        font-size: 0.6875rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .pn-change-badge {
+        min-width: auto;
+    }
+
+    .pn-highlights {
+        padding: 0.875rem 1rem;
+    }
+
+    .pn-sidebar-footer {
+        display: none;
+    }
+}
+
 /* Global Help Tip Styles */
 .help-tip {
     display: inline-flex;

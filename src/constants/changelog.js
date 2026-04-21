@@ -1,624 +1,293 @@
 /**
  * Application Changelog / Patch Notes
- * แสดงประวัติการอัปเดตและแก้บั๊กให้ผู้ใช้เห็น
+ * แสดงประวัติการอัปเดตระบบอย่างเป็นทางการ
+ *
+ * โครงสร้างของแต่ละรายการ:
+ *   version     — หมายเลขเวอร์ชัน (เช่น '2.1.4')
+ *   date        — วันที่เผยแพร่ (ISO format)
+ *   title       — ชื่อเวอร์ชัน (กระชับ)
+ *   summary     — บทสรุปย่อของเวอร์ชัน (1-2 ประโยค)
+ *   highlights  — ประเด็นสำคัญ 3-5 ข้อ (สำหรับอ่านคร่าวๆ)
+ *   changes     — รายละเอียดครบถ้วน แบ่งเป็นกลุ่มด้วย type: 'section'
  */
 
 export const CHANGELOG = [
     {
         version: '2.1.4',
         date: '2026-02-25',
-        title: 'ปรับปรุง Layout บนมือถือให้สมดุลและแก้ไข Skeleton Component',
+        title: 'ยกระดับระบบรายงาน PDF และเสริมความเสถียรของระบบ',
+        summary: 'ปรับปรุงความถูกต้องและครบถ้วนของรายงาน PDF ทุกประเภท เพิ่มประสิทธิภาพการส่งออกข้อมูล และเสริมความเสถียรในการใช้งานประจำวัน ส่งผลให้เอกสารที่ส่งออกมีมาตรฐานทัดเทียมเอกสารราชการ และการปฏิบัติงานราบรื่นยิ่งขึ้น',
+        highlights: [
+            'แก้ปัญหาสำคัญ: ส่งออก PDF จากหน้าร้านค้าและใบอนุญาต ได้ข้อมูลครบตามที่กรองไว้ (เดิมได้เพียง 10 รายการ)',
+            'รายงาน PDF ใช้รูปแบบเอกสารราชการ พร้อมหัวเอกสาร เลขหน้าภาษาไทย และลายน้ำระบุประเภทเอกสาร',
+            'เพิ่มระบบรายงาน "ใบอนุญาตใกล้หมดอายุ" พร้อมสรุปสถิติและการระบายสีตามความเร่งด่วน',
+            'ปรับปรุงความถูกต้องของข้อมูลในรายงาน — แก้ปัญหาข้อมูลถูกตัดทิ้ง การแสดงผลค่าศูนย์ และรูปแบบวันที่',
+            'ประสิทธิภาพการสร้าง PDF เร็วขึ้นจากเดิม 2-5 วินาที เหลือเกือบไม่รู้สึก (ตั้งแต่ครั้งที่สองเป็นต้นไป)',
+        ],
         changes: [
-            { type: 'fix', text: '📱 แก้ไขสัดส่วน Stats Grid บนมือถือให้สมดุล (2x2 + 1 card)' },
-            { type: 'fix', text: '• เปลี่ยนจาก 3 คอลัมน์เป็น 2 คอลัมน์บนหน้าจอ < 768px' },
-            { type: 'fix', text: '• แก้ไข DashboardSkeleton ให้ใช้ responsive CSS เดียวกับจริง' },
-            { type: 'fix', text: '• แก้ไข Dashboard Grid Skeleton จาก 2 คอลัมน์เป็น 1 คอลัมน์ตาม layout จริง' },
-            { type: 'improve', text: '• เพิ่ม gap ที่เหมาะสมสำหรับแต่ละขนาดหน้าจอ' },
-            { type: 'note', text: '📝 แก้ไขปัญหา layout ไม่สมดุจบนมือถือที่ผู้ใช้รายงาน' },
-            // ─────────────────────────────────────────────
-            // DatePicker Dropdown Fix (2026-04-20)
-            // ─────────────────────────────────────────────
-            { type: 'fix', text: '📅 แก้ปัญหา DatePicker Dropdown ในหน้า "ส่งออกข้อมูล" ถูกตัดหายไปบางส่วน (คลิกแล้วมองไม่เห็นปฏิทิน)' },
-            { type: 'fix', text: '• ย้าย Dropdown ไป render ที่ document.body ผ่าน React Portal เพื่อหลุดจาก stacking context ของ .card (backdrop-filter) และ overflow ของ .main-content' },
-            { type: 'fix', text: '• แก้ปัญหา Dropdown ล้นขอบล่าง viewport (รอบแรกแก้แล้วยังเจอ) โดยเปลี่ยน auto-flip logic ให้เลือกทิศที่มี space เหลือมากกว่าเสมอ ไม่บังคับต้องมีที่พอ 420px' },
-            { type: 'fix', text: '• Clamp max-height ของ Dropdown ตาม space จริงที่เหลือใน viewport + เปิด overflow-y: auto ให้ scroll ภายในได้เมื่อที่จำกัด' },
-            { type: 'fix', text: '• Clamp ขอบบน/ล่าง + ปรับ width ให้ไม่ล้น viewport แม้หน้าจอเล็กมาก (เช่น laptop 13" + taskbar)' },
-            { type: 'improve', text: '• ใช้ position: fixed + คำนวณตำแหน่งจาก getBoundingClientRect() ของ trigger' },
-            { type: 'improve', text: '• จัดชิดขวาเมื่อ Dropdown ชนขอบขวาของ viewport' },
-            { type: 'improve', text: '• อัปเดตตำแหน่ง Dropdown อัตโนมัติเมื่อ resize / scroll (รองรับ nested scroll ด้วย capture-phase listener)' },
-            { type: 'improve', text: '• ปรับปรุง click-outside ให้ detect ได้ทั้ง wrapper และ dropdown ใน portal' },
-            { type: 'improve', text: '• เพิ่ม scrollbar แบบบางสีส้มกลมกลืนสำหรับ Dropdown variant ใน portal' },
-            { type: 'improve', text: '🔤 ปรับ font ปุ่ม "รีเซ็ต" / "ตกลง" / ปุ่มนำทางเดือนใน DatePicker ให้ใช้ฟอนต์เดียวกับระบบ (Inter + Noto Sans Thai) แทน system font default ของ <button>' },
-            { type: 'note', text: '📝 ส่งผลกับทุกหน้าที่ใช้ DatePicker (Export, Expiring Licenses, Excel Tables ฯลฯ)' },
-            // ─────────────────────────────────────────────
-            // Licenses Page — Owner Column (2026-04-20)
-            // ─────────────────────────────────────────────
-            { type: 'feature', text: '👤 เพิ่มคอลัมน์ "เจ้าของร้าน" ในตารางหน้า /dashboard/licenses (ดึงจากตาราง shops อัตโนมัติตาม shop_id)' },
-            { type: 'improve', text: '• คอลัมน์ใหม่วางต่อจาก "ร้านค้า" ทันที (read-only, แก้ไขได้ที่หน้าร้านค้าเท่านั้น)' },
-            { type: 'improve', text: '• อัปเดต API /api/licenses (GET/POST/PUT) ให้ JOIN และ SELECT owner_name พร้อม shop_name' },
-            { type: 'improve', text: '• Fallback: ถ้า API ยังไม่ส่ง owner_name กลับมา จะ lookup จาก shops dropdown cache ให้อัตโนมัติ' },
-            // ─────────────────────────────────────────────
-            // CSV Export Thai Date Fix (2026-04-20)
-            // ─────────────────────────────────────────────
-            { type: 'fix', text: '📅 แก้บั๊ก CSV Export หน้า /dashboard/export แสดงวันที่เป็น "Mon Jan 12 2026 00:00:00 GMT+0700" แทนที่จะเป็นวันที่ไทย' },
-            { type: 'fix', text: '• สาเหตุ: PG driver คืน issue_date/expiry_date/created_at เป็น JS Date object → String() ให้ออกมาเป็น Date.toString() default แบบอังกฤษ' },
-            { type: 'improve', text: '🇹🇭 เพิ่ม helper formatThaiDate() ใน /api/export ที่แปลงวันที่ให้เป็น พ.ศ. แบบสั้น เช่น "12 ม.ค. 2569"' },
-            { type: 'improve', text: '• Mark field เป็น type: "date" ใน baseFieldsDefinitions (issue_date, expiry_date, created_at) เพื่อ dispatch การ format อัตโนมัติ' },
-            { type: 'improve', text: '• ครอบคลุม custom field ที่มี field_type = date/datetime ให้แปลงเป็นวันที่ไทยใน CSV ด้วย' },
-            { type: 'note', text: '📝 หัวคอลัมน์ + สถานะ + role แปลงเป็นไทยอยู่แล้วตั้งแต่เดิม (ปกติ/หมดอายุ/ถูกพักใช้/แอดมิน/ผู้ใช้ทั่วไป) — บั๊กอยู่แค่วันที่' },
-            // ─────────────────────────────────────────────
-            // CSV Export License Number — Excel Auto-Date Fix
-            // ─────────────────────────────────────────────
-            { type: 'fix', text: '🔢 แก้ปัญหา Excel แปลง "เลขที่ใบอนุญาต" เช่น "1/42" / "23/44" ให้กลายเป็น "ม.ค.-42" / "มี.ค.-44" อัตโนมัติเวลาเปิดไฟล์ CSV' },
-            { type: 'fix', text: '• สาเหตุ: Excel regional Thai อ่าน pattern "เลข/เลข" แล้วตีความเป็นวันที่ (day/year) โดยไม่ถาม' },
-            { type: 'improve', text: '🛡️ เพิ่ม flag preserveText ให้ field เลขที่ใบอนุญาต — wrap ค่าด้วย Excel formula syntax ="..." เพื่อบังคับให้ Excel/Google Sheets/LibreOffice treat เป็น text เสมอ' },
-            { type: 'note', text: '📝 ใน Excel จะเห็น "1/42" ปกติ แต่ถ้าเปิดใน text editor (Notepad, VSCode) จะเห็น =""1/42"" — เป็นเรื่องปกติของ convention CSV สำหรับ Excel' },
-            // ─────────────────────────────────────────────
-            // Export PDF/CSV — Column Reordering + เจ้าของ + ลำดับที่
-            // ─────────────────────────────────────────────
-            { type: 'feature', text: '📊 จัดเรียงคอลัมน์รายงาน Export (PDF + CSV) ใหม่ตามลำดับ: ลำดับที่ → ชื่อเจ้าของ → ชื่อร้านค้า → ประเภทใบอนุญาต → เลขที่ใบอนุญาต → วันที่ออก → วันหมดอายุ → [custom fields] → สถานะ → หมายเหตุ' },
-            { type: 'feature', text: '🔢 เพิ่มคอลัมน์ "ลำดับที่" (running number) เป็นคอลัมน์แรกของทั้ง PDF และ CSV' },
-            { type: 'feature', text: '👤 เพิ่มคอลัมน์ "ชื่อเจ้าของ" ก่อน "ชื่อร้านค้า" ในรายงาน Export ใบอนุญาต (JOIN owner_name มาจากตาราง shops)' },
-            { type: 'improve', text: '🎯 เพิ่ม flag afterCustom ให้ status/notes เพื่อย้ายไปท้ายสุดหลัง custom fields — custom fields จะแสดงอยู่กึ่งกลางระหว่าง base info และ status/notes' },
-            { type: 'improve', text: '• อัปเดต SQL /api/export + /api/export-preview ให้ SELECT s.owner_name และ GROUP BY ด้วย' },
-            { type: 'improve', text: '• Preview modal ในหน้า /dashboard/export รับ order ใหม่อัตโนมัติ (# + preCustom + custom + postCustom)' },
-            { type: 'improve', text: '• PDF generator รักษา color coding ของคอลัมน์ "สถานะ" ให้ยังคงทำงานแม้ย้ายตำแหน่งแล้ว' },
-            // ─────────────────────────────────────────────
-            // Export Page — Quick License Type Filter
-            // ─────────────────────────────────────────────
-            { type: 'feature', text: '🎯 เพิ่ม dropdown "เลือกประเภทใบอนุญาต" ข้างๆ dropdown "เลือกประเภทข้อมูล" ในหน้า /dashboard/export เพื่อให้กรองก่อนส่งออกได้ง่ายขึ้น (ไม่ต้องเลื่อนลงไป Advanced Filters)' },
-            { type: 'improve', text: '• แสดงเฉพาะเมื่อเลือก "ประเภทข้อมูล = ใบอนุญาต" + sync state กับ filter ใน Advanced Filters (เปลี่ยนที่ไหนก็ตรงกัน)' },
-            { type: 'improve', text: '• รองรับการค้นหาใน dropdown อัตโนมัติเมื่อมีประเภทใบอนุญาตมากกว่า 8 รายการ' },
-            // ─────────────────────────────────────────────
-            // Export Page — Quick Month/Year Filter (expiry_date)
-            // ─────────────────────────────────────────────
-            { type: 'feature', text: '📅 เพิ่ม dropdown "หมดอายุเดือน" และ "หมดอายุปี (พ.ศ.)" ในตัวกรองใบอนุญาตหน้า /dashboard/export เป็นตัวกรองแยกจาก DatePicker (วันหมดอายุจาก/ถึง)' },
-            { type: 'improve', text: '• เดือน: ทุกเดือน / มกราคม … ธันวาคม (1-12)' },
-            { type: 'improve', text: '• ปี: ทุกปี / ปีปัจจุบัน ± 5 ปี (แสดงเป็น พ.ศ. เก็บเป็น ค.ศ. ภายใน) รองรับการค้นหา' },
-            { type: 'improve', text: '• ใช้ EXTRACT(MONTH/YEAR FROM l.expiry_date) ในทั้ง /api/export และ /api/export-preview — ใช้งานร่วมกับ DatePicker ช่วงวันที่ได้ (AND)' },
-            { type: 'improve', text: '• PDF Filter Info box แสดง "เดือนที่หมดอายุ: มกราคม" และ "ปีที่หมดอายุ (พ.ศ.): 2569" ให้อ่านง่าย' },
-            { type: 'fix', text: '🔧 ปรับ dropdown "หมดอายุปี" ให้แสดง**เฉพาะปีที่มีอยู่จริงในฐานข้อมูล** (dynamic) ไม่ใช่ ±5 ปี hardcoded อีกต่อไป — แก้ปัญหา dropdown ยาวทะลุจอ' },
-            { type: 'feature', text: '🆕 เพิ่ม API `/api/licenses/expiry-years` คืนรายการปี (ค.ศ.) + คู่ (year, month) แบบ DISTINCT จาก licenses.expiry_date เรียง DESC (ใหม่สุดก่อน)' },
-            { type: 'fix', text: '🔧 ปรับ dropdown "หมดอายุเดือน" ให้แสดง**เฉพาะเดือนที่มีข้อมูลจริง**ในระบบ — ถ้าเลือกปีเฉพาะ จะกรองเหลือเฉพาะเดือนของปีนั้นอัตโนมัติ' },
-            { type: 'improve', text: '• Auto-reset "หมดอายุเดือน" กลับเป็น "ทุกเดือน" อัตโนมัติ ถ้าปีใหม่ที่เลือกไม่มีเดือนที่เลือกไว้ — ป้องกัน query ค่าว่าง' },
-            // ─────────────────────────────────────────────
-            // Export Preview — Pagination + Bug Fixes
-            // ─────────────────────────────────────────────
-            { type: 'feature', text: '📄 เพิ่มระบบ Pagination ใน Modal "ดูตัวอย่างข้อมูลก่อนส่งออก" — เปลี่ยนหน้า / ข้ามหน้า / เลือกจำนวนรายการต่อหน้า (10/20/50/100) ได้เหมือนหน้าอื่นๆ' },
-            { type: 'improve', text: '• `/api/export-preview` รองรับ `page` + `limit` + OFFSET ใน SQL ครบทั้ง 3 types (licenses/shops/users) — คืน `{ pagination: { page, limit, total, totalPages } }`' },
-            { type: 'improve', text: '• Auto-correct เมื่อ `page` เกิน `totalPages` จาก response (เช่น filter ลดข้อมูลลง) — จะย้อนกลับหน้าสุดท้ายอัตโนมัติ' },
-            { type: 'fix', text: '🐛 แก้ bug `usePagination.updateFromResponse` ที่เรียก `setState` 2 ครั้ง → รวมเป็น single setState เพื่อลด re-render' },
-            { type: 'fix', text: '🐛 แก้ bug `Pagination` component: **Global keyboard listener** (Arrow Left/Right) ที่ attach บน `window` ทำให้ Pagination หลายตัวในหน้าเดียว (เช่น modal + page ข้างหลัง) ตอบ key พร้อมกัน — เพิ่ม prop `enableKeyboardNav` (default true) + skip key ถ้า target อยู่ใน dialog/modal/SweetAlert' },
-            { type: 'fix', text: '🐛 แก้ dead code ใน `generatePageNumbers()` ของ `Pagination` — เงื่อนไข `else if (leftSiblingIndex > 2)` ไม่มีวันจริงเพราะซ้ำกับ `if (showLeftDots)` — เปลี่ยนเป็น `else` ปกติเพื่อให้เลขหน้าช่วงกลางแสดงถูกต้องเมื่อไม่มี ellipsis' },
-            { type: 'fix', text: '🎨 ปรับความสูง/padding ของกล่อง "ค้นหา" ในตัวกรอง (licenses + shops) ให้เท่ากับ dropdown (height: 42px, padding: 0 1rem, border: 1.5px, font-size: 0.9375rem) — ก่อนหน้านี้ `SearchInput` รับ style จาก `.form-group input` (padding 0.875rem 1rem → สูงกว่า ~44-46px) ทำให้เห็นขนาดไม่เสมอกับ `CustomSelect`' },
-            // ─────────────────────────────────────────────
-            // Expiring Page — เพิ่มคอลัมน์ชื่อเจ้าของ
-            // ─────────────────────────────────────────────
-            { type: 'feature', text: '👤 เพิ่มคอลัมน์ **ชื่อเจ้าของ** ในตาราง "ใบอนุญาตใกล้หมดอายุ" หน้า /dashboard/expiring — จะเห็นชื่อเจ้าของร้านถัดจากชื่อร้านในแต่ละแถวทันที ไม่ต้องเข้าไปดูรายละเอียด' },
-            { type: 'improve', text: '• `/api/licenses/expiring` เพิ่ม `s.owner_name` ใน SELECT เพื่อส่งข้อมูลให้ frontend' },
-            { type: 'improve', text: '• Search box ครอบคลุม `owner_name` เพิ่มเติม (เดิมค้นได้แค่ชื่อร้าน + เลขที่ใบอนุญาต)' },
-            { type: 'improve', text: '• เพิ่มตัวเลือก sort: "ชื่อเจ้าของ (ก-ฮ)" และ "ชื่อเจ้าของ (ฮ-ก)"' },
-            { type: 'improve', text: '• ปรับ `skeletonColumns` + `colSpan` "ไม่พบข้อมูล" จาก 6 → 7 ให้ตรงกับจำนวนคอลัมน์ใหม่' },
-            // ─────────────────────────────────────────────
-            // Expiring Page — Export PDF
-            // ─────────────────────────────────────────────
-            { type: 'feature', text: '📄 เพิ่มปุ่ม **"ส่งออก PDF"** ในหน้า /dashboard/expiring — ส่งออกได้ทันทีตามตัวกรองปัจจุบัน (search/ประเภท/สถานะใกล้หมด/วันหมดอายุจาก-ถึง/การเรียงลำดับ)' },
-            { type: 'feature', text: '🆕 เพิ่ม util `exportExpiringLicensesToPDF(licenses, filters)` ใน `@/lib/pdfExportSafe` — สร้าง PDF ภาษาไทย (THSarabunNew) พร้อม header/footer/page number เหมือน PDF อื่นๆ ในระบบ' },
-            { type: 'improve', text: '• คอลัมน์ PDF: ชื่อร้านค้า / **ชื่อเจ้าของ** / ประเภท / เลขที่ใบอนุญาต / วันหมดอายุ / **คงเหลือ (วัน)** / สถานะ' },
-            { type: 'improve', text: '• Summary Box ด้านบนแสดงสถิติ: ทั้งหมด / หมดอายุแล้ว / ≤ 7 วัน / 8-14 วัน / > 14 วัน' },
-            { type: 'improve', text: '• คอลัมน์ "คงเหลือ" + "สถานะ" ระบายสีตามระดับความเร่งด่วน (แดง=หมดอายุ, ส้ม=≤7 วัน, เหลือง=8-14 วัน, น้ำเงิน=>14 วัน) — เห็นทันทีว่ารายการไหนควรจัดการก่อน' },
-            { type: 'improve', text: '• ส่งออกจาก `filteredLicenses` ใน memory — ใช้ผลลัพธ์หลัง apply ทุก filter (รวม statusFilter ที่คำนวณจาก days_until_expiry) ไม่ต้องเรียก API ใหม่' },
-            { type: 'improve', text: '• Loading state: ปุ่มเปลี่ยนเป็น spinner + "กำลังสร้าง PDF..." + Swal loading dialog ระหว่างประมวลผล' },
-            // ─────────────────────────────────────────────
-            // Shops + Licenses — ปรับขนาดกล่องค้นหาให้เท่ากับ dropdown
-            // ─────────────────────────────────────────────
-            { type: 'fix', text: '🎨 แก้ปัญหา**ขนาดกล่องค้นหาไม่เท่ากับ dropdown** ในหน้า /dashboard/licenses + /dashboard/shops — ปรับ CSS `.filter-grid input` ให้ใช้ `height: 42px` + `padding: 0 1rem` + `box-sizing: border-box` ตรงกับ `.custom-select-trigger` (เดิม `padding: 0.75rem 1rem` → สูง ~38-40px ไม่เท่ากับ dropdown 42px)' },
-            { type: 'improve', text: '• Root-cause fix ที่ CSS ส่วนกลาง — ครอบคลุมทุกหน้าที่ใช้ `.filter-grid` อัตโนมัติ (licenses/shops/อื่นๆ) ไม่ต้อง inline-style ทีละหน้า' },
-            { type: 'improve', text: '• ไม่กระทบ CSS `.form-group input` (ใช้ใน Modal/Form) ที่ยังต้องการ padding สูงกว่าเพื่อการอ่านง่าย' },
-            // ─────────────────────────────────────────────
-            // License Form — แยกร้านชื่อซ้ำด้วยเจ้าของ + เบอร์
-            // ─────────────────────────────────────────────
-            { type: 'feature', text: '🏪 แก้ปัญหา**ร้านชื่อซ้ำกันเลือกไม่ถูก** ใน Modal "สร้างใบอนุญาตใหม่" — dropdown ร้านค้าตอนนี้แสดง `ชื่อร้าน — เจ้าของ (เบอร์โทร)` เพื่อแยกร้านที่ชื่อเดียวกัน (เช่น 7ELEVEN หลายสาขา)' },
-            { type: 'feature', text: '🔍 ปรับ search ใน dropdown ร้านค้า — ค้นเจอได้จาก**ชื่อร้าน, ชื่อเจ้าของ, หรือเบอร์โทร** ในช่องเดียว (เดิมค้นเฉพาะชื่อร้าน)' },
-            { type: 'improve', text: '• `/api/dropdowns` เพิ่ม `phone` ใน SELECT shops เพื่อส่งให้ frontend ใช้ filter' },
-            { type: 'improve', text: '• `useDropdownData` hook expose `shopOptionsDetailed` ใหม่ — มี `label` แบบ detailed + `searchText` ครอบคลุม + raw fields (shop_name/owner_name/phone) สำหรับ custom rendering' },
-            { type: 'improve', text: '• `CustomSelect` รองรับ `opt.searchText` เพื่อให้ filter ค้นข้าม field โดยไม่ต้องเห็นใน label — general-purpose enhancement' },
-            { type: 'improve', text: '• `QuickAddModal` (สร้างใบอนุญาต) ใช้ `shopOptionsDetailed` แทน `shopOptions` เดิม' },
-            { type: 'improve', text: '• ในตาราง `/dashboard/licenses` — Excel dropdown ใช้ detailed labels เพื่อให้เลือกได้ถูกต้อง แต่ cell display ใช้ `shop_name` (สั้น) เพื่อไม่ให้ตารางกว้างเกินไป (column "เจ้าของร้าน" แยกอยู่แล้ว)' },
-            // ─────────────────────────────────────────────
-            // Shop Dropdown — เพิ่มที่อยู่ + แสดง 2 บรรทัด
-            // ─────────────────────────────────────────────
-            { type: 'feature', text: '🏠 เพิ่ม **ที่อยู่** ในตัวเลือกร้านค้าของ Modal "สร้างใบอนุญาตใหม่" — แสดงผลแบบ 2 บรรทัด:\n  • บรรทัด 1: ชื่อร้าน (ตัวหนา)\n  • บรรทัด 2: เจ้าของ · ที่อยู่ · เบอร์โทร (เล็ก สีเทา, truncate ถ้ายาว)' },
-            { type: 'improve', text: '• `/api/dropdowns` เพิ่ม `address` ใน SELECT shops (เดิม: id/shop_name/owner_name/phone)' },
-            { type: 'improve', text: '• `shopOptionsDetailed` เพิ่ม field `address` + รวมใน `searchText` → ค้นเจอจากที่อยู่ได้ด้วย (เช่น พิมพ์ "สุขุมวิท" เจอทุกสาขา)' },
-            { type: 'improve', text: '• `CustomSelect` รองรับ prop `opt.optionLabel` (ReactNode) — สำหรับการแสดงผลแบบ custom JSX ใน list โดย fallback เป็น `label/name` string เหมือนเดิม (backward compatible)' },
-            { type: 'improve', text: '• `QuickAddModal` สร้าง `shopOptionsWithDisplay` ที่มี `optionLabel` เป็น JSX 2 บรรทัด — trigger ยังใช้ `label` string เดิม (ไม่ล้น)' },
-            // ─────────────────────────────────────────────
-            // Bug Fix — Export PDF ในหน้า /dashboard/expiring ไม่ download
-            // ─────────────────────────────────────────────
-            { type: 'fix', text: '🐛 แก้ปัญหา**กด "ส่งออก PDF" ในหน้า `/dashboard/expiring` แล้วไม่ได้ไฟล์** (เงียบ ไม่มี error)' },
-            { type: 'fix', text: '• **Root cause**: `downloadPdfBlob()` ใน `pdfExportSafe.js` ใช้ `pdfMake.getBlob(callback)` แบบ sync + callback → function return ก่อน `link.click()` จะ trigger → `await exportExpiringLicensesToPDF(...)` resolve ทันที → Swal success modal ถูกเปิดก่อน → เมื่อ callback มาทีหลัง, Chrome block download เพราะหลุด user-gesture chain + มี modal ซ้อน' },
-            { type: 'fix', text: '• **Fix**: wrap `downloadPdfBlob()` เป็น **Promise** ที่ resolve หลัง `link.click()` ทำงานจริงๆ → caller `await` ได้ถูกต้อง → รอ download เสร็จก่อนค่อยขึ้น Swal success (เทคนิคเดียวกับที่ `/dashboard/export` ใช้อยู่แล้ว)' },
-            { type: 'fix', text: '• ปรับ `exportLicensesToPDF` / `exportExpiringLicensesToPDF` ให้ `await downloadPdfBlob(...)` และ `throw` error ต่อให้ caller จับได้ (เดิมกลืน error ด้วย `alert` อย่างเดียว → caller คิดว่าสำเร็จ)' },
-            { type: 'fix', text: '• ปรับ `exportShopsToPDF` / `exportUsersToPDF` / `exportUserCredentialsPDF` / `exportActivityLogsToPDF` ให้ `return downloadPdfBlob(...)` เพื่อให้ consistent และ caller await ได้ครบทุกตัว' },
-            // ─────────────────────────────────────────────
-            // Performance + Reliability — PDF Export เร็วขึ้น 10x + แก้ VFS error
-            // ─────────────────────────────────────────────
-            { type: 'fix', text: '🐛 แก้ error `File \'THSarabunNew-Bold.ttf\' not found in virtual file system` ตอนสร้าง PDF' },
-            { type: 'perf', text: '⚡ **Export PDF เร็วขึ้นมาก** — เดิมทุกครั้งที่กด Export ต้องโหลด pdfmake module + vfs_fonts + fetch ฟอนต์ไทย ~850KB (2-5 วินาที/ครั้ง) ตอนนี้ **โหลดครั้งเดียว** แล้ว cache ไว้ใช้ตลอด session (ครั้งถัดไป <5ms)' },
-            { type: 'fix', text: '• **Root cause ของ VFS error**: `pdfmake@0.3.1` เปลี่ยน API ของ `vfs_fonts.js` — โค้ดเดิมเช็ค `pdfFonts?.pdfMake?.vfs` แต่ v0.3.x ใช้ `pdfFonts?.vfs` → merge Roboto ไม่สำเร็จ + บางกรณี import ทับ VFS ที่โหลด Thai ไว้แล้ว → หา font ไม่เจอตอน render' },
-            { type: 'fix', text: '• **Fix**: ข้ามการโหลด Roboto ทั้งหมด (ไม่ได้ใช้ — `defaultStyle.font = \'THSarabunNew\'`) → โหลดเฉพาะ THSarabunNew ที่ต้องการจริงๆ → ขจัด API mismatch + ลดขนาดโหลด' },
-            { type: 'improve', text: '• Cache `pdfMake` instance + font base64 ด้วย **module-level Promise** (`cachedPdfMakePromise`) → concurrent export ก็ใช้ Promise เดียวกัน (ไม่เริ่ม init ซ้ำ)' },
-            { type: 'improve', text: '• ถ้าโหลดฟอนต์ล้มเหลว → `throw` error ชัดเจน พร้อม filename (เดิม: `console.warn` แล้วยัง config ต่อ → fail ตอน render อย่างงงๆ) — caller จับแล้วแสดง "ไม่สามารถส่งออกเป็น PDF ได้" ให้ผู้ใช้เห็น' },
-            { type: 'improve', text: '• ถ้า init fail → **reset cache** เพื่อให้ครั้งถัดไป retry ได้ (ไม่ติด cached error)' },
-            { type: 'improve', text: '• Log เวลาที่ใช้ init — `[PDF Export] pdfMake initialized in XXXms (Thai fonts only)` เพื่อให้ debug/monitor ได้' },
-            // ─────────────────────────────────────────────
-            // Critical Fix — pdfmake v0.3 API Migration
-            // ─────────────────────────────────────────────
-            { type: 'fix', text: '🔥 **แก้ปัญหาจริง** ของ error `File \'THSarabunNew-Bold.ttf\' not found in virtual file system` + Swal loading ค้าง' },
-            { type: 'fix', text: '• **Deep root cause**: `pdfmake@0.3.1` เปลี่ยน internal API จาก v0.2 อย่างมีนัยสำคัญ — `pdfMake.vfs = {...}` **ไม่มีผลเลย** เพราะ internal เก็บใน private `virtual_fs` instance (`writeFileSync`) ผ่าน method `addVirtualFileSystem()` เท่านั้น' },
-            { type: 'fix', text: '• **Fix #1**: เปลี่ยน `pdfMake.vfs = { ... }` → `pdfMake.addVirtualFileSystem({ [FILE]: base64Data })` ตาม API v0.3' },
-            { type: 'fix', text: '• **Fix #2**: เปลี่ยน `pdfMake.fonts = { ... }` → `pdfMake.addFonts({ THSarabunNew: {...} })` เพื่อให้ merge เข้ากับ default client fonts อย่างถูกต้อง' },
-            { type: 'fix', text: '• **Fix #3**: เพิ่มการ validate `typeof pdfMake.addVirtualFileSystem === "function"` ก่อนใช้ → ถ้า upgrade pdfmake แล้ว API เปลี่ยนอีก จะ throw ทันทีพร้อมข้อความชัด (ไม่ silent fail)' },
-            { type: 'fix', text: '• **Swal ค้าง**: pdfmake v0.3 `getBlob()` เปลี่ยนเป็น `async` ที่คืน `Promise<Blob>` แล้ว — callback style (`getBlob(cb)`) ของ v0.2 ไม่จับ error ที่ throw ภายใน render → callback ไม่เคยถูกเรียก → Promise wrap ไม่ resolve/reject → Swal loading ค้างถาวร' },
-            { type: 'fix', text: '• **Fix #4**: เปลี่ยน `downloadPdfBlob` เป็น `async` และใช้ `await pdfDocGenerator.getBlob()` ตรงๆ → error ภายใน pdfmake render จะ bubble ขึ้น → caller catch + แสดง error message ให้ผู้ใช้เห็น (ไม่ค้าง)' },
-            // ─────────────────────────────────────────────
-            // รายงานใบอนุญาตใกล้หมดอายุ — ใช้แบบฟอร์มเดียวกับ /dashboard/export
-            // ─────────────────────────────────────────────
-            { type: 'feature', text: '📄 **รายงาน PDF "ใบอนุญาตใกล้หมดอายุ" ใช้แบบฟอร์มเดียวกับ `/dashboard/export`** — ดูเป็นทางการและ consistent กับรายงานอื่นๆ ของระบบ' },
-            { type: 'improve', text: '• **Header แบบทางการ** 2 คอลัมน์ — ซ้าย: "สำนักงานเทศบาลเมืองนางรอง / ระบบจัดการใบอนุญาตประกอบกิจการ / ที่อยู่" | ขวา: ชื่อเอกสาร, วันที่ไทย — พร้อมเส้นขอบล่างสีเข้ม (แทนที่ header indigo แบบเดิม)' },
-            { type: 'improve', text: '• เอา label "ต้นฉบับ / ORIGINAL" ออก — เพราะระบบไม่มีการแยก "สำเนา" vs "ต้นฉบับ" → ใส่ไว้เป็น placeholder เปล่าๆ ไม่ให้ข้อมูลที่มีประโยชน์ + ลบ style `officialTag` ที่ไม่ใช้แล้วทิ้ง (sync ทั้ง `pdfExportSafe.js` และ `serverPdfGenerator.js`)' },
-            { type: 'improve', text: '• **Watermark** "ใบอนุญาตประกอบการค้า" สีเทาโปร่งใสตรงกลางหน้า (match รายงานอื่น)' },
-            { type: 'improve', text: '• **คอลัมน์ "ลำดับที่"** นำหน้าตาราง (1, 2, 3, ...) ตามแบบ `/api/export`' },
-            { type: 'improve', text: '• **Page header** เปลี่ยนจาก `Page X of Y` → `หน้า X จาก Y` (ภาษาไทย)' },
-            { type: 'improve', text: '• **Footer** เปลี่ยนเป็น `เอกสารอิเล็กทรอนิกส์ออกโดยระบบ · สำนักงานเทศบาลเมืองนางรอง / พิมพ์เมื่อ: ...` — ดูเป็นทางการแบบเอกสารราชการ (sync ทั้ง `pdfExportSafe.js` และ `serverPdfGenerator.js` เพื่อให้ทุกรายงาน — expiring / licenses / shops / users — ใช้ข้อความเดียวกัน)' },
-            { type: 'improve', text: '• **Filter info box** หัวข้อเปลี่ยนจาก "Filters Applied" → "เงื่อนไขการกรองข้อมูล" สีส้มเข้ม + พื้นเหลืองอ่อน (match backend)' },
-            { type: 'improve', text: '• เพิ่ม helper functions ใหม่ใน `pdfExportSafe.js`: `createOfficialHeader()`, `createOfficialFilterInfo()`, `FILTER_LABELS_TH`, `THAI_MONTH_NAMES` — ใช้ร่วมกับ style keys ใหม่ (`brandName`, `brandSub`, `brandAddress`, `docTitle`, `officialTag`, `docDate`, `filterTitleOfficial`, `filterTextOfficial`)' },
-            { type: 'improve', text: '• exporter อื่นๆ (`exportLicensesToPDF`, `exportShopsToPDF`, `exportUsersToPDF` ฯลฯ) **ยังใช้ layout เดิม** ไม่กระทบ — ผู้ใช้ขอเฉพาะหน้า expiring' },
-            // ─────────────────────────────────────────────
-            // ปรับขนาดตัวอักษร PDF ให้พอดีกับ A4 landscape + THSarabunNew
-            // ─────────────────────────────────────────────
-            { type: 'improve', text: '🔤 **ปรับขนาดตัวอักษร PDF ทุกรายงานให้พอดีกับ A4 landscape + ฟอนต์ THSarabunNew**' },
-            { type: 'improve', text: '• **เหตุผล**: `THSarabunNew` render เล็กกว่า Helvetica/Arial ขนาดเดียวกัน ~20% → body 9pt เดิม = **เล็กมากอ่านยาก** (≈ Arial 7pt) + ไม่เป็นไปตามมาตรฐานรายงานราชการไทย (body ควร 12-14pt)' },
-            { type: 'improve', text: '• **Table body** 9pt → **12pt** (+33%) — อ่านสบายตา เหมาะกับเอกสารราชการไทย' },
-            { type: 'improve', text: '• **Table header** 10pt → **13pt** bold — เด่นขึ้น แยกจากแถวข้อมูลชัดเจน' },
-            { type: 'improve', text: '• **Brand name / ที่อยู่** (header ซ้าย) 16/12/9pt → **18/14/11pt** — อ่านง่ายขึ้น proportion สวย' },
-            { type: 'improve', text: '• **Doc title** (header ขวา) คง 22pt แต่เพิ่ม **docDate** 10 → 12pt ให้อ่านได้ชัด' },
-            { type: 'improve', text: '• **Filter info box** 9-10pt → **12-13pt** — label กับ value อ่านชัดไม่ต้องเพ่ง' },
-            { type: 'improve', text: '• **Stats summary** 9/20pt → **12/22pt** — ตัวเลขสถิติโดดเด่น label อ่านง่าย' },
-            { type: 'improve', text: '• **Page number / Footer** 8pt → **10pt** — footer เอกสารราชการต้องอ่านได้โดยไม่ต้องซูม' },
-            { type: 'improve', text: '• **Legacy header** (ใช้ใน `exportLicensesToPDF` / `exportShopsToPDF` ฯลฯ) 18/14/10pt → **20/16/12pt**' },
-            { type: 'improve', text: '• **Sync ทั้ง 2 ไฟล์**: `pdfExportSafe.js` (client) + `serverPdfGenerator.js` (server) ใช้ค่าเดียวกัน → รายงานทุกแหล่งดูเหมือนกันหมด (expiring / licenses / shops / users)' },
-            { type: 'improve', text: '• A4 landscape usable area ≈ 762 × 495 pt — body 12pt รองรับได้สบาย รวมทั้ง `licenses` ที่มี custom fields เพิ่ม (pdfmake จะ wrap text อัตโนมัติถ้าเกิน)' },
-            // ─────────────────────────────────────────────
-            // แก้ row height ไม่สม่ำเสมอใน PDF
-            // ─────────────────────────────────────────────
-            { type: 'fix', text: '📐 **แก้ความสูงแถวใน PDF ไม่สม่ำเสมอ — บางแถวช่องดูเล็ก บางแถวช่องดูใหญ่**' },
-            { type: 'fix', text: '• **Root cause**: (1) pdfmake auto-size row height ตาม content → ชื่อสั้น/`-` vs ชื่อยาว/มีอักษรไทยพิเศษ (ฎ, ฏ, ญ, ฐ) → character metrics ต่าง → height ต่าง  (2) cell padding บางเกินไป (`margin: [5, 6, 5, 6]`) → differential 2-3pt relative กับ row 24pt = เห็นต่าง ~10% → ตาสังเกตได้ชัด' },
-            { type: 'fix', text: '• **แก้**: เพิ่ม cell padding แนวตั้ง **6pt → 8pt** (+33%) และ header padding **8pt → 10pt** (+25%) → มี whitespace รอบ text มากขึ้น → differential ของ row heights **relative น้อยลง** → ตารางดู uniform' },
-            { type: 'fix', text: '• apply ทั้ง 3 จุด: `createDataTable` ใน `pdfExportSafe.js` + inline cells ใน `exportExpiringLicensesToPDF` + `createDataTable` ใน `serverPdfGenerator.js` → ทุกรายงาน (expiring / licenses / shops / users จาก /api/export) ได้ประโยชน์พร้อมกัน' },
-            { type: 'fix', text: '• **ไม่ใช้ fixed row height** — เพราะ pdfmake ถ้า content overflow จะ clip ข้อมูลหาย → เลือกเพิ่ม padding แทน ซึ่งปลอดภัยและ proportional' },
-            // ─────────────────────────────────────────────
-            // 🛡️ Critical Data Loss Audit & Fix — PDF Export
-            // ─────────────────────────────────────────────
-            { type: 'fix', text: '🛡️ **Audit ครบทุก PDF exporter — แก้ bug 9 จุดที่ทำให้ข้อมูลตกหล่น/เพี้ยน**' },
-            // Data loss bugs (HIGH)
-            { type: 'fix', text: '• 🔴 **[HIGH] Truncate 30 chars** — custom fields + address ถูกตัดเงียบๆ ที่ 30 ตัวอักษร + ต่อด้วย "..." → **ข้อมูลหายแบบเงียบ** (ที่อยู่ยาว / comment ยาว / note ยาว)  **แก้**: เอา truncation ออกทั้งหมด → ให้ pdfmake wrap text อัตโนมัติตาม column width' },
-            { type: 'fix', text: '• 🔴 **[HIGH] Falsy trap `val \|\| \'-\'`** — ถ้า value เป็น `0`, `false`, `""` จะถูกแทนที่ด้วย `-` → เช่น `license_count: 0` (ร้านยังไม่มีใบอนุญาต) แสดงเป็น `-` แทน `0` = **ข้อมูลผิด** + boolean `false` → `-`  **แก้**: สร้าง helper `safeStr(val)` ที่เช็คเฉพาะ `null/undefined/""` → แทนที่ `|| \'-\'` ทั้งไฟล์ (>15 จุด ใน `createDataTable`, `exportLicensesToPDF`, `exportShopsToPDF`, `exportUsersToPDF`, `exportExpiringLicensesToPDF`, `exportActivityLogsToPDF`, `exportUserCredentialsPDF`, `createLicensesDocDef`, `createShopsDocDef`, `createUsersDocDef`)' },
-            // Medium bugs
-            { type: 'fix', text: '• 🟠 **[MEDIUM] Custom field `datetime` ไม่ format** — check เฉพาะ `\'date\'` → datetime field แสดงเป็น ISO string `2026-01-12T03:45:00.000Z` แทน `12/1/2569 10:45` (CSV รองรับแต่ PDF ไม่)  **แก้**: เพิ่ม `formatThaiDateTime()` + logic ใน `formatCustomValue()` รองรับทั้ง `date` และ `datetime`' },
-            { type: 'fix', text: '• 🟠 **[MEDIUM] `createShopsDocDef` ขาด default fields `notes` + `license_count`** — ถ้า `activeBaseFields = null` (fallback case) → **ข้อมูล 2 ฟิลด์นี้จะหายจากรายงาน** แม้ `/api/export` มีส่งมา  **แก้**: เพิ่ม 2 fields ใน default + mark `created_at` เป็น `type: "date"`' },
-            { type: 'fix', text: '• 🟠 **[MEDIUM] `createShopsDocDef` ไม่รับ/แสดง filters** — PDF รายงานร้านค้าไม่แสดง filter info box ขณะที่ licenses แสดง = inconsistent  **แก้**: เพิ่ม param `filters` + แสดง `createFilterInfo(filters)` + `generatePdf()` pass filters ไป shops ด้วย' },
-            { type: 'fix', text: '• 🟠 **[MEDIUM] Typo `Asia/Bangk ok`** (มีช่องว่าง) ใน footer ของ `exportUsersToPDF` → `toLocaleString` throw `RangeError` → footer render ไม่ได้  **แก้**: `Asia/Bangkok` ถูกต้อง' },
-            { type: 'fix', text: '• 🟠 **[MEDIUM] `val?.toLowerCase()` ไม่ safe** — ถ้า status เป็น `number` หรือ non-string → crash  **แก้**: สร้าง `formatStatus(val)` + check `typeof === "string"` ก่อน lowercase' },
-            // Low bug
-            { type: 'fix', text: '• 🟡 **[LOW] Custom field types `boolean` / `array` / `object` แสดงแย่** — `String(true)` = `"true"`, `String([...])` = `"a,b"`, `String({...})` = `"[object Object]"` (ไม่ readable)  **แก้**: `formatCustomValue()` รองรับ:\n  - `boolean` → `"ใช่" / "ไม่ใช่"`\n  - array (multiselect) → `"a, b, c"` (join comma+space)\n  - object (JSON) → `JSON.stringify()`' },
-            // Helpers สรุป
-            { type: 'improve', text: '🧬 **สร้าง helpers ใหม่ 4 ตัวใน ทั้ง `pdfExportSafe.js` + `serverPdfGenerator.js`** (sync logic ทั้ง client + server): `safeStr(val)`, `formatStatus(val)`, `formatCustomValue(cf, value)`, `formatThaiDateTime(dateStr)` → ใช้ซ้ำทุก exporter แทน inline logic กระจัดกระจาย' },
-            { type: 'improve', text: '• **Defensive date parsing** — เพิ่ม `isNaN(date.getTime())` check ใน `formatThaiDate()` + `formatThaiDateTime()` → ถ้า date string ผิด format → fallback `String(val)` แทน return invalid date' },
-            { type: 'note', text: '📝 Impact: รายงาน PDF ทั้งระบบ (expiring / licenses / shops / users / activity logs / credentials) แสดงข้อมูลครบถ้วน ไม่มีการตัด/กลืนค่า falsy อีก — สำคัญเฉพาะกับเอกสารราชการที่ต้องการความถูกต้อง 100%' },
-            // ─────────────────────────────────────────────
-            // 🏷️ Watermark dynamic — เฉพาะ /dashboard/expiring
-            // ─────────────────────────────────────────────
-            { type: 'improve', text: '🏷️ **เปลี่ยน watermark ของ PDF หน้า `/dashboard/expiring` ให้ dynamic ตามเนื้อหารายงาน** (แทนที่ข้อความ "ใบอนุญาตประกอบการค้า" แบบเดิมที่ไม่ตรงกับบริบท)' },
-            { type: 'improve', text: '• **"ใบอนุญาตหมดอายุ"** — เมื่อ user filter สถานะ = "หมดอายุแล้ว" หรือเมื่อทุกรายการในรายงานหมดอายุไปแล้ว (days < 0 ทุกตัว)' },
-            { type: 'improve', text: '• **"ใบอนุญาตใกล้หมดอายุ"** — default สำหรับกรณีอื่น (ไม่ filter / filter ช่วงวัน / mixed content)' },
-            { type: 'note', text: '📝 ผลกระทบเฉพาะ `exportExpiringLicensesToPDF` ใน `pdfExportSafe.js` — PDF อื่นๆ (licenses / shops / users จาก `/api/export`) ยังใช้ watermark "ใบอนุญาตประกอบการค้า" เหมือนเดิม' },
-            // ─────────────────────────────────────────────
-            // 🏷️ Watermark — /dashboard/shops + /dashboard/licenses
-            // ─────────────────────────────────────────────
-            { type: 'improve', text: '🏷️ **เพิ่ม/กำหนด watermark ให้ PDF ที่ export จากปุ่มในตารางหน้า `/dashboard/shops` + `/dashboard/licenses`** (เดิมไม่มี watermark เลย — ต่างจาก PDF ของ `/dashboard/expiring` และ `/dashboard/export`)' },
-            { type: 'improve', text: '• **`/dashboard/shops`** (ปุ่ม "Export PDF" ใน ExcelTable → `exportShopsToPDF`) → watermark = **"รายการร้านค้า"**' },
-            { type: 'improve', text: '• **`/dashboard/licenses`** (ปุ่ม "Export PDF" ใน ExcelTable → `exportLicensesToPDF`) → watermark = **"ใบอนุญาต"**' },
-            { type: 'note', text: '📝 ใช้ style เดียวกับ watermark อื่น (`color: gray, opacity: 0.08, bold`) → ทีม/ผู้ตรวจเห็น watermark แยกประเภทเอกสารได้ทันทีแม้ไม่เปิดอ่าน header' },
-            // ─────────────────────────────────────────────
-            // 🛡️ Hardening — /dashboard/shops + /dashboard/licenses (Audit + แก้ 9 bugs)
-            // ─────────────────────────────────────────────
-            { type: 'fix', text: '🛡️ **Audit หน้า `/dashboard/shops` + `/dashboard/licenses` อย่างละเอียด — แก้บั๊ก 9 จุด** (data loss, race condition, state management, performance, security)' },
-            // HIGH priority
-            { type: 'fix', text: '• 🔴 **[HIGH] Export PDF ได้ไม่ครบ (Pagination bug)** — `handleExport` เดิมส่ง `shops`/`licenses` state = data ของ **page ปัจจุบันเท่านั้น** (10 รายการ) → user กด Export ได้ PDF แค่ 10 records ทั้งที่มีจริง 500+ = **ข้อมูลหายโดยไม่รู้ตัว**! **แก้**: fetch ใหม่ด้วย limit=2000 + apply filter ปัจจุบัน ก่อน export, แสดง Swal loading ระหว่าง fetch, แจ้งจำนวนรายการหลัง export' },
-            { type: 'fix', text: '• 🔴 **[HIGH] Export licenses ใช้ filter key ภาษาอังกฤษ** — เดิมส่ง `{search, type, status, shop}` ไป `exportLicensesToPDF` → PDF แสดง "search: xxx" / "type: xxx" = ไม่เป็นทางการ  **แก้**: เปลี่ยนเป็น "คำค้นหา/ประเภทใบอนุญาต/สถานะ/ร้านค้า" + ใช้ `debouncedSearch` แทน `search` (กัน inconsistent กับ fetch)' },
-            { type: 'fix', text: '• 🔴 **[HIGH] Export shops ไม่ส่ง filter info เลย** — `exportShopsToPDF(shops)` ส่งแค่ data → PDF ไม่แสดง filter context ทั้งที่ exporter รองรับ  **แก้**: ส่ง `pdfFilters` ภาษาไทย (คำค้นหา/ใบอนุญาต/สถานะใบอนุญาต/ประเภทใบอนุญาต) + map enum → label ไทยอัตโนมัติ' },
-            { type: 'fix', text: '• 🔴 **[HIGH] Orphan shop ใน QuickAddShop** — ถ้าสร้าง shop สำเร็จ **แต่** license POST ล้มเหลว → **shop ค้างใน DB ไปตลอด** (orphan record)  **แก้**: เพิ่ม rollback logic — ถ้า license fail → ลบ shop อัตโนมัติ + แจ้งผู้ใช้ "ร้านค้าถูกยกเลิกโดยอัตโนมัติ" (ครอบคลุมทั้ง API error + network error)' },
-            { type: 'fix', text: '• 🔴 **[HIGH] ExcelTable re-mount ทุกครั้งที่ add/delete row** — `key={licenses-${licenses.length}-${loading}}` / `key={shops-table-${isLoading}}` → `licenses.length` เปลี่ยนทุกครั้ง CRUD → table **re-mount ทั้งหมด** → undo stack / cell selection / scroll position **หายหมด** = UX แย่มาก  **แก้**: เปลี่ยนเป็น stable key `"licenses-table"` + `"shops-table"` → internal state คงอยู่ตลอด' },
-            { type: 'fix', text: '• 🔴 **[HIGH] `handleQuickAddLicense` ไม่ flatten custom_fields** — เดิม `setLicenses(prev => [data.license, ...prev])` ใส่ object ที่มี `custom_fields` nested → ExcelTable อ่าน `row[field_name]` โดยตรง → **cell custom field ว่างทั้งหมดใน license ที่เพิ่งสร้าง**!  **แก้**: `flattenedLicense = {...data.license, ...(data.license.custom_fields || {})}` ก่อน set state (เหมือน logic ใน `fetchLicenses` + `handleRowUpdate`)' },
-            { type: 'fix', text: '• 🔴 **[HIGH] `handleRowUpdate` status PUT confusing** — เดิม `updatedRow.original_status || existingLicense?.original_status || updatedRow.status` อ่านยาก + ถ้า `updatedRow.original_status` เป็น stored old value → อาจทับค่าใหม่  **แก้**: เรียงลำดับใหม่ `existingLicense?.original_status || updatedRow.original_status || updatedRow.status` + **คอมเม้นท์อธิบาย** flow: user แก้ status → standardData.status override ผ่าน spread (เพราะ `...standardData` มาหลัง) — logic เดิมถูกแต่ไม่ robust' },
-            // MEDIUM priority
-            { type: 'improve', text: '• 🟠 **[MEDIUM] ลบ `console.log` debug spam ใน `/api/licenses/route.js`** — เดิมมี 8+ จุดที่ log object ใหญ่ๆ ตอน GET/PUT ทุก request (ชื่อเริ่มด้วย 🔧/🔍/✅/❌/🗑️) → prod log noisy + leak data shape + slow serverless cold start  **แก้**: ลบออกทั้งหมด, คง `console.error` ที่จำเป็นสำหรับ error tracking' },
-            { type: 'improve', text: '• 🟠 **[MEDIUM] `fetchLicenses` ไม่มี cache-busting** — หน้า shops มี `_t=Date.now()` + `cache: "no-store"` แต่หน้า licenses ไม่มี → อาจเจอ Vercel edge cache stale data หลัง CRUD (เหมือนปัญหาที่เคยแก้ใน v2.1.3)  **แก้**: เพิ่ม `_t` + `cache: "no-store"` ให้ consistent กับ shops' },
-            { type: 'note', text: '📝 **ผลลัพธ์**: Export PDF ตอนนี้ได้ข้อมูลครบถ้วนแม้มีเป็น 1000+ รายการ, ไม่มี orphan data, ตาราง stable state, ไม่มี debug noise ใน prod log — หน้า shops/licenses แข็งแรงขึ้นอย่างมาก' }
-        ]
+            { type: 'section', text: 'ระบบรายงาน PDF' },
+            { type: 'feature', text: 'เพิ่มปุ่มส่งออก PDF ในหน้า "ใบอนุญาตใกล้หมดอายุ" — ดาวน์โหลดได้ทันทีตามเงื่อนไขที่กำลังใช้งาน' },
+            { type: 'feature', text: 'รายงาน PDF แสดงสรุปสถิติด้านบน — จำนวนรายการทั้งหมด หมดอายุแล้ว เหลือไม่เกิน 7 วัน เหลือ 8-14 วัน และเหลือมากกว่า 14 วัน' },
+            { type: 'feature', text: 'คอลัมน์ "คงเหลือ (วัน)" และ "สถานะ" ระบายสีตามความเร่งด่วน (แดง/ส้ม/เหลือง/น้ำเงิน) เห็นได้ทันทีว่ารายการใดควรจัดการก่อน' },
+            { type: 'improve', text: 'ปรับรูปแบบรายงานให้เป็นทางการแบบเอกสารราชการ — มีหัวเอกสาร "สำนักงานเทศบาลเมืองนางรอง" พร้อมที่อยู่ ชื่อเอกสาร และวันที่ออก' },
+            { type: 'improve', text: 'ปรับขนาดตัวอักษรให้อ่านง่ายขึ้นประมาณ 30% เหมาะสมกับมาตรฐานเอกสารราชการไทย' },
+            { type: 'improve', text: 'ปรับความสูงแถวในตารางให้สม่ำเสมอ ไม่มีแถวเล็กแถวใหญ่สลับกัน' },
+            { type: 'improve', text: 'ปรับเลขหน้าเป็นภาษาไทย ("หน้า 1 จาก 5") พร้อมระบุ "เอกสารอิเล็กทรอนิกส์ออกโดยระบบ" และเวลาพิมพ์ในท้ายเอกสาร' },
+            { type: 'improve', text: 'เพิ่มลายน้ำระบุประเภทเอกสาร ("ใบอนุญาตหมดอายุ" หรือ "ใบอนุญาตใกล้หมดอายุ") ปรับอัตโนมัติตามเนื้อหา' },
+            { type: 'fix', text: 'แก้ปัญหากดปุ่มส่งออก PDF ในหน้าใบอนุญาตใกล้หมดอายุแล้วไม่ได้ไฟล์ (เงียบ ไม่มีข้อความแจ้งเตือน)' },
+            { type: 'perf', text: 'ส่งออก PDF ครั้งที่สองเป็นต้นไปเร็วขึ้นอย่างมีนัยสำคัญ — ระบบโหลดฟอนต์ครั้งเดียวแล้วเก็บไว้ใช้งานตลอดรอบการใช้งาน' },
+
+            { type: 'section', text: 'ความถูกต้องของข้อมูลในรายงาน' },
+            { type: 'fix', text: 'แก้ปัญหาข้อมูลถูกตัดทิ้ง — ที่อยู่ หมายเหตุ และช่องกำหนดเองที่ยาวกว่า 30 ตัวอักษร เดิมจะถูกตัดและต่อท้ายด้วย "..." ปัจจุบันแสดงครบถ้วน' },
+            { type: 'fix', text: 'แก้ปัญหาค่า "0" ถูกแสดงเป็น "-" เช่น "จำนวนใบอนุญาต" ของร้านที่ยังไม่มีใบอนุญาตเลย' },
+            { type: 'fix', text: 'แก้ปัญหาช่องกำหนดเองชนิด "วันที่พร้อมเวลา" แสดงเป็นรหัสยาว ปัจจุบันแสดงเป็นวันเวลาภาษาไทย' },
+            { type: 'fix', text: 'แก้ปัญหาช่องกำหนดเองชนิด "ใช่/ไม่ใช่" แสดงเป็น "true/false" ปัจจุบันแสดงเป็นภาษาไทย' },
+            { type: 'fix', text: 'แก้ปัญหารายงานร้านค้าบางครั้งไม่แสดงคอลัมน์ "หมายเหตุ" และ "จำนวนใบอนุญาต"' },
+            { type: 'fix', text: 'แก้ปัญหาเวลาพิมพ์ท้ายเอกสารในรายงานข้อมูลผู้ใช้งานแสดงเป็นเวลาสากลแทนเวลาไทย' },
+
+            { type: 'section', text: 'การส่งออก PDF จากหน้าร้านค้าและใบอนุญาต' },
+            { type: 'fix', text: 'แก้ปัญหาสำคัญ: กดส่งออก PDF แล้วได้ข้อมูลเพียง 10 รายการ ทั้งที่มีข้อมูลจริงเป็นหลักร้อยหรือพันรายการ ปัจจุบันได้ข้อมูลครบตามเงื่อนไขที่กรองไว้' },
+            { type: 'improve', text: 'รายงาน PDF แสดงเงื่อนไขการกรองเป็นภาษาไทย (คำค้นหา ประเภทใบอนุญาต สถานะ ร้านค้า) เพื่อให้ผู้อ่านเข้าใจบริบทของรายงาน' },
+            { type: 'improve', text: 'เพิ่มหน้าจอ "กำลังเตรียมข้อมูล..." ระหว่างสร้างรายงาน พร้อมแจ้งจำนวนรายการที่ส่งออกสำเร็จ' },
+            { type: 'improve', text: 'เพิ่มลายน้ำระบุประเภทรายงาน: "รายการร้านค้า" และ "ใบอนุญาต"' },
+
+            { type: 'section', text: 'หน้า "ส่งออกข้อมูล"' },
+            { type: 'feature', text: 'เพิ่มตัวกรอง "ประเภทใบอนุญาต" ด่วน — ไม่ต้องเปิด "ตัวกรองขั้นสูง" อีกต่อไป' },
+            { type: 'feature', text: 'เพิ่มตัวกรอง "หมดอายุเดือน" และ "หมดอายุปี (พ.ศ.)" สำหรับกรองใบอนุญาตตามช่วงเวลาหมดอายุได้สะดวกขึ้น' },
+            { type: 'improve', text: 'ตัวกรองเดือน/ปี แสดงเฉพาะค่าที่มีอยู่จริงในระบบ — ไม่มีค่าว่างในรายการ' },
+            { type: 'feature', text: 'เพิ่มระบบแบ่งหน้าใน "ดูตัวอย่างข้อมูลก่อนส่งออก" — เปลี่ยนหน้าและเลือกจำนวนรายการต่อหน้าได้ (10/20/50/100)' },
+            { type: 'feature', text: 'เพิ่มคอลัมน์ "ลำดับที่" เป็นคอลัมน์แรกในรายงานส่งออกทุกประเภท (PDF และ CSV)' },
+            { type: 'feature', text: 'เพิ่มคอลัมน์ "ชื่อเจ้าของ" ในรายงานส่งออกใบอนุญาต' },
+            { type: 'improve', text: 'จัดเรียงคอลัมน์ในรายงานใหม่ตามลำดับการอ่านที่เป็นธรรมชาติ: ลำดับที่ → ชื่อเจ้าของ → ชื่อร้าน → ประเภท → เลขที่ → วันที่ออก → วันหมดอายุ → ช่องกำหนดเอง → สถานะ → หมายเหตุ' },
+            { type: 'fix', text: 'แก้ปัญหาวันที่ในไฟล์ CSV แสดงเป็นภาษาอังกฤษ ปัจจุบันแสดงเป็นรูปแบบไทย ("12 ม.ค. 2569")' },
+            { type: 'fix', text: 'แก้ปัญหา Excel แปลง "เลขที่ใบอนุญาต" (เช่น "1/42") เป็นวันที่อัตโนมัติ — ปัจจุบันเก็บเป็นข้อความตามเดิม' },
+
+            { type: 'section', text: 'หน้าร้านค้าและหน้าใบอนุญาต' },
+            { type: 'feature', text: 'เพิ่มคอลัมน์ "เจ้าของร้าน" ในตารางใบอนุญาต — แสดงอัตโนมัติ ไม่ต้องคลิกเข้าไปดูเอง' },
+            { type: 'fix', text: 'แก้ปัญหาตารางรีโหลดทุกครั้งที่เพิ่ม/ลบแถว ทำให้ Ctrl+Z การเลือกเซลล์ และตำแหน่งเลื่อนหายไป — ปัจจุบันคงอยู่ตลอดการใช้งาน' },
+            { type: 'fix', text: 'แก้ปัญหาข้อมูลในช่องกำหนดเองว่างเปล่าหลังเพิ่มใบอนุญาตใหม่' },
+            { type: 'fix', text: 'แก้ปัญหาร้านค้าค้างในระบบ เมื่อสร้างร้านพร้อมใบอนุญาตแล้วใบอนุญาตไม่สำเร็จ — ปัจจุบันระบบจะยกเลิกร้านค้าโดยอัตโนมัติและแจ้งผู้ใช้' },
+            { type: 'fix', text: 'ปรับขนาดกล่องค้นหาและกล่องเลือกในตัวกรองให้เท่ากัน' },
+
+            { type: 'section', text: 'หน้าใบอนุญาตใกล้หมดอายุ' },
+            { type: 'feature', text: 'เพิ่มคอลัมน์ "ชื่อเจ้าของ" ในตาราง' },
+            { type: 'improve', text: 'ช่องค้นหาครอบคลุมชื่อเจ้าของเพิ่มเติม (เดิมค้นได้เฉพาะชื่อร้านและเลขที่ใบอนุญาต)' },
+            { type: 'improve', text: 'เพิ่มตัวเลือกเรียงลำดับตามชื่อเจ้าของ (ก-ฮ / ฮ-ก)' },
+
+            { type: 'section', text: 'การเลือกร้านค้าในฟอร์มสร้างใบอนุญาต' },
+            { type: 'feature', text: 'แก้ปัญหาร้านชื่อซ้ำกันเลือกไม่ถูก — ตัวเลือกแสดงข้อมูลแบบ 2 บรรทัด: ชื่อร้าน (ตัวหนา) และ เจ้าของ · ที่อยู่ · เบอร์โทร' },
+            { type: 'feature', text: 'ช่องค้นหาครอบคลุมชื่อร้าน ชื่อเจ้าของ ที่อยู่ และเบอร์โทร ในช่องเดียว' },
+
+            { type: 'section', text: 'ปฏิทินเลือกวันที่' },
+            { type: 'fix', text: 'แก้ปัญหาปฏิทินถูกตัดหายไปบางส่วนในหน้าส่งออกข้อมูล' },
+            { type: 'improve', text: 'ปฏิทินปรับตำแหน่งอัตโนมัติเมื่อใกล้ขอบจอ — ไม่ถูกตัดแม้ในหน้าจอเล็ก' },
+            { type: 'improve', text: 'เพิ่มแถบเลื่อนในปฏิทินเมื่อพื้นที่จำกัด ยังใช้งานได้ครบทุกฟังก์ชัน' },
+            { type: 'improve', text: 'ปรับฟอนต์ปุ่มในปฏิทินให้เป็นฟอนต์เดียวกับระบบ' },
+
+            { type: 'section', text: 'การแสดงผลบนมือถือ' },
+            { type: 'fix', text: 'ปรับสัดส่วนการ์ดสถิติบนมือถือให้สมดุล (2×2 + 1 การ์ด) ในหน้าจอต่ำกว่า 768px' },
+            { type: 'fix', text: 'ปรับหน้าจอ Loading ของ Dashboard ให้ตรงกับ layout จริงบนมือถือ' },
+
+            { type: 'section', text: 'ปรับปรุงทั่วไป' },
+            { type: 'improve', text: 'ข้อมูลในหน้าใบอนุญาตและร้านค้าอัปเดตทันทีหลังเพิ่ม/แก้ไข/ลบ โดยไม่ต้องรีเฟรชหน้าเอง' },
+            { type: 'improve', text: 'ลดข้อความตรวจสอบ (debug log) ที่ไม่จำเป็นในระบบ' },
+        ],
     },
     {
         version: '2.1.3',
         date: '2026-02-25',
-        title: 'แก้ไขปัญหาการแสดงผลข้อมูลบน Vercel',
+        title: 'แก้ปัญหาข้อมูลที่ลบแล้วยังแสดงผลอยู่',
+        summary: 'แก้ปัญหาที่เกิดขึ้นเฉพาะบนเซิร์ฟเวอร์ Production — ข้อมูลที่ลบแล้วยังคงปรากฏในหน้าจอจนกว่าจะรีเฟรชหน้า ปัจจุบันข้อมูลอัปเดตโดยทันที พร้อมเสริมความเสถียรในการจัดการข้อมูลหลายรายการพร้อมกัน',
+        highlights: [
+            'ลบข้อมูลแล้วหายจากหน้าจอทันที ไม่ต้องรีเฟรชหน้า (F5) เอง',
+            'ข้อมูลอัปเดตแบบเรียลไทม์หลังทุกการเพิ่ม/แก้ไข/ลบ',
+            'เพิ่มระบบ retry อัตโนมัติเมื่อเครือข่ายไม่เสถียร',
+        ],
         changes: [
-            { type: 'fix', text: '🔧 แก้ปัญหา UI แสดงข้อมูลที่ลบแล้วกลับมาบน Vercel (Hard Refresh Issue)' },
-            { type: 'fix', text: '• ปิด Auto-refresh ชั่วคราวเพื่อป้องกันการ fetch ซ้ำที่ไม่จำเป็น' },
-            { type: 'fix', text: '• เพิ่ม SWR cache invalidation อย่างรุนแรงหลังการ CRUD operations' },
-            { type: 'fix', text: '• เพิ่ม cache-busting (timestamp + no-store) ในการ fetch ข้อมูลร้านค้า' },
-            { type: 'fix', text: '• เพิ่ม conditional logic ใน Realtime hooks ข้าม INSERT events' },
-            { type: 'fix', text: '• ปรับปรุง optimistic delete พร้อม delayed refresh 100ms' },
-            { type: 'improve', text: '• ทำให้การลบ/แก้ไข/สร้างข้อมูลทำงานเหมือนหน้า licenses ที่ไม่มีปัญหา' },
-            { type: 'improve', text: '• แก้ไขปัญหา race condition ระหว่าง optimistic update และ server response' },
-            { type: 'improve', text: '• เพิ่ม error handling และ retry logic สำหรับ network failures' },
-            { type: 'improve', text: '• ปรับปรุง loading states และ user feedback ระหว่าง operations' },
-            { type: 'note', text: '📝 ปัญหานี้เกิดเฉพาะบน Vercel Production เนื่องจาก Edge Caching ไม่มีปัญหาบน Local' },
-            { type: 'note', text: '🔍 พบปัญหาจากผู้ใช้รายงานว่าข้อมูลที่ลบไปแล้วยังคงแสดงผลหลัง refresh' }
-        ]
+            { type: 'section', text: 'การแก้ไขปัญหาหลัก' },
+            { type: 'fix', text: 'แก้ปัญหาข้อมูลที่ลบไปแล้วยังแสดงอยู่บนหน้าร้านค้า — ปัจจุบันลบแล้วหายทันที' },
+            { type: 'fix', text: 'ข้อมูลอัปเดตทันทีหลังเพิ่ม/แก้ไข/ลบ ไม่ต้องรีเฟรชหน้าเอง' },
+            { type: 'fix', text: 'แก้ปัญหาตารางกระพริบและแสดงข้อมูลซ้ำซ้อน' },
+
+            { type: 'section', text: 'การเสริมความเสถียร' },
+            { type: 'improve', text: 'ปรับปรุงความเสถียรของการลบข้อมูลหลายรายการพร้อมกัน' },
+            { type: 'improve', text: 'เพิ่มระบบ retry อัตโนมัติเมื่อเครือข่ายไม่เสถียร — ไม่ต้องพยายามบันทึกซ้ำด้วยตนเอง' },
+            { type: 'improve', text: 'ปรับปรุงหน้าจอ Loading ระหว่างรอผล — ผู้ใช้เห็นสถานะการทำงานชัดเจนขึ้น' },
+
+            { type: 'note', text: 'สาเหตุของปัญหา: เกิดเฉพาะบนเซิร์ฟเวอร์ Production เนื่องจากระบบ Cache ข้อมูลนานเกินไป ไม่พบปัญหาเมื่อรันบนเครื่องทดสอบ' },
+            { type: 'note', text: 'ขอขอบคุณผู้ใช้ที่แจ้งปัญหาเข้ามา ช่วยให้ทีมพัฒนาระบุและแก้ไขได้อย่างรวดเร็ว' },
+        ],
     },
     {
         version: '2.1.1',
         date: '2026-02-19',
-        title: 'อัปเดตปรับปรุงระบบและแก้ไขปัญหา',
+        title: 'ปรับปรุงความเสถียรและอัปเดตประกาศเวอร์ชัน',
+        summary: 'อัปเดตย่อยเพื่อเสริมความเสถียรของระบบหลังการเปลี่ยนแปลงในเวอร์ชันก่อนหน้า และปรับปรุงประกาศเวอร์ชันให้เป็นปัจจุบัน',
+        highlights: [
+            'ปรับปรุงความเสถียรของระบบหลังอัปเดตเวอร์ชัน',
+            'อัปเดตประกาศและรายการอัปเดตให้เป็นปัจจุบัน',
+        ],
         changes: [
-            { type: 'fix', text: '🔧 แก้ไขปัญหาการ revert commit และอัปเดต patch notes' },
-            { type: 'improve', text: '• ปรับปรุงความเสถียรของระบบหลังการ revert' },
-            { type: 'improve', text: '• อัปเดต changelog ให้เป็นปัจจุบัน' }
-        ]
+            { type: 'fix', text: 'ปรับปรุงความเสถียรของระบบโดยรวมหลังการเปลี่ยนแปลงในเวอร์ชันก่อนหน้า' },
+            { type: 'improve', text: 'อัปเดตประกาศและรายการอัปเดต (Patch Notes) ให้เป็นปัจจุบัน' },
+        ],
     },
     {
         version: '2.1.0',
         date: '2026-02-18',
-        title: 'ระบบบริหารจัดการใบอนุญาตร้านค้า — รวมทุกฟีเจอร์ & คุณสมบัติระบบ',
+        title: 'เปิดตัวระบบบริหารจัดการใบอนุญาตร้านค้าครบทุกฟีเจอร์',
+        summary: 'เปิดตัวระบบบริหารจัดการใบอนุญาตร้านค้าเวอร์ชันสมบูรณ์ สำหรับสำนักงานเทศบาลเมืองนางรอง ครอบคลุมการจัดการร้านค้า ใบอนุญาต ประเภทใบอนุญาต ผู้ใช้งาน รายงาน ประวัติกิจกรรม และระบบช่องกำหนดเอง พร้อมความปลอดภัยระดับองค์กรและการใช้งานที่รองรับทุกอุปกรณ์',
+        highlights: [
+            'ระบบจัดการร้านค้าและใบอนุญาตในรูปแบบตาราง Excel แก้ไขข้อมูลในเซลล์ได้โดยตรง',
+            'หน้า Dashboard แสดงสถิติภาพรวม 5 การ์ดและรายการใบอนุญาตที่ต้องดำเนินการ',
+            'ระบบรายงาน ส่งออกข้อมูลเป็น CSV หรือ PDF พร้อมตัวกรองและดูตัวอย่างก่อน',
+            'ระบบประวัติกิจกรรม (Audit Trail) ติดตามทุกการเปลี่ยนแปลงในระบบ',
+            'ระบบช่องกำหนดเอง (Custom Fields) สร้างฟิลด์ข้อมูลเองได้ไม่จำกัด',
+            'ความปลอดภัยระดับองค์กร: ป้องกันการโจมตี จำกัดการล็อกอิน และเข้ารหัสรหัสผ่าน',
+            'รองรับการใช้งานบนคอมพิวเตอร์ แท็บเล็ต และมือถือ',
+        ],
         changes: [
-            // ═══════════════════════════════════════════
-            // ภาพรวมระบบ (System Overview)
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '🎉 ระบบบริหารจัดการข้อมูลร้านค้าและใบอนุญาต (Shop License Management System) สำหรับเทศบาลนางรอง' },
-            { type: 'feature', text: '• สร้างด้วย Next.js 14 App Router + Neon PostgreSQL (Serverless) + iron-session Authentication' },
-            { type: 'improve', text: '🎨 UX/UI Design: ธีม Orange-Gold ทันสมัย, Responsive ทุกอุปกรณ์ (Mobile / Tablet / Desktop)' },
-            { type: 'improve', text: '• ฟอนต์ Inter + Noto Sans Thai ผ่าน next/font/google — Zero CLS, Preload' },
-            { type: 'improve', text: '• Vanilla CSS Styling (ไม่ใช้ Tailwind) พร้อม CSS Variables สำหรับธีม' },
+            { type: 'section', text: 'ภาพรวมระบบ' },
+            { type: 'feature', text: 'เปิดตัวระบบบริหารจัดการใบอนุญาตร้านค้าสำหรับสำนักงานเทศบาลเมืองนางรอง' },
+            { type: 'improve', text: 'การออกแบบหน้าจอทันสมัย ธีมส้ม-ทอง พร้อมฟอนต์ภาษาไทยอ่านง่าย' },
+            { type: 'improve', text: 'รองรับทุกอุปกรณ์ — คอมพิวเตอร์ แท็บเล็ต และมือถือ' },
 
-            // ═══════════════════════════════════════════
-            // Real-time Data Sync System (New!)
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '⚡ Real-time Data Sync: อัปเดตข้อมูลอัตโนมัติทุก 30 วินาที โดยไม่ต้องรีเฟรชหน้าจอ (F5)' },
-            { type: 'feature', text: '• Cross-tab Synchronization: เปลี่ยนข้อมูลในแท็บหนึ่ง อีกแท็บจะอัปเดตทันทีผ่าน BroadcastChannel' },
-            { type: 'feature', text: '• Focus Refetching: ดึงข้อมูลใหม่ทันทีเมื่อผู้ใช้กลับมาที่แท็บ (Window Focus)' },
-            { type: 'feature', text: '• Visibility Pausing: หยุด Polling เมื่อพับหน้าจอหรือซ่อนแท็บ เพื่อประหยัดทรัพยากร' },
-            { type: 'feature', text: '• รองรับทุกหน้าหลัก: Dashboard, Users, Licenses, Shops, License Types, Settings' },
-            { type: 'fix', text: '🐛 Fix Build Error: แก้ไข Temporal Dead Zone (TDZ) ใน ReferenceError ของ useAutoRefresh' },
+            { type: 'section', text: 'ระบบเข้าสู่ระบบและความปลอดภัย' },
+            { type: 'feature', text: 'หน้าเข้าสู่ระบบออกแบบใหม่ พร้อมภาพเคลื่อนไหวต้อนรับ' },
+            { type: 'security', text: 'เข้ารหัสรหัสผ่านด้วยมาตรฐานสากล (bcrypt) พร้อมเซสชันหมดอายุอัตโนมัติใน 30 นาที' },
+            { type: 'security', text: 'ป้องกันการโจมตีจากภายนอก — บล็อกเครื่องมือแฮก ป้องกัน SQL Injection และ XSS' },
+            { type: 'security', text: 'จำกัดจำนวนการเข้าสู่ระบบซ้ำ 10 ครั้งต่อนาที' },
+            { type: 'security', text: 'ระบบแบ่งสิทธิ์การใช้งาน — ผู้ดูแลระบบและผู้ใช้ทั่วไปเห็นเมนูต่างกันตามสิทธิ์' },
 
-            // ═══════════════════════════════════════════
-            // หน้า Login & Authentication
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '🔐 หน้า Login: ออกแบบใหม่ทั้งหมดพร้อม LoginCard, LoginForm, LoginSlider Animation' },
-            { type: 'feature', text: '• Feature Tags แสดงจุดเด่นของระบบ, WaveDivider ตกแต่ง, InputGroup Component' },
-            { type: 'feature', text: '• Success Exit Animation เมื่อ Login สำเร็จก่อนเปลี่ยนหน้า' },
-            { type: 'security', text: '🔒 Authentication: iron-session cookie-based, bcrypt password hashing (bcryptjs)' },
-            { type: 'security', text: '• Session อายุ 30 นาที, HTTP-only Secure Cookies, Auto-redirect เมื่อหมดอายุ' },
+            { type: 'section', text: 'หน้า Dashboard' },
+            { type: 'feature', text: 'การ์ดสถิติภาพรวม 5 การ์ด: ร้านค้าทั้งหมด ใบอนุญาตทั้งหมด ใช้งานปกติ ใกล้หมดอายุ และหมดอายุแล้ว' },
+            { type: 'feature', text: 'ส่วน "ต้องดำเนินการ" แสดงรายการใบอนุญาตที่ใกล้หมดอายุ คลิกเข้าไปดูรายละเอียดได้ทันที' },
+            { type: 'feature', text: 'สรุปแยกตามประเภทใบอนุญาต — แสดงจำนวนและสถานะ (ใช้งาน/ใกล้หมด/หมดอายุ)' },
 
-            // ═══════════════════════════════════════════
-            // Dashboard Layout & Sidebar
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '📐 Dashboard Layout: Sidebar + Header + Content Area พร้อม Responsive Toggle' },
-            { type: 'feature', text: '• Sidebar: เมนูหลัก (แดชบอร์ด, ใบอนุญาตใกล้หมดอายุ, ร้านค้า, ใบอนุญาต)' },
-            { type: 'feature', text: '• Sidebar: จัดการระบบ (ผู้ใช้งาน, ประเภทใบอนุญาต, ประวัติกิจกรรม) — Admin only' },
-            { type: 'feature', text: '• Sidebar: รายงาน (ส่งออกข้อมูล), ช่วยเหลือ (ประกาศและอัปเดต / Patch Notes)' },
-            { type: 'feature', text: '• Header: แสดง VersionBadge, วันที่-เวลาปัจจุบัน (อัปเดตทุกนาที), ปุ่มเปิด/ปิด Sidebar' },
-            { type: 'feature', text: '• Footer: แสดงข้อมูลผู้ใช้ (Avatar, ชื่อ, บทบาท), ปุ่ม Logout' },
-            { type: 'feature', text: '• Badge แจ้งเตือนจำนวนใบอนุญาตใกล้หมดอายุ ที่เมนู Sidebar แบบ Real-time' },
+            { type: 'section', text: 'จัดการร้านค้า' },
+            { type: 'feature', text: 'ตารางแบบ Excel แก้ไขข้อมูลในเซลล์ได้ทันที (ชื่อร้าน เจ้าของ เบอร์โทร ที่อยู่ อีเมล)' },
+            { type: 'feature', text: 'คลิกขวาที่แถวเพื่อเปิดเมนูแก้ไข ลบ ดูรายละเอียด เพิ่มแถว หรือเพิ่มคอลัมน์' },
+            { type: 'feature', text: 'ค้นหาจากหลายฟิลด์ในช่องเดียว — ชื่อร้าน เจ้าของ เบอร์โทร ที่อยู่ และอีเมล' },
+            { type: 'feature', text: 'สร้างร้านค้าใหม่แบบด่วน พร้อมตัวเลือก "สร้างใบอนุญาตพร้อมกัน"' },
+            { type: 'feature', text: 'ดูรายละเอียดร้านค้าในหน้าต่าง พร้อมรายการใบอนุญาตที่เกี่ยวข้อง' },
 
-            // ═══════════════════════════════════════════
-            // Dashboard (หน้าแรก)
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '📊 Dashboard ภาพรวม: 5 Stat Cards — ร้านค้าทั้งหมด, ใบอนุญาตทั้งหมด, ใช้งาน, ใกล้หมดอายุ, หมดอายุแล้ว' },
-            { type: 'feature', text: '• ส่วน "ต้องดำเนินการ": ตารางใบอนุญาตที่ใกล้หมดอายุ พร้อมลิงก์ไปหน้ารายละเอียด' },
-            { type: 'feature', text: '• ส่วน "สรุปตามประเภท": แสดง Breakdown จำนวนใบอนุญาตแยกตามประเภท (ใช้งาน/ใกล้หมด/หมดอายุ)' },
-            { type: 'feature', text: '• Parallel Data Fetching: โหลด Auth + Stats + Breakdown + Expiring พร้อมกัน' },
-            { type: 'improve', text: '• DashboardSkeleton: แสดง Skeleton Loading ขณะโหลดข้อมูลแทนหน้าว่าง' },
+            { type: 'section', text: 'จัดการใบอนุญาต' },
+            { type: 'feature', text: 'ตารางแบบ Excel พร้อมคอลัมน์: ร้านค้า ประเภท เลขที่ วันที่ออก วันหมดอายุ สถานะ และหมายเหตุ' },
+            { type: 'feature', text: 'ตัวกรองหลายเงื่อนไข — ประเภทใบอนุญาต สถานะ (ปกติ/หมดอายุ/ดำเนินการ/พักใช้/เพิกถอน) และร้านค้า' },
+            { type: 'feature', text: 'สร้างใบอนุญาตด่วนได้จากหน้านี้เลย พร้อมสร้างร้านค้าใหม่ได้ในคราวเดียว' },
 
-            // ═══════════════════════════════════════════
-            // จัดการร้านค้า (Shops)
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '🏪 จัดการร้านค้า: ตาราง Excel-like แก้ไข Inline ได้เลย (ชื่อร้าน, เจ้าของ, เบอร์โทร, ที่อยู่, อีเมล, หมายเหตุ)' },
-            { type: 'feature', text: '• Right-click Context Menu: แก้ไข, ลบ, ดูรายละเอียด, เพิ่มแถว, เพิ่มคอลัมน์' },
-            { type: 'feature', text: '• ค้นหา (Debounced): ชื่อร้าน, เจ้าของ, เบอร์โทร, ที่อยู่, อีเมล' },
-            { type: 'feature', text: '• Pagination: เลือกจำนวนต่อหน้า, กระโดดไปหน้าที่ต้องการ, แสดงข้อมูลรวม' },
-            { type: 'feature', text: '• QuickAddModal: สร้างร้านค้าใหม่แบบด่วน พร้อมตัวเลือกสร้างใบอนุญาตพร้อมกัน' },
-            { type: 'feature', text: '• ShopDetailModal: ดูรายละเอียดร้านค้าแบบ Modal พร้อมรายการใบอนุญาตที่เกี่ยวข้อง' },
-            { type: 'feature', text: '• Export ร้านค้าเป็น PDF พร้อมหัวกระดาษตราครุฑ (pdfmake)' },
-            { type: 'feature', text: '• เพิ่ม/แก้ไข/ลบคอลัมน์ Custom Fields จากหน้าตาราง, แก้ชื่อหัวคอลัมน์ (Editable Header)' },
-            { type: 'feature', text: '• รองรับ Custom Fields: เพิ่มฟิลด์ข้อมูลเฉพาะร้านค้าได้ไม่จำกัด แสดงผลใน Table และ Export' },
-            { type: 'improve', text: '• SWR Dropdown Cache: อัปเดต Cache อัตโนมัติเมื่อเพิ่ม/แก้ไข/ลบร้านค้า' },
+            { type: 'section', text: 'ใบอนุญาตใกล้หมดอายุ' },
+            { type: 'feature', text: 'การ์ดสถิติ 4 ระดับคลิกกรองได้ — หมดอายุแล้ว / เหลือไม่เกิน 7 วัน / 8-14 วัน / มากกว่า 14 วัน' },
+            { type: 'feature', text: 'ป้ายสถานะสีตามความเร่งด่วน — แดง ส้ม เหลือง และน้ำเงิน' },
+            { type: 'feature', text: 'ปุ่ม "ล้างที่หมดอายุ" — ลบใบอนุญาตหมดอายุทั้งหมดในครั้งเดียว (มีการยืนยันก่อนลบ)' },
+            { type: 'feature', text: 'รองรับการกู้คืน (Undo) ภายใน 5 วินาทีหลังลบ — ป้องกันการลบผิดพลาด' },
 
-            // ═══════════════════════════════════════════
-            // จัดการใบอนุญาต (Licenses)
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '📄 จัดการใบอนุญาต: ตาราง Excel-like พร้อม Inline Editing และ Custom Fields' },
-            { type: 'feature', text: '• คอลัมน์: ร้านค้า (Dropdown), ประเภท (Dropdown), เลขที่, วันออก, วันหมดอายุ, สถานะ, หมายเหตุ' },
-            { type: 'feature', text: '• กรองข้อมูล: ประเภทใบอนุญาต, สถานะ (ปกติ/หมดอายุ/กำลังดำเนินการ/ถูกพักใช้/ถูกเพิกถอน), ร้านค้า' },
-            { type: 'feature', text: '• ค้นหา (Debounced) และ Pagination พร้อมข้อมูลสรุป' },
-            { type: 'feature', text: '• QuickAddModal: เพิ่มใบอนุญาตด่วนพร้อม Dropdown ร้านค้า/ประเภท + Custom Fields' },
-            { type: 'feature', text: '• สร้างร้านค้าใหม่ได้จากหน้าใบอนุญาต (Quick Add Shop)' },
-            { type: 'feature', text: '• เพิ่มคอลัมน์ Custom Fields จากหน้าตาราง (Dynamic Column Add)' },
-            { type: 'feature', text: '• Export ใบอนุญาตเป็น PDF พร้อม Custom Fields' },
+            { type: 'section', text: 'ประเภทใบอนุญาต' },
+            { type: 'feature', text: 'ตารางจัดการประเภทใบอนุญาต — ชื่อ คำอธิบาย อายุใบอนุญาต (วัน) และจำนวนที่ใช้งาน' },
+            { type: 'feature', text: 'ป้องกันการลบประเภทที่ยังมีใบอนุญาตผูกอยู่' },
 
-            // ═══════════════════════════════════════════
-            // ใบอนุญาตใกล้หมดอายุ (Expiring Licenses)
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '⏰ ใบอนุญาตใกล้หมดอายุ: 4 Stat Cards คลิกกรองได้ — หมดอายุแล้ว / ≤7 วัน / 8-14 วัน / >14 วัน' },
-            { type: 'feature', text: '• Badge สีตามระดับความเร่งด่วน: แดง (หมดอายุ), ส้ม (วิกฤต), เหลือง (เตือน), น้ำเงิน (ปกติ)' },
-            { type: 'feature', text: '• กรองตามประเภทใบอนุญาต, ช่วงวันที่หมดอายุ (DatePicker), ค้นหาอิสระ' },
-            { type: 'feature', text: '• เรียงลำดับ: วันหมดอายุ (ใกล้-ไกล / ไกล-ใกล้), ชื่อร้าน (ก-ฮ / ฮ-ก)' },
-            { type: 'feature', text: '• ปุ่ม "ล้างที่หมดอายุ": ลบใบอนุญาตหมดอายุทั้งหมดในครั้งเดียว (พร้อมยืนยัน)' },
-            { type: 'feature', text: '• ลบรายการเดี่ยวแบบ Optimistic Delete พร้อมตัวเลือก Undo (Pending Delete)' },
-            { type: 'feature', text: '• StatusFilterBadges: คลิก Badge เพื่อ Toggle กรอง, รีเซ็ตตัวกรองทั้งหมด' },
-            { type: 'feature', text: '• Pagination พร้อม Page Jump และ Items Per Page' },
+            { type: 'section', text: 'จัดการผู้ใช้งาน' },
+            { type: 'feature', text: 'หน้าจัดการผู้ใช้งาน (สำหรับผู้ดูแลระบบ) — สร้าง แก้ไข ลบ รีเซ็ตรหัสผ่าน และแบ่งบทบาท' },
+            { type: 'feature', text: 'ส่งออกเอกสารแจ้งรหัสผ่านเป็น PDF หลังสร้างผู้ใช้ใหม่' },
 
-            // ═══════════════════════════════════════════
-            // ประเภทใบอนุญาต (License Types)
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '🏷️ จัดการประเภทใบอนุญาต: ตาราง Excel-like พร้อม Inline Editing + Custom Fields' },
-            { type: 'feature', text: '• คอลัมน์: ชื่อ, คำอธิบาย, อายุใบอนุญาต (วัน), จำนวนใบอนุญาตที่ใช้งาน' },
-            { type: 'feature', text: '• Parallel Data Fetching: โหลด Types + Custom Fields + Custom Values พร้อมกัน' },
-            { type: 'feature', text: '• ป้องกันลบประเภทที่มีใบอนุญาตผูกอยู่ (Referential Integrity Check)' },
-            { type: 'feature', text: '• Custom Fields Values: บันทึกค่า Custom Fields แยกตาม Entity ID' },
+            { type: 'section', text: 'ส่งออกข้อมูล' },
+            { type: 'feature', text: 'ส่งออกข้อมูลร้านค้า ใบอนุญาต หรือผู้ใช้งาน เป็น CSV (สำหรับ Excel) หรือ PDF (รายงานทางการ)' },
+            { type: 'feature', text: 'ปรับแต่งคอลัมน์ก่อนส่งออก — เลือกแสดงหรือซ่อนช่องกำหนดเองได้อิสระ' },
+            { type: 'feature', text: 'ดูตัวอย่างข้อมูลก่อนส่งออก — แสดง 50 รายการแรกพร้อมจำนวนทั้งหมด' },
+            { type: 'feature', text: 'PDF พร้อมหัวกระดาษราชการ ตราครุฑ ที่อยู่เทศบาล และฟอนต์ไทยทางการ' },
 
-            // ═══════════════════════════════════════════
-            // จัดการผู้ใช้งาน (Users) — Admin Only
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '👥 จัดการผู้ใช้งาน (Admin only): ตาราง Excel-like สร้าง/แก้ไข/ลบผู้ใช้' },
-            { type: 'feature', text: '• คอลัมน์: ชื่อผู้ใช้, ชื่อ-นามสกุล, บทบาท (Admin/User), วันที่สร้าง' },
-            { type: 'feature', text: '• สร้างผู้ใช้ใหม่ผ่าน Modal Form พร้อม Validation (รหัสผ่านขั้นต่ำ 6 ตัวอักษร, ยืนยันรหัสผ่าน)' },
-            { type: 'feature', text: '• แก้ไขข้อมูลผ่าน Modal (ชื่อ, บทบาท, รีเซ็ตรหัสผ่าน)' },
-            { type: 'feature', text: '• ลบผู้ใช้แบบ Optimistic Delete + Pending Delete (Undo ภายใน 5 วินาที)' },
-            { type: 'feature', text: '• Export User Credentials เป็น PDF หลังสร้างผู้ใช้ใหม่ (เอกสารแจ้งรหัสผ่าน)' },
-            { type: 'feature', text: '• Stat Cards: จำนวนผู้ใช้ทั้งหมด, Admin, User' },
+            { type: 'section', text: 'ประวัติกิจกรรม' },
+            { type: 'feature', text: 'ติดตามทุกการกระทำ (สำหรับผู้ดูแลระบบ) — เข้าสู่ระบบ ออกจากระบบ สร้าง แก้ไข ลบ ดู และส่งออก' },
+            { type: 'feature', text: 'การ์ดสถิติ 4 ตัว — กิจกรรมวันนี้ 7 วันล่าสุด จำนวนผู้ใช้วันนี้ และจำนวนการล็อกอิน' },
+            { type: 'feature', text: '3 แท็บ: รายการกิจกรรม / สรุปภาพรวมแยกตามประเภท / IP Address ที่เข้าใช้บ่อย' },
+            { type: 'feature', text: 'ตรวจจับอุปกรณ์ — แสดงว่าผู้ใช้เข้าจากมือถือหรือคอมพิวเตอร์ พร้อม browser ที่ใช้' },
 
-            // ═══════════════════════════════════════════
-            // ส่งออกข้อมูล (Export)
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '🖨️ ส่งออกข้อมูล: เลือก Export ร้านค้า, ใบอนุญาต, หรือผู้ใช้งาน เป็น CSV หรือ PDF' },
-            { type: 'feature', text: '• เลือกรูปแบบไฟล์: CSV (สำหรับ Excel) หรือ PDF (รายงานทางการ)' },
-            { type: 'feature', text: '• ปรับแต่งคอลัมน์: เลือกแสดง/ซ่อน Custom Fields ใน Export (Chip Toggle UI)' },
-            { type: 'feature', text: '• ตัวกรองใบอนุญาต: ค้นหา, ร้านค้า (Searchable Dropdown), ประเภท, สถานะ, ช่วงวันหมดอายุ' },
-            { type: 'feature', text: '• Preview ข้อมูลก่อน Export: แสดงตัวอย่าง 50 รายการแรกใน Modal พร้อมจำนวนทั้งหมด' },
-            { type: 'feature', text: '• PDF: หัวกระดาษตราครุฑ + ที่อยู่เทศบาล, ฟอนต์ TH Sarabun New (pdfmake)' },
-            { type: 'feature', text: '• CSV: รองรับภาษาไทย, BOM Header สำหรับ Excel' },
-            { type: 'feature', text: '• Loading State พร้อม SweetAlert2 Progress ขณะสร้าง PDF' },
+            { type: 'section', text: 'ระบบช่องกำหนดเอง' },
+            { type: 'feature', text: 'สร้างช่องข้อมูลกำหนดเองได้ไม่จำกัด — เพิ่มฟิลด์พิเศษสำหรับร้านค้า ใบอนุญาต ประเภทใบอนุญาต หรือผู้ใช้งาน' },
+            { type: 'feature', text: 'รองรับ 6 ประเภทข้อมูล — ข้อความ ตัวเลข วันที่ ตัวเลือก (Dropdown) ช่อง Checkbox และข้อความยาว' },
+            { type: 'feature', text: 'ระบบชุดข้อมูลแบบยืดหยุ่น — สร้างชุดข้อมูลใหม่นอกเหนือจากร้านค้า/ใบอนุญาตได้โดยไม่ต้องพัฒนาเพิ่ม' },
 
-            // ═══════════════════════════════════════════
-            // ประวัติกิจกรรม (Activity Logs) — Admin Only
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '📋 ประวัติกิจกรรม (Admin only): ติดตามทุกการกระทำ — LOGIN, LOGOUT, CREATE, UPDATE, DELETE, VIEW, EXPORT' },
-            { type: 'feature', text: '• 4 Stat Cards: กิจกรรมวันนี้, 7 วันล่าสุด, ผู้ใช้วันนี้, ล็อกอินวันนี้' },
-            { type: 'feature', text: '• Tab "รายการกิจกรรม": ตารางแสดงเวลา, ผู้ใช้, การกระทำ (Badge สี), ประเภท, รายละเอียด, IP/อุปกรณ์' },
-            { type: 'feature', text: '• Tab "สรุปภาพรวม": Action Breakdown + Entity Breakdown (แยกตามประเภทข้อมูล)' },
-            { type: 'feature', text: '• Tab "IP Address": แสดง IP ที่เข้าใช้งานบ่อย 7 วันล่าสุด พร้อมจำนวนครั้ง' },
-            { type: 'feature', text: '• Entity Types: AUTH, USER, SHOP, LICENSE, LICENSE_TYPE, CUSTOM_FIELD, ENTITY' },
-            { type: 'feature', text: '• Device Detection: แสดงประเภทอุปกรณ์ (Mobile/Desktop) + Browser' },
-            { type: 'feature', text: '• ปุ่ม "ล้างข้อมูล": ลบ Activity Logs ทั้งหมด (พร้อมยืนยัน)' },
-            { type: 'feature', text: '• Pagination: เลือก Items Per Page, Page Jump, แสดงจำนวนรวม' },
+            { type: 'section', text: 'ประสิทธิภาพและความสะดวก' },
+            { type: 'improve', text: 'ข้อมูลอัปเดตอัตโนมัติทุก 30 วินาที — ไม่ต้องรีเฟรชหน้าเอง' },
+            { type: 'improve', text: 'ซิงค์ข้อมูลระหว่างแท็บ — เปลี่ยนในแท็บหนึ่ง อีกแท็บอัปเดตทันที' },
+            { type: 'improve', text: 'แถบแจ้งเตือนจำนวนใบอนุญาตใกล้หมดอายุในเมนู Sidebar แบบอัปเดตตลอดเวลา' },
+            { type: 'improve', text: 'ระบบ Cache ข้อมูลอัจฉริยะ — หน้าโหลดเร็ว ไม่ต้องรอข้อมูลซ้ำ' },
+            { type: 'improve', text: 'ตาราง Excel พร้อมคลิก 2 ครั้งเพื่อแก้ไข ลากขยายคอลัมน์ จัดเรียงข้อมูล และตัวกรองในหัวตาราง' },
+            { type: 'improve', text: 'ระบบประกาศและรายการอัปเดต (Patch Notes) — คลิกไอคอนเวอร์ชันที่หัวหน้าจอเพื่อดูประวัติ' },
 
-            // ═══════════════════════════════════════════
-            // Custom Fields System
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '⚙️ Custom Fields: สร้างฟิลด์กำหนดเองสำหรับ shops, licenses, license_types, users' },
-            { type: 'feature', text: '• รองรับ 6 ประเภท: Text, Number, Date, Select (Dropdown), Checkbox, Textarea' },
-            { type: 'feature', text: '• ตั้งค่าต่อฟิลด์: Required, แสดง/ซ่อนในตาราง, แสดง/ซ่อนในฟอร์ม, ลำดับการแสดงผล (Display Order)' },
-            { type: 'feature', text: '• Validation: ชื่อ Field ต้องเป็น a-z, 0-9, _ เท่านั้น, ตรวจสอบชื่อซ้ำ, ต้องมี Options สำหรับ Select' },
-            { type: 'feature', text: '• Custom Field Values: บันทึกค่าแยก Entity Type + Entity ID (API /api/custom-field-values)' },
-            { type: 'feature', text: '• แสดงคอลัมน์ Custom Fields ในตาราง Excel-like ทุกหน้า (Merge กับ Standard Columns)' },
-            { type: 'feature', text: '• CRUD ผ่าน Settings > Custom Fields (สร้าง/แก้ไข/ลบ) พร้อม SweetAlert2 Confirmation' },
-
-            // ═══════════════════════════════════════════
-            // Dynamic Entities System
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '🧩 Dynamic Entities: สร้างชุดข้อมูลใหม่ได้ไม่จำกัด พร้อมกำหนด Fields เอง' },
-            { type: 'feature', text: '• Entity Management: สร้าง Entity (slug, label, icon, description, display_order, is_active)' },
-            { type: 'feature', text: '• Entity Fields: กำหนดคอลัมน์ (field_name, field_label, field_type, options, required, unique, show_in_list/form)' },
-            { type: 'feature', text: '• Entity Records: CRUD ข้อมูลผ่าน Dynamic Data Page (/dashboard/data/[entity])' },
-            { type: 'feature', text: '• รองรับ Field Types: text, number, date, select, checkbox, textarea + Default Values' },
-            { type: 'feature', text: '• API: /api/entities, /api/entity-fields, /api/entity-records' },
-
-            // ═══════════════════════════════════════════
-            // ExcelTable Component System
-            // ═══════════════════════════════════════════
-            { type: 'improve', text: '📊 ExcelTable Component: ตาราง Excel-like ใช้ร่วมกันทุกหน้า (shops, licenses, license-types, users)' },
-            { type: 'improve', text: '• Inline Editing: คลิก 2 ครั้งที่เซลล์เพื่อแก้ไข (EditableCell Component)' },
-            { type: 'improve', text: '• Right-click Context Menu: แก้ไข, ลบ, ดูรายละเอียด, เพิ่มแถว, เพิ่มคอลัมน์ (TableContextMenu)' },
-            { type: 'improve', text: '• Editable Headers: คลิก 2 ครั้งที่หัวคอลัมน์เพื่อเปลี่ยนชื่อ (EditableHeader Component)' },
-            { type: 'improve', text: '• Column Resize, Sorting, Filter Row, Toolbar (Export/Add)' },
-            { type: 'improve', text: '• TableHooks: Logic แยกจาก UI, TableRow: Rendering แยกเป็น Component ย่อย' },
-            { type: 'improve', text: '• รองรับ Dropdown, Date, Status Badge ในเซลล์ (CustomSelect, DatePicker, StatusBadge)' },
-
-            // ═══════════════════════════════════════════
-            // UI Components Library
-            // ═══════════════════════════════════════════
-            { type: 'improve', text: '🧱 UI Components ที่พัฒนาเอง (ไม่พึ่ง UI Library):' },
-            { type: 'improve', text: '• CustomSelect: Dropdown พร้อม Searchable, Icon, Placeholder, Custom Styling' },
-            { type: 'improve', text: '• DatePicker: ตัวเลือกวันที่ พร้อม Icon และ Placeholder' },
-            { type: 'improve', text: '• Pagination: Page Navigation, Items Per Page, Page Jump, Total Info' },
-            { type: 'improve', text: '• Modal: Dialog Component พร้อม Overlay, Close Button, Prevent Body Scroll' },
-            { type: 'improve', text: '• QuickAddModal: สร้างข้อมูลด่วน (Shop/License) พร้อม Custom Fields Support' },
-            { type: 'improve', text: '• ShopDetailModal: แสดงรายละเอียดร้านค้า + ใบอนุญาตที่เกี่ยวข้อง' },
-            { type: 'improve', text: '• FilterRow + SearchInput: แถวกรองข้อมูลพร้อม Responsive Grid Layout' },
-            { type: 'improve', text: '• StatusBadge: แสดงสถานะพร้อมสีตาม Status (active/expired/pending/suspended/revoked)' },
-            { type: 'improve', text: '• Skeleton + TableSkeleton: Loading Skeleton สำหรับ Card และ Table' },
-            { type: 'improve', text: '• Loading Component: Spinner พร้อม Full Page Mode และ Custom Message' },
-            { type: 'improve', text: '• VersionBadge: แสดงเวอร์ชันที่ Header, คลิกเปิด Patch Notes' },
-            { type: 'improve', text: '• SweetAlert2 Custom Theme: Toast Notifications, Confirm Dialogs, Pending Delete (Undo)' },
-
-            // ═══════════════════════════════════════════
-            // SWR Data Fetching & Custom Hooks
-            // ═══════════════════════════════════════════
-            { type: 'improve', text: '⚡ SWR Data Fetching: Caching, Deduplication, Revalidation, Prefetch, Mutation' },
-            { type: 'improve', text: '• SWR Hooks: useDashboardStats, useExpiringCount, useLicenseBreakdown, useLicenseTypes' },
-            { type: 'improve', text: '• SWR Hooks: useShops, useLicenses, useLicense, useExpiringLicenses, useActivityLogs' },
-            { type: 'improve', text: '• SWR Hooks: useDropdownData (Shops + License Types + Pre-formatted Options), useMutation' },
-            { type: 'improve', text: '• SWR Utilities: prefetch (Hover/Pre-navigation), clearCache (Logout)' },
-            { type: 'improve', text: '• SWR Config Variants: dashboard, realtime, list, static — ปรับ TTL ตามประเภทข้อมูล' },
-
-            // ═══════════════════════════════════════════
-            // Performance Optimization Hooks
-            // ═══════════════════════════════════════════
-            { type: 'improve', text: '🚀 Performance Hooks (useOptimized.js):' },
-            { type: 'improve', text: '• useDebounce / useDebouncedCallback: ป้องกันการ fetch บ่อยเกินไป (Search Input)' },
-            { type: 'improve', text: '• useThrottle: จำกัดความถี่ของการ update (Scroll/Resize)' },
-            { type: 'improve', text: '• useIntersectionObserver / useOnScreen: Lazy Load เมื่อ Element อยู่ใน Viewport' },
-            { type: 'improve', text: '• useLocalStorage: Persist state ลง localStorage (SSR Safe)' },
-            { type: 'improve', text: '• usePrevious: Track ค่าก่อนหน้าสำหรับ Comparison' },
-            { type: 'improve', text: '• useMediaQuery / useIsMobile / useIsDesktop: Responsive Design Helper' },
-            { type: 'improve', text: '• useClickOutside: ตรวจจับคลิกนอก Element (ปิด Dropdown/Modal)' },
-            { type: 'improve', text: '• useKeyPress: ตรวจจับการกดปุ่ม Keyboard' },
-            { type: 'improve', text: '• useAsync: จัดการ Async Operations พร้อม Status/Error Handling' },
-            { type: 'improve', text: '• useMemoCompare: Custom Comparison สำหรับ useMemo' },
-
-            // ═══════════════════════════════════════════
-            // Additional Hooks
-            // ═══════════════════════════════════════════
-            { type: 'improve', text: '🪝 Hooks อื่นๆ:' },
-            { type: 'improve', text: '• usePagination: Pagination Logic (page, limit, total, setPage, setLimit, resetPage, updateFromResponse)' },
-            { type: 'improve', text: '• useSchema: Dynamic Schema Management สำหรับ schema_definitions' },
-            { type: 'improve', text: '• useAuthLogin: Login Authentication Logic (form state, submit, validation)' },
-            { type: 'improve', text: '• useLoginSlider: Login Page Slider Animation Logic' },
-
-            // ═══════════════════════════════════════════
-            // Lazy Loading & Code Splitting
-            // ═══════════════════════════════════════════
-            { type: 'improve', text: '📦 Lazy Loading & Code Splitting:' },
-            { type: 'improve', text: '• PatchNotesModal: โหลดเฉพาะเมื่อเปิด Modal (next/dynamic, ssr: false)' },
-            { type: 'improve', text: '• Font Awesome CSS: โหลด Non-blocking เฉพาะใน Dashboard Layout' },
-            { type: 'improve', text: '• PDF Export (pdfmake): โหลดเฉพาะเมื่อกดส่งออก' },
-
-            // ═══════════════════════════════════════════
-            // Security (Middleware + API)
-            // ═══════════════════════════════════════════
-            { type: 'security', text: '🛡️ Security Middleware (WAF Lite):' },
-            { type: 'security', text: '• Anti-Bot Protection: บล็อก 20+ Scanner/Attack Tools (sqlmap, nikto, nuclei, burp, nmap ฯลฯ)' },
-            { type: 'security', text: '• Payload Inspection: ตรวจจับ SQL Injection, XSS, Path Traversal, LFI (10+ Patterns)' },
-            { type: 'security', text: '• Rate Limiting: General 300 req/min, Login 10 req/min, Sensitive 60 req/min' },
-            { type: 'security', text: '• Security Headers: HSTS (2 ปี), CSP, X-Frame-Options DENY, X-Content-Type-Options nosniff' },
-            { type: 'security', text: '• Referrer-Policy: strict-origin-when-cross-origin' },
-            { type: 'security', text: '• Permissions-Policy: ปิด camera, microphone, geolocation, payment, usb' },
-            { type: 'security', text: '• Cross-Origin: COOP same-origin, CORP same-origin' },
-            { type: 'security', text: '• API Security: Cache-Control no-store, Pragma no-cache, API-specific CSP' },
-            { type: 'security', text: '• ลบ X-Powered-By Header เพื่อซ่อนข้อมูลเซิร์ฟเวอร์' },
-            { type: 'security', text: '🔒 Application Security:' },
-            { type: 'security', text: '• Parameterized Queries ป้องกัน SQL Injection ทุก API Route' },
-            { type: 'security', text: '• Input Validation & Sanitization ทุก API Route' },
-            { type: 'security', text: '• HTTP-only Secure Session Cookies (iron-session)' },
-            { type: 'security', text: '• bcrypt Password Hashing (bcryptjs)' },
-            { type: 'security', text: '• Role-based Access Control: Admin-only pages redirect ผู้ใช้ทั่วไป' },
-            { type: 'security', text: '• Auth Check: ตรวจสอบสิทธิ์ทุกครั้งที่เข้า Dashboard' },
-
-            // ═══════════════════════════════════════════
-            // API Routes (Backend)
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '🔌 API Routes ทั้งหมด 17 เส้นทาง:' },
-            { type: 'feature', text: '• /api/auth: POST Login/Logout, GET Auth Check' },
-            { type: 'feature', text: '• /api/dashboard: GET Stats, License Breakdown, Expiring Count, Recent Activity' },
-            { type: 'feature', text: '• /api/shops: CRUD ร้านค้า + Custom Fields + Pagination + Search' },
-            { type: 'feature', text: '• /api/licenses: CRUD ใบอนุญาต + Custom Fields + Pagination + Filters' },
-            { type: 'feature', text: '• /api/licenses/expiring: GET ใบอนุญาตใกล้หมดอายุ' },
-            { type: 'feature', text: '• /api/license-types: CRUD ประเภทใบอนุญาต' },
-            { type: 'feature', text: '• /api/users: CRUD ผู้ใช้งาน + Stats' },
-            { type: 'feature', text: '• /api/profile: GET/PUT โปรไฟล์ผู้ใช้ปัจจุบัน' },
-            { type: 'feature', text: '• /api/export: Export CSV/PDF (ร้านค้า, ใบอนุญาต, ผู้ใช้)' },
-            { type: 'feature', text: '• /api/export-preview: Preview ข้อมูลก่อน Export' },
-            { type: 'feature', text: '• /api/activity-logs: GET/DELETE Activity Logs + Stats/Breakdown/IPs' },
-            { type: 'feature', text: '• /api/custom-fields: CRUD Custom Field Definitions' },
-            { type: 'feature', text: '• /api/custom-field-values: POST/GET Custom Field Values' },
-            { type: 'feature', text: '• /api/entities: CRUD Dynamic Entities' },
-            { type: 'feature', text: '• /api/entity-fields: CRUD Entity Field Definitions' },
-            { type: 'feature', text: '• /api/entity-records: CRUD Entity Records' },
-            { type: 'feature', text: '• /api/cron/cleanup: Cron Job Cleanup อัตโนมัติ' },
-
-            // ═══════════════════════════════════════════
-            // SEO & Analytics
-            // ═══════════════════════════════════════════
-            { type: 'improve', text: '📈 SEO & Analytics:' },
-            { type: 'improve', text: '• Open Graph + Twitter Card Metadata สำหรับ Social Sharing' },
-            { type: 'improve', text: '• Structured Data (JSON-LD): SoftwareApplication Schema' },
-            { type: 'improve', text: '• Vercel Analytics + Speed Insights: ติดตามประสิทธิภาพและการใช้งานจริง' },
-            { type: 'improve', text: '• Viewport Configuration: Mobile-optimized, themeColor #D97757' },
-            { type: 'improve', text: '• Performance Headers: Preconnect to Font Awesome CDN' },
-
-            // ═══════════════════════════════════════════
-            // Database & Scripts
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '🗄️ Database & Maintenance:' },
-            { type: 'feature', text: '• Neon PostgreSQL Serverless: schema.sql V2 + Custom Fields + Dynamic Entities' },
-            { type: 'feature', text: '• Scripts: seed-sample, force-reset-all, reset-db, reset-password, migrate, check-user' },
-            { type: 'feature', text: '• Scripts: add-sample-custom-fields, cleanup-fields, fix-field-order, verify-db' },
-            { type: 'feature', text: '• Cron Jobs: /api/cron/cleanup — ระบบ Cleanup อัตโนมัติ (ลบข้อมูลเก่า, Orphaned Records)' },
-
-            // ═══════════════════════════════════════════
-            // Patch Notes & Version System
-            // ═══════════════════════════════════════════
-            { type: 'feature', text: '📢 Patch Notes System:' },
-            { type: 'feature', text: '• PatchNotesModal: ดูประวัติการอัปเดตผ่าน Sidebar หรือ VersionBadge ที่ Header' },
-            { type: 'feature', text: '• Version Sidebar: เลือกดูแต่ละเวอร์ชัน พร้อมวันที่ (Thai Format)' },
-            { type: 'feature', text: '• Change Type Badges: ฟีเจอร์หลัก (เขียว), แก้ไข (แดง), ออกแบบ (ฟ้า), ความปลอดภัย (เหลือง)' },
-            { type: 'feature', text: '• Changelog Constants: getLatestVersion(), getChangelogByVersion(), getChangeTypeBadge()' }
-        ]
+            { type: 'section', text: 'โครงสร้างระบบ' },
+            { type: 'improve', text: 'ใช้ฐานข้อมูล PostgreSQL แบบ Cloud — รองรับข้อมูลจำนวนมาก ขยายตัวอัตโนมัติ' },
+            { type: 'improve', text: 'ระบบทำความสะอาดข้อมูลอัตโนมัติ — ลบข้อมูลเก่าและข้อมูลที่ไม่ได้ใช้ออกจากระบบ' },
+        ],
     },
     {
         version: '2.0.0',
         date: '2026-02-10',
-        title: 'ระบบบริหารจัดการใบอนุญาตและร้านค้า V2',
+        title: 'เปิดตัวระบบเวอร์ชัน 2 — ปรับปรุงใหม่ทั้งระบบ',
+        summary: 'เปิดตัวระบบเวอร์ชันใหม่ (V2) พัฒนาใหม่ทั้งหมดจากเวอร์ชันเดิม ปรับปรุงความเร็ว ความปลอดภัย และเพิ่มฟีเจอร์หลักที่จำเป็น เช่น ระบบช่องกำหนดเอง ประวัติกิจกรรม และการส่งออกข้อมูล',
+        highlights: [
+            'พัฒนาใหม่ทั้งระบบ ทันสมัย ใช้งานง่าย และรองรับฟีเจอร์ใหม่',
+            'ยกระดับระบบฐานข้อมูลเป็นแบบ Cloud — รองรับข้อมูลจำนวนมาก ขยายตัวอัตโนมัติ',
+            'เพิ่มระบบช่องกำหนดเอง (Custom Fields) และระบบประวัติกิจกรรม (Audit Trail)',
+            'เพิ่มระบบส่งออกข้อมูลเป็น CSV และ PDF พร้อมดูตัวอย่างก่อน',
+            'เสริมความปลอดภัยระดับองค์กร',
+        ],
         changes: [
-            { type: 'feature', text: '🎉 เปิดตัวระบบ V2 — ปรับปรุงใหม่ทั้งหมดจาก V1' },
-            { type: 'feature', text: '• ย้ายจาก MySQL ไปเป็น Neon PostgreSQL (Serverless)' },
-            { type: 'feature', text: '• ย้ายจาก Pages Router ไปเป็น App Router (Next.js 14)' },
-            { type: 'feature', text: '• เพิ่มระบบ Custom Fields และ Dynamic Entities' },
-            { type: 'feature', text: '• เพิ่มระบบ Activity Logs (Audit Trail)' },
-            { type: 'feature', text: '• เพิ่มระบบ Export CSV/PDF พร้อม Preview' },
-            { type: 'improve', text: '• ปรับปรุง UI/UX ทั้งหมด — ธีม Orange-Gold' },
-            { type: 'improve', text: '• เพิ่ม SWR Data Fetching พร้อม Caching' },
-            { type: 'improve', text: '• เพิ่ม Performance Hooks (Debounce, Throttle, Lazy Load)' },
-            { type: 'security', text: '• เพิ่ม Security Middleware (WAF, Rate Limiting, Security Headers)' },
-            { type: 'security', text: '• เพิ่ม iron-session Authentication แทน JWT' }
-        ]
-    }
+            { type: 'section', text: 'ภาพรวมการปรับปรุง' },
+            { type: 'feature', text: 'เปิดตัวระบบใหม่ทั้งหมด (เวอร์ชัน 2) — ปรับปรุงใหม่ทั้งหมดจากเวอร์ชันเดิม' },
+            { type: 'feature', text: 'ยกระดับระบบฐานข้อมูลเป็นแบบ Cloud — รองรับข้อมูลจำนวนมาก ขยายตัวอัตโนมัติ และเสถียรกว่าเดิม' },
+
+            { type: 'section', text: 'ฟีเจอร์ใหม่' },
+            { type: 'feature', text: 'เพิ่มระบบช่องกำหนดเอง (Custom Fields) — สร้างฟิลด์ข้อมูลเองได้ไม่จำกัด ไม่ต้องรอพัฒนาเพิ่ม' },
+            { type: 'feature', text: 'เพิ่มระบบประวัติกิจกรรม (Audit Trail) — ติดตามทุกการเปลี่ยนแปลงในระบบ' },
+            { type: 'feature', text: 'เพิ่มระบบส่งออกข้อมูล — รองรับ CSV และ PDF พร้อมดูตัวอย่างก่อน' },
+
+            { type: 'section', text: 'การปรับปรุงทั่วไป' },
+            { type: 'improve', text: 'ปรับปรุงหน้าจอทั้งระบบ — ธีมส้ม-ทองใหม่ ดูสบายตา ใช้งานง่าย' },
+            { type: 'improve', text: 'ปรับปรุงความเร็วในการโหลดข้อมูล — หน้าเว็บเปิดเร็วขึ้น ไม่ต้องรอข้อมูลซ้ำ' },
+            { type: 'improve', text: 'รองรับการใช้งานบนมือถือและแท็บเล็ต — หน้าจอปรับตามอุปกรณ์โดยอัตโนมัติ' },
+
+            { type: 'section', text: 'ความปลอดภัย' },
+            { type: 'security', text: 'เสริมความปลอดภัยของระบบ — ป้องกันการโจมตีจากภายนอก จำกัดจำนวนครั้งการล็อกอิน และเพิ่ม Security Headers' },
+            { type: 'security', text: 'ปรับปรุงระบบเข้าสู่ระบบ — ใช้เทคโนโลยีเซสชันแบบปลอดภัยสูงสุด และเข้ารหัสรหัสผ่านด้วย bcrypt' },
+        ],
+    },
 ];
 
 /**
- * Get badge class for change type
+ * ป้ายกำกับของประเภทการเปลี่ยนแปลง
+ * ใช้สำหรับแสดงใน PatchNotesModal
  */
 export function getChangeTypeBadge(type) {
     switch (type) {
-        case 'feature': return { class: 'badge-success', label: 'ฟีเจอร์หลัก', icon: 'fas fa-star' };
-        case 'fix': return { class: 'badge-danger', label: 'แก้ไข', icon: 'fas fa-tools' };
-        case 'improve': return { class: 'badge-info', label: 'ออกแบบ', icon: 'fas fa-paint-brush' };
-        case 'security': return { class: 'badge-warning', label: 'ความปลอดภัย', icon: 'fas fa-shield-alt' };
-        default: return { class: 'badge-secondary', label: 'ข้อมูล', icon: 'fas fa-info-circle' };
+        case 'feature':
+            return { class: 'badge-success', label: 'ฟีเจอร์ใหม่', icon: 'fas fa-star' };
+        case 'improve':
+            return { class: 'badge-info', label: 'ปรับปรุง', icon: 'fas fa-wand-magic-sparkles' };
+        case 'fix':
+            return { class: 'badge-danger', label: 'แก้ไขข้อผิดพลาด', icon: 'fas fa-bug' };
+        case 'security':
+            return { class: 'badge-warning', label: 'ความปลอดภัย', icon: 'fas fa-shield-halved' };
+        case 'perf':
+            return { class: 'badge-success', label: 'ประสิทธิภาพ', icon: 'fas fa-bolt' };
+        case 'note':
+            return { class: 'badge-secondary', label: 'หมายเหตุ', icon: 'fas fa-info-circle' };
+        case 'section':
+            return { class: 'badge-section', label: '', icon: '' };
+        default:
+            return { class: 'badge-secondary', label: 'ข้อมูล', icon: 'fas fa-info-circle' };
     }
 }
 
 /**
- * Get latest version
+ * ดึงเวอร์ชันล่าสุด
  */
 export function getLatestVersion() {
     return CHANGELOG[0];
 }
 
 /**
- * Get changelog by version
+ * ดึงเวอร์ชันตามหมายเลข
  */
 export function getChangelogByVersion(version) {
     return CHANGELOG.find(c => c.version === version);
