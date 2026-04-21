@@ -660,6 +660,19 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
         console.warn('Failed to fetch custom fields for licenses:', error);
     }
 
+    // 🛡️ Dedupe: ตัด custom fields ที่ field_name ซ้ำกับ base columns ออก
+    // ป้องกันกรณี legacy data ที่ custom field ชื่อตรงกับ built-in column
+    // → ทำให้ header ซ้ำ (bug: "ชื่อร้านค้า" โผล่ 2 ครั้งใน PDF)
+    const LICENSE_RESERVED_FIELDS = new Set([
+        'owner_name', 'shop_name', 'shop_id', 'type_name', 'license_type_id',
+        'license_number', 'issue_date', 'expiry_date', 'status', 'notes'
+    ]);
+    const skippedLicenseFields = customFieldDefs.filter(cf => LICENSE_RESERVED_FIELDS.has(cf.field_name));
+    if (skippedLicenseFields.length > 0) {
+        console.warn('[exportLicensesToPDF] Skipped custom fields with reserved names:', skippedLicenseFields.map(f => f.field_name));
+    }
+    customFieldDefs = customFieldDefs.filter(cf => !LICENSE_RESERVED_FIELDS.has(cf.field_name));
+
     // Header structure (ตรงกับ serverPdfGenerator — createLicensesDocDef)
     // pre-custom: ลำดับที่ → ชื่อเจ้าของ → ชื่อร้าน → ประเภท → เลขที่ → วันที่ออก → วันหมดอายุ
     // custom fields: inserted ตรงกลาง
@@ -944,6 +957,19 @@ export async function exportShopsToPDF(shops, filters = {}) {
     } catch (error) {
         console.warn('Failed to fetch custom fields for shops:', error);
     }
+
+    // 🛡️ Dedupe: ตัด custom fields ที่ field_name ซ้ำกับ base columns ออก
+    // ป้องกันกรณี legacy data ที่ custom field ชื่อตรงกับ built-in column
+    // → ทำให้ header ซ้ำ (bug: "ชื่อร้านค้า/เจ้าของ/โทร/ที่อยู่" โผล่ 2 ครั้งใน PDF)
+    const SHOP_RESERVED_FIELDS = new Set([
+        'shop_name', 'owner_name', 'phone', 'email', 'address',
+        'notes', 'license_count', 'created_at'
+    ]);
+    const skippedShopFields = customFieldDefs.filter(cf => SHOP_RESERVED_FIELDS.has(cf.field_name));
+    if (skippedShopFields.length > 0) {
+        console.warn('[exportShopsToPDF] Skipped custom fields with reserved names:', skippedShopFields.map(f => f.field_name));
+    }
+    customFieldDefs = customFieldDefs.filter(cf => !SHOP_RESERVED_FIELDS.has(cf.field_name));
 
     // Base headers (match serverPdfGenerator — createShopsDocDef default)
     // ✅ เพิ่ม "หมายเหตุ" + "จำนวนใบอนุญาต" ที่เคยขาดหาย
