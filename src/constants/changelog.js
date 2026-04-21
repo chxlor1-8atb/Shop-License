@@ -223,7 +223,30 @@ export const CHANGELOG = [
             { type: 'improve', text: '🏷️ **เปลี่ยน watermark ของ PDF หน้า `/dashboard/expiring` ให้ dynamic ตามเนื้อหารายงาน** (แทนที่ข้อความ "ใบอนุญาตประกอบการค้า" แบบเดิมที่ไม่ตรงกับบริบท)' },
             { type: 'improve', text: '• **"ใบอนุญาตหมดอายุ"** — เมื่อ user filter สถานะ = "หมดอายุแล้ว" หรือเมื่อทุกรายการในรายงานหมดอายุไปแล้ว (days < 0 ทุกตัว)' },
             { type: 'improve', text: '• **"ใบอนุญาตใกล้หมดอายุ"** — default สำหรับกรณีอื่น (ไม่ filter / filter ช่วงวัน / mixed content)' },
-            { type: 'note', text: '📝 ผลกระทบเฉพาะ `exportExpiringLicensesToPDF` ใน `pdfExportSafe.js` — PDF อื่นๆ (licenses / shops / users จาก `/api/export`) ยังใช้ watermark "ใบอนุญาตประกอบการค้า" เหมือนเดิม' }
+            { type: 'note', text: '📝 ผลกระทบเฉพาะ `exportExpiringLicensesToPDF` ใน `pdfExportSafe.js` — PDF อื่นๆ (licenses / shops / users จาก `/api/export`) ยังใช้ watermark "ใบอนุญาตประกอบการค้า" เหมือนเดิม' },
+            // ─────────────────────────────────────────────
+            // 🏷️ Watermark — /dashboard/shops + /dashboard/licenses
+            // ─────────────────────────────────────────────
+            { type: 'improve', text: '🏷️ **เพิ่ม/กำหนด watermark ให้ PDF ที่ export จากปุ่มในตารางหน้า `/dashboard/shops` + `/dashboard/licenses`** (เดิมไม่มี watermark เลย — ต่างจาก PDF ของ `/dashboard/expiring` และ `/dashboard/export`)' },
+            { type: 'improve', text: '• **`/dashboard/shops`** (ปุ่ม "Export PDF" ใน ExcelTable → `exportShopsToPDF`) → watermark = **"รายการร้านค้า"**' },
+            { type: 'improve', text: '• **`/dashboard/licenses`** (ปุ่ม "Export PDF" ใน ExcelTable → `exportLicensesToPDF`) → watermark = **"ใบอนุญาต"**' },
+            { type: 'note', text: '📝 ใช้ style เดียวกับ watermark อื่น (`color: gray, opacity: 0.08, bold`) → ทีม/ผู้ตรวจเห็น watermark แยกประเภทเอกสารได้ทันทีแม้ไม่เปิดอ่าน header' },
+            // ─────────────────────────────────────────────
+            // 🛡️ Hardening — /dashboard/shops + /dashboard/licenses (Audit + แก้ 9 bugs)
+            // ─────────────────────────────────────────────
+            { type: 'fix', text: '🛡️ **Audit หน้า `/dashboard/shops` + `/dashboard/licenses` อย่างละเอียด — แก้บั๊ก 9 จุด** (data loss, race condition, state management, performance, security)' },
+            // HIGH priority
+            { type: 'fix', text: '• 🔴 **[HIGH] Export PDF ได้ไม่ครบ (Pagination bug)** — `handleExport` เดิมส่ง `shops`/`licenses` state = data ของ **page ปัจจุบันเท่านั้น** (10 รายการ) → user กด Export ได้ PDF แค่ 10 records ทั้งที่มีจริง 500+ = **ข้อมูลหายโดยไม่รู้ตัว**! **แก้**: fetch ใหม่ด้วย limit=2000 + apply filter ปัจจุบัน ก่อน export, แสดง Swal loading ระหว่าง fetch, แจ้งจำนวนรายการหลัง export' },
+            { type: 'fix', text: '• 🔴 **[HIGH] Export licenses ใช้ filter key ภาษาอังกฤษ** — เดิมส่ง `{search, type, status, shop}` ไป `exportLicensesToPDF` → PDF แสดง "search: xxx" / "type: xxx" = ไม่เป็นทางการ  **แก้**: เปลี่ยนเป็น "คำค้นหา/ประเภทใบอนุญาต/สถานะ/ร้านค้า" + ใช้ `debouncedSearch` แทน `search` (กัน inconsistent กับ fetch)' },
+            { type: 'fix', text: '• 🔴 **[HIGH] Export shops ไม่ส่ง filter info เลย** — `exportShopsToPDF(shops)` ส่งแค่ data → PDF ไม่แสดง filter context ทั้งที่ exporter รองรับ  **แก้**: ส่ง `pdfFilters` ภาษาไทย (คำค้นหา/ใบอนุญาต/สถานะใบอนุญาต/ประเภทใบอนุญาต) + map enum → label ไทยอัตโนมัติ' },
+            { type: 'fix', text: '• 🔴 **[HIGH] Orphan shop ใน QuickAddShop** — ถ้าสร้าง shop สำเร็จ **แต่** license POST ล้มเหลว → **shop ค้างใน DB ไปตลอด** (orphan record)  **แก้**: เพิ่ม rollback logic — ถ้า license fail → ลบ shop อัตโนมัติ + แจ้งผู้ใช้ "ร้านค้าถูกยกเลิกโดยอัตโนมัติ" (ครอบคลุมทั้ง API error + network error)' },
+            { type: 'fix', text: '• 🔴 **[HIGH] ExcelTable re-mount ทุกครั้งที่ add/delete row** — `key={licenses-${licenses.length}-${loading}}` / `key={shops-table-${isLoading}}` → `licenses.length` เปลี่ยนทุกครั้ง CRUD → table **re-mount ทั้งหมด** → undo stack / cell selection / scroll position **หายหมด** = UX แย่มาก  **แก้**: เปลี่ยนเป็น stable key `"licenses-table"` + `"shops-table"` → internal state คงอยู่ตลอด' },
+            { type: 'fix', text: '• 🔴 **[HIGH] `handleQuickAddLicense` ไม่ flatten custom_fields** — เดิม `setLicenses(prev => [data.license, ...prev])` ใส่ object ที่มี `custom_fields` nested → ExcelTable อ่าน `row[field_name]` โดยตรง → **cell custom field ว่างทั้งหมดใน license ที่เพิ่งสร้าง**!  **แก้**: `flattenedLicense = {...data.license, ...(data.license.custom_fields || {})}` ก่อน set state (เหมือน logic ใน `fetchLicenses` + `handleRowUpdate`)' },
+            { type: 'fix', text: '• 🔴 **[HIGH] `handleRowUpdate` status PUT confusing** — เดิม `updatedRow.original_status || existingLicense?.original_status || updatedRow.status` อ่านยาก + ถ้า `updatedRow.original_status` เป็น stored old value → อาจทับค่าใหม่  **แก้**: เรียงลำดับใหม่ `existingLicense?.original_status || updatedRow.original_status || updatedRow.status` + **คอมเม้นท์อธิบาย** flow: user แก้ status → standardData.status override ผ่าน spread (เพราะ `...standardData` มาหลัง) — logic เดิมถูกแต่ไม่ robust' },
+            // MEDIUM priority
+            { type: 'improve', text: '• 🟠 **[MEDIUM] ลบ `console.log` debug spam ใน `/api/licenses/route.js`** — เดิมมี 8+ จุดที่ log object ใหญ่ๆ ตอน GET/PUT ทุก request (ชื่อเริ่มด้วย 🔧/🔍/✅/❌/🗑️) → prod log noisy + leak data shape + slow serverless cold start  **แก้**: ลบออกทั้งหมด, คง `console.error` ที่จำเป็นสำหรับ error tracking' },
+            { type: 'improve', text: '• 🟠 **[MEDIUM] `fetchLicenses` ไม่มี cache-busting** — หน้า shops มี `_t=Date.now()` + `cache: "no-store"` แต่หน้า licenses ไม่มี → อาจเจอ Vercel edge cache stale data หลัง CRUD (เหมือนปัญหาที่เคยแก้ใน v2.1.3)  **แก้**: เพิ่ม `_t` + `cache: "no-store"` ให้ consistent กับ shops' },
+            { type: 'note', text: '📝 **ผลลัพธ์**: Export PDF ตอนนี้ได้ข้อมูลครบถ้วนแม้มีเป็น 1000+ รายการ, ไม่มี orphan data, ตาราง stable state, ไม่มี debug noise ใน prod log — หน้า shops/licenses แข็งแรงขึ้นอย่างมาก' }
         ]
     },
     {

@@ -146,15 +146,6 @@ export async function GET(request) {
             fetchAll(query, [...params, limit, offset])
         ]);
 
-        // Debug logging สำหรับตรวจสอบข้อมูลที่ส่งกลับไป frontend
-        console.log('🔍 GET API - Data Debug:', {
-            totalLicenses: licenses.length,
-            sampleLicense: licenses[0],
-            sampleCustomFields: licenses[0]?.custom_fields,
-            hasCustomFields: licenses[0]?.custom_fields && Object.keys(licenses[0]?.custom_fields).length > 0,
-            customFieldsKeys: licenses[0]?.custom_fields ? Object.keys(licenses[0]?.custom_fields) : []
-        });
-
         const total = parseInt(countResult?.total || 0, 10);
         const totalPages = Math.ceil(total / limit);
 
@@ -192,7 +183,6 @@ export async function POST(request) {
         const notes = sanitizeString(body.notes || '', 1000);
 
         if (shop_id < 1 || license_type_id < 1 || !license_number) {
-            console.error('[POST /api/licenses] Missing required fields');
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
         }
 
@@ -298,57 +288,7 @@ export async function PUT(request) {
         const issue_date = body.issue_date !== undefined ? sanitizeDate(body.issue_date, null) : (existingLicense?.issue_date || null);
         const expiry_date = body.expiry_date !== undefined ? sanitizeDate(body.expiry_date, null) : (existingLicense?.expiry_date || null);
 
-        // Debug logging สำหรับตรวจสอบข้อมูลที่รับมาจาก frontend
-        console.log('🔧 PUT API - Complete Data Debug:', {
-            id,
-            shop_id,
-            license_type_id,
-            license_number,
-            issue_date: body.issue_date,
-            expiry_date: body.expiry_date,
-            status,
-            notes,
-
-            custom_fields,
-            allBodyKeys: Object.keys(body),
-            hasIssueDate: 'issue_date' in body,
-            hasExpiryDate: 'expiry_date' in body,
-            hasCustomFields: custom_fields && Object.keys(custom_fields).length > 0,
-            // ตรวจสอบว่าฟิลด์ที่จำเป็นต้องมีค่า
-            hasId: !!id,
-            hasShopId: !!shop_id,
-            hasLicenseTypeId: !!license_type_id,
-            hasLicenseNumber: !!license_number,
-            idValid: id >= 1,
-            shopIdValid: shop_id >= 1,
-            licenseTypeIdValid: license_type_id >= 1,
-            licenseNumberValid: !!license_number && license_number !== '',
-            // ตรวจสอบว่าฟิลด์ที่จำเป็นต้องมาครบถ้วน
-            allRequiredFieldsValid: id >= 1 && shop_id >= 1 && license_type_id >= 1 && !!license_number && license_number !== ''
-        });
-
-
         if (id < 1 || shop_id < 1 || license_type_id < 1) {
-            // Debug logging สำหรับตรวจสอบฟิลด์ที่จำเป็นต้อง
-            console.log('❌ Missing Required Fields Debug:', {
-                id,
-                shop_id,
-                license_type_id,
-                license_number,
-                issue_date,
-                expiry_date,
-                status,
-                notes,
-                custom_fields,
-                bodyKeys: Object.keys(body),
-                idValid: id >= 1,
-                shopIdValid: shop_id >= 1,
-                licenseTypeIdValid: license_type_id >= 1,
-                licenseNumberValid: !!body.license_number,
-                issueDateValid: !!body.issue_date,
-                expiryDateValid: !!body.expiry_date,
-                statusValid: !!body.status
-            });
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
         }
 
@@ -358,24 +298,6 @@ export async function PUT(request) {
              WHERE id = $8`,
             [shop_id, license_type_id, license_number, issue_date, expiry_date, status, notes, id]
         );
-
-        // Debug logging หลังจากบันทึกข้อมูล licenses
-        console.log('🔧 PUT API - License Update Debug:', {
-            shop_id,
-            license_type_id,
-            license_number,
-            issue_date: issue_date || 'NULL',
-            expiry_date: expiry_date || 'NULL',
-            status,
-            notes,
-            id,
-            custom_fields,
-            // ตรวจสอบว่า custom fields ถูกบันทึก
-            hasLocation: custom_fields?.cf_selling_location !== undefined,
-            locationValue: custom_fields?.cf_selling_location,
-            hasAmount: custom_fields?.cf_amount !== undefined,
-            amountValue: custom_fields?.cf_amount
-        });
 
         // Update custom fields if provided
         if (custom_fields && Object.keys(custom_fields).length > 0) {
@@ -391,39 +313,24 @@ export async function PUT(request) {
                 fieldMap[f.field_name] = f.id;
             });
 
-            // Update custom field values
-            console.log('🔧 PUT API - Custom Fields Debug:', {
-                licenseId: id,
-                custom_fields_received: custom_fields,
-                available_fields: fields.map(f => f.field_name)
-            });
-
             for (const [fieldName, value] of Object.entries(custom_fields)) {
                 const fieldId = fieldMap[fieldName];
-                console.log(`🔧 Processing field: ${fieldName}, value: ${value}, fieldId: ${fieldId}`);
+                if (fieldId === undefined) continue;
 
-                if (fieldId !== undefined) {
-                    if (value !== undefined && value !== null && value !== '') {
-                        // Insert or update the value
-                        await executeQuery(`
-                            INSERT INTO custom_field_values (custom_field_id, entity_id, entity_type, field_value, updated_at)
-                            VALUES ($1, $2, $3, $4, NOW())
-                            ON CONFLICT (custom_field_id, entity_id) 
-                            DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
-                        `, [fieldId, id, 'licenses', value?.toString() || '']);
-
-                        console.log(`✅ Saved field ${fieldName} with value: ${value}`);
-                    } else {
-                        // Delete the value if it's empty/null
-                        await executeQuery(
-                            'DELETE FROM custom_field_values WHERE custom_field_id = $1 AND entity_id = $2',
-                            [fieldId, id]
-                        );
-
-                        console.log(`🗑️ Deleted field ${fieldName} (empty value)`);
-                    }
+                if (value !== undefined && value !== null && value !== '') {
+                    // Insert or update the value
+                    await executeQuery(`
+                        INSERT INTO custom_field_values (custom_field_id, entity_id, entity_type, field_value, updated_at)
+                        VALUES ($1, $2, $3, $4, NOW())
+                        ON CONFLICT (custom_field_id, entity_id) 
+                        DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
+                    `, [fieldId, id, 'licenses', value?.toString() || '']);
                 } else {
-                    console.log(`❌ Field ${fieldName} not found in fieldMap`);
+                    // Delete the value if it's empty/null
+                    await executeQuery(
+                        'DELETE FROM custom_field_values WHERE custom_field_id = $1 AND entity_id = $2',
+                        [fieldId, id]
+                    );
                 }
             }
         }

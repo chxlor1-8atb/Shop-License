@@ -263,9 +263,14 @@ function LicensesPageContent() {
         license_type: filterType,
         status: filterStatus,
         shop_id: filterShop,
+        // 🛠 Cache-busting timestamp — ให้เหมือน fetchShops (กัน Vercel edge cache/SWR stale)
+        _t: Date.now(),
       });
 
-      const response = await fetch(`${API_ENDPOINTS.LICENSES}?${params}`, { credentials: "include" });
+      const response = await fetch(`${API_ENDPOINTS.LICENSES}?${params}`, {
+        credentials: "include",
+        cache: "no-store", // Force no caching (consistent with shops page)
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -411,12 +416,17 @@ function LicensesPageContent() {
       } else {
         // PUT for existing records
         // ALWAYS include required fields for the API
+        // 🛡️ status handling: ใน state เก็บทั้ง `status` (computed: active/expired) และ
+        //    `original_status` (stored: active/expired/pending/suspended/revoked)
+        //    เวลา PUT ต้องส่ง `original_status` ไป server (เพื่อไม่ทับ stored value ด้วย computed)
+        //    ยกเว้นกรณี user แก้ status จาก UI → standardData.status จะ override อีกที
+        //    (เพราะ `...standardData` มาหลัง status base ใน spread)
         const payload = {
           id: updatedRow.id,
           shop_id: updatedRow.shop_id || existingLicense?.shop_id,
           license_type_id: updatedRow.license_type_id || existingLicense?.license_type_id,
           license_number: updatedRow.license_number || existingLicense?.license_number,
-          status: updatedRow.original_status || existingLicense?.original_status || updatedRow.status,
+          status: existingLicense?.original_status || updatedRow.original_status || updatedRow.status,
           ...standardData,
           custom_fields: customValues,
         };
@@ -727,16 +737,72 @@ function LicensesPageContent() {
   ], [handleRenewLicense]);
 
   const handleExport = async () => {
+    // 🔴 Bug fix: เดิมส่ง `licenses` (state = data หน้าปัจจุบัน 10 รายการ) → PDF ไม่ครบ
+    // → ต้อง fetch ใหม่ด้วย limit สูง (2000) + apply filter ปัจจุบัน ก่อน export
+    // + ใช้ key ภาษาไทยสำหรับ filter info (เดิมใช้ search/type/status/shop = อังกฤษ)
+    Swal.fire({
+      title: "กำลังเตรียมข้อมูล...",
+      text: "กรุณารอสักครู่",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
     try {
-      await exportLicensesToPDF(licenses, {
-        search,
-        type: typeOptions.find((t) => t.value == filterType)?.label,
-        status: STATUS_OPTIONS.find((s) => s.value == filterStatus)?.label,
-        shop: shopOptions.find((s) => s.value == filterShop)?.label,
+      const params = new URLSearchParams({
+        page: 1,
+        limit: 2000,
+        search: debouncedSearch,
+        license_type: filterType,
+        status: filterStatus,
+        shop_id: filterShop,
       });
+
+      const response = await fetch(`${API_ENDPOINTS.LICENSES}?${params}`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "ไม่สามารถโหลดข้อมูลทั้งหมด");
+      }
+
+      // Flatten custom_fields เพื่อให้ exporter อ่านได้เหมือนกับที่หน้าแสดง
+      const allLicenses = (data.licenses || []).map((l) => ({
+        ...l,
+        ...(l.custom_fields || {}),
+      }));
+
+      if (allLicenses.length === 0) {
+        Swal.close();
+        showError("ไม่มีข้อมูลสำหรับส่งออก");
+        return;
+      }
+
+      // 🏷️ Filter info ภาษาไทย
+      const pdfFilters = {};
+      if (debouncedSearch) pdfFilters["คำค้นหา"] = debouncedSearch;
+      if (filterType) {
+        const typeName = typeOptions.find((t) => String(t.value) === String(filterType))?.label;
+        if (typeName) pdfFilters["ประเภทใบอนุญาต"] = typeName;
+      }
+      if (filterStatus) {
+        const statusName = STATUS_OPTIONS.find((s) => String(s.value) === String(filterStatus))?.label;
+        if (statusName) pdfFilters["สถานะ"] = statusName;
+      }
+      if (filterShop) {
+        const shopName = shopOptions.find((s) => String(s.value) === String(filterShop))?.label;
+        if (shopName) pdfFilters["ร้านค้า"] = shopName;
+      }
+
+      await exportLicensesToPDF(allLicenses, pdfFilters);
+
+      Swal.close();
+      showSuccess(`ส่งออก PDF ${allLicenses.length} รายการเรียบร้อยแล้ว`);
     } catch (err) {
-      console.error(err);
-      showError("Export PDF ล้มเหลว");
+      Swal.close();
+      console.error("Export licenses failed:", err);
+      showError(err.message || "Export PDF ล้มเหลว");
     }
   };
 
@@ -796,8 +862,15 @@ function LicensesPageContent() {
     mutate('/api/license-types/dropdown');
     
     // Manually add to state to prevent flashing/disappearing due to pagination
+    // 🛠 Bug fix: เดิม setLicenses(prev => [data.license, ...prev]) ไม่ flatten custom_fields
+    //    → ถ้า license ใหม่มี custom_fields → cell ใน ExcelTable ว่าง
+    //    (เพราะ ExcelTable อ่าน row[field_name] โดยตรง ไม่ใช่ row.custom_fields[field_name])
     if (data.license) {
-      setLicenses(prev => [data.license, ...prev]);
+      const flattenedLicense = {
+        ...data.license,
+        ...(data.license.custom_fields || {}),
+      };
+      setLicenses(prev => [flattenedLicense, ...prev]);
     } else {
        // Fallback if full object not returned
        fetchLicenses();
@@ -885,7 +958,10 @@ function LicensesPageContent() {
         {!loading ? (
           <div style={{ overflow: "auto", maxHeight: "600px" }}>
             <ExcelTable
-              key={`licenses-${licenses.length}-${loading}`}
+              // 🛠 Bug fix: เดิม key ผูกกับ `licenses.length` + `loading` → ทุกครั้งที่ add/delete
+              //   row หรือ loading toggle → table re-mount → undo stack + selection + scroll
+              //   position หาย. ใช้ stable key แทน
+              key="licenses-table"
               initialColumns={columns}
               initialRows={licenses}
               onRowUpdate={handleRowUpdate}

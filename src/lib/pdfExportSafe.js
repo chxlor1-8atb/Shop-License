@@ -692,6 +692,8 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
         pageSize: 'A4',
         pageOrientation: 'landscape',
         pageMargins: [40, 40, 40, 60],
+        // 🏷️ Watermark "ใบอนุญาต" — สำหรับหน้า /dashboard/licenses
+        watermark: { text: 'ใบอนุญาต', color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
 
         header: (currentPage, pageCount) => ({
@@ -967,6 +969,8 @@ export async function exportShopsToPDF(shops) {
         pageSize: 'A4',
         pageOrientation: customFieldDefs.length > 2 ? 'landscape' : 'landscape', // Always landscape for shops
         pageMargins: [40, 40, 40, 60],
+        // 🏷️ Watermark "รายการร้านค้า" — สำหรับหน้า /dashboard/shops
+        watermark: { text: 'รายการร้านค้า', color: 'gray', opacity: 0.08, bold: true, italics: false },
         defaultStyle: { font: 'THSarabunNew' },
 
         header: (currentPage, pageCount) => ({

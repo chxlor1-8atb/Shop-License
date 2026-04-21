@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import Swal from "sweetalert2";
 import { usePagination, useDropdownData, useAutoRefresh, notifyDataChange, useShops, useRealtime } from "@/hooks";
 import { API_ENDPOINTS } from "@/constants";
 import { showSuccess, showError, pendingDelete } from "@/utils/alerts";
@@ -511,11 +512,81 @@ function ShopsPageContent() {
 
 
   const handleExport = async () => {
+    // 🔴 Bug fix: เดิมส่ง `shops` (state) ซึ่งเป็นข้อมูลแค่ page ปัจจุบัน (10 records)
+    // → user กด Export แต่ได้ PDF ไม่ครบ! ต้อง fetch ทั้งหมดก่อน โดย apply filters ปัจจุบันด้วย
+    // แสดง loading ระหว่าง fetch เพราะอาจใช้เวลา (ข้อมูลเยอะ)
+    Swal.fire({
+      title: "กำลังเตรียมข้อมูล...",
+      text: "กรุณารอสักครู่",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
     try {
-      await exportShopsToPDF(shops);
+      // Fetch all shops ด้วย limit สูง (2000) + filters ปัจจุบัน
+      const params = new URLSearchParams({
+        page: 1,
+        limit: 2000,
+        search: debouncedSearch,
+        has_license: filterHasLicense,
+        license_status: filterLicenseStatus,
+        license_type: filterLicenseType,
+        _t: Date.now(),
+      });
+
+      const response = await fetch(`${API_ENDPOINTS.SHOPS}?${params}`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "ไม่สามารถโหลดข้อมูลทั้งหมด");
+      }
+
+      const allShops = data.shops || [];
+
+      if (allShops.length === 0) {
+        Swal.close();
+        showError("ไม่มีข้อมูลสำหรับส่งออก");
+        return;
+      }
+
+      // 🏷️ สร้าง filter info ภาษาไทย สำหรับแสดงใน PDF
+      const pdfFilters = {};
+      if (debouncedSearch) pdfFilters["คำค้นหา"] = debouncedSearch;
+      if (filterHasLicense) {
+        const hasLicenseLabels = {
+          yes: "มีใบอนุญาต",
+          no: "ไม่มีใบอนุญาตเลย",
+          all_expired: "ใบอนุญาตหมดอายุทั้งหมด",
+          no_active: "ไม่มีใบอนุญาตที่ใช้งานได้",
+        };
+        pdfFilters["ใบอนุญาต"] = hasLicenseLabels[filterHasLicense] || filterHasLicense;
+      }
+      if (filterLicenseStatus) {
+        const statusLabels = {
+          active: "ปกติ",
+          expired: "หมดอายุ",
+          pending: "กำลังดำเนินการ",
+          suspended: "ถูกพักใช้",
+          revoked: "ถูกเพิกถอน",
+        };
+        pdfFilters["สถานะใบอนุญาต"] = statusLabels[filterLicenseStatus] || filterLicenseStatus;
+      }
+      if (filterLicenseType) {
+        const typeName = typeOptions.find((t) => String(t.value) === String(filterLicenseType))?.label;
+        if (typeName) pdfFilters["ประเภทใบอนุญาต"] = typeName;
+      }
+
+      await exportShopsToPDF(allShops, pdfFilters);
+
+      Swal.close();
+      showSuccess(`ส่งออก PDF ${allShops.length} รายการเรียบร้อยแล้ว`);
     } catch (err) {
-      console.error(err);
-      showError("Export PDF ล้มเหลว");
+      Swal.close();
+      console.error("Export shops failed:", err);
+      showError(err.message || "Export PDF ล้มเหลว");
     }
   };
 
@@ -559,10 +630,16 @@ function ShopsPageContent() {
       }
 
       // If user wants to create license too
-      if (formData.create_license && formData.license_type_id && formData.license_number) {
-        const newShopId = shopData.shop_id || shopData.id;
+      // 🛡️ Bug fix: เดิมถ้า license POST fail → shop จะค้างใน DB (orphan record)
+      // → ต้อง rollback ด้วยการลบ shop ที่เพิ่งสร้าง แล้วค่อย throw error
+      const newShopId = shopData.shop?.id || shopData.shop_id || shopData.id;
 
-        if (newShopId) {
+      if (formData.create_license && formData.license_type_id && formData.license_number) {
+        if (!newShopId) {
+          throw new Error("สร้างร้านค้าแล้วแต่ไม่ได้รับ ID กลับมา");
+        }
+
+        try {
           const licenseRes = await fetch(API_ENDPOINTS.LICENSES, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -578,10 +655,24 @@ function ShopsPageContent() {
           const licenseData = await licenseRes.json();
 
           if (!licenseData.success) {
-            throw new Error("สร้างร้านค้าแล้วแต่ไม่สามารถสร้างใบอนุญาตได้: " + (licenseData.message || "Unknown error"));
+            // 🛡️ Rollback: ลบ shop ที่เพิ่งสร้างเพื่อป้องกัน orphan record
+            await fetch(`${API_ENDPOINTS.SHOPS}?id=${newShopId}`, {
+              method: "DELETE",
+              credentials: "include",
+            }).catch((e) => console.warn("Shop rollback failed:", e));
+            throw new Error(
+              "สร้างใบอนุญาตล้มเหลว: " + (licenseData.message || "Unknown error") + " — ร้านค้าถูกยกเลิกโดยอัตโนมัติ"
+            );
           }
-        } else {
-          throw new Error("สร้างร้านค้าแล้วแต่ไม่ได้รับ ID กลับมา");
+        } catch (licenseErr) {
+          // Network error / unexpected error → rollback shop ด้วย
+          if (!licenseErr.message?.includes("ร้านค้าถูกยกเลิกโดยอัตโนมัติ")) {
+            await fetch(`${API_ENDPOINTS.SHOPS}?id=${newShopId}`, {
+              method: "DELETE",
+              credentials: "include",
+            }).catch((e) => console.warn("Shop rollback failed:", e));
+          }
+          throw licenseErr;
         }
       }
 
@@ -701,7 +792,9 @@ function ShopsPageContent() {
         {!isLoading ? (
           <div style={{ overflow: "auto", maxHeight: "600px" }}>
             <ExcelTable
-              key={`shops-table-${isLoading}`}
+              // 🛠 stable key — ไม่ include isLoading/rows.length เพื่อกัน re-mount
+              // ทุกครั้งที่ loading toggle หรือ add/delete row → สูญเสีย undo stack + selection
+              key="shops-table"
               initialColumns={columns}
               initialRows={shops}
               onRowUpdate={handleRowUpdate}
