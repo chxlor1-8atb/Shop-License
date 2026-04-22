@@ -709,84 +709,87 @@ function ShopsPageContent() {
               padding: 0,
               borderRadius: 0 
             }}></i>
-            คลิก 2 ครั้งที่หัวตารางเพื่อแก้ไข | คลิกขวาเพื่อเปิดเมนู
+            <span>คำแนะนำ: คุณสามารถเพิ่ม/ลบร้านค้า, แก้ไขข้อมูลร้านค้า, และส่งออก PDF ได้</span>
           </span>
         </h3>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button type="button" className="btn btn-outline-primary btn-sm" onClick={fetchShops} title="รีเฟรชข้อมูล">
+          <button type="button" className="btn btn-outline-primary btn-sm" onClick={fetchShops} title="รีเฟรช">
             <i className="fas fa-sync-alt"></i> รีเฟรช
           </button>
+          <button type="button" className="btn btn-success btn-sm" onClick={handleExport}>
+            <i className="fas fa-file-pdf"></i> Export PDF
+          </button>
           <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowQuickAdd(true)}>
-            <i className="fas fa-plus"></i> สร้างร้านค้าใหม่
+            <i className="fas fa-plus"></i> เพิ่มร้านค้า
           </button>
         </div>
       </div>
 
       <div className="card-body">
         <div className="mb-4">
-        <div className="filter-grid">
-          <div className="filter-group">
-            <label htmlFor="shop-search" className="filter-label">ค้นหา</label>
-            <SearchInput
-              id="shop-search"
-              value={search}
-              onChange={(val) => {
-                setSearch(val);
-                pagination.resetPage();
-              }}
-              placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร, ที่อยู่, อีเมล..."
-            />
+          <div className="filter-grid">
+            <div className="filter-group">
+              <label htmlFor="shop-search" className="filter-label">ค้นหาร้านค้า</label>
+              <SearchInput
+                id="shop-search"
+                value={search}
+                onChange={(val) => {
+                  setSearch(val);
+                  pagination.resetPage();
+                }}
+                placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร, ที่อยู่, อีเมล..."
+              />
+            </div>
+            <div className="filter-group">
+              <label htmlFor="has-license-filter" className="filter-label">ใบอนุญาต</label>
+              <CustomSelect
+                id="has-license-filter"
+                value={filterHasLicense}
+                onChange={(e) => {
+                  setFilterHasLicense(e.target.value);
+                  pagination.resetPage();
+                }}
+                options={[
+                  { value: "", label: "ทั้งหมด" },
+                  { value: "yes", label: "มีใบอนุญาต" },
+                  { value: "no", label: "ไม่มีใบอนุญาตเลย" },
+                  { value: "all_expired", label: "ใบอนุญาตหมดอายุทั้งหมด" },
+                  { value: "no_active", label: "ไม่มีใบอนุญาตที่ใช้งานได้" },
+                ]}
+              />
+            </div>
+            <div className="filter-group">
+              <label htmlFor="license-status-filter" className="filter-label">สถานะใบอนุญาต</label>
+              <CustomSelect
+                id="license-status-filter"
+                value={filterLicenseStatus}
+                onChange={(e) => {
+                  setFilterLicenseStatus(e.target.value);
+                  pagination.resetPage();
+                }}
+                options={[
+                  { value: "", label: "ทุกสถานะ" },
+                  { value: "active", label: "ปกติ" },
+                  { value: "expired", label: "หมดอายุ" },
+                  { value: "pending", label: "กำลังดำเนินการ" },
+                  { value: "suspended", label: "ถูกพักใช้" },
+                  { value: "revoked", label: "ถูกเพิกถอน" },
+                ]}
+              />
+            </div>
+            <div className="filter-group">
+              <label htmlFor="license-type-filter" className="filter-label">ประเภทใบอนุญาต</label>
+              <CustomSelect
+                id="license-type-filter"
+                value={filterLicenseType}
+                onChange={(e) => {
+                  setFilterLicenseType(e.target.value);
+                  pagination.resetPage();
+                }}
+                options={[{ value: "", label: "ทุกประเภท" }, ...typeOptions]}
+              />
+            </div>
           </div>
-          <div className="filter-group">
-            <label htmlFor="has-license-filter" className="filter-label">ใบอนุญาต</label>
-            <CustomSelect
-              id="has-license-filter"
-              value={filterHasLicense}
-              onChange={(e) => {
-                setFilterHasLicense(e.target.value);
-                pagination.resetPage();
-              }}
-              options={[
-                { value: "", label: "ทั้งหมด" },
-                { value: "yes", label: "มีใบอนุญาต" },
-                { value: "no", label: "ไม่มีใบอนุญาตเลย" },
-                { value: "all_expired", label: "🔴 ใบอนุญาตหมดอายุทั้งหมด" },
-                { value: "no_active", label: "⚠️ ไม่มีใบอนุญาตที่ใช้งานได้" },
-              ]}
-            />
-          </div>
-          <div className="filter-group">
-            <label htmlFor="license-status-filter" className="filter-label">สถานะใบอนุญาต</label>
-            <CustomSelect
-              id="license-status-filter"
-              value={filterLicenseStatus}
-              onChange={(e) => {
-                setFilterLicenseStatus(e.target.value);
-                pagination.resetPage();
-              }}
-              options={[
-                { value: "", label: "ทุกสถานะ" },
-                { value: "active", label: "ปกติ" },
-                { value: "expired", label: "หมดอายุ" },
-                { value: "pending", label: "กำลังดำเนินการ" },
-                { value: "suspended", label: "ถูกพักใช้" },
-                { value: "revoked", label: "ถูกเพิกถอน" },
-              ]}
-            />
-          </div>
-          <div className="filter-group">
-            <label htmlFor="license-type-filter" className="filter-label">ประเภทใบอนุญาต</label>
-            <CustomSelect
-              id="license-type-filter"
-              value={filterLicenseType}
-              onChange={(e) => {
-                setFilterLicenseType(e.target.value);
-                pagination.resetPage();
-              }}
-              options={[{ value: "", label: "ทุกประเภท" }, ...typeOptions]}
-            />
-          </div>
-        </div>
         </div>
 
         {!isLoading ? (
@@ -803,10 +806,7 @@ function ShopsPageContent() {
               onColumnAdd={handleColumnAdd}
               onColumnUpdate={handleColumnUpdate}
               onColumnDelete={handleColumnDelete}
-              onExport={handleExport}
               onRowClick={handleRowClick}
-              exportLabel="Export PDF"
-              exportIcon="fa-file-pdf"
               preserveTempRows={false}
             />
           </div>

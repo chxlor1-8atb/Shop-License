@@ -907,6 +907,9 @@ function LicensesPageContent() {
           <button type="button" className="btn btn-outline-primary btn-sm" onClick={fetchLicenses} title="รีเฟรชข้อมูล">
             <i className="fas fa-sync-alt"></i> รีเฟรช
           </button>
+          <button type="button" className="btn btn-success btn-sm" onClick={handleExport}>
+            <i className="fas fa-file-pdf"></i> Export PDF
+          </button>
           <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowQuickAddLicense(true)}>
             <i className="fas fa-plus"></i> เพิ่มใบอนุญาต
           </button>
@@ -970,9 +973,6 @@ function LicensesPageContent() {
               onColumnAdd={handleColumnAdd}
               onColumnUpdate={handleColumnUpdate}
               onColumnDelete={handleColumnDelete}
-              onExport={handleExport}
-              exportLabel="Export PDF"
-              exportIcon="fa-file-pdf"
               customContextMenuItems={customContextMenuItems}
             />
           </div>
