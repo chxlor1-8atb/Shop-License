@@ -1,5 +1,9 @@
 'use client';
-import { useState, useRef, useEffect, useId, useMemo } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useId, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+
+const useIsomorphicLayoutEffect =
+    typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 export default function CustomSelect({
     value,
@@ -20,11 +24,14 @@ export default function CustomSelect({
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [openUp, setOpenUp] = useState(false);
-    const [maxHeight, setMaxHeight] = useState(320);
+    const [dropdownStyle, setDropdownStyle] = useState({});
+    const [mounted, setMounted] = useState(false);
     const wrapperRef = useRef(null);
+    const dropdownRef = useRef(null);
     const searchInputRef = useRef(null);
     const searchInputId = useId();
+
+    useEffect(() => { setMounted(true); }, []);
 
     const selectedOption = useMemo(() => 
         options.find(opt => opt.value == value), 
@@ -61,12 +68,13 @@ export default function CustomSelect({
 
     useEffect(() => {
         function handleClickOutside(event) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+            const insideWrapper = wrapperRef.current && wrapperRef.current.contains(event.target);
+            const insideDropdown = dropdownRef.current && dropdownRef.current.contains(event.target);
+            if (!insideWrapper && !insideDropdown) {
                 if (isOpen) {
                     setIsOpen(false);
                     setSearchTerm('');
-                    // Trigger onBlur when clicking outside if we were open (interaction finished)
-                     if (onBlur) onBlur(event);
+                    if (onBlur) onBlur(event);
                 }
             }
         }
@@ -74,7 +82,7 @@ export default function CustomSelect({
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [wrapperRef, isOpen, onBlur]);
+    }, [isOpen, onBlur]);
 
     const handleBlur = (e) => {
         // Only trigger blur if focus leaves the entire wrapper
@@ -95,25 +103,57 @@ export default function CustomSelect({
         }
     }, [isOpen, searchable]);
 
-    // 🔄 Smart positioning: เลือกทิศทางที่มีพื้นที่มากกว่า + จำกัด max-height ให้พอดี
-    useEffect(() => {
-        if (!isOpen || !wrapperRef.current) return;
-        const compute = () => {
-            const rect = wrapperRef.current.getBoundingClientRect();
-            const margin = 12; // เว้นขอบ viewport
-            const spaceBelow = window.innerHeight - rect.bottom - margin;
-            const spaceAbove = rect.top - margin;
-            const flip = spaceAbove > spaceBelow;
-            setOpenUp(flip);
-            const available = Math.max(160, flip ? spaceAbove : spaceBelow);
-            setMaxHeight(Math.min(320, available));
-        };
-        compute();
-        window.addEventListener('resize', compute);
-        window.addEventListener('scroll', compute, true);
+    // 🔄 Smart positioning via Portal — เลือกบน/ล่างตามพื้นที่ + clamp max-height
+    const updatePosition = () => {
+        if (!wrapperRef.current) return;
+        const rect = wrapperRef.current.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const MARGIN = 8;
+        const GAP = 6;
+        const DESIRED_HEIGHT = 320;
+        const MIN_HEIGHT = 160;
+        // Width: ตาม trigger แต่ไม่ต่ำกว่า 200
+        const width = Math.max(rect.width, 200);
+        let left = rect.left;
+        if (left + width > vw - MARGIN) left = Math.max(MARGIN, rect.right - width);
+        if (left < MARGIN) left = MARGIN;
+
+        const spaceBelow = vh - rect.bottom - GAP - MARGIN;
+        const spaceAbove = rect.top - GAP - MARGIN;
+        const preferBelow = spaceBelow >= DESIRED_HEIGHT || spaceBelow >= spaceAbove;
+
+        let top;
+        let maxHeight;
+        if (preferBelow) {
+            top = rect.bottom + GAP;
+            maxHeight = Math.max(MIN_HEIGHT, Math.min(DESIRED_HEIGHT, spaceBelow));
+        } else {
+            maxHeight = Math.max(MIN_HEIGHT, Math.min(DESIRED_HEIGHT, spaceAbove));
+            top = rect.top - GAP - maxHeight;
+        }
+        if (top < MARGIN) top = MARGIN;
+        if (top + maxHeight > vh - MARGIN) maxHeight = Math.max(120, vh - MARGIN - top);
+
+        setDropdownStyle({
+            position: 'fixed',
+            top: `${Math.round(top)}px`,
+            left: `${Math.round(left)}px`,
+            width: `${Math.round(width)}px`,
+            maxHeight: `${Math.round(maxHeight)}px`,
+            zIndex: 10050,
+        });
+    };
+
+    useIsomorphicLayoutEffect(() => {
+        if (!isOpen) return;
+        updatePosition();
+        const handle = () => updatePosition();
+        window.addEventListener('resize', handle);
+        window.addEventListener('scroll', handle, true);
         return () => {
-            window.removeEventListener('resize', compute);
-            window.removeEventListener('scroll', compute, true);
+            window.removeEventListener('resize', handle);
+            window.removeEventListener('scroll', handle, true);
         };
     }, [isOpen]);
 
@@ -151,7 +191,7 @@ export default function CustomSelect({
 
     return (
         <div
-            className={`custom-select-wrapper ${className} ${disabled ? 'disabled' : ''} ${searchable ? 'searchable' : ''} ${isOpen ? 'open' : ''} ${openUp ? 'open-up' : ''}`}
+            className={`custom-select-wrapper ${className} ${disabled ? 'disabled' : ''} ${searchable ? 'searchable' : ''} ${isOpen ? 'open' : ''}`}
             ref={wrapperRef}
             style={style}
             onBlur={handleBlur}
@@ -184,80 +224,81 @@ export default function CustomSelect({
                 </div>
             </button>
 
-            <div 
-                className={`custom-select-options ${isOpen ? 'show' : ''}`}
-                role="listbox"
-                id={`${id || searchInputId}-list`}
-                style={{ maxHeight: `${maxHeight}px` }}
-            >
-                {label && (
-                    <div className="custom-select-header">
-                        {label}
-                    </div>
-                )}
-                {/* Search Input */}
-                {searchable && (
-                    <div className="custom-select-search">
-                        <i className="fas fa-search search-icon"></i>
-                        <input
-                            ref={searchInputRef}
-                            id={searchInputId}
-                            type="text"
-                            className="custom-select-search-input"
-                            placeholder={searchPlaceholder}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                            aria-label="Search options"
-                        />
-                        {searchTerm && (
-                            <button
-                                className="search-clear"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSearchTerm('');
+            {/* Dropdown rendered via Portal to escape stacking/overflow ancestors */}
+            {isOpen && mounted && typeof document !== 'undefined' && createPortal(
+                <div
+                    ref={dropdownRef}
+                    className={`custom-select-options custom-select-options--portal show`}
+                    role="listbox"
+                    id={`${id || searchInputId}-list`}
+                    style={dropdownStyle}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {label && (
+                        <div className="custom-select-header">
+                            {label}
+                        </div>
+                    )}
+                    {searchable && (
+                        <div className="custom-select-search">
+                            <i className="fas fa-search search-icon"></i>
+                            <input
+                                ref={searchInputRef}
+                                id={searchInputId}
+                                type="text"
+                                className="custom-select-search-input"
+                                placeholder={searchPlaceholder}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label="Search options"
+                            />
+                            {searchTerm && (
+                                <button
+                                    className="search-clear"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSearchTerm('');
+                                    }}
+                                    aria-label="Clear search"
+                                >
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="custom-select-options-list">
+                        {filteredOptions.map((opt, index) => (
+                            <div
+                                key={index}
+                                role="option"
+                                aria-selected={value == opt.value}
+                                className={`custom-option ${value == opt.value ? 'selected' : ''}`}
+                                onClick={(e) => handleSelect(opt.value, e)}
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        handleSelect(opt.value, e);
+                                    }
                                 }}
-                                aria-label="Clear search"
                             >
-                                <i className="fas fa-times"></i>
-                            </button>
+                                {opt.optionLabel || opt.label || opt.name}
+                            </div>
+                        ))}
+                        {filteredOptions.length === 0 && searchTerm && (
+                            <div className="custom-option disabled text-center text-muted">
+                                <i className="fas fa-search mr-2"></i>
+                                ไม่พบข้อมูลที่ค้นหา
+                            </div>
+                        )}
+                        {options.length === 0 && (
+                            <div className="custom-option disabled text-center text-muted">No options</div>
                         )}
                     </div>
-                )}
-
-                {/* Options List */}
-                <div className="custom-select-options-list">
-                    {filteredOptions.map((opt, index) => (
-                        <div
-                            key={index}
-                            role="option"
-                            aria-selected={value == opt.value}
-                            className={`custom-option ${value == opt.value ? 'selected' : ''}`}
-                            onClick={(e) => handleSelect(opt.value, e)}
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    handleSelect(opt.value, e);
-                                }
-                            }}
-                        >
-                            {/* รองรับ optionLabel (ReactNode) สำหรับการแสดงผลแบบ custom
-                                เช่น 2 บรรทัด — ชื่อร้าน + เจ้าของ/ที่อยู่/เบอร์
-                                fallback เป็น label/name string ปกติ */}
-                            {opt.optionLabel || opt.label || opt.name}
-                        </div>
-                    ))}
-                    {filteredOptions.length === 0 && searchTerm && (
-                        <div className="custom-option disabled text-center text-muted">
-                            <i className="fas fa-search mr-2"></i>
-                            ไม่พบข้อมูลที่ค้นหา
-                        </div>
-                    )}
-                    {options.length === 0 && (
-                        <div className="custom-option disabled text-center text-muted">No options</div>
-                    )}
-                </div>
-            </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }
