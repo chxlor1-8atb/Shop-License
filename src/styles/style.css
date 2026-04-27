@@ -6874,17 +6874,13 @@ img {
     z-index: 9999 !important;
 }
 
-/* Auto-flip: เปิด dropdown ขึ้นบน เมื่อพื้นที่ด้านล่างไม่พอ */
-.custom-select-wrapper.open-up .custom-select-options {
-    top: auto;
-    bottom: calc(100% + 6px);
-    transform-origin: bottom center;
-    transform: translateY(8px) scale(0.98);
-}
-
-.custom-select-wrapper.open-up.open .custom-select-options,
-.custom-select-wrapper.open-up .custom-select-options.show {
-    transform: translateY(0) scale(1);
+/* Portal-rendered dropdown: ใช้ width จาก inline style (เท่ากับ trigger)
+   ไม่งั้น min-width: 100% จะ inherit ความกว้างของ body แล้วยืดทั้งจอ */
+.custom-select-options--portal {
+    min-width: 0 !important;
+    width: auto;
+    max-width: none;
+    transform: none !important;
 }
 
 /* การ์ดตาราง - Soft & Rounded */
