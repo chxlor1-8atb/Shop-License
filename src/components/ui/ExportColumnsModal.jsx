@@ -89,9 +89,9 @@ export default function ExportColumnsModal({
               gap: "0.5rem",
               maxHeight: 360,
               overflowY: "auto",
-              padding: "0.5rem",
-              border: "1px solid var(--border-color)",
-              borderRadius: 8,
+              padding: "0.75rem",
+              background: "rgba(0, 0, 0, 0.015)",
+              borderRadius: 12,
             }}
           >
             {columns.map((col) => {
@@ -102,13 +102,21 @@ export default function ExportColumnsModal({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "0.5rem",
-                    padding: "0.5rem 0.75rem",
-                    borderRadius: 6,
-                    background: checked ? "var(--primary-bg, #eff6ff)" : "transparent",
+                    gap: "0.625rem",
+                    padding: "0.55rem 0.85rem",
+                    borderRadius: 10,
+                    background: checked ? "rgba(16, 185, 129, 0.08)" : "rgba(255, 255, 255, 0.6)",
+                    color: checked ? "#047857" : "var(--text-primary)",
                     cursor: "pointer",
                     fontSize: "0.9rem",
                     userSelect: "none",
+                    transition: "background 0.15s ease, color 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!checked) e.currentTarget.style.background = "rgba(16, 185, 129, 0.04)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!checked) e.currentTarget.style.background = "rgba(255, 255, 255, 0.6)";
                   }}
                 >
                   <input
@@ -116,6 +124,12 @@ export default function ExportColumnsModal({
                     checked={checked}
                     onChange={() => toggle(col.key)}
                     disabled={submitting}
+                    style={{
+                      accentColor: "#10b981",
+                      width: 16,
+                      height: 16,
+                      cursor: "pointer",
+                    }}
                   />
                   <span>{col.label}</span>
                 </label>
