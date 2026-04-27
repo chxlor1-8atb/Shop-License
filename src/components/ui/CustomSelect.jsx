@@ -20,6 +20,7 @@ export default function CustomSelect({
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [openUp, setOpenUp] = useState(false);
     const wrapperRef = useRef(null);
     const searchInputRef = useRef(null);
     const searchInputId = useId();
@@ -93,6 +94,17 @@ export default function CustomSelect({
         }
     }, [isOpen, searchable]);
 
+    // 🔄 Smart auto-flip: ถ้าพื้นที่ด้านล่างไม่พอ → เปิด dropdown ขึ้นบน
+    useEffect(() => {
+        if (!isOpen || !wrapperRef.current) return;
+        const rect = wrapperRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        const desiredHeight = 320; // ตรงกับ max-height ใน CSS
+        // ถ้า below ไม่พอ และ above มีมากกว่า → flip up
+        setOpenUp(spaceBelow < Math.min(desiredHeight, 240) && spaceAbove > spaceBelow);
+    }, [isOpen]);
+
     const handleSelect = (optionValue, e) => {
         if (e) {
             e.preventDefault();
@@ -127,7 +139,7 @@ export default function CustomSelect({
 
     return (
         <div
-            className={`custom-select-wrapper ${className} ${disabled ? 'disabled' : ''} ${searchable ? 'searchable' : ''} ${isOpen ? 'open' : ''}`}
+            className={`custom-select-wrapper ${className} ${disabled ? 'disabled' : ''} ${searchable ? 'searchable' : ''} ${isOpen ? 'open' : ''} ${openUp ? 'open-up' : ''}`}
             ref={wrapperRef}
             style={style}
             onBlur={handleBlur}

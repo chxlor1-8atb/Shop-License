@@ -6874,6 +6874,19 @@ img {
     z-index: 9999 !important;
 }
 
+/* Auto-flip: เปิด dropdown ขึ้นบน เมื่อพื้นที่ด้านล่างไม่พอ */
+.custom-select-wrapper.open-up .custom-select-options {
+    top: auto;
+    bottom: calc(100% + 6px);
+    transform-origin: bottom center;
+    transform: translateY(8px) scale(0.98);
+}
+
+.custom-select-wrapper.open-up.open .custom-select-options,
+.custom-select-wrapper.open-up .custom-select-options.show {
+    transform: translateY(0) scale(1);
+}
+
 /* การ์ดตาราง - Soft & Rounded */
 .table-card {
     background: rgba(255, 255, 255, 0.6);
