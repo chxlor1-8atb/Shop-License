@@ -21,6 +21,7 @@ export default function CustomSelect({
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [openUp, setOpenUp] = useState(false);
+    const [maxHeight, setMaxHeight] = useState(320);
     const wrapperRef = useRef(null);
     const searchInputRef = useRef(null);
     const searchInputId = useId();
@@ -94,15 +95,26 @@ export default function CustomSelect({
         }
     }, [isOpen, searchable]);
 
-    // 🔄 Smart auto-flip: ถ้าพื้นที่ด้านล่างไม่พอ → เปิด dropdown ขึ้นบน
+    // 🔄 Smart positioning: เลือกทิศทางที่มีพื้นที่มากกว่า + จำกัด max-height ให้พอดี
     useEffect(() => {
         if (!isOpen || !wrapperRef.current) return;
-        const rect = wrapperRef.current.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const spaceAbove = rect.top;
-        const desiredHeight = 320; // ตรงกับ max-height ใน CSS
-        // ถ้า below ไม่พอ และ above มีมากกว่า → flip up
-        setOpenUp(spaceBelow < Math.min(desiredHeight, 240) && spaceAbove > spaceBelow);
+        const compute = () => {
+            const rect = wrapperRef.current.getBoundingClientRect();
+            const margin = 12; // เว้นขอบ viewport
+            const spaceBelow = window.innerHeight - rect.bottom - margin;
+            const spaceAbove = rect.top - margin;
+            const flip = spaceAbove > spaceBelow;
+            setOpenUp(flip);
+            const available = Math.max(160, flip ? spaceAbove : spaceBelow);
+            setMaxHeight(Math.min(320, available));
+        };
+        compute();
+        window.addEventListener('resize', compute);
+        window.addEventListener('scroll', compute, true);
+        return () => {
+            window.removeEventListener('resize', compute);
+            window.removeEventListener('scroll', compute, true);
+        };
     }, [isOpen]);
 
     const handleSelect = (optionValue, e) => {
@@ -176,6 +188,7 @@ export default function CustomSelect({
                 className={`custom-select-options ${isOpen ? 'show' : ''}`}
                 role="listbox"
                 id={`${id || searchInputId}-list`}
+                style={{ maxHeight: `${maxHeight}px` }}
             >
                 {label && (
                     <div className="custom-select-header">
