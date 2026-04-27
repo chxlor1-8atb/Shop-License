@@ -3518,7 +3518,7 @@ body:has(.sidebar.show) .mobile-toggle i {
     visibility: hidden;
     transform: translateY(-8px) scale(0.98);
     transform-origin: top center;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.18s;
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -4036,7 +4036,7 @@ body:has(.sidebar.show) .mobile-toggle i {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-8px);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.18s;
     max-height: 300px;
     overflow-y: auto;
     padding: 4px;
@@ -6878,13 +6878,19 @@ img {
     z-index: 9999 !important;
 }
 
-/* Portal-rendered dropdown: ใช้ width จาก inline style (เท่ากับ trigger)
-   ไม่งั้น min-width: 100% จะ inherit ความกว้างของ body แล้วยืดทั้งจอ */
+/* Portal-rendered dropdown: ความกว้างถูกควบคุมจาก inline style (min-width/width:max-content/max-width)
+   ไม่ใช้ค่า default ของ .custom-select-options ที่ตั้งไว้ */
 .custom-select-options--portal {
-    min-width: 0 !important;
-    width: auto;
+    min-width: 0;
     max-width: none;
     transform: none !important;
+}
+
+/* บังคับ option ใน portal dropdown ให้อยู่บรรทัดเดียว
+   (กล่อง dropdown จะขยายตาม max-content ของข้อความที่ยาวที่สุด) */
+.custom-select-options--portal .custom-option,
+.custom-select-options--portal .custom-select-option {
+    white-space: nowrap;
 }
 
 /* การ์ดตาราง - Soft & Rounded */

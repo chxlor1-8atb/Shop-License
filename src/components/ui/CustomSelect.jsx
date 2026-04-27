@@ -113,10 +113,12 @@ export default function CustomSelect({
         const GAP = 6;
         const DESIRED_HEIGHT = 320;
         const MIN_HEIGHT = 160;
-        // Width: ตาม trigger แต่ไม่ต่ำกว่า 200
-        const width = Math.max(rect.width, 200);
+        // Width: min = trigger width, ให้ขยายตามเนื้อหาได้ (max-content) แต่ไม่เกินจอ
+        const minWidth = Math.max(rect.width, 200);
+        const maxWidth = Math.max(minWidth, vw - MARGIN * 2);
         let left = rect.left;
-        if (left + width > vw - MARGIN) left = Math.max(MARGIN, rect.right - width);
+        // ถ้า dropdown อาจล้นขวา ให้ชิดขวาของ trigger
+        if (left + minWidth > vw - MARGIN) left = Math.max(MARGIN, rect.right - minWidth);
         if (left < MARGIN) left = MARGIN;
 
         const spaceBelow = vh - rect.bottom - GAP - MARGIN;
@@ -139,7 +141,9 @@ export default function CustomSelect({
             position: 'fixed',
             top: `${Math.round(top)}px`,
             left: `${Math.round(left)}px`,
-            width: `${Math.round(width)}px`,
+            minWidth: `${Math.round(minWidth)}px`,
+            width: 'max-content',
+            maxWidth: `${Math.round(maxWidth)}px`,
             maxHeight: `${Math.round(maxHeight)}px`,
             zIndex: 10050,
         });
