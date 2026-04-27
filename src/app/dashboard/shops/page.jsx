@@ -27,8 +27,8 @@ const exportShopsToPDF = async (...args) => {
 const STANDARD_COLUMNS = [
   { id: "shop_name", name: "ชื่อร้านค้า", width: 250, align: "center" },
   { id: "owner_name", name: "ชื่อเจ้าของ", width: 200, align: "center" },
-  { id: "phone", name: "เบอร์โทรศัพท์", width: 150, align: "center" },
   { id: "address", name: "ที่อยู่", width: 300, align: "center" }, // Added address as it was in form
+  { id: "phone", name: "เบอร์โทรศัพท์", width: 150, align: "center" },
   { id: "notes", name: "หมายเหตุ", width: 200, align: "center" }, // Added notes
   {
     id: "license_count",
@@ -116,8 +116,15 @@ function ShopsPageContent() {
         });
 
         // Pure custom columns
+        // 🔀 เรียงตาม display_order (ASC) → id (ASC) เพื่อให้ column ใหม่สุดไปอยู่ท้ายกลุ่ม custom
         const customCols = apiFields
           .filter((f) => !STANDARD_COLUMNS.find((sc) => sc.id === f.field_name))
+          .sort((a, b) => {
+            const oa = a.display_order ?? 99;
+            const ob = b.display_order ?? 99;
+            if (oa !== ob) return oa - ob;
+            return (a.id || 0) - (b.id || 0);
+          })
           .map((f) => ({
             id: f.field_name,
             name: f.field_label,
@@ -128,8 +135,16 @@ function ShopsPageContent() {
             db_id: f.id,
           }));
 
-        // Merge with standard
-        setColumns([...updatedStandardCols, ...customCols]);
+        // 📌 แทรก custom columns ก่อน "หมายเหตุ" (notes) เพื่อให้ notes + license_count
+        //     อยู่ท้ายเสมอ — เมื่อเพิ่มคอลัมน์ใหม่จะไล่มาเรื่อยๆ ก่อน notes
+        const notesIdx = updatedStandardCols.findIndex((c) => c.id === "notes");
+        if (notesIdx === -1) {
+          setColumns([...updatedStandardCols, ...customCols]);
+        } else {
+          const before = updatedStandardCols.slice(0, notesIdx);
+          const after = updatedStandardCols.slice(notesIdx); // notes + license_count
+          setColumns([...before, ...customCols, ...after]);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -519,8 +534,8 @@ function ShopsPageContent() {
     const baseOptions = [
       { key: "shop_name",     label: "ชื่อร้านค้า" },
       { key: "owner_name",    label: "ชื่อเจ้าของ" },
-      { key: "phone",         label: "เบอร์โทรศัพท์" },
       { key: "address",       label: "ที่อยู่" },
+      { key: "phone",         label: "เบอร์โทรศัพท์" },
       { key: "notes",         label: "หมายเหตุ" },
       { key: "license_count", label: "จำนวนใบอนุญาต" },
       { key: "created_at",    label: "วันที่สร้าง" },

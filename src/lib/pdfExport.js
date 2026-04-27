@@ -536,12 +536,11 @@ export async function exportShopsToPDF(shops) {
         'ร้านค้าทั้งหมด': shops.length
     };
 
-    const headers = ['ชื่อร้านค้า', 'เจ้าของ', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่', 'วันที่สร้าง'];
+    const headers = ['ชื่อร้านค้า', 'เจ้าของ', 'เบอร์โทรศัพท์', 'ที่อยู่', 'วันที่สร้าง'];
     const data = shops.map(s => [
         s.shop_name || '-',
         s.owner_name || '-',
         s.phone || '-',
-        s.email || '-',
         s.address?.substring(0, 30) + (s.address?.length > 30 ? '...' : '') || '-',
         formatThaiDate(s.created_at)
     ]);

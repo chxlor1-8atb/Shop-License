@@ -78,8 +78,8 @@ export async function GET(request) {
             shops: [
                 { key: 'shop_name', dataKey: 'shop_name', label: 'ชื่อร้านค้า' },
                 { key: 'owner_name', dataKey: 'owner_name', label: 'ชื่อเจ้าของ' },
-                { key: 'phone', dataKey: 'phone', label: 'เบอร์โทรศัพท์' },
                 { key: 'address', dataKey: 'address', label: 'ที่อยู่' },
+                { key: 'phone', dataKey: 'phone', label: 'เบอร์โทรศัพท์' },
                 { key: 'notes', dataKey: 'notes', label: 'หมายเหตุ' },
                 { key: 'license_count', dataKey: 'license_count', label: 'จำนวนใบอนุญาต' }
             ],

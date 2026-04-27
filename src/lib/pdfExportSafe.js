@@ -999,8 +999,8 @@ export async function exportShopsToPDF(shops, filters = {}, selectedKeys = null)
     const baseColumns = [
         { key: 'shop_name',     label: 'ชื่อร้านค้า',     width: '*', get: (s) => safeStr(s.shop_name) },
         { key: 'owner_name',    label: 'ชื่อเจ้าของ',     width: '*', get: (s) => safeStr(s.owner_name) },
-        { key: 'phone',         label: 'เบอร์โทรศัพท์',   width: 70,  get: (s) => safeStr(s.phone) },
         { key: 'address',       label: 'ที่อยู่',         width: '*', get: (s) => safeStr(s.address) },
+        { key: 'phone',         label: 'เบอร์โทรศัพท์',   width: 70,  get: (s) => safeStr(s.phone) },
         { key: 'notes',         label: 'หมายเหตุ',        width: '*', get: (s) => safeStr(s.notes) },
         { key: 'license_count', label: 'จำนวนใบอนุญาต',   width: 50,  get: (s) => safeStr(s.license_count) },
         { key: 'created_at',    label: 'วันที่สร้าง',     width: 70,  get: (s) => formatThaiDate(s.created_at) },
