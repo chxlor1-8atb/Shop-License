@@ -647,7 +647,7 @@ function getStyles() {
  *   • Headers: [ลำดับที่, ชื่อเจ้าของ, ชื่อร้านค้า, ประเภท, เลขที่, วันที่ออก, วันหมดอายุ,
  *              ...custom fields, สถานะ, หมายเหตุ]
  */
-export async function exportLicensesToPDF(licenses, filters = {}) {
+export async function exportLicensesToPDF(licenses, filters = {}, selectedKeys = null) {
     const pdfMake = await getPdfMake();
 
     const title = 'รายงานใบอนุญาต';
@@ -665,63 +665,64 @@ export async function exportLicensesToPDF(licenses, filters = {}) {
     }
 
     // 🛡️ Dedupe: ตัด custom fields ที่ field_name ซ้ำกับ base columns ออก
-    // ป้องกันกรณี legacy data ที่ custom field ชื่อตรงกับ built-in column
-    // → ทำให้ header ซ้ำ (bug: "ชื่อร้านค้า" โผล่ 2 ครั้งใน PDF)
     const LICENSE_RESERVED_FIELDS = new Set([
         'owner_name', 'shop_name', 'shop_id', 'type_name', 'license_type_id',
         'license_number', 'issue_date', 'expiry_date', 'status', 'notes'
     ]);
-    const skippedLicenseFields = customFieldDefs.filter(cf => LICENSE_RESERVED_FIELDS.has(cf.field_name));
-    if (skippedLicenseFields.length > 0) {
-        console.warn('[exportLicensesToPDF] Skipped custom fields with reserved names:', skippedLicenseFields.map(f => f.field_name));
-    }
     customFieldDefs = customFieldDefs.filter(cf => !LICENSE_RESERVED_FIELDS.has(cf.field_name));
 
-    // Header structure (ตรงกับ serverPdfGenerator — createLicensesDocDef)
-    // pre-custom: ลำดับที่ → ชื่อเจ้าของ → ชื่อร้าน → ประเภท → เลขที่ → วันที่ออก → วันหมดอายุ
-    // custom fields: inserted ตรงกลาง
-    // post-custom: สถานะ → หมายเหตุ
-    const preCustomHeaders = ['ชื่อเจ้าของ', 'ชื่อร้านค้า', 'ประเภทใบอนุญาต', 'เลขที่ใบอนุญาต', 'วันที่ออก', 'วันหมดอายุ'];
-    const postCustomHeaders = ['สถานะ', 'หมายเหตุ'];
-    const customHeaders = customFieldDefs.map(cf => cf.field_label);
-    const headers = ['ลำดับที่', ...preCustomHeaders, ...customHeaders, ...postCustomHeaders];
+    // Pre-custom + post-custom column definitions
+    const preColumns = [
+        { key: 'owner_name',     label: 'ชื่อเจ้าของ',     width: '*', get: (l) => safeStr(l.owner_name) },
+        { key: 'shop_name',      label: 'ชื่อร้านค้า',     width: '*', get: (l) => safeStr(l.shop_name) },
+        { key: 'type_name',      label: 'ประเภทใบอนุญาต',  width: '*', get: (l) => safeStr(l.type_name) },
+        { key: 'license_number', label: 'เลขที่ใบอนุญาต',  width: 65,  get: (l) => safeStr(l.license_number) },
+        { key: 'issue_date',     label: 'วันที่ออก',       width: 65,  get: (l) => formatThaiDate(l.issue_date) },
+        { key: 'expiry_date',    label: 'วันหมดอายุ',      width: 65,  get: (l) => formatThaiDate(l.expiry_date) },
+    ];
+    const postColumns = [
+        { key: 'status', label: 'สถานะ',     width: 65,  get: (l) => formatStatus(l.status), isStatus: true },
+        { key: 'notes',  label: 'หมายเหตุ',  width: '*', get: (l) => safeStr(l.notes) },
+    ];
 
-    // Build data rows — match โครงสร้าง header (pre → custom → post)
-    // 🛡️ safeStr/formatStatus/formatThaiDate — กัน falsy trap + ไม่ truncate
+    // 🆕 Filter by selectedKeys — null = include all
+    let activePre = preColumns;
+    let activePost = postColumns;
+    let activeCustom = customFieldDefs;
+    if (Array.isArray(selectedKeys) && selectedKeys.length > 0) {
+        const keySet = new Set(selectedKeys);
+        activePre = preColumns.filter(c => keySet.has(c.key));
+        activePost = postColumns.filter(c => keySet.has(c.key));
+        activeCustom = customFieldDefs.filter(cf => keySet.has(cf.field_name));
+    }
+
+    const headers = [
+        'ลำดับที่',
+        ...activePre.map(c => c.label),
+        ...activeCustom.map(cf => cf.field_label),
+        ...activePost.map(c => c.label),
+    ];
+
     const data = licenses.map((l, idx) => {
-        const preData = [
-            safeStr(l.owner_name),
-            safeStr(l.shop_name),
-            safeStr(l.type_name),
-            safeStr(l.license_number),
-            formatThaiDate(l.issue_date),
-            formatThaiDate(l.expiry_date)
-        ];
-
+        const preData = activePre.map(c => c.get(l));
         const customFieldsData = l.custom_fields || {};
-        const customData = customFieldDefs.map(cf => formatCustomValue(cf, customFieldsData[cf.field_name]));
-
-        const postData = [
-            formatStatus(l.status),
-            safeStr(l.notes)
-        ];
-
+        const customData = activeCustom.map(cf => formatCustomValue(cf, customFieldsData[cf.field_name]));
+        const postData = activePost.map(c => c.get(l));
         return [String(idx + 1), ...preData, ...customData, ...postData];
     });
 
-    // Compute status column index (สำหรับ colorColumn) — ตำแหน่งใหม่ที่อยู่ post-custom
-    // [ลำดับที่, 6 pre-custom, N custom, สถานะ, หมายเหตุ]
-    //                                         ↑ statusColumnIndex
-    const statusColumnIndex = 1 + preCustomHeaders.length + customFieldDefs.length;
+    // Compute status column index dynamically (สำหรับ colorColumn)
+    const statusIdxInPost = activePost.findIndex(c => c.isStatus);
+    const statusColumnIndex = statusIdxInPost === -1
+        ? -1
+        : 1 + activePre.length + activeCustom.length + statusIdxInPost;
 
-    // 📏 Column widths — fixed pt สำหรับตัวเลข/วันที่/สถานะ, '*' สำหรับ text
-    // 🛠 กัน bug "column width fluctuate ระหว่างหน้า" (ดู expiring)
-    //   pre-custom order: [ชื่อเจ้าของ, ชื่อร้าน, ประเภท, เลขที่, วันที่ออก, วันหมดอายุ]
-    //   post-custom order: [สถานะ, หมายเหตุ]
-    const preCustomWidths = ['*', '*', '*', 65, 65, 65];
-    const customWidths = customFieldDefs.map(() => '*');
-    const postCustomWidths = [65, '*'];
-    const columnWidths = [30, ...preCustomWidths, ...customWidths, ...postCustomWidths];
+    const columnWidths = [
+        30,
+        ...activePre.map(c => c.width),
+        ...activeCustom.map(() => '*'),
+        ...activePost.map(c => c.width),
+    ];
 
     const docDefinition = {
         pageSize: 'A4',

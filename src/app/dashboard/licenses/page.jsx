@@ -14,6 +14,7 @@ import TableSkeleton from "@/components/ui/TableSkeleton";
 import QuickAddModal from "@/components/ui/QuickAddModal";
 import ExcelTable from "@/components/ExcelTable";
 import { mutate } from "swr";
+import ExportColumnsModal from "@/components/ui/ExportColumnsModal";
 
 // Lazy load PDF export to reduce initial bundle size
 const exportLicensesToPDF = async (...args) => {
@@ -57,6 +58,9 @@ function LicensesPageContent() {
   const [showQuickAddShop, setShowQuickAddShop] = useState(false);
   // Modal for quick adding license
   const [showQuickAddLicense, setShowQuickAddLicense] = useState(false);
+  // Modal for export columns selection
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportColumnOptions, setExportColumnOptions] = useState([]);
 
   // Debounce search input
   useEffect(() => {
@@ -736,7 +740,43 @@ function LicensesPageContent() {
     },
   ], [handleRenewLicense]);
 
-  const handleExport = async () => {
+  // เปิด modal เลือกคอลัมน์ก่อน export
+  const openExportModal = async () => {
+    const baseOptions = [
+      { key: "owner_name",     label: "ชื่อเจ้าของ" },
+      { key: "shop_name",      label: "ชื่อร้านค้า" },
+      { key: "type_name",      label: "ประเภทใบอนุญาต" },
+      { key: "license_number", label: "เลขที่ใบอนุญาต" },
+      { key: "issue_date",     label: "วันที่ออก" },
+      { key: "expiry_date",    label: "วันหมดอายุ" },
+      { key: "status",         label: "สถานะ" },
+      { key: "notes",          label: "หมายเหตุ" },
+    ];
+
+    let customOptions = [];
+    try {
+      const res = await fetch("/api/custom-fields?entity_type=licenses&show_in_table=true", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) {
+        const reserved = new Set([
+          ...baseOptions.map((b) => b.key),
+          "shop_id", "license_type_id",
+        ]);
+        customOptions = (data.fields || [])
+          .filter((f) => f.show_in_table && !reserved.has(f.field_name))
+          .map((f) => ({ key: f.field_name, label: f.field_label }));
+      }
+    } catch (e) {
+      console.warn("Fetch custom fields for export modal failed:", e);
+    }
+
+    setExportColumnOptions([...baseOptions, ...customOptions]);
+    setShowExportModal(true);
+  };
+
+  const handleExport = async (selectedKeys) => {
     // 🔴 Bug fix: เดิมส่ง `licenses` (state = data หน้าปัจจุบัน 10 รายการ) → PDF ไม่ครบ
     // → ต้อง fetch ใหม่ด้วย limit สูง (2000) + apply filter ปัจจุบัน ก่อน export
     // + ใช้ key ภาษาไทยสำหรับ filter info (เดิมใช้ search/type/status/shop = อังกฤษ)
@@ -795,7 +835,7 @@ function LicensesPageContent() {
         if (shopName) pdfFilters["ร้านค้า"] = shopName;
       }
 
-      await exportLicensesToPDF(allLicenses, pdfFilters);
+      await exportLicensesToPDF(allLicenses, pdfFilters, selectedKeys);
 
       Swal.close();
       showSuccess(`ส่งออก PDF ${allLicenses.length} รายการเรียบร้อยแล้ว`);
@@ -907,7 +947,7 @@ function LicensesPageContent() {
           <button type="button" className="btn btn-outline-primary btn-sm" onClick={fetchLicenses} title="รีเฟรชข้อมูล">
             <i className="fas fa-sync-alt"></i> รีเฟรช
           </button>
-          <button type="button" className="btn btn-success btn-sm" onClick={handleExport}>
+          <button type="button" className="btn btn-success btn-sm" onClick={openExportModal}>
             <i className="fas fa-file-pdf"></i> Export PDF
           </button>
           <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowQuickAddLicense(true)}>
@@ -1060,6 +1100,15 @@ function LicensesPageContent() {
         onClose={() => setShowQuickAddLicense(false)}
         type="license"
         onSubmit={handleQuickAddLicense}
+      />
+
+      {/* Export Columns Modal */}
+      <ExportColumnsModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        columns={exportColumnOptions}
+        onConfirm={handleExport}
+        title="เลือกคอลัมน์ที่จะ Export (ใบอนุญาต)"
       />
     </div>
   );

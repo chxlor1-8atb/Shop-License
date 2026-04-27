@@ -59,7 +59,7 @@ export default function ExportColumnsModal({
       <div className="modal" style={{ maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 style={{ margin: 0 }}>
-            <i className="fas fa-file-pdf" style={{ marginRight: 8, color: "#16a34a" }}></i>
+            <i className="fas fa-file-pdf" style={{ marginRight: 8, color: "#dc2626" }}></i>
             {title}
           </h3>
           <button className="modal-close" onClick={onClose} disabled={submitting}>
