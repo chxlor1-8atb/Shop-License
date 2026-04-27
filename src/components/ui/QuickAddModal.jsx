@@ -99,7 +99,7 @@ export default function QuickAddModal({
       if (data.success) {
         // Filter only fields that should show in form and are not standard fields
         const standardFields = type === "shop" 
-          ? ['shop_name', 'owner_name', 'phone', 'address', 'email', 'notes', 'license_count']
+          ? ['shop_name', 'owner_name', 'phone', 'address', 'notes', 'license_count']
           : ['shop_id', 'license_type_id', 'license_number', 'issue_date', 'expiry_date', 'status', 'notes'];
         const fields = (data.fields || []).filter(
           f => f.show_in_form && !standardFields.includes(f.field_name)
@@ -122,7 +122,6 @@ export default function QuickAddModal({
           owner_name: "",
           phone: "",
           address: "",
-          email: "",
           notes: "",
           // If we want to create a license too
           create_license: false,
@@ -171,7 +170,7 @@ export default function QuickAddModal({
     try {
       // Separate standard fields from custom fields for both types
       if (type === "shop") {
-        const standardFields = ['shop_name', 'owner_name', 'phone', 'address', 'email', 'notes', 'create_license', 'license_type_id', 'license_number'];
+        const standardFields = ['shop_name', 'owner_name', 'phone', 'address', 'notes', 'create_license', 'license_type_id', 'license_number'];
         const customFieldsData = {};
         
         // Extract custom field values
@@ -187,7 +186,6 @@ export default function QuickAddModal({
           owner_name: formData.owner_name,
           phone: formData.phone,
           address: formData.address,
-          email: formData.email,
           notes: formData.notes,
           create_license: formData.create_license,
           license_type_id: formData.license_type_id,
@@ -323,31 +321,17 @@ export default function QuickAddModal({
               />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="email" className="form-label">อีเมล</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  className="form-input"
-                  value={formData.email || ""}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  placeholder="example@email.com"
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="notes" className="form-label">หมายเหตุ</label>
-                <input
-                  id="notes"
-                  name="notes"
-                  type="text"
-                  className="form-input"
-                  value={formData.notes || ""}
-                  onChange={(e) => handleChange("notes", e.target.value)}
-                  placeholder="หมายเหตุเพิ่มเติม"
-                />
-              </div>
+            <div className="form-group">
+              <label htmlFor="notes" className="form-label">หมายเหตุ</label>
+              <input
+                id="notes"
+                name="notes"
+                type="text"
+                className="form-input"
+                value={formData.notes || ""}
+                onChange={(e) => handleChange("notes", e.target.value)}
+                placeholder="หมายเหตุเพิ่มเติม"
+              />
             </div>
 
             {/* Custom Fields Section */}

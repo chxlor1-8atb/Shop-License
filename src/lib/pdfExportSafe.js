@@ -992,7 +992,7 @@ export async function exportShopsToPDF(shops, filters = {}) {
     // ป้องกันกรณี legacy data ที่ custom field ชื่อตรงกับ built-in column
     // → ทำให้ header ซ้ำ (bug: "ชื่อร้านค้า/เจ้าของ/โทร/ที่อยู่" โผล่ 2 ครั้งใน PDF)
     const SHOP_RESERVED_FIELDS = new Set([
-        'shop_name', 'owner_name', 'phone', 'email', 'address',
+        'shop_name', 'owner_name', 'phone', 'address',
         'notes', 'license_count', 'created_at'
     ]);
     const skippedShopFields = customFieldDefs.filter(cf => SHOP_RESERVED_FIELDS.has(cf.field_name));
@@ -1003,7 +1003,7 @@ export async function exportShopsToPDF(shops, filters = {}) {
 
     // Base headers (match serverPdfGenerator — createShopsDocDef default)
     // ✅ เพิ่ม "หมายเหตุ" + "จำนวนใบอนุญาต" ที่เคยขาดหาย
-    const baseHeaders = ['ชื่อร้านค้า', 'ชื่อเจ้าของ', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่', 'หมายเหตุ', 'จำนวนใบอนุญาต', 'วันที่สร้าง'];
+    const baseHeaders = ['ชื่อร้านค้า', 'ชื่อเจ้าของ', 'เบอร์โทรศัพท์', 'ที่อยู่', 'หมายเหตุ', 'จำนวนใบอนุญาต', 'วันที่สร้าง'];
     const customHeaders = customFieldDefs.map(cf => cf.field_label);
     const headers = ['ลำดับที่', ...baseHeaders, ...customHeaders];
 
@@ -1014,7 +1014,6 @@ export async function exportShopsToPDF(shops, filters = {}) {
             safeStr(s.shop_name),
             safeStr(s.owner_name),
             safeStr(s.phone),
-            safeStr(s.email),
             safeStr(s.address),
             safeStr(s.notes),
             safeStr(s.license_count),
@@ -1029,8 +1028,8 @@ export async function exportShopsToPDF(shops, filters = {}) {
 
     // 📏 Column widths — fixed pt สำหรับคอลัมน์ตัวเลข/วันที่, '*' สำหรับ text
     // 🛠 กัน bug "column width fluctuate ระหว่างหน้า"
-    //   base order: [ชื่อร้าน, เจ้าของ, โทร, อีเมล, ที่อยู่, หมายเหตุ, จำนวนใบอนุญาต, วันที่สร้าง]
-    const baseWidths = ['*', '*', 70, '*', '*', '*', 50, 70];
+    //   base order: [ชื่อร้าน, เจ้าของ, โทร, ที่อยู่, หมายเหตุ, จำนวนใบอนุญาต, วันที่สร้าง]
+    const baseWidths = ['*', '*', 70, '*', '*', 50, 70];
     const customWidthsArr = customFieldDefs.map(() => '*');
     const columnWidths = [30, ...baseWidths, ...customWidthsArr];
 

@@ -79,7 +79,6 @@ export async function GET(request) {
                 { key: 'shop_name', dataKey: 'shop_name', label: 'ชื่อร้านค้า' },
                 { key: 'owner_name', dataKey: 'owner_name', label: 'ชื่อเจ้าของ' },
                 { key: 'phone', dataKey: 'phone', label: 'เบอร์โทรศัพท์' },
-                { key: 'email', dataKey: 'email', label: 'อีเมล' },
                 { key: 'address', dataKey: 'address', label: 'ที่อยู่' },
                 { key: 'notes', dataKey: 'notes', label: 'หมายเหตุ' },
                 { key: 'license_count', dataKey: 'license_count', label: 'จำนวนใบอนุญาต' }
@@ -283,7 +282,6 @@ export async function GET(request) {
                     s.owner_name ILIKE $${shopParamIndex} OR 
                     s.phone ILIKE $${shopParamIndex} OR 
                     s.address ILIKE $${shopParamIndex} OR 
-                    s.email ILIKE $${shopParamIndex} OR 
                     s.notes ILIKE $${shopParamIndex}
                 )`);
                 shopParams.push(`%${shopSearch}%`);
@@ -329,7 +327,6 @@ export async function GET(request) {
                     s.shop_name, 
                     s.owner_name, 
                     s.phone, 
-                    s.email, 
                     s.address, 
                     s.notes, 
                     s.created_at,
@@ -342,7 +339,7 @@ export async function GET(request) {
                 LEFT JOIN custom_field_values cfv ON cfv.entity_id = s.id AND cfv.entity_type = 'shops'
                 LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'shops' AND cf.is_active = true
                 ${shopWhereSQL}
-                GROUP BY s.id, s.shop_name, s.owner_name, s.phone, s.email, s.address, s.notes, s.created_at
+                GROUP BY s.id, s.shop_name, s.owner_name, s.phone, s.address, s.notes, s.created_at
                 ORDER BY s.id DESC
                 LIMIT 5000
             `, shopParams);

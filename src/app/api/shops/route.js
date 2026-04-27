@@ -77,7 +77,6 @@ export async function GET(request) {
                 s.owner_name ILIKE $${paramIndex} OR 
                 s.phone ILIKE $${paramIndex} OR 
                 s.address ILIKE $${paramIndex} OR 
-                s.email ILIKE $${paramIndex} OR 
                 s.notes ILIKE $${paramIndex} OR
                 s.custom_fields::text ILIKE $${paramIndex}
             )`);
@@ -200,7 +199,6 @@ export async function POST(request) {
         const owner_name = sanitizeString(body.owner_name || '', 255);
         const address = sanitizeString(body.address || '', 500);
         const phone = sanitizeString(body.phone || '', 50);
-        const email = sanitizeString(body.email || '', 255);
         const notes = sanitizeString(body.notes || '', 1000);
 
         if (!shop_name) {
@@ -218,9 +216,9 @@ export async function POST(request) {
         }
 
         const result = await executeQuery(
-            `INSERT INTO shops (shop_name, owner_name, address, phone, email, notes, custom_fields) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-            [shop_name, owner_name, address, phone, email, notes, customFieldsStr]
+            `INSERT INTO shops (shop_name, owner_name, address, phone, notes, custom_fields) 
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+            [shop_name, owner_name, address, phone, notes, customFieldsStr]
         );
 
         // Log activity
@@ -258,7 +256,6 @@ export async function PUT(request) {
         const owner_name = sanitizeString(body.owner_name || '', 255);
         const address = sanitizeString(body.address || '', 500);
         const phone = sanitizeString(body.phone || '', 50);
-        const email = sanitizeString(body.email || '', 255);
         const notes = sanitizeString(body.notes || '', 1000);
 
         if (id < 1 || !shop_name) {
@@ -277,9 +274,9 @@ export async function PUT(request) {
 
         await executeQuery(
             `UPDATE shops 
-             SET shop_name = $1, owner_name = $2, address = $3, phone = $4, email = $5, notes = $6, custom_fields = $7
-             WHERE id = $8`,
-            [shop_name, owner_name, address, phone, email, notes, customFieldsStr, id]
+             SET shop_name = $1, owner_name = $2, address = $3, phone = $4, notes = $5, custom_fields = $6
+             WHERE id = $7`,
+            [shop_name, owner_name, address, phone, notes, customFieldsStr, id]
         );
 
         // Log activity

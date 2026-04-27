@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS shops (
   owner_name VARCHAR(255),
   address TEXT,
   phone VARCHAR(50),
-  email VARCHAR(255),
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

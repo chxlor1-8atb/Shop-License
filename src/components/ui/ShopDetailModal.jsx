@@ -153,12 +153,6 @@ export default function ShopDetailModal({
                 <span className="detail-value">{shop.address}</span>
               </div>
             )}
-            {shop.email && (
-              <div className="detail-item">
-                <span className="detail-label"><i className="fas fa-envelope"></i> อีเมล</span>
-                <span className="detail-value">{shop.email}</span>
-              </div>
-            )}
             {shop.notes && (
               <div className="detail-item">
                 <span className="detail-label"><i className="fas fa-sticky-note"></i> หมายเหตุ</span>

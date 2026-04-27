@@ -263,7 +263,6 @@ export async function GET(request) {
                     s.owner_name ILIKE $${shopParamIndex} OR 
                     s.phone ILIKE $${shopParamIndex} OR 
                     s.address ILIKE $${shopParamIndex} OR 
-                    s.email ILIKE $${shopParamIndex} OR 
                     s.notes ILIKE $${shopParamIndex}
                 )`);
                 shopParams.push(`%${search}%`);
@@ -308,7 +307,6 @@ export async function GET(request) {
                     s.shop_name, 
                     s.owner_name, 
                     s.phone, 
-                    s.email, 
                     s.address, 
                     s.notes, 
                     s.created_at,
@@ -321,7 +319,7 @@ export async function GET(request) {
                 LEFT JOIN custom_field_values cfv ON cfv.entity_id = s.id AND cfv.entity_type = 'shops'
                 LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'shops' AND cf.is_active = true
                 ${shopWhereSQL}
-                GROUP BY s.id, s.shop_name, s.owner_name, s.phone, s.email, s.address, s.notes, s.created_at
+                GROUP BY s.id, s.shop_name, s.owner_name, s.phone, s.address, s.notes, s.created_at
                 ORDER BY s.id DESC
                 LIMIT $${shopParamIndex} OFFSET $${shopParamIndex + 1}
             `, [...shopParams, limit, offset]);

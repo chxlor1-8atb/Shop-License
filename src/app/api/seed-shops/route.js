@@ -247,14 +247,13 @@ export async function POST(request) {
                     });
                 } else {
                     const result = await executeQuery(
-                        `INSERT INTO shops (shop_name, owner_name, address, phone, email, notes, custom_fields) 
-                         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+                        `INSERT INTO shops (shop_name, owner_name, address, phone, notes, custom_fields) 
+                         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
                         [
                             shop.shop_name,
                             shop.owner_name,
                             shop.address,
                             shop.phone,
-                            shop.email,
                             shop.notes,
                             JSON.stringify({})
                         ]

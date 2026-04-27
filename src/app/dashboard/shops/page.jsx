@@ -28,7 +28,6 @@ const STANDARD_COLUMNS = [
   { id: "owner_name", name: "ชื่อเจ้าของ", width: 200, align: "center" },
   { id: "phone", name: "เบอร์โทรศัพท์", width: 150, align: "center" },
   { id: "address", name: "ที่อยู่", width: 300, align: "center" }, // Added address as it was in form
-  { id: "email", name: "อีเมล", width: 200, align: "center" }, // Added email
   { id: "notes", name: "หมายเหตุ", width: 200, align: "center" }, // Added notes
   {
     id: "license_count",
@@ -204,7 +203,6 @@ function ShopsPageContent() {
       owner_name: updatedRow.owner_name || "",
       phone: updatedRow.phone || "",
       address: updatedRow.address || "",
-      email: updatedRow.email || "",
       notes: updatedRow.notes || "",
     };
 
@@ -612,7 +610,6 @@ function ShopsPageContent() {
         owner_name: formData.owner_name?.trim() || "",
         phone: formData.phone?.trim() || "",
         address: formData.address?.trim() || "",
-        email: formData.email?.trim() || "",
         notes: formData.notes?.trim() || "",
         custom_fields: formData.custom_fields || {},
       };
@@ -737,7 +734,7 @@ function ShopsPageContent() {
                   setSearch(val);
                   pagination.resetPage();
                 }}
-                placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร, ที่อยู่, อีเมล..."
+                placeholder="ชื่อร้าน, เจ้าของ, เบอร์โทร, ที่อยู่..."
               />
             </div>
             <div className="filter-group">
