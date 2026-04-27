@@ -13,6 +13,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import ShopDetailModal from "@/components/ui/ShopDetailModal";
 import QuickAddModal from "@/components/ui/QuickAddModal";
+import ExportColumnsModal from "@/components/ui/ExportColumnsModal";
 import ExcelTable from "@/components/ExcelTable";
 import { mutate } from "swr";
 
@@ -78,6 +79,8 @@ function ShopsPageContent() {
   const [selectedShop, setSelectedShop] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportColumnOptions, setExportColumnOptions] = useState([]);
 
   // Debounce search input
   useEffect(() => {
@@ -509,7 +512,42 @@ function ShopsPageContent() {
 
 
 
-  const handleExport = async () => {
+  // เปิด modal เลือกคอลัมน์ก่อน export
+  // 🆕 ใช้ baseColumns + custom fields ที่ดึงมาแล้ว → user เลือกได้ว่าจะ export อะไรบ้าง
+  const openExportModal = async () => {
+    // base columns (ตรงกับ exportShopsToPDF)
+    const baseOptions = [
+      { key: "shop_name",     label: "ชื่อร้านค้า" },
+      { key: "owner_name",    label: "ชื่อเจ้าของ" },
+      { key: "phone",         label: "เบอร์โทรศัพท์" },
+      { key: "address",       label: "ที่อยู่" },
+      { key: "notes",         label: "หมายเหตุ" },
+      { key: "license_count", label: "จำนวนใบอนุญาต" },
+      { key: "created_at",    label: "วันที่สร้าง" },
+    ];
+
+    // ดึง custom fields
+    let customOptions = [];
+    try {
+      const res = await fetch("/api/custom-fields?entity_type=shops&show_in_table=true", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) {
+        const reserved = new Set(baseOptions.map((b) => b.key));
+        customOptions = (data.fields || [])
+          .filter((f) => f.show_in_table && !reserved.has(f.field_name))
+          .map((f) => ({ key: f.field_name, label: f.field_label }));
+      }
+    } catch (e) {
+      console.warn("Fetch custom fields for export modal failed:", e);
+    }
+
+    setExportColumnOptions([...baseOptions, ...customOptions]);
+    setShowExportModal(true);
+  };
+
+  const handleExport = async (selectedKeys) => {
     // 🔴 Bug fix: เดิมส่ง `shops` (state) ซึ่งเป็นข้อมูลแค่ page ปัจจุบัน (10 records)
     // → user กด Export แต่ได้ PDF ไม่ครบ! ต้อง fetch ทั้งหมดก่อน โดย apply filters ปัจจุบันด้วย
     // แสดง loading ระหว่าง fetch เพราะอาจใช้เวลา (ข้อมูลเยอะ)
@@ -577,7 +615,7 @@ function ShopsPageContent() {
         if (typeName) pdfFilters["ประเภทใบอนุญาต"] = typeName;
       }
 
-      await exportShopsToPDF(allShops, pdfFilters);
+      await exportShopsToPDF(allShops, pdfFilters, selectedKeys);
 
       Swal.close();
       showSuccess(`ส่งออก PDF ${allShops.length} รายการเรียบร้อยแล้ว`);
@@ -713,7 +751,7 @@ function ShopsPageContent() {
           <button type="button" className="btn btn-outline-primary btn-sm" onClick={fetchShops} title="รีเฟรช">
             <i className="fas fa-sync-alt"></i> รีเฟรช
           </button>
-          <button type="button" className="btn btn-success btn-sm" onClick={handleExport}>
+          <button type="button" className="btn btn-success btn-sm" onClick={openExportModal}>
             <i className="fas fa-file-pdf"></i> Export PDF
           </button>
           <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowQuickAdd(true)}>
@@ -875,6 +913,15 @@ function ShopsPageContent() {
         onClose={() => setShowQuickAdd(false)}
         type="shop"
         onSubmit={handleQuickAddShop}
+      />
+
+      {/* Export Columns Modal */}
+      <ExportColumnsModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        columns={exportColumnOptions}
+        onConfirm={handleExport}
+        title="เลือกคอลัมน์ที่จะ Export (ร้านค้า)"
       />
     </div>
   );

@@ -971,7 +971,7 @@ export async function exportExpiringLicensesToPDF(licenses, filters = {}) {
  * @param {Array} shops - ข้อมูลร้านค้า
  * @param {Object} filters - ตัวกรองที่ใช้ (แสดงเป็น filter info box ใน PDF) — optional
  */
-export async function exportShopsToPDF(shops, filters = {}) {
+export async function exportShopsToPDF(shops, filters = {}, selectedKeys = null) {
     const pdfMake = await getPdfMake();
 
     const title = 'รายงานร้านค้า';
@@ -989,49 +989,42 @@ export async function exportShopsToPDF(shops, filters = {}) {
     }
 
     // 🛡️ Dedupe: ตัด custom fields ที่ field_name ซ้ำกับ base columns ออก
-    // ป้องกันกรณี legacy data ที่ custom field ชื่อตรงกับ built-in column
-    // → ทำให้ header ซ้ำ (bug: "ชื่อร้านค้า/เจ้าของ/โทร/ที่อยู่" โผล่ 2 ครั้งใน PDF)
     const SHOP_RESERVED_FIELDS = new Set([
         'shop_name', 'owner_name', 'phone', 'address',
         'notes', 'license_count', 'created_at'
     ]);
-    const skippedShopFields = customFieldDefs.filter(cf => SHOP_RESERVED_FIELDS.has(cf.field_name));
-    if (skippedShopFields.length > 0) {
-        console.warn('[exportShopsToPDF] Skipped custom fields with reserved names:', skippedShopFields.map(f => f.field_name));
-    }
     customFieldDefs = customFieldDefs.filter(cf => !SHOP_RESERVED_FIELDS.has(cf.field_name));
 
-    // Base headers (match serverPdfGenerator — createShopsDocDef default)
-    // ✅ เพิ่ม "หมายเหตุ" + "จำนวนใบอนุญาต" ที่เคยขาดหาย
-    const baseHeaders = ['ชื่อร้านค้า', 'ชื่อเจ้าของ', 'เบอร์โทรศัพท์', 'ที่อยู่', 'หมายเหตุ', 'จำนวนใบอนุญาต', 'วันที่สร้าง'];
-    const customHeaders = customFieldDefs.map(cf => cf.field_label);
-    const headers = ['ลำดับที่', ...baseHeaders, ...customHeaders];
+    // Base columns definition: key, label, width, getter
+    const baseColumns = [
+        { key: 'shop_name',     label: 'ชื่อร้านค้า',     width: '*', get: (s) => safeStr(s.shop_name) },
+        { key: 'owner_name',    label: 'ชื่อเจ้าของ',     width: '*', get: (s) => safeStr(s.owner_name) },
+        { key: 'phone',         label: 'เบอร์โทรศัพท์',   width: 70,  get: (s) => safeStr(s.phone) },
+        { key: 'address',       label: 'ที่อยู่',         width: '*', get: (s) => safeStr(s.address) },
+        { key: 'notes',         label: 'หมายเหตุ',        width: '*', get: (s) => safeStr(s.notes) },
+        { key: 'license_count', label: 'จำนวนใบอนุญาต',   width: 50,  get: (s) => safeStr(s.license_count) },
+        { key: 'created_at',    label: 'วันที่สร้าง',     width: 70,  get: (s) => formatThaiDate(s.created_at) },
+    ];
 
-    // Build data rows — เพิ่ม index column นำหน้า
-    // 🛡️ safeStr — กัน falsy trap (เช่น license_count: 0 จะแสดง "0" แทน "-")
+    // 🆕 Filter columns by selectedKeys (if provided) — null = include all
+    let activeBase = baseColumns;
+    let activeCustom = customFieldDefs;
+    if (Array.isArray(selectedKeys) && selectedKeys.length > 0) {
+        const keySet = new Set(selectedKeys);
+        activeBase = baseColumns.filter(c => keySet.has(c.key));
+        activeCustom = customFieldDefs.filter(cf => keySet.has(cf.field_name));
+    }
+
+    const headers = ['ลำดับที่', ...activeBase.map(c => c.label), ...activeCustom.map(cf => cf.field_label)];
+
     const data = shops.map((s, idx) => {
-        const baseData = [
-            safeStr(s.shop_name),
-            safeStr(s.owner_name),
-            safeStr(s.phone),
-            safeStr(s.address),
-            safeStr(s.notes),
-            safeStr(s.license_count),
-            formatThaiDate(s.created_at)
-        ];
-
+        const baseData = activeBase.map(c => c.get(s));
         const customFieldsData = s.custom_fields || {};
-        const customData = customFieldDefs.map(cf => formatCustomValue(cf, customFieldsData[cf.field_name]));
-
+        const customData = activeCustom.map(cf => formatCustomValue(cf, customFieldsData[cf.field_name]));
         return [String(idx + 1), ...baseData, ...customData];
     });
 
-    // 📏 Column widths — fixed pt สำหรับคอลัมน์ตัวเลข/วันที่, '*' สำหรับ text
-    // 🛠 กัน bug "column width fluctuate ระหว่างหน้า"
-    //   base order: [ชื่อร้าน, เจ้าของ, โทร, ที่อยู่, หมายเหตุ, จำนวนใบอนุญาต, วันที่สร้าง]
-    const baseWidths = ['*', '*', 70, '*', '*', 50, 70];
-    const customWidthsArr = customFieldDefs.map(() => '*');
-    const columnWidths = [30, ...baseWidths, ...customWidthsArr];
+    const columnWidths = [30, ...activeBase.map(c => c.width), ...activeCustom.map(() => '*')];
 
     const docDefinition = {
         pageSize: 'A4',
