@@ -18,6 +18,40 @@ export default function ExportPage() {
   const [customFields, setCustomFields] = useState([]);
   const [selectedFields, setSelectedFields] = useState([]);
 
+  // Standard (base) columns ของแต่ละประเภท — ตรงกับ baseFieldsDefinitions ใน /api/export
+  // ใช้ key เดียวกับฝั่ง API เพื่อให้ส่งกลับไป filter ได้ถูกต้อง
+  const BASE_FIELDS_BY_TYPE = {
+    licenses: [
+      { key: 'owner_name',      label: 'ชื่อเจ้าของ' },
+      { key: 'shop_id',         label: 'ชื่อร้านค้า' },
+      { key: 'license_type_id', label: 'ประเภทใบอนุญาต' },
+      { key: 'license_number',  label: 'เลขที่ใบอนุญาต' },
+      { key: 'issue_date',      label: 'วันที่ออก' },
+      { key: 'expiry_date',     label: 'วันหมดอายุ' },
+      { key: 'status',          label: 'สถานะ' },
+      { key: 'notes',           label: 'หมายเหตุ' },
+    ],
+    shops: [
+      { key: 'shop_name',     label: 'ชื่อร้านค้า' },
+      { key: 'owner_name',    label: 'ชื่อเจ้าของ' },
+      { key: 'address',       label: 'ที่อยู่' },
+      { key: 'phone',         label: 'เบอร์โทรศัพท์' },
+      { key: 'notes',         label: 'หมายเหตุ' },
+      { key: 'license_count', label: 'จำนวนใบอนุญาต' },
+    ],
+    users: [
+      { key: 'username',   label: 'ชื่อผู้ใช้' },
+      { key: 'full_name',  label: 'ชื่อ-นามสกุล' },
+      { key: 'role',       label: 'สิทธิ์การใช้งาน' },
+      { key: 'created_at', label: 'วันที่สร้าง' },
+    ],
+  };
+
+  const baseFields = BASE_FIELDS_BY_TYPE[type] || [];
+  // Custom fields ที่ไม่ชนกับ key ของ base fields — กัน duplicate ใน UI
+  const baseKeySet = new Set(baseFields.map(f => f.key));
+  const extraCustomFields = customFields.filter(cf => !baseKeySet.has(cf.field_name));
+
   // Preview State
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState([]);
@@ -98,24 +132,32 @@ export default function ExportPage() {
   }, []);
 
   // Fetch custom fields when type changes
+  // Reset selectedFields ให้ select-all (รวม standard + custom) ทุกครั้งที่เปลี่ยน type
   useEffect(() => {
+    const baseKeys = (BASE_FIELDS_BY_TYPE[type] || []).map(f => f.key);
+
     if (type === 'licenses' || type === 'shops') {
-        fetchCustomFields(type);
+      fetchCustomFields(type, baseKeys);
     } else {
-        setCustomFields([]);
-        setSelectedFields([]);
+      // users: ไม่มี custom fields — select all ของ standard
+      setCustomFields([]);
+      setSelectedFields(baseKeys);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type]);
 
-  const fetchCustomFields = async (entityType) => {
+  const fetchCustomFields = async (entityType, baseKeys = []) => {
       try {
           const res = await fetch(`/api/custom-fields?entity_type=${entityType}`);
           const data = await res.json();
           if (data.success) {
               const fields = data.fields || [];
               setCustomFields(fields);
-              // Default select all
-              setSelectedFields(fields.map(f => f.field_name));
+              // Default select all (standard + custom) — กัน duplicate ด้วย Set
+              const customKeys = fields
+                  .map(f => f.field_name)
+                  .filter(name => !baseKeys.includes(name));
+              setSelectedFields([...baseKeys, ...customKeys]);
           }
       } catch (e) {
           console.error("Error fetching custom fields:", e);
@@ -128,6 +170,19 @@ export default function ExportPage() {
       } else {
           setSelectedFields([...selectedFields, fieldName]);
       }
+  };
+
+  // เลือก/ยกเลิกทั้งหมด — ทำงานกับ standard + custom รวมกัน
+  const handleSelectAll = () => {
+      const allKeys = [
+          ...baseFields.map(f => f.key),
+          ...extraCustomFields.map(cf => cf.field_name),
+      ];
+      setSelectedFields(allKeys);
+  };
+
+  const handleClearAll = () => {
+      setSelectedFields([]);
   };
 
   const loadDropdowns = async () => {
@@ -532,73 +587,117 @@ export default function ExportPage() {
               </div>
             </div>
 
-            {/* Column Selection (Minimal Design) */}
-            {customFields.length > 0 && (
-              <div className="form-group" style={{ 
-                  marginTop: "1.5rem", 
-                  padding: "1.25rem", 
-                  background: "var(--bg-secondary)", 
-                  borderRadius: "12px",
-                  border: "1px solid var(--border-color)"
-              }}>
-                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            {/* Column Selection — Standard + Custom Fields */}
+            {(baseFields.length > 0 || extraCustomFields.length > 0) && (() => {
+              const totalCount = baseFields.length + extraCustomFields.length;
+              const renderChip = (key, label) => {
+                const isSelected = selectedFields.includes(key);
+                return (
+                  <div
+                    key={key}
+                    onClick={() => handleToggleField(key)}
+                    style={{
+                      padding: '0.4rem 0.85rem',
+                      borderRadius: '50px',
+                      border: isSelected ? '1px solid var(--primary)' : '1px solid transparent',
+                      background: isSelected ? 'rgba(99, 102, 241, 0.1)' : 'var(--white)',
+                      color: isSelected ? 'var(--primary)' : 'var(--text-secondary)',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      fontWeight: isSelected ? 500 : 400,
+                      userSelect: 'none',
+                      boxShadow: isSelected ? '0 2px 4px rgba(99, 102, 241, 0.1)' : '0 1px 2px rgba(0,0,0,0.03)'
+                    }}
+                  >
+                    <div style={{
+                      width: '14px',
+                      height: '14px',
+                      borderRadius: '50%',
+                      border: isSelected ? 'none' : '1px solid #cbd5e1',
+                      background: isSelected ? 'var(--primary)' : 'transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s'
+                    }}>
+                      {isSelected && <i className="fas fa-check" style={{ fontSize: '8px', color: 'white' }}></i>}
+                    </div>
+                    {label}
+                  </div>
+                );
+              };
+
+              return (
+                <div className="form-group" style={{
+                    marginTop: "1.5rem",
+                    padding: "1.25rem",
+                    background: "var(--bg-secondary)",
+                    borderRadius: "12px",
+                    border: "1px solid var(--border-color)"
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                        <i className="fas fa-sliders-h" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}></i>
-                        ปรับแต่งคอลัมน์ (Custom Fields)
+                      <i className="fas fa-sliders-h" style={{ color: 'var(--primary)', fontSize: '0.9rem' }}></i>
+                      ปรับแต่งคอลัมน์ที่จะ Export
                     </span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: '10px' }}>
-                        แสดง {selectedFields.length}/{customFields.length}
-                    </span>
-                 </div>
-                 
-                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {customFields.map(field => {
-                        const isSelected = selectedFields.includes(field.field_name);
-                        return (
-                            <div 
-                                key={field.id}
-                                onClick={() => handleToggleField(field.field_name)}
-                                style={{
-                                    padding: '0.4rem 0.85rem',
-                                    borderRadius: '50px',
-                                    border: isSelected ? '1px solid var(--primary)' : '1px solid transparent',
-                                    background: isSelected ? 'rgba(99, 102, 241, 0.1)' : 'var(--white)',
-                                    color: isSelected ? 'var(--primary)' : 'var(--text-secondary)',
-                                    fontSize: '0.85rem',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.4rem',
-                                    fontWeight: isSelected ? 500 : 400,
-                                    userSelect: 'none',
-                                    boxShadow: isSelected ? '0 2px 4px rgba(99, 102, 241, 0.1)' : '0 1px 2px rgba(0,0,0,0.03)'
-                                }}
-                            >
-                                <div style={{
-                                    width: '14px',
-                                    height: '14px',
-                                    borderRadius: '50%',
-                                    border: isSelected ? 'none' : '1px solid #cbd5e1',
-                                    background: isSelected ? 'var(--primary)' : 'transparent',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    transition: 'all 0.2s'
-                                }}>
-                                    {isSelected && <i className="fas fa-check" style={{ fontSize: '8px', color: 'white' }}></i>}
-                                </div>
-                                {field.field_label}
-                            </div>
-                        );
-                    })}
-                 </div>
-                 <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        onClick={handleSelectAll}
+                        className="btn btn-sm btn-ghost"
+                        style={{ fontSize: '0.75rem', padding: '0.25rem 0.625rem' }}
+                      >
+                        <i className="fas fa-check-double"></i> เลือกทั้งหมด
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleClearAll}
+                        className="btn btn-sm btn-ghost"
+                        style={{ fontSize: '0.75rem', padding: '0.25rem 0.625rem' }}
+                      >
+                        <i className="fas fa-times"></i> ล้าง
+                      </button>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: '10px' }}>
+                        {selectedFields.length}/{totalCount}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Standard Columns */}
+                  {baseFields.length > 0 && (
+                    <>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+                        ข้อมูลมาตรฐาน
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: extraCustomFields.length > 0 ? '1rem' : 0 }}>
+                        {baseFields.map(f => renderChip(f.key, f.label))}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Custom Fields */}
+                  {extraCustomFields.length > 0 && (
+                    <>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+                        ข้อมูลเพิ่มเติม (Custom Fields)
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {extraCustomFields.map(cf => renderChip(cf.field_name, cf.field_label))}
+                      </div>
+                    </>
+                  )}
+
+                  <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     <i className="fas fa-info-circle" style={{ marginRight: '4px' }}></i>
-                    คลิกเพื่อแสดง/ซ่อนข้อมูลในไฟล์ PDF และ CSV
-                 </div>
-              </div>
-            )}
+                    คลิกเพื่อเลือก/ยกเลิกคอลัมน์ที่ต้องการแสดงในไฟล์ PDF และ CSV
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* License Filters */}
             {type === "licenses" && (

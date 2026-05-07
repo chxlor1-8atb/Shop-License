@@ -78,19 +78,11 @@ export async function GET(request) {
             );
 
             // 2. Determine Active Base Fields
-            const customFieldNames = new Set(customFieldDefs.map(cf => cf.field_name));
-
+            // ถ้ามี fieldsParam → filter ทุก base field ตามที่ผู้ใช้เลือก (ไม่ใช่เฉพาะที่ชนกับ custom)
+            // เพื่อให้ UI สามารถเลือก/ตัด standard columns ได้ด้วย
             if (fieldsParam) {
-                const selectedKeys = fieldsParam.split(',');
-
-                activeBaseFields = availableBaseFields.filter(f => {
-                    if (customFieldNames.has(f.key)) {
-                        return selectedKeys.includes(f.key);
-                    }
-                    return true;
-                });
-
-                // Filter Custom Fields Definitions
+                const selectedKeys = fieldsParam.split(',').map(k => k.trim()).filter(Boolean);
+                activeBaseFields = availableBaseFields.filter(f => selectedKeys.includes(f.key));
                 customFieldDefs = customFieldDefs.filter(cf => selectedKeys.includes(cf.field_name));
             }
 

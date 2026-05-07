@@ -167,11 +167,11 @@
 }
 
 /* ========================================
-   Form Row Styling - Single Column for Compact Modal
+   Form Row Styling - 2-column on desktop, stack on mobile
    ======================================== */
 .form-row {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(0.625rem, 2vw, 0.875rem);
 }
 
