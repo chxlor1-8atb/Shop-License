@@ -6,6 +6,7 @@ import CustomSelect from "./CustomSelect";
 import DatePicker from "./DatePicker";
 import Modal from "./Modal";
 import { useDropdownData } from "@/hooks";
+import { STATUS_OPTIONS } from "@/constants";
 import useSWR, { mutate } from "swr";
 import "./QuickAddModal.css";
 
@@ -73,6 +74,8 @@ export default function QuickAddModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [customFields, setCustomFields] = useState([]);
+  // Custom fields ของ licenses — ใช้ตอนเปิด "สร้างใบอนุญาตพร้อมกัน" ในโหมด type=shop
+  const [licenseCustomFields, setLicenseCustomFields] = useState([]);
   const [loadingFields, setLoadingFields] = useState(false);
 
   // Refresh dropdown data when modal opens
@@ -94,17 +97,31 @@ export default function QuickAddModal({
     setLoadingFields(true);
     try {
       const entityType = type === "shop" ? "shops" : "licenses";
+      const shopStandard = ['shop_name', 'owner_name', 'phone', 'address', 'notes', 'license_count'];
+      const licenseStandard = ['shop_id', 'license_type_id', 'license_number', 'issue_date', 'expiry_date', 'status', 'notes'];
+
       const res = await fetch(`/api/custom-fields?entity_type=${entityType}&t=${Date.now()}`, { credentials: "include" });
       const data = await res.json();
       if (data.success) {
-        // Filter only fields that should show in form and are not standard fields
-        const standardFields = type === "shop" 
-          ? ['shop_name', 'owner_name', 'phone', 'address', 'notes', 'license_count']
-          : ['shop_id', 'license_type_id', 'license_number', 'issue_date', 'expiry_date', 'status', 'notes'];
+        const standardFields = type === "shop" ? shopStandard : licenseStandard;
         const fields = (data.fields || []).filter(
           f => f.show_in_form && !standardFields.includes(f.field_name)
         );
         setCustomFields(fields);
+      }
+
+      // ถ้าเปิดโหมด shop ให้ fetch license custom fields มาด้วย เพื่อรองรับ "สร้างใบอนุญาตพร้อมกัน"
+      if (type === "shop") {
+        const lres = await fetch(`/api/custom-fields?entity_type=licenses&t=${Date.now()}`, { credentials: "include" });
+        const ldata = await lres.json();
+        if (ldata.success) {
+          const lfields = (ldata.fields || []).filter(
+            f => f.show_in_form && !licenseStandard.includes(f.field_name)
+          );
+          setLicenseCustomFields(lfields);
+        }
+      } else {
+        setLicenseCustomFields([]);
       }
     } catch (err) {
       console.error('Error fetching custom fields:', err);
@@ -115,6 +132,12 @@ export default function QuickAddModal({
 
   useEffect(() => {
     if (isOpen) {
+      const today = new Date();
+      const nextYear = new Date(today);
+      nextYear.setFullYear(today.getFullYear() + 1);
+      const todayStr = today.toISOString().split("T")[0];
+      const nextYearStr = nextYear.toISOString().split("T")[0];
+
       // Initialize form data based on type
       if (type === "shop") {
         const initialData = {
@@ -123,17 +146,29 @@ export default function QuickAddModal({
           phone: "",
           address: "",
           notes: "",
-          // If we want to create a license too
+          // ส่วนสร้างใบอนุญาตพร้อมกัน (ใช้ prefix license_* กันชนกับ notes ของ shop)
           create_license: false,
           license_type_id: "",
           license_number: "",
+          license_issue_date: todayStr,
+          license_expiry_date: nextYearStr,
+          license_status: "active",
+          license_notes: "",
           ...prefillData,
         };
         
-        // Initialize custom fields with empty values
+        // Initialize shop custom fields with empty values
         customFields.forEach(field => {
           if (!(field.field_name in initialData)) {
             initialData[field.field_name] = "";
+          }
+        });
+
+        // Initialize license custom fields (ใช้ key prefix เพื่อไม่ชนกับ shop custom fields)
+        licenseCustomFields.forEach(field => {
+          const key = `lcf_${field.field_name}`;
+          if (!(key in initialData)) {
+            initialData[key] = "";
           }
         });
         
@@ -147,8 +182,8 @@ export default function QuickAddModal({
           shop_id: "",
           license_type_id: "",
           license_number: "",
-          issue_date: today.toISOString().split("T")[0],
-          expiry_date: nextYear.toISOString().split("T")[0],
+          issue_date: todayStr,
+          expiry_date: nextYearStr,
           status: "active",
           notes: "",
           ...prefillData,
@@ -156,7 +191,7 @@ export default function QuickAddModal({
       }
       setError("");
     }
-  }, [isOpen, type, prefillData, customFields]);
+  }, [isOpen, type, prefillData, customFields, licenseCustomFields]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -170,13 +205,22 @@ export default function QuickAddModal({
     try {
       // Separate standard fields from custom fields for both types
       if (type === "shop") {
-        const standardFields = ['shop_name', 'owner_name', 'phone', 'address', 'notes', 'create_license', 'license_type_id', 'license_number'];
-        const customFieldsData = {};
-        
-        // Extract custom field values
+        const shopStandardFields = [
+          'shop_name', 'owner_name', 'phone', 'address', 'notes',
+          'create_license',
+          'license_type_id', 'license_number',
+          'license_issue_date', 'license_expiry_date', 'license_status', 'license_notes'
+        ];
+        const shopCustomFieldsData = {};
+        const licenseCustomFieldsData = {};
+
+        // Extract custom field values — แยกของ shop vs license ด้วย prefix "lcf_"
         Object.keys(formData).forEach(key => {
-          if (!standardFields.includes(key)) {
-            customFieldsData[key] = formData[key];
+          if (shopStandardFields.includes(key)) return;
+          if (key.startsWith('lcf_')) {
+            licenseCustomFieldsData[key.slice(4)] = formData[key];
+          } else {
+            shopCustomFieldsData[key] = formData[key];
           }
         });
         
@@ -190,7 +234,12 @@ export default function QuickAddModal({
           create_license: formData.create_license,
           license_type_id: formData.license_type_id,
           license_number: formData.license_number,
-          custom_fields: customFieldsData,
+          license_issue_date: formData.license_issue_date,
+          license_expiry_date: formData.license_expiry_date,
+          license_status: formData.license_status,
+          license_notes: formData.license_notes,
+          license_custom_fields: licenseCustomFieldsData,
+          custom_fields: shopCustomFieldsData,
         };
         
         await onSubmit(payload);
@@ -459,6 +508,150 @@ export default function QuickAddModal({
                     />
                   </div>
                 </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="license_issue_date_shop" className="form-label">วันที่ออก</label>
+                    <DatePicker
+                      id="license_issue_date_shop"
+                      value={formData.license_issue_date || ""}
+                      onChange={(e) => {
+                        const newIssueDate = e.target.value;
+                        setFormData((prev) => {
+                          let newExpiryDate = prev.license_expiry_date;
+                          if (newIssueDate) {
+                            const date = new Date(newIssueDate);
+                            if (!isNaN(date.getTime())) {
+                              date.setFullYear(date.getFullYear() + 1);
+                              newExpiryDate = date.toISOString().split("T")[0];
+                            }
+                          }
+                          return {
+                            ...prev,
+                            license_issue_date: newIssueDate,
+                            license_expiry_date: newExpiryDate,
+                          };
+                        });
+                      }}
+                      placeholder="เลือกวันที่ออก"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="license_expiry_date_shop" className="form-label">วันหมดอายุ</label>
+                    <DatePicker
+                      id="license_expiry_date_shop"
+                      value={formData.license_expiry_date || ""}
+                      onChange={(e) => handleChange("license_expiry_date", e.target.value)}
+                      placeholder="เลือกวันหมดอายุ"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="license_status_shop" className="form-label">สถานะ</label>
+                  <CustomSelect
+                    id="license_status_shop"
+                    value={formData.license_status || "active"}
+                    onChange={(e) => handleChange("license_status", e.target.value)}
+                    options={STATUS_OPTIONS}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="license_notes_shop" className="form-label">หมายเหตุ (ใบอนุญาต)</label>
+                  <textarea
+                    id="license_notes_shop"
+                    name="license_notes"
+                    className="form-input"
+                    value={formData.license_notes || ""}
+                    onChange={(e) => handleChange("license_notes", e.target.value)}
+                    placeholder="หมายเหตุของใบอนุญาต"
+                    rows={2}
+                  />
+                </div>
+
+                {/* License Custom Fields */}
+                {licenseCustomFields.length > 0 && (
+                  <>
+                    <div className="form-divider" style={{ margin: '1rem 0 0.75rem', borderTop: '1px dashed var(--border-color)', paddingTop: '0.75rem' }}>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                        <i className="fas fa-sliders-h" style={{ marginRight: '0.5rem' }}></i>
+                        ข้อมูลเพิ่มเติมของใบอนุญาต
+                      </label>
+                    </div>
+
+                    {licenseCustomFields.map((field) => {
+                      const key = `lcf_${field.field_name}`;
+                      const fieldValue = formData[key] || "";
+
+                      return (
+                        <div key={field.id} className="form-group">
+                          <label htmlFor={key} className={`form-label ${field.is_required ? 'required' : ''}`}>
+                            {field.field_label}
+                          </label>
+
+                          {field.field_type === 'textarea' ? (
+                            <textarea
+                              id={key}
+                              className="form-input"
+                              value={fieldValue}
+                              onChange={(e) => handleChange(key, e.target.value)}
+                              placeholder={`กรอก${field.field_label}`}
+                              required={field.is_required}
+                              rows={3}
+                            />
+                          ) : field.field_type === 'number' ? (
+                            <input
+                              id={key}
+                              type="number"
+                              className="form-input"
+                              value={fieldValue}
+                              onChange={(e) => handleChange(key, e.target.value)}
+                              placeholder={`กรอก${field.field_label}`}
+                              required={field.is_required}
+                            />
+                          ) : field.field_type === 'date' ? (
+                            <DatePicker
+                              id={key}
+                              value={fieldValue}
+                              onChange={(e) => handleChange(key, e.target.value)}
+                              placeholder={`เลือก${field.field_label}`}
+                              required={field.is_required}
+                            />
+                          ) : field.field_type === 'select' && field.field_options ? (
+                            <CustomSelect
+                              id={key}
+                              value={fieldValue}
+                              onChange={(e) => handleChange(key, e.target.value)}
+                              options={[
+                                { value: "", label: `-- เลือก${field.field_label} --` },
+                                ...(Array.isArray(field.field_options)
+                                  ? field.field_options.map(opt => ({
+                                      value: typeof opt === 'string' ? opt : opt.value,
+                                      label: typeof opt === 'string' ? opt : opt.label
+                                    }))
+                                  : []
+                                )
+                              ]}
+                              searchable={true}
+                              searchPlaceholder={`🔍 ค้นหา${field.field_label}...`}
+                            />
+                          ) : (
+                            <input
+                              id={key}
+                              type="text"
+                              className="form-input"
+                              value={fieldValue}
+                              onChange={(e) => handleChange(key, e.target.value)}
+                              placeholder={`กรอก${field.field_label}`}
+                              required={field.is_required}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
               </div>
             )}
           </>

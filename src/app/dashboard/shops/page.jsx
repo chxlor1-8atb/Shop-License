@@ -690,17 +690,23 @@ function ShopsPageContent() {
         }
 
         try {
+          const today = new Date().toISOString().split("T")[0];
+          const licensePayload = {
+            shop_id: newShopId,
+            license_type_id: formData.license_type_id,
+            license_number: formData.license_number?.trim() || "",
+            issue_date: formData.license_issue_date || today,
+            expiry_date: formData.license_expiry_date || null,
+            status: formData.license_status || "active",
+            notes: formData.license_notes?.trim() || "",
+            custom_fields: formData.license_custom_fields || {},
+          };
+
           const licenseRes = await fetch(API_ENDPOINTS.LICENSES, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({
-              shop_id: newShopId,
-              license_type_id: formData.license_type_id,
-              license_number: formData.license_number?.trim() || "",
-              issue_date: new Date().toISOString().split("T")[0],
-              status: "active",
-            }),
+            body: JSON.stringify(licensePayload),
           });
           const licenseData = await licenseRes.json();
 
