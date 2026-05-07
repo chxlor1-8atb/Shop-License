@@ -249,7 +249,7 @@ export async function GET(request) {
                 LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
                 ${whereSQL}
                 GROUP BY l.id, l.license_number, s.shop_name, s.owner_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
-                ORDER BY l.id DESC
+                ORDER BY l.expiry_date ASC NULLS LAST, l.license_number ASC, s.shop_name ASC
                 LIMIT 5000
             `;
             data = await fetchAll(query, params);
@@ -332,7 +332,7 @@ export async function GET(request) {
                 LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'shops' AND cf.is_active = true
                 ${shopWhereSQL}
                 GROUP BY s.id, s.shop_name, s.owner_name, s.phone, s.address, s.notes, s.created_at
-                ORDER BY s.id DESC
+                ORDER BY s.shop_name ASC
                 LIMIT 5000
             `, shopParams);
         } else if (type === 'users') {
