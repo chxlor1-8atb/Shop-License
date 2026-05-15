@@ -19,6 +19,32 @@
     padding: clamp(0.5rem, 1.5vw, 0.625rem) clamp(0.625rem, 2vw, 0.75rem);
 }
 
+/* ========================================
+   DatePicker - ทำให้กลมกลืนกับ form-input อื่นใน modal
+   (เดิมเป็น pill-shape + border ส้ม → ดูใหญ่กว่าฟิลด์อื่น)
+   ======================================== */
+.modal-body .datepicker-trigger {
+    border-radius: var(--border-radius, 10px);
+    border: 1.5px solid var(--border-color, #e5e7eb);
+    height: auto;
+    min-height: 40px;
+    padding: clamp(0.5rem, 1.5vw, 0.625rem) clamp(0.625rem, 2vw, 0.75rem);
+    min-width: 0;
+}
+
+.modal-body .datepicker-trigger:hover {
+    border-color: #D97757;
+}
+
+.modal-body .datepicker-trigger.open {
+    border-radius: var(--border-radius, 10px);
+    border-color: #D97757;
+}
+
+.modal-body .datepicker-trigger span {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
 .form-group {
     margin-bottom: clamp(0.875rem, 2.5vw, 1rem);
 }
