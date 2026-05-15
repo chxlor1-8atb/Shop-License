@@ -22,27 +22,34 @@
 /* ========================================
    DatePicker - ทำให้กลมกลืนกับ form-input อื่นใน modal
    (เดิมเป็น pill-shape + border ส้ม → ดูใหญ่กว่าฟิลด์อื่น)
+   ใช้ !important + specificity สูง เพื่อ override global style.css
    ======================================== */
-.modal-body .datepicker-trigger {
-    border-radius: var(--border-radius, 10px);
-    border: 1.5px solid var(--border-color, #e5e7eb);
-    height: auto;
-    min-height: 40px;
-    padding: clamp(0.5rem, 1.5vw, 0.625rem) clamp(0.625rem, 2vw, 0.75rem);
-    min-width: 0;
+.modal-body .datepicker-wrapper .datepicker-trigger {
+    border-radius: var(--border-radius, 10px) !important;
+    border: 1.5px solid var(--border-color, #e5e7eb) !important;
+    height: auto !important;
+    min-height: 40px !important;
+    padding: clamp(0.5rem, 1.5vw, 0.625rem) clamp(0.625rem, 2vw, 0.75rem) !important;
+    min-width: 0 !important;
+    width: 100%;
 }
 
-.modal-body .datepicker-trigger:hover {
-    border-color: #D97757;
+.modal-body .datepicker-wrapper .datepicker-trigger:hover {
+    border-color: #D97757 !important;
 }
 
-.modal-body .datepicker-trigger.open {
-    border-radius: var(--border-radius, 10px);
-    border-color: #D97757;
+.modal-body .datepicker-wrapper .datepicker-trigger.open {
+    border-radius: var(--border-radius, 10px) !important;
+    border-color: #D97757 !important;
 }
 
-.modal-body .datepicker-trigger span {
+.modal-body .datepicker-wrapper .datepicker-trigger span {
     font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+/* DatePicker ใน nested-form ยังกินความกว้างเต็ม column */
+.modal-body .nested-form .datepicker-wrapper {
+    width: 100%;
 }
 
 .form-group {
