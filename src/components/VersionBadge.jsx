@@ -14,11 +14,11 @@ export default function VersionBadge({ onClick }) {
             onClick={onClick}
             title="ดูบันทึกการเผยแพร่ (Release Notes)"
             className="version-badge"
-            aria-label={`เวอร์ชัน ${latest?.version || '2.0.0'} — คลิกเพื่อดูประวัติการอัปเดต`}
+            aria-label={`เวอร์ชัน ${latest?.version || '3.0.0'} — คลิกเพื่อดูประวัติการอัปเดต`}
         >
             <i className="fas fa-code-branch version-badge-icon" aria-hidden="true"></i>
             <span className="version-badge-label">เวอร์ชัน</span>
-            <span className="version-badge-number">{latest?.version || '2.0.0'}</span>
+            <span className="version-badge-number">{latest?.version || '3.0.0'}</span>
         </button>
     );
 }
