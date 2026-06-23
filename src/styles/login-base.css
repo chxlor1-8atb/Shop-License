@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Login Page - Base Styles
  * Claude-style Light Theme - Modern & Clean
  * For responsive styles, see: login-responsive.css
@@ -13,29 +13,32 @@
     /* Note: These are login-specific variables, dashboard uses style.css values */
 
     /* LOGIN-SPECIFIC: Using --login- prefix to avoid conflicts */
-    --login-primary: #D97706;
-    --login-primary-dark: #B45309;
-    --login-primary-light: #FBBF24;
-    --login-primary-glow: rgba(217, 119, 6, 0.2);
-    --login-primary-accent: #F59E0B;
+    --login-primary: #00703C; /* Official MOPH Green from Logo */
+    --login-primary-dark: #00562E;
+    --login-primary-light: #48C78E;
+    --login-primary-glow: rgba(0, 112, 60, 0.2);
+    --login-primary-accent: #008548;
 
-    --bg-main: #FAFAF9;
+    --bg-main: #F8FAFC; /* Slate 50 */
     --bg-card: #FFFFFF;
-    --bg-subtle: #F5F5F4;
+    --bg-subtle: #F1F5F9; /* Slate 100 */
     --bg-input: #FFFFFF;
 
-    --text-primary: #1C1917;
-    --text-secondary: #57534E;
-    --text-muted: #A8A29E;
+    --text-primary: #0F172A; /* Slate 900 */
+    --text-secondary: #475569; /* Slate 600 */
+    --text-muted: #94A3B8; /* Slate 400 */
     --text-light: #FFFFFF;
 
-    --border-light: #E7E5E4;
-    --border-medium: #D6D3D1;
+    --border-light: #E2E8F0; /* Slate 200 */
+    --border-medium: #CBD5E1; /* Slate 300 */
 
     --purple: #8B5CF6;
     --blue: #3B82F6;
     --green: #10B981;
     --orange: #F59E0B;
+    --teal: #0D9488;
+    --cyan: #0EA5E9;
+    --emerald: #059669;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -127,6 +130,25 @@ html {
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Disable text selection / drag-copy across the login page.
+     * Inputs/textarea are re-enabled below so users can still type & select credentials. */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+}
+
+/* Re-enable selection inside editable fields so typing/selecting still works */
+.login-body input,
+.login-body textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    /* Allow drag-to-select within text fields only */
+    -webkit-user-drag: element;
 }
 
 /* iOS Safari viewport fix */
@@ -163,10 +185,10 @@ html {
     width: 400px;
     height: 400px;
     background: radial-gradient(circle,
-            rgba(251, 191, 36, 0.5) 0%,
-            rgba(245, 158, 11, 0.35) 15%,
-            rgba(217, 119, 6, 0.2) 35%,
-            rgba(180, 83, 9, 0.08) 55%,
+            rgba(72, 199, 142, 0.45) 0%,
+            rgba(0, 112, 60, 0.3) 15%,
+            rgba(0, 86, 46, 0.18) 35%,
+            rgba(0, 61, 32, 0.06) 55%,
             transparent 70%);
     pointer-events: none;
     z-index: 0;
@@ -179,27 +201,27 @@ html {
 
 @keyframes bounceOrb1 {
     0% {
-        transform: translate3d(10%, -10%, 0) scale(1);
+        transform: translate3d(10%, -10%, 0);
     }
 
     20% {
-        transform: translate3d(-30%, 60%, 0) scale(1.2);
+        transform: translate3d(-30%, 60%, 0);
     }
 
     40% {
-        transform: translate3d(-70%, 20%, 0) scale(0.8);
+        transform: translate3d(-70%, 20%, 0);
     }
 
     60% {
-        transform: translate3d(-10%, 70%, 0) scale(1.1);
+        transform: translate3d(-10%, 70%, 0);
     }
 
     80% {
-        transform: translate3d(-50%, 10%, 0) scale(0.9);
+        transform: translate3d(-50%, 10%, 0);
     }
 
     100% {
-        transform: translate3d(10%, -10%, 0) scale(1);
+        transform: translate3d(10%, -10%, 0);
     }
 }
 
@@ -234,74 +256,23 @@ html {
 
 @keyframes bounceOrb2 {
     0% {
-        transform: translate3d(-10%, 10%, 0) scale(1);
+        transform: translate3d(-10%, 10%, 0);
     }
 
     25% {
-        transform: translate3d(50%, -40%, 0) scale(1.15);
+        transform: translate3d(50%, -40%, 0);
     }
 
     50% {
-        transform: translate3d(30%, -10%, 0) scale(0.85);
+        transform: translate3d(30%, -10%, 0);
     }
 
     75% {
-        transform: translate3d(0%, -50%, 0) scale(1.1);
+        transform: translate3d(0%, -50%, 0);
     }
 
     100% {
-        transform: translate3d(-10%, 10%, 0) scale(1);
-    }
-}
-
-/* Flowing light orb - center (teal/cyan accent) */
-.login-body .bg-shapes::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 350px;
-    height: 350px;
-    background: radial-gradient(circle,
-            rgba(45, 212, 191, 0.4) 0%,
-            rgba(20, 184, 166, 0.28) 15%,
-            rgba(13, 148, 136, 0.15) 35%,
-            rgba(6, 95, 70, 0.05) 55%,
-            transparent 70%);
-    pointer-events: none;
-    /* Optimize animation */
-    transform: translate3d(-50%, -50%, 0);
-    animation: bounceOrb3 28s ease-in-out infinite;
-    will-change: transform;
-}
-
-@keyframes bounceOrb3 {
-    0% {
-        transform: translate3d(-50%, -50%, 0) scale(1);
-    }
-
-    16% {
-        transform: translate3d(80%, -90%, 0) scale(1.2);
-    }
-
-    33% {
-        transform: translate3d(-80%, 20%, 0) scale(0.9);
-    }
-
-    50% {
-        transform: translate3d(-90%, -80%, 0) scale(1.15);
-    }
-
-    66% {
-        transform: translate3d(20%, 30%, 0) scale(0.85);
-    }
-
-    83% {
-        transform: translate3d(10%, -20%, 0) scale(1.1);
-    }
-
-    100% {
-        transform: translate3d(-50%, -50%, 0) scale(1);
+        transform: translate3d(-10%, 10%, 0);
     }
 }
 
@@ -451,7 +422,7 @@ html {
     overflow: hidden;
     box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.12),
-        0 20px 60px -10px rgba(217, 119, 6, 0.1);
+        0 20px 60px -10px rgba(0, 112, 60, 0.1);
 }
 
 /* ====================================
@@ -467,21 +438,23 @@ html {
     justify-content: center;
     position: relative;
     z-index: 1;
-    /* Solid gradient for fast LCP (no backdrop-filter) */
-    background: linear-gradient(135deg,
-            rgb(254, 243, 199) 0%,
-            rgb(253, 230, 138) 50%,
-            rgb(252, 211, 77) 100%);
+    /* Clean Green Theme - no backdrop-filter for high performance */
+    /* Clean Green Theme - no backdrop-filter for high performance */
+    background: rgba(0, 112, 60, 0.07);
+    border-right: 1px solid rgba(0, 112, 60, 0.12);
 }
 
 .card-left::before {
     content: '';
     position: absolute;
     inset: 0;
-    background:
-        radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.5) 0%, transparent 50%),
-        radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.4) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    /* Emblem watermark with very low opacity */
+    background-image: url('/image/โลโก้เทศบาลนางรอง.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 55%;
+    opacity: 0.08;
+    z-index: 0;
     pointer-events: none;
 }
 
@@ -519,11 +492,66 @@ html {
         border-radius: 0;
         /* Smooth gradient transition that blends with card-left */
         background: linear-gradient(180deg,
-                rgba(253, 240, 200, 0.95) 0%,
-                rgba(255, 250, 240, 0.98) 30%,
+                rgba(0, 112, 60, 0.05) 0%,
+                rgba(255, 255, 255, 0.95) 30%,
                 rgba(255, 255, 255, 0.98) 100%);
         border-top: none;
     }
+}
+
+/* ====================================
+   5.1 ORGANIZATION BANNER (Top of left card)
+   ==================================== */
+
+.org-banner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(0, 112, 60, 0.15);
+    /* Reserve space so layout doesn't shift after fonts load */
+    min-height: 4.5em;
+}
+
+.org-banner__title {
+    font-size: clamp(1.5rem, 3vw + 0.5rem, 2.25rem);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    /* Same green gradient as the hero highlight for visual consistency */
+    background: linear-gradient(135deg, #00703C 0%, #008548 50%, #48C78E 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.org-banner__divider {
+    width: 56px;
+    height: 4px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, #00703C, rgba(72, 199, 142, 0.4));
+    flex-shrink: 0;
+}
+
+.org-banner__subtitle {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #64748B;
+    /* Slate 500 */
+}
+
+.org-banner__system-name {
+    font-size: clamp(1.125rem, 2.25vw + 0.5rem, 1.625rem);
+    font-weight: 700;
+    color: #004D29;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
 }
 
 /* ====================================
@@ -569,7 +597,7 @@ html {
     font-size: var(--fs-brand);
     /* RWD: Fluid typography */
     font-weight: 700;
-    color: var(--text-primary);
+    color: #004D29;
     letter-spacing: -0.02em;
 }
 
@@ -581,7 +609,7 @@ html {
     font-size: var(--fs-hero-title);
     /* RWD: Fluid typography using clamp() */
     font-weight: 800;
-    color: var(--text-primary);
+    color: #0F172A;
     line-height: 1.2;
     margin-bottom: var(--space-section);
     letter-spacing: -0.02em;
@@ -595,7 +623,7 @@ html {
 }
 
 .hero__title--highlight {
-    background: linear-gradient(135deg, var(--login-primary) 0%, var(--login-primary-dark) 100%);
+    background: linear-gradient(135deg, #00703C 0%, #008548 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -612,7 +640,7 @@ html {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, var(--login-primary-glow), transparent);
+    background: linear-gradient(90deg, rgba(0, 112, 60, 0.35), transparent);
     border-radius: 2px;
     transform: translateY(4px);
 }
@@ -620,7 +648,7 @@ html {
 .hero__description {
     font-size: var(--fs-hero-desc);
     /* RWD: Fluid typography */
-    color: var(--text-secondary);
+    color: #334155;
     line-height: 1.7;
     max-width: 420px;
     margin-bottom: var(--space-section);
@@ -642,7 +670,7 @@ html {
 .features__label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: #475569;
     text-transform: uppercase;
     letter-spacing: 0.1em;
 }
@@ -660,16 +688,16 @@ html {
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 112, 60, 0.12);
     border-radius: 100px;
-    color: var(--text-primary);
+    color: #1E293B;
     font-size: var(--fs-tag);
     /* RWD: Fluid typography */
     font-weight: 500;
     transition: all 0.25s ease;
     white-space: nowrap;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 8px rgba(0, 112, 60, 0.06);
 }
 
 .feature-tag:hover {
@@ -677,7 +705,7 @@ html {
     background: rgba(255, 255, 255, 0.95);
     box-shadow:
         0 8px 25px rgba(0, 0, 0, 0.12),
-        0 0 0 2px rgba(217, 119, 6, 0.15);
+        0 0 0 2px rgba(0, 112, 60, 0.15);
 }
 
 .feature-tag:hover svg {
@@ -735,6 +763,30 @@ html {
 
 .feature-tag--orange svg {
     color: var(--orange);
+}
+
+.feature-tag--teal {
+    border-color: rgba(13, 148, 136, 0.3);
+}
+
+.feature-tag--teal svg {
+    color: var(--teal);
+}
+
+.feature-tag--cyan {
+    border-color: rgba(14, 165, 233, 0.3);
+}
+
+.feature-tag--cyan svg {
+    color: var(--cyan);
+}
+
+.feature-tag--emerald {
+    border-color: rgba(5, 150, 105, 0.3);
+}
+
+.feature-tag--emerald svg {
+    color: var(--emerald);
 }
 
 /* ====================================
@@ -838,7 +890,7 @@ html {
     font-size: var(--fs-input);
     /* RWD: Fluid typography */
     font-family: inherit;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: border-color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -1093,14 +1145,10 @@ html {
    ======================================== */
 
 /* GPU acceleration for animated elements */
-.login-body::before,
 .login-body::after,
 .bg-shapes::before,
-.bg-shapes::after,
-.particle,
-.login-card,
 .slider-btn {
-    will-change: transform, opacity;
+    will-change: transform;
     transform: translateZ(0);
 }
 
@@ -1112,19 +1160,6 @@ html {
 .card-left,
 .card-right {
     contain: layout;
-}
-
-/* Fixed dimensions for brand logo to prevent CLS */
-.brand__logo {
-    width: 52px;
-    height: 52px;
-    flex-shrink: 0;
-}
-
-.brand__logo-img {
-    width: 52px;
-    height: 52px;
-    object-fit: cover;
 }
 
 /* Reduce motion for accessibility */

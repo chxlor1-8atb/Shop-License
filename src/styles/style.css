@@ -675,53 +675,6 @@ select option:checked {
     white-space: nowrap;
 }
 
-.badge-primary {
-    background: rgba(217, 119, 87, 0.15);
-    color: var(--primary-dark);
-}
-
-.badge-secondary {
-    background: rgba(120, 116, 106, 0.15);
-    color: var(--gray-600);
-}
-
-.badge-success {
-    background: rgba(16, 185, 129, 0.15);
-    color: #059669;
-}
-
-.badge-warning {
-    background: rgba(245, 158, 11, 0.15);
-    color: #D97706;
-}
-
-.badge-danger {
-    background: rgba(239, 68, 68, 0.15);
-    color: #DC2626;
-}
-
-.badge-info {
-    background: rgba(99, 102, 241, 0.15);
-    color: #4F46E5;
-}
-
-.badge-light {
-    background: rgba(0, 0, 0, 0.05);
-    color: var(--text-secondary);
-}
-
-.badge-admin {
-    background: rgba(124, 58, 237, 0.1);
-    color: #7c3aed;
-    border: 1px solid rgba(124, 58, 237, 0.2);
-}
-
-.badge-user {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
-    border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
 /* Messages */
 .error-message {
     display: flex;
@@ -1893,60 +1846,52 @@ select option:checked {
     font-size: 0.875rem;
 }
 
-/* Expired - แดงเข้ม (หมดอายุแล้ว) */
+/* Expired - แดงอ่อน (หมดอายุแล้ว) */
 .badge-expired {
-    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-    color: #ffffff;
-    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+    background: rgba(239, 68, 68, 0.12);
+    color: #DC2626;
 }
 
-/* Critical - ส้ม (เร่งด่วน ≤ 7 วัน) */
+/* Critical - ส้มอ่อน (เร่งด่วน ≤ 7 วัน) */
 .badge-critical {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-    color: #ffffff;
-    box-shadow: 0 2px 4px rgba(249, 115, 22, 0.3);
+    background: rgba(249, 115, 22, 0.12);
+    color: #EA580C;
 }
 
-/* Warning - เหลือง (ควรระวัง 8-14 วัน) */
+/* Warning - เหลืองอ่อน (ควรระวัง 8-14 วัน) */
 .badge-warning {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    color: #78350f;
-    box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+    background: rgba(245, 158, 11, 0.12);
+    color: #B45309;
 }
 
-/* Info - ฟ้า (ปกติ > 14 วัน) */
+/* Info - ฟ้าอ่อน (ปกติ > 14 วัน) */
 .badge-info {
-    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-    color: #ffffff;
-    box-shadow: 0 2px 4px rgba(96, 165, 250, 0.3);
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563EB;
 }
 
-/* Active - เขียว */
+/* Active - เขียวอ่อน */
 .badge-active {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: #ffffff;
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
 }
 
-/* Pending - กำลังดำเนินการ - ส้ม */
+/* Pending - ส้มอ่อน (กำลังดำเนินการ) */
 .badge-pending {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: #ffffff;
-    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    background: rgba(245, 158, 11, 0.12);
+    color: #D97706;
 }
 
-/* Suspended - ถูกพักใช้ - เทา */
+/* Suspended - เทาอ่อน (ถูกพักใช้) */
 .badge-suspended {
-    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
-    color: #ffffff;
-    box-shadow: 0 2px 4px rgba(148, 163, 184, 0.3);
+    background: rgba(148, 163, 184, 0.15);
+    color: #475569;
 }
 
-/* Revoked - ถูกเพิกถอน - เทาเข้ม */
+/* Revoked - เทาเข้ม (ถูกเพิกถอน) */
 .badge-revoked {
-    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-    color: #ffffff;
-    box-shadow: 0 2px 4px rgba(75, 85, 99, 0.3);
+    background: rgba(107, 114, 128, 0.15);
+    color: #374151;
 }
 
 
@@ -2164,47 +2109,55 @@ select option:checked {
     color: var(--text-primary);
 }
 
-/* Badges - Glass */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.3125rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    border-radius: var(--border-radius-full);
-    backdrop-filter: blur(8px);
-}
+/* ========================================
+   Badges - Soft Glass Style
+   ======================================== */
 
-.badge-active {
-    background: rgba(16, 185, 129, 0.15);
-    color: #059669;
-}
+/* --- Status Badges --- */
+.badge-active   { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.badge-expired  { background: rgba(239, 68, 68, 0.12);  color: #DC2626; }
+.badge-pending  { background: rgba(245, 158, 11, 0.12);  color: #D97706; }
+.badge-cancelled { background: rgba(120, 116, 106, 0.12); color: #6B7280; }
+.badge-suspended { background: rgba(148, 163, 184, 0.15); color: #475569; }
+.badge-revoked  { background: rgba(107, 114, 128, 0.15); color: #374151; }
 
-.badge-expired {
-    background: rgba(239, 68, 68, 0.15);
-    color: #DC2626;
-}
+/* --- Role Badges --- */
+.badge-admin    { background: rgba(139, 92, 246, 0.12);  color: #7C3AED; }
+.badge-staff    { background: rgba(14, 165, 233, 0.12);   color: #0284C7; }
+.badge-user     { background: rgba(59, 130, 246, 0.12);   color: #2563EB; }
 
-.badge-pending {
-    background: rgba(245, 158, 11, 0.15);
-    color: #D97706;
-}
+/* --- Semantic Badges --- */
+.badge-success  { background: rgba(34, 197, 94, 0.12);   color: #16A34A; }
+.badge-danger   { background: rgba(239, 68, 68, 0.12);   color: #DC2626; }
+.badge-warning  { background: rgba(245, 158, 11, 0.12);   color: #B45309; }
+.badge-info     { background: rgba(59, 130, 246, 0.12);   color: #2563EB; }
+.badge-primary  { background: rgba(217, 119, 87, 0.12);  color: #C2410C; }
+.badge-secondary { background: rgba(120, 116, 106, 0.12); color: #6B7280; }
+.badge-light    { background: rgba(0, 0, 0, 0.05);        color: var(--text-secondary); }
 
-.badge-cancelled {
-    background: rgba(120, 116, 106, 0.15);
-    color: var(--gray-500);
-}
+/* --- Color Variants --- */
+.badge-rose     { background: rgba(244, 63, 94, 0.12);   color: #E11D48; }
+.badge-pink     { background: rgba(236, 72, 153, 0.12);   color: #DB2777; }
+.badge-fuchsia  { background: rgba(192, 38, 211, 0.12);    color: #A21CAF; }
+.badge-violet   { background: rgba(139, 92, 246, 0.12);   color: #7C3AED; }
+.badge-purple   { background: rgba(168, 85, 247, 0.12);    color: #9333EA; }
+.badge-indigo   { background: rgba(99, 102, 241, 0.12);    color: #4F46E5; }
+.badge-blue     { background: rgba(59, 130, 246, 0.12);   color: #2563EB; }
+.badge-sky      { background: rgba(14, 165, 233, 0.12);    color: #0284C7; }
+.badge-cyan     { background: rgba(6, 182, 212, 0.12);    color: #0891B2; }
+.badge-teal     { background: rgba(20, 184, 166, 0.12);    color: #0D9488; }
+.badge-emerald  { background: rgba(16, 185, 129, 0.12);    color: #059669; }
+.badge-green    { background: rgba(34, 197, 94, 0.12);      color: #16A34A; }
+.badge-lime     { background: rgba(132, 204, 22, 0.12);     color: #65A30D; }
+.badge-amber    { background: rgba(245, 158, 11, 0.12);   color: #D97706; }
+.badge-orange   { background: rgba(249, 115, 22, 0.12);    color: #EA580C; }
+.badge-red      { background: rgba(239, 68, 68, 0.12);      color: #DC2626; }
+.badge-slate    { background: rgba(100, 116, 139, 0.12); color: #475569; }
+.badge-zinc     { background: rgba(113, 113, 122, 0.12);   color: #52525B; }
+.badge-stone    { background: rgba(168, 162, 158, 0.12);  color: #78716C; }
 
-.badge-admin {
-    background: rgba(217, 119, 87, 0.15);
-    color: var(--primary);
-}
-
-.badge-staff {
-    background: rgba(14, 165, 233, 0.15);
-    color: #0284C7;
-}
+/* --- Urgency Badges (for expiring licenses) --- */
+.badge-critical { background: rgba(249, 115, 22, 0.12);    color: #EA580C; }
 
 .action-buttons {
     display: flex;

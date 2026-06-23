@@ -122,17 +122,20 @@
     animation: arrowSlide 0.8s ease infinite;
 }
 
-/* Background fill that follows slider */
+/* Background fill that follows slider.
+ * NOTE: Do NOT animate this with transform: scaleX() — it would stretch
+ * border-radius into an ellipse and the trailing edge behind the button
+ * looks flat instead of round. We animate width via the hook instead,
+ * which keeps the pill shape perfectly round at every position. */
 .slide-bg {
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
-    width: 0;
+    width: 0px;
     background: linear-gradient(90deg,
             rgba(0, 0, 0, 0.08) 0%,
             rgba(0, 0, 0, 0.15) 100%);
-    transition: width 0.1s linear;
     border-radius: 9999px;
     pointer-events: none;
     will-change: width;
@@ -344,7 +347,6 @@
     100% {
         opacity: 0;
         transform: scale(1.1) translateY(-20px);
-        filter: blur(10px);
     }
 }
 

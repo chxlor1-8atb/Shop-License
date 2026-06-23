@@ -16,26 +16,14 @@ export const LoginSlider = ({ slider, loading, unlocked, error }) => {
         id="slideContainer"
         ref={slider.slideContainerRef}
       >
-        <div
-          className="slide-bg"
-          style={{
-            width:
-              slider.slideProgress > 0
-                ? `${slider.slideProgress + 48}px`
-                : "0px",
-          }}
-        ></div>
+        {/* slide-bg transform is driven directly by the hook (updateDOM)
+            to keep drag tracking at 60fps without React re-renders. */}
+        <div className="slide-bg" />
         <div className="slide-text">เลื่อนเพื่อเข้าสู่ระบบ »</div>
         <div
           className="slider-btn"
           id="sliderBtn"
           ref={slider.sliderBtnRef}
-          style={{
-            '--slide-x': `${slider.slideProgress > 4 ? slider.slideProgress - 4 : 0}px`,
-            transition: slider.isDragging
-              ? "none"
-              : "transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease",
-          }}
           onMouseDown={slider.handleStartDrag}
           onTouchStart={slider.handleStartDrag}
         >

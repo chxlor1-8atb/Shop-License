@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { FeatureTag } from "@/components/login/FeatureTag";
 import LoginCard from "@/components/login/LoginCard";
 import "../styles/login-base.css";
@@ -10,7 +9,7 @@ export default function LoginPage() {
     <main className="login-body">
         <div className="bg-shapes" />
         <div className="particles">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(4)].map((_, i) => (
             <div key={i} className="particle"></div>
           ))}
         </div>
@@ -20,25 +19,13 @@ export default function LoginPage() {
             {/* Left Side: Brand & Info — Server-rendered for fast FCP */}
             <div className="card-left">
               <div className="card-left__content">
-                <div className="brand">
-                  <div className="brand__logo">
-                    <Image
-                      src="/image/shop-logo.png"
-                      alt="Shop License"
-                      width={52}
-                      height={52}
-                      className="brand__logo-img"
-                      priority
-                    />
-                  </div>
-                  <span className="brand__name">Shop License</span>
+                <div className="org-banner">
+                  <span className="org-banner__title">กองสาธารณสุข</span>
+                  <span className="org-banner__divider" />
+                  <span className="org-banner__subtitle">Division of Public Health</span>
                 </div>
+                <span className="org-banner__system-name">ระบบจัดการใบอนุญาต</span>
                 <div className="hero-section text-content">
-                  <h1 className="hero__title">
-                    ระบบจัดการ
-                    <br />
-                    <span className="hero__title--highlight">ใบอนุญาตร้านค้า</span>
-                  </h1>
                   <p className="hero__description">
                     ยกระดับการจัดการร้านค้าของคุณด้วยระบบที่ใช้งานง่าย ออกแบบมาเพื่อ
                     ความเรียบง่าย ปลอดภัย และรวดเร็ว
@@ -48,10 +35,10 @@ export default function LoginPage() {
                 <div className="features">
                   <div className="features__label">คุณสมบัติเด่น</div>
                   <div className="features__list">
-                    <FeatureTag color="purple" icon="check" text="จัดการร้านค้า" />
-                    <FeatureTag color="blue" icon="check" text="บันทึกใบอนุญาต" />
-                    <FeatureTag color="green" icon="check" text="แจ้งเตือนหมดอายุ" />
-                    <FeatureTag color="orange" icon="check" text="Export CSV/PDF" />
+                    <FeatureTag color="green" icon="check" text="จัดการร้านค้า" />
+                    <FeatureTag color="teal" icon="check" text="บันทึกใบอนุญาต" />
+                    <FeatureTag color="cyan" icon="check" text="แจ้งเตือนหมดอายุ" />
+                    <FeatureTag color="emerald" icon="check" text="Export CSV/PDF" />
                   </div>
                 </div>
               </div>

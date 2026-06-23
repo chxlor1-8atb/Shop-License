@@ -19,9 +19,11 @@ export function useAuthLogin() {
     const passwordRef = useRef(password);
     const rememberMeRef = useRef(rememberMe);
 
-    useEffect(() => { usernameRef.current = username; }, [username]);
-    useEffect(() => { passwordRef.current = password; }, [password]);
-    useEffect(() => { rememberMeRef.current = rememberMe; }, [rememberMe]);
+    useEffect(() => {
+        usernameRef.current = username;
+        passwordRef.current = password;
+        rememberMeRef.current = rememberMe;
+    }, [username, password, rememberMe]);
 
     // Initial auth check
     useEffect(() => {

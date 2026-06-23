@@ -664,11 +664,29 @@
         gap: 0.5rem;
     }
 
+    /* Compact org banner on mobile - centered like the rest of card-left */
+    .org-banner {
+        align-items: center;
+        text-align: center;
+        gap: 0.3rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+        min-height: unset;
+    }
+
+    .org-banner__title {
+        font-size: clamp(1.25rem, 5vw, 1.75rem);
+    }
+
+    .org-banner__subtitle {
+        font-size: 0.65rem;
+    }
+
     .brand__logo {
         width: 48px;
         height: 48px;
         border-radius: 12px;
-        box-shadow: 0 6px 16px rgba(217, 119, 6, 0.18);
+        box-shadow: 0 6px 16px rgba(0, 112, 60, 0.18);
     }
 
     .brand__logo-img {
@@ -1003,7 +1021,7 @@
         transform: none !important;
         opacity: 0.6;
         /* Slight dim to compensate for lack of movement */
-        filter: blur(40px) !important;
+        filter: blur(20px) !important;
         /* Static blur is cheaper */
         transition: none !important;
     }
@@ -1037,15 +1055,15 @@
     .card-left {
         /* Pre-calculated color of the gradient on white background */
         background: linear-gradient(135deg,
-                #FEF3C7 0%,
-                #FDE68A 50%,
-                #FCD34D 100%) !important;
+                #E8F5E9 0%,
+                #E8F8F0 50%,
+                #C8E6C9 100%) !important;
     }
 
     .card-right {
         background: linear-gradient(180deg,
-                #FDF0C8 0%,
-                #FFFDF5 30%,
+                #E8F8F0 0%,
+                #F4FBF7 30%,
                 #FFFFFF 100%) !important;
     }
 
@@ -1055,7 +1073,7 @@
 
     /* 5. Optimize shadows */
     .brand__logo {
-        box-shadow: 0 4px 10px rgba(217, 119, 6, 0.15) !important;
+        box-shadow: 0 4px 10px rgba(0, 112, 60, 0.15) !important;
     }
 
     /* 6. Hardware acceleration for critical transforming elements */
