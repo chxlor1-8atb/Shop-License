@@ -1,0 +1,202 @@
+/**
+ * Login FX — เทคนิคอนิเมชั่นพรีเมียมทั้งหมด
+ * ─────────────────────────────────────────────
+ * 1. Cursor Glow          — แสงวงกลมตามเมาส์
+ * 2. Page Load Entrance   — staggered fade-in/slide-up
+ * 3. Animated Gradient Text — สีไล่เป็นแสงเลื่อน
+ * 4. 3D Tilt Card         — การ์ดเอียงตามเมาส์ + spotlight glare
+ * 5. Animated Border Glow — ขอบแสงไล่สีหมุนรอบการ์ด
+ */
+
+/* ====================================
+   1. CURSOR GLOW FOLLOWER
+   ==================================== */
+.cursor-glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+            rgba(72, 199, 142, 0.10) 0%,
+            rgba(14, 165, 233, 0.05) 40%,
+            transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform;
+    mix-blend-mode: screen;
+}
+
+/* ====================================
+   2. PAGE LOAD ENTRANCE (Staggered)
+   ====================================
+ * เพิ่ม class .fx-rise ลงใน element ที่จะให้ slide-up + fade-in
+ * กำหนด delay ผ่าน --fx-delay
+ */
+.fx-rise {
+    animation: fxRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--fx-delay, 0s);
+}
+
+@keyframes fxRise {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+        filter: blur(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ====================================
+   3. ANIMATED GRADIENT TEXT (Shine)
+   ====================================
+ * ชื่อระบบมีแสงไล่สีเลื่อนผ่านตัวอักษร
+ */
+.fx-shine {
+    background: linear-gradient(
+            100deg,
+            #00703C 0%,
+            #00703C 35%,
+            #48C78E 50%,
+            #0EA5E9 65%,
+            #00703C 100%
+    );
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: fxShine 4s ease-in-out infinite;
+}
+
+@keyframes fxShine {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ====================================
+   4. 3D TILT CARD + SPOTLIGHT GLARE
+   ==================================== */
+.fx-card-tilt {
+    /* CSS custom properties ที่ hook จะ update */
+    --tilt-rx: 0deg;
+    --tilt-ry: 0deg;
+    --tilt-scale: 1;
+    --tilt-active: 0;
+    --glare-x: 50%;
+    --glare-y: 50%;
+
+    transform-style: preserve-3d;
+    transform:
+            perspective(1200px)
+            rotateX(var(--tilt-rx))
+            rotateY(var(--tilt-ry))
+            scale(var(--tilt-scale));
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+
+/* เมื่อเมาส์อยู่บนการ์ด เปลี่ยน transition ให้เร็วขึ้น (responsive) */
+.fx-card-tilt:hover {
+    transition: transform 0.08s ease-out;
+}
+
+/* Spotlight glare layer */
+.login-card__glare {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-card);
+    background: radial-gradient(
+            circle 250px at var(--glare-x) var(--glare-y),
+            rgba(255, 255, 255, 0.35) 0%,
+            rgba(255, 255, 255, 0.1) 30%,
+            transparent 60%
+    );
+    opacity: var(--tilt-active);
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 6;
+    mix-blend-mode: overlay;
+}
+
+/* ====================================
+   FEATURE TAGS — entrance stagger
+   ====================================
+ * แต่ละ tag โผล่ทีละตัวแบบ pop
+ */
+.features__list {
+    /* container สำหรับ stagger */
+}
+
+.features__list .feature-tag {
+    animation: fxTagPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: calc(var(--fx-delay, 0.4s) + 0.08s * var(--tag-i, 0));
+}
+
+.features__list .feature-tag:nth-child(1) { --tag-i: 1; }
+.features__list .feature-tag:nth-child(2) { --tag-i: 2; }
+.features__list .feature-tag:nth-child(3) { --tag-i: 3; }
+.features__list .feature-tag:nth-child(4) { --tag-i: 4; }
+
+@keyframes fxTagPop {
+    0% {
+        opacity: 0;
+        transform: translateY(12px) scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ====================================
+   ORG BANNER — slide-down entrance
+   ==================================== */
+.org-banner__system-name {
+    display: inline-block;
+}
+
+/* ====================================
+   REDUCED MOTION — เคารพผู้ใช้
+   ==================================== */
+@media (prefers-reduced-motion: reduce) {
+    .cursor-glow { display: none; }
+
+    .fx-rise,
+    .fx-shine,
+    .fx-card-tilt,
+    .login-card__border,
+    .features__list .feature-tag {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .fx-shine {
+        -webkit-text-fill-color: var(--login-primary);
+        color: var(--login-primary);
+    }
+}
+
+/* ====================================
+   MOBILE — ลด FX ที่หนัก
+   ==================================== */
+@media (max-width: 768px) {
+    .cursor-glow {
+        display: none;
+    }
+
+    .login-card__border {
+        /* ขอบหมุนอาจทำให้ mobile กระตุก → ปิด */
+        animation: none;
+        opacity: 0.3;
+    }
+
+    .fx-card-tilt {
+        /* tilt อาจไม่จำเป็นบนมือถือ */
+        transform: none !important;
+    }
+}

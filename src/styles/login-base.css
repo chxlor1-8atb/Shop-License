@@ -689,12 +689,12 @@ html {
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 112, 60, 0.12);
+    border: 1.5px solid rgba(0, 112, 60, 0.15);
     border-radius: 100px;
     color: #1E293B;
     font-size: var(--fs-tag);
     /* RWD: Fluid typography */
-    font-weight: 500;
+    font-weight: 600;
     transition: all 0.25s ease;
     white-space: nowrap;
     box-shadow: 0 2px 8px rgba(0, 112, 60, 0.06);
@@ -702,7 +702,6 @@ html {
 
 .feature-tag:hover {
     transform: translateY(-4px) scale(1.05);
-    background: rgba(255, 255, 255, 0.95);
     box-shadow:
         0 8px 25px rgba(0, 0, 0, 0.12),
         0 0 0 2px rgba(0, 112, 60, 0.15);
@@ -725,68 +724,122 @@ html {
 }
 
 .feature-tag svg {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     width: 1em;
     height: 1em;
     min-width: 1em;
     flex-shrink: 0;
 }
 
-/* Feature tag colors */
+/* Feature tag colors — Pastel Fill Badge style */
 .feature-tag--purple {
-    border-color: rgba(139, 92, 246, 0.3);
+    background: rgba(139, 92, 246, 0.12);
+    border-color: rgba(139, 92, 246, 0.35);
+    color: #6D28D9;
 }
 
 .feature-tag--purple svg {
-    color: var(--purple);
+    color: #7C3AED;
 }
 
 .feature-tag--blue {
-    border-color: rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.35);
+    color: #1D4ED8;
 }
 
 .feature-tag--blue svg {
-    color: var(--blue);
+    color: #3B82F6;
 }
 
 .feature-tag--green {
-    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #047857;
 }
 
 .feature-tag--green svg {
-    color: var(--green);
+    color: #059669;
 }
 
 .feature-tag--orange {
-    border-color: rgba(217, 119, 6, 0.3);
+    background: rgba(217, 119, 6, 0.12);
+    border-color: rgba(217, 119, 6, 0.35);
+    color: #B45309;
 }
 
 .feature-tag--orange svg {
-    color: var(--orange);
+    color: #D97706;
 }
 
 .feature-tag--teal {
-    border-color: rgba(13, 148, 136, 0.3);
+    background: rgba(13, 148, 136, 0.15);
+    border-color: rgba(13, 148, 136, 0.4);
+    color: #0F766E;
 }
 
 .feature-tag--teal svg {
-    color: var(--teal);
+    color: #0D9488;
 }
 
 .feature-tag--cyan {
-    border-color: rgba(14, 165, 233, 0.3);
+    background: rgba(14, 165, 233, 0.15);
+    border-color: rgba(14, 165, 233, 0.4);
+    color: #0369A1;
 }
 
 .feature-tag--cyan svg {
-    color: var(--cyan);
+    color: #0EA5E9;
 }
 
 .feature-tag--emerald {
-    border-color: rgba(5, 150, 105, 0.3);
+    background: rgba(5, 150, 105, 0.15);
+    border-color: rgba(5, 150, 105, 0.4);
+    color: #065F46;
 }
 
 .feature-tag--emerald svg {
-    color: var(--emerald);
+    color: #059669;
+}
+
+.feature-tag--indigo {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.4);
+    color: #3730A3;
+}
+
+.feature-tag--indigo svg {
+    color: #6366F1;
+}
+
+.feature-tag--violet {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.4);
+    color: #5B21B6;
+}
+
+.feature-tag--violet svg {
+    color: #8B5CF6;
+}
+
+.feature-tag--rose {
+    background: rgba(244, 63, 94, 0.15);
+    border-color: rgba(244, 63, 94, 0.4);
+    color: #BE123C;
+}
+
+.feature-tag--rose svg {
+    color: #F43F5E;
+}
+
+.feature-tag--amber {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #92400E;
+}
+
+.feature-tag--amber svg {
+    color: #F59E0B;
 }
 
 /* ====================================
