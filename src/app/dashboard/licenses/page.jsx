@@ -97,11 +97,13 @@ function LicensesPageContent() {
           // ถ้ากำลังแก้ไข ไม่ต้องแสดง render function
           if (isEditing) return null;
 
-          // ใช้ shop_name (สั้น) สำหรับ cell display แทน label (detailed รวมเจ้าของ)
-          // เพื่อให้ตารางไม่กว้างเกินไป — เจ้าของมี column "เจ้าของร้าน" แยกอยู่แล้ว
+          // ใช้ shop_name (สั้น) สำหรับ cell display เท่านั้น
+          // ห้าม fallback ไป opt.label เพราะ label รวม "— เจ้าของ (เบอร์)" สำหรับ dropdown
+          // ถ้า shop_name ว่าง → แสดง "-" สีจาง (มีคอลัมน์ "เจ้าของร้าน" แยกอยู่แล้ว)
           const opt = enhancedShopOptions.find((o) => o.value == value);
-          const shopName = opt?.shop_name || row.shop_name || opt?.label || value;
+          const shopName = opt?.shop_name || row.shop_name || '';
           if (!value || value === CREATE_NEW_SHOP_VALUE) return <span className="text-muted">-</span>;
+          if (!shopName) return <span className="text-muted">-</span>;
           return (
             <Link
               href={`/dashboard/shops?search=${encodeURIComponent(shopName)}`}
