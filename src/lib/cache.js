@@ -165,7 +165,7 @@ export const getCachedExpiringCount = unstable_cache(
  * Get financial stats (GovTech dashboard) with caching
  */
 export const getCachedFinancialStats = unstable_cache(
-    async (period = 'year') => {
+    async (period = 'year', selectedYear = null) => {
         const baseCTE = `
             WITH LicenseRevenue AS (
                 SELECT 
@@ -189,10 +189,12 @@ export const getCachedFinancialStats = unstable_cache(
         let currentWhere = '';
         let previousWhere = '';
         let trendQuery = '';
+        
+        const targetYear = selectedYear ? parseInt(selectedYear) - 543 : new Date().getFullYear();
 
         if (period === 'year') {
-            currentWhere = "EXTRACT(YEAR FROM issue_date) = EXTRACT(YEAR FROM CURRENT_DATE)";
-            previousWhere = "EXTRACT(YEAR FROM issue_date) = EXTRACT(YEAR FROM CURRENT_DATE) - 1";
+            currentWhere = `EXTRACT(YEAR FROM issue_date) = ${targetYear}`;
+            previousWhere = `EXTRACT(YEAR FROM issue_date) = ${targetYear - 1}`;
             trendQuery = `
                 ${baseCTE}
                 SELECT 
@@ -230,8 +232,8 @@ export const getCachedFinancialStats = unstable_cache(
                 ORDER BY label ASC
             `;
         } else {
-            currentWhere = "EXTRACT(YEAR FROM issue_date) = EXTRACT(YEAR FROM CURRENT_DATE)";
-            previousWhere = "EXTRACT(YEAR FROM issue_date) = EXTRACT(YEAR FROM CURRENT_DATE) - 1";
+            currentWhere = `EXTRACT(YEAR FROM issue_date) = ${targetYear}`;
+            previousWhere = `EXTRACT(YEAR FROM issue_date) = ${targetYear - 1}`;
             trendQuery = `
                 ${baseCTE}
                 SELECT 
@@ -278,12 +280,25 @@ export const getCachedFinancialStats = unstable_cache(
         const revenueByType = await fetchAll(typeQuery);
         const trend = await fetchAll(trendQuery);
         const forecastData = await fetchAll(forecastQuery);
+        
+        const availableYearsQuery = `SELECT DISTINCT EXTRACT(YEAR FROM issue_date) as year FROM licenses WHERE issue_date IS NOT NULL ORDER BY year DESC`;
+        const availableYearsData = await fetchAll(availableYearsQuery);
+        let availableYears = availableYearsData.map(r => parseInt(r.year) + 543);
+        const currentThaiYear = new Date().getFullYear() + 543;
+        if (!availableYears.includes(currentThaiYear)) {
+            availableYears.unshift(currentThaiYear);
+        }
+        
+        // Sort descending
+        availableYears.sort((a, b) => b - a);
 
         return {
             overview: overviewData[0] || { current_revenue: 0, current_licenses: 0, previous_revenue: 0, previous_licenses: 0 },
             revenueByType,
             trend,
-            forecast: forecastData[0]?.expected_revenue || 0
+            forecast: forecastData[0]?.expected_revenue || 0,
+            availableYears,
+            selectedYear: selectedYear || currentThaiYear
         };
     },
     ['financial-stats-v1'],

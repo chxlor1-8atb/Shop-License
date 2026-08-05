@@ -49,14 +49,16 @@ export default function FinancialDashboardCharts({ data, period }) {
         datasets: [{
             data: revenueByType.map(t => parseFloat(t.revenue)),
             backgroundColor: [
-                '#1e40af', // blue-800
+                '#2563eb', // blue-600
                 '#3b82f6', // blue-500
-                '#93c5fd', // blue-300
-                '#0f172a', // slate-900
-                '#64748b', // slate-500
-                '#cbd5e1'  // slate-300
+                '#60a5fa', // blue-400
+                '#0ea5e9', // sky-500
+                '#38bdf8', // sky-400
+                '#7dd3fc'  // sky-300
             ],
-            borderWidth: 1,
+            hoverOffset: 4,
+            borderWidth: 2,
+            borderColor: '#ffffff',
         }]
     };
 
@@ -64,14 +66,21 @@ export default function FinancialDashboardCharts({ data, period }) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: { position: 'right', labels: { usePointStyle: true, font: { family: 'inherit' } } },
+            legend: { 
+                position: 'bottom', 
+                labels: { 
+                    usePointStyle: true, 
+                    font: { family: 'inherit' },
+                    padding: 20
+                } 
+            },
             tooltip: {
                 callbacks: {
                     label: (context) => ' ' + context.label + ': ฿' + formatNumber(context.raw)
                 }
             }
         },
-        cutout: '70%'
+        cutout: '75%'
     };
 
     // Process Trend Data to fill missing dates/months
@@ -100,13 +109,24 @@ export default function FinancialDashboardCharts({ data, period }) {
                 label: 'ค่าธรรมเนียมจัดเก็บ (บาท)',
                 data: finalTrendData,
                 borderColor: primaryColor,
-                backgroundColor: 'rgba(59, 130, 246, 0.1)', // blue-500 with opacity
-                borderWidth: 2,
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+                    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.4)'); // blue-600 stronger at top
+                    gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)'); // transparent at bottom
+                    return gradient;
+                },
+                borderWidth: 3,
                 fill: true,
-                tension: 0.4, // smooth curves
-                pointBackgroundColor: primaryColor,
+                tension: 0.45, // smoother curves
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: primaryColor,
+                pointBorderWidth: 2,
                 pointRadius: 4,
-                pointHoverRadius: 6
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: primaryColor,
+                pointHoverBorderColor: '#ffffff',
+                pointHoverBorderWidth: 2,
             }
         ]
     };
@@ -128,10 +148,12 @@ export default function FinancialDashboardCharts({ data, period }) {
                 ticks: {
                     callback: (value) => '฿' + formatNumber(value)
                 },
-                grid: { color: '#e2e8f0', drawBorder: false }
+                grid: { color: 'rgba(226, 232, 240, 0.6)', drawBorder: false, borderDash: [5, 5] },
+                border: { display: false }
             },
             x: {
-                grid: { display: false, drawBorder: false }
+                grid: { display: false, drawBorder: false },
+                border: { display: false }
             }
         },
         interaction: { intersect: false, mode: 'index' }
@@ -161,7 +183,7 @@ export default function FinancialDashboardCharts({ data, period }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                 
                 {/* Revenue Card */}
-                <div className="card" style={{ padding: '20px', borderLeft: `4px solid ${primaryColor}` }}>
+                <div className="card summary-card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                             <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>ยอดจัดเก็บค่าธรรมเนียม</p>
@@ -169,7 +191,7 @@ export default function FinancialDashboardCharts({ data, period }) {
                                 ฿{formatNumber(currentRev)}
                             </h2>
                         </div>
-                        <div style={{ backgroundColor: '#eff6ff', padding: '12px', borderRadius: '8px', color: primaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', padding: '14px', borderRadius: '12px', color: primaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.1)' }}>
                             <Wallet size={24} />
                         </div>
                     </div>
@@ -177,7 +199,7 @@ export default function FinancialDashboardCharts({ data, period }) {
                 </div>
 
                 {/* Licenses Card */}
-                <div className="card" style={{ padding: '20px', borderLeft: `4px solid ${secondaryColor}` }}>
+                <div className="card summary-card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                             <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>สถิติการต่ออายุ/ออกใบอนุญาต</p>
@@ -185,7 +207,7 @@ export default function FinancialDashboardCharts({ data, period }) {
                                 {formatNumber(currentLic)} <span style={{ fontSize: '1rem', color: '#64748b' }}>รายการ</span>
                             </h2>
                         </div>
-                        <div style={{ backgroundColor: '#eff6ff', padding: '12px', borderRadius: '8px', color: secondaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', padding: '14px', borderRadius: '12px', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(22, 163, 74, 0.1)' }}>
                             <FileText size={24} />
                         </div>
                     </div>
@@ -193,7 +215,7 @@ export default function FinancialDashboardCharts({ data, period }) {
                 </div>
 
                 {/* Forecast Card */}
-                <div className="card" style={{ padding: '20px', borderLeft: `4px solid ${successColor}` }}>
+                <div className="card summary-card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                             <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>คาดการณ์รายได้ (30 วันข้างหน้า)</p>
@@ -201,7 +223,7 @@ export default function FinancialDashboardCharts({ data, period }) {
                                 ฿{formatNumber(parseFloat(forecast))}
                             </h2>
                         </div>
-                        <div style={{ backgroundColor: '#ecfdf5', padding: '12px', borderRadius: '8px', color: successColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)', padding: '14px', borderRadius: '12px', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(217, 119, 6, 0.1)' }}>
                             <TrendingUp size={24} />
                         </div>
                     </div>
@@ -215,8 +237,8 @@ export default function FinancialDashboardCharts({ data, period }) {
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
                 
                 {/* Trend Line Chart */}
-                <div className="card">
-                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff' }}>
+                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', borderBottom: 'none', padding: '0 0 20px 0' }}>
                         <LineChart color={primaryColor} size={20} />
                         <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor, margin: 0 }}>
                             แนวโน้มการจัดเก็บค่าธรรมเนียม
@@ -234,8 +256,8 @@ export default function FinancialDashboardCharts({ data, period }) {
                 </div>
 
                 {/* Doughnut Chart - Revenue by Type */}
-                <div className="card">
-                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff' }}>
+                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', borderBottom: 'none', padding: '0 0 20px 0' }}>
                         <PieChart color={secondaryColor} size={20} />
                         <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor, margin: 0 }}>
                             สัดส่วนตามประเภทใบอนุญาต
