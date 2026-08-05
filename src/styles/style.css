@@ -1813,6 +1813,20 @@ select option:checked {
 /* License Types Badge */
 .license-types-badge {
     display: inline-block;
+}
+
+/* Dashboard Charts Responsive Grid */
+.dashboard-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+@media (min-width: 1024px) {
+    .dashboard-charts-grid {
+        grid-template-columns: 2fr 1fr;
+    }
+}
     font-size: 0.75rem;
     color: var(--text-secondary);
     background: rgba(217, 119, 87, 0.08);

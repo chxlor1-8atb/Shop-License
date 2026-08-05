@@ -176,10 +176,15 @@ export function RecentActivityLog() {
     };
 
     const formatActionText = (log) => {
-        const entityName = log.entity_type === 'shops' ? 'ร้านค้า' : 
-                           log.entity_type === 'licenses' ? 'ใบอนุญาต' : 
-                           log.entity_type === 'license_types' ? 'ประเภทใบอนุญาต' : 
-                           log.entity_type === 'users' ? 'ผู้ใช้งาน' : log.entity_type;
+        const type = (log.entity_type || '').toUpperCase();
+        let entityName = type;
+        if (type === 'SHOPS' || type === 'SHOP') entityName = 'ร้านค้า';
+        else if (type === 'LICENSES' || type === 'LICENSE') entityName = 'ใบอนุญาต';
+        else if (type === 'LICENSE_TYPES' || type === 'LICENSE_TYPE') entityName = 'ประเภทใบอนุญาต';
+        else if (type === 'USERS' || type === 'USER') entityName = 'ผู้ใช้งาน';
+        else if (type === 'CUSTOM_FIELD') entityName = 'ฟิลด์เพิ่มเติม';
+        else if (type === 'ENTITY' || type === 'ENTITY_RECORD') entityName = 'ข้อมูลอ้างอิง';
+        else if (type === 'AUTH') entityName = 'ระบบ';
         
         if (log.action === 'CREATE') return `เพิ่มข้อมูล${entityName}ใหม่`;
         if (log.action === 'UPDATE') return `แก้ไขข้อมูล${entityName}`;
