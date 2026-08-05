@@ -126,20 +126,22 @@ export default function CustomSelect({
         const preferBelow = spaceBelow >= DESIRED_HEIGHT || spaceBelow >= spaceAbove;
 
         let top;
+        let bottom;
         let maxHeight;
         if (preferBelow) {
             top = rect.bottom + GAP;
             maxHeight = Math.max(MIN_HEIGHT, Math.min(DESIRED_HEIGHT, spaceBelow));
+            if (top + maxHeight > vh - MARGIN) maxHeight = Math.max(120, vh - MARGIN - top);
         } else {
             maxHeight = Math.max(MIN_HEIGHT, Math.min(DESIRED_HEIGHT, spaceAbove));
-            top = rect.top - GAP - maxHeight;
+            // Anchor to the bottom so it grows upwards from the trigger
+            bottom = vh - rect.top + GAP;
+            if (bottom + maxHeight > vh - MARGIN) maxHeight = Math.max(120, vh - MARGIN - bottom);
         }
-        if (top < MARGIN) top = MARGIN;
-        if (top + maxHeight > vh - MARGIN) maxHeight = Math.max(120, vh - MARGIN - top);
 
         setDropdownStyle({
             position: 'fixed',
-            top: `${Math.round(top)}px`,
+            ...(top !== undefined ? { top: `${Math.round(top)}px` } : { bottom: `${Math.round(bottom)}px` }),
             left: `${Math.round(left)}px`,
             minWidth: `${Math.round(minWidth)}px`,
             width: 'max-content',
