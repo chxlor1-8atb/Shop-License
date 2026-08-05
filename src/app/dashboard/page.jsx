@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import FinancialDashboardCharts from '@/components/FinancialDashboardCharts';
-import { SystemHealthWidget, ActionableExpiringList, RecentActivityLog } from '@/components/DashboardWidgets';
+import { ActionableExpiringList, RecentActivityLog } from '@/components/DashboardWidgets';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { Plus, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -65,9 +65,6 @@ export default function DashboardPage() {
                     </button>
                 </div>
             </div>
-
-            {/* 1. System Health Widget */}
-            <SystemHealthWidget stats={statsData?.stats} />
 
             {/* 2. Financial Dashboard Charts Section */}
             <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff', marginBottom: '24px' }}>
