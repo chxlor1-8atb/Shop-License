@@ -70,8 +70,8 @@ export default function FinancialDashboardCharts({ data, period }) {
                 position: 'bottom', 
                 labels: { 
                     usePointStyle: true, 
-                    font: { family: 'inherit' },
-                    padding: 20,
+                    font: { family: 'inherit', size: 14 },
+                    padding: 16,
                     color: '#64748b'
                 } 
             },
@@ -108,14 +108,14 @@ export default function FinancialDashboardCharts({ data, period }) {
             const centerY = chartArea.top + chartArea.height / 2;
             
             // Draw subtitle
-            ctx.font = 'normal 13px sans-serif';
+            ctx.font = 'normal 14px sans-serif';
             ctx.fillStyle = '#64748b';
-            ctx.fillText('รวมทั้งหมด', centerX, centerY - 12);
+            ctx.fillText('รวมทั้งหมด', centerX, centerY - 14);
             
             // Draw amount
-            ctx.font = 'bold 18px sans-serif';
+            ctx.font = 'bold 24px sans-serif';
             ctx.fillStyle = accentColor;
-            ctx.fillText(formatNumber(total), centerX, centerY + 12);
+            ctx.fillText(formatNumber(total), centerX, centerY + 14);
             
             ctx.restore();
         }
