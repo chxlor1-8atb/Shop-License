@@ -239,7 +239,9 @@ export default function FinancialDashboardCharts({ data, period }) {
                 {/* Trend Line Chart */}
                 <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff' }}>
                     <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', borderBottom: 'none', padding: '0 0 20px 0' }}>
-                        <LineChart color={primaryColor} size={20} />
+                        <div style={{ flexShrink: 0, display: 'flex' }}>
+                            <LineChart color={primaryColor} size={20} />
+                        </div>
                         <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor, margin: 0 }}>
                             แนวโน้มการจัดเก็บค่าธรรมเนียม
                         </h3>
@@ -258,7 +260,9 @@ export default function FinancialDashboardCharts({ data, period }) {
                 {/* Doughnut Chart - Revenue by Type */}
                 <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff' }}>
                     <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', borderBottom: 'none', padding: '0 0 20px 0' }}>
-                        <PieChart color={secondaryColor} size={20} />
+                        <div style={{ flexShrink: 0, display: 'flex' }}>
+                            <PieChart color={secondaryColor} size={20} />
+                        </div>
                         <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor, margin: 0 }}>
                             สัดส่วนตามประเภทใบอนุญาต
                         </h3>

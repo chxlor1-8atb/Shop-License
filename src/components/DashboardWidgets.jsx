@@ -75,7 +75,7 @@ export function ActionableExpiringList() {
     const { data, error, isLoading } = useSWR('/api/licenses/expiring', fetcher);
 
     return (
-        <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff', height: 'auto', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ background: '#fef3c7', padding: '8px', borderRadius: '8px', color: '#d97706', display: 'flex' }}>
@@ -83,7 +83,7 @@ export function ActionableExpiringList() {
                     </div>
                     <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>รายการใบอนุญาตใกล้หมดอายุ</h3>
                 </div>
-                <button onClick={() => router.push('/dashboard/expiring')} style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontWeight: 500, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button onClick={() => router.push('/dashboard/expiring')} style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontWeight: 500, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'inherit' }}>
                     ดูทั้งหมด <ChevronRight size={16} />
                 </button>
             </div>
@@ -188,7 +188,7 @@ export function RecentActivityLog() {
     };
 
     return (
-        <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff', height: 'auto', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ background: '#f8fafc', padding: '8px', borderRadius: '8px', color: '#64748b', display: 'flex' }}>

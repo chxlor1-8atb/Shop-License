@@ -112,7 +112,7 @@ export default function DashboardPage() {
             </div>
 
             {/* 3. Actionable List & Activity Log */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', minHeight: '400px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'start', minHeight: '400px' }}>
                 <ActionableExpiringList />
                 <RecentActivityLog />
             </div>
