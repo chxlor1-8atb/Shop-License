@@ -99,10 +99,7 @@ async function getExpiringCount(warningDays) {
 }
 
 async function getRecentActivity(session, searchParams) {
-    // Security check: Only admins can see activity logs
-    if (session.role !== 'admin') {
-        return NextResponse.json({ success: true, activities: [] });
-    }
+    // Note: User requested that recent activity be visible to all users, not just admins.
 
     const type = searchParams.get('type') || 'ALL';
     let whereClause = "a.action IN ('CREATE', 'UPDATE', 'DELETE')";
@@ -114,7 +111,9 @@ async function getRecentActivity(session, searchParams) {
     }
 
     const activities = await fetchAll(`
-        SELECT a.*, COALESCE(u.full_name, 'System') as user_name 
+        SELECT 
+            a.id, a.action, a.entity_type, a.entity_id, a.created_at,
+            COALESCE(u.full_name, 'System') as user_name 
         FROM audit_logs a
         LEFT JOIN users u ON a.user_id = u.id
         WHERE ${whereClause}

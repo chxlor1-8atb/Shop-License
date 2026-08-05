@@ -166,8 +166,8 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-    // Security: Require Admin for write operations
-    const authError = await requireAdmin();
+    // Security: Require Auth for write operations (Users can add licenses)
+    const authError = await requireAuth();
     if (authError) return authError;
 
     try {
@@ -266,8 +266,8 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
-    // Security: Require Admin for write operations
-    const authError = await requireAdmin();
+    // Security: Require Auth for write operations (Users can edit licenses)
+    const authError = await requireAuth();
     if (authError) return authError;
 
     try {
@@ -378,8 +378,8 @@ export async function PUT(request) {
 }
 
 export async function DELETE(request) {
-    // Check authentication - Require Admin
-    const authError = await requireAdmin();
+    // Security: Require Auth for delete operations (Users can delete licenses)
+    const authError = await requireAuth();
     if (authError) return authError;
 
     try {
