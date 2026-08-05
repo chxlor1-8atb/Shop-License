@@ -4,6 +4,7 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import FinancialDashboardCharts from '@/components/FinancialDashboardCharts';
 import { SystemHealthWidget, ActionableExpiringList, RecentActivityLog } from '@/components/DashboardWidgets';
+import CustomSelect from '@/components/ui/CustomSelect';
 import { Plus, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -74,37 +75,15 @@ export default function DashboardPage() {
                     <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>สถิติยอดจัดเก็บค่าธรรมเนียม</h2>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         {period === 'year' && (
-                            <div style={{ position: 'relative' }}>
-                                <select 
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(e.target.value)}
-                                    style={{
-                                        padding: '8px 32px 8px 16px',
-                                        borderRadius: '8px',
-                                        border: '1px solid #e2e8f0',
-                                        background: '#fff',
-                                        color: '#0f172a',
-                                        fontWeight: '500',
-                                        fontSize: '0.95rem',
-                                        cursor: 'pointer',
-                                        outline: 'none',
-                                        appearance: 'none',
-                                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                        fontFamily: 'inherit'
-                                    }}
-                                >
-                                    {data?.stats?.availableYears ? (
-                                        data.stats.availableYears.map(year => (
-                                            <option key={year} value={year}>ปี {year}</option>
-                                        ))
-                                    ) : (
-                                        <option value={selectedYear}>ปี {selectedYear}</option>
-                                    )}
-                                </select>
-                                <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b' }}>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                                </div>
-                            </div>
+                            <CustomSelect 
+                                value={selectedYear}
+                                onChange={(val) => setSelectedYear(val)}
+                                options={data?.stats?.availableYears ? 
+                                    data.stats.availableYears.map(year => ({ value: year, label: `ปี ${year}` })) : 
+                                    [{ value: selectedYear, label: `ปี ${selectedYear}` }]
+                                }
+                                style={{ width: '120px' }}
+                            />
                         )}
 
                         <div style={{ 
