@@ -2,10 +2,14 @@
 
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Filler } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { Wallet, FileText, TrendingUp, TrendingDown, ArrowUp, ArrowDown, LineChart, PieChart } from 'lucide-react';
 import { formatNumber, formatCurrency } from '@/utils/formatters';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Filler);
+
+// Use system fonts
+ChartJS.defaults.font.family = 'var(--font-noto-thai), var(--font-inter), sans-serif';
 
 export default function FinancialDashboardCharts({ data, period }) {
     if (!data || !data.overview) {
@@ -63,27 +67,38 @@ export default function FinancialDashboardCharts({ data, period }) {
             legend: { position: 'right', labels: { usePointStyle: true, font: { family: 'inherit' } } },
             tooltip: {
                 callbacks: {
-                    label: (context) => ` \${context.label}: ฿\${formatNumber(context.raw)}`
+                    label: (context) => ' ' + context.label + ': ฿' + formatNumber(context.raw)
                 }
             }
         },
         cutout: '70%'
     };
 
-    // Prepare Trend Data (Line/Area Chart)
-    const getMonthName = (monthNum) => {
-        const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-        return months[parseInt(monthNum) - 1] || monthNum;
-    };
+    // Process Trend Data to fill missing dates/months
+    let finalTrendLabels = [];
+    let finalTrendData = [];
 
-    const trendLabels = trend.map(t => period === 'year' ? getMonthName(t.label) : t.label);
+    if (period === 'year') {
+        finalTrendLabels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        finalTrendData = Array(12).fill(0);
+        
+        trend.forEach(t => {
+            const m = parseInt(t.label) - 1;
+            if (m >= 0 && m < 12) {
+                finalTrendData[m] = parseFloat(t.revenue);
+            }
+        });
+    } else {
+        finalTrendLabels = trend.map(t => t.label);
+        finalTrendData = trend.map(t => parseFloat(t.revenue));
+    }
     
     const trendData = {
-        labels: trendLabels,
+        labels: finalTrendLabels,
         datasets: [
             {
                 label: 'ค่าธรรมเนียมจัดเก็บ (บาท)',
-                data: trend.map(t => parseFloat(t.revenue)),
+                data: finalTrendData,
                 borderColor: primaryColor,
                 backgroundColor: 'rgba(59, 130, 246, 0.1)', // blue-500 with opacity
                 borderWidth: 2,
@@ -103,7 +118,7 @@ export default function FinancialDashboardCharts({ data, period }) {
             legend: { display: false },
             tooltip: {
                 callbacks: {
-                    label: (context) => ` ฿\${formatNumber(context.raw)}`
+                    label: (context) => ' ฿' + formatNumber(context.raw)
                 }
             }
         },
@@ -126,12 +141,12 @@ export default function FinancialDashboardCharts({ data, period }) {
     const renderDiff = (diff, percent, unit) => {
         const isPositive = diff >= 0;
         const color = isPositive ? successColor : warningColor;
-        const icon = isPositive ? 'fa-arrow-up' : 'fa-arrow-down';
+        const Icon = isPositive ? TrendingUp : TrendingDown;
         const sign = isPositive ? '+' : '';
         return (
             <div style={{ marginTop: '10px', fontSize: '0.9rem' }}>
                 <span style={{ color, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <i className={`fas \${icon}`}></i>
+                    <Icon size={16} />
                     {sign}{formatNumber(diff)} {unit} ({sign}{percent}%)
                 </span>
                 <span style={{ color: '#64748b', fontSize: '0.8rem' }}>เทียบกับช่วงเวลาก่อนหน้า</span>
@@ -146,7 +161,7 @@ export default function FinancialDashboardCharts({ data, period }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                 
                 {/* Revenue Card */}
-                <div className="card" style={{ padding: '20px', borderLeft: `4px solid \${primaryColor}` }}>
+                <div className="card" style={{ padding: '20px', borderLeft: `4px solid ${primaryColor}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                             <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>ยอดจัดเก็บค่าธรรมเนียม</p>
@@ -154,15 +169,15 @@ export default function FinancialDashboardCharts({ data, period }) {
                                 ฿{formatNumber(currentRev)}
                             </h2>
                         </div>
-                        <div style={{ backgroundColor: '#eff6ff', padding: '10px', borderRadius: '8px', color: primaryColor }}>
-                            <i className="fas fa-wallet fa-lg"></i>
+                        <div style={{ backgroundColor: '#eff6ff', padding: '12px', borderRadius: '8px', color: primaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Wallet size={24} />
                         </div>
                     </div>
                     {renderDiff(revDiff, revDiffPercent, 'บาท')}
                 </div>
 
                 {/* Licenses Card */}
-                <div className="card" style={{ padding: '20px', borderLeft: `4px solid \${secondaryColor}` }}>
+                <div className="card" style={{ padding: '20px', borderLeft: `4px solid ${secondaryColor}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                             <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>สถิติการต่ออายุ/ออกใบอนุญาต</p>
@@ -170,15 +185,15 @@ export default function FinancialDashboardCharts({ data, period }) {
                                 {formatNumber(currentLic)} <span style={{ fontSize: '1rem', color: '#64748b' }}>รายการ</span>
                             </h2>
                         </div>
-                        <div style={{ backgroundColor: '#eff6ff', padding: '10px', borderRadius: '8px', color: secondaryColor }}>
-                            <i className="fas fa-file-contract fa-lg"></i>
+                        <div style={{ backgroundColor: '#eff6ff', padding: '12px', borderRadius: '8px', color: secondaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <FileText size={24} />
                         </div>
                     </div>
                     {renderDiff(licDiff, licDiffPercent, 'รายการ')}
                 </div>
 
                 {/* Forecast Card */}
-                <div className="card" style={{ padding: '20px', borderLeft: `4px solid \${successColor}` }}>
+                <div className="card" style={{ padding: '20px', borderLeft: `4px solid ${successColor}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                             <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>คาดการณ์รายได้ (30 วันข้างหน้า)</p>
@@ -186,8 +201,8 @@ export default function FinancialDashboardCharts({ data, period }) {
                                 ฿{formatNumber(parseFloat(forecast))}
                             </h2>
                         </div>
-                        <div style={{ backgroundColor: '#ecfdf5', padding: '10px', borderRadius: '8px', color: successColor }}>
-                            <i className="fas fa-chart-line fa-lg"></i>
+                        <div style={{ backgroundColor: '#ecfdf5', padding: '12px', borderRadius: '8px', color: successColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <TrendingUp size={24} />
                         </div>
                     </div>
                     <div style={{ marginTop: '10px', fontSize: '0.85rem', color: '#64748b' }}>
@@ -201,9 +216,9 @@ export default function FinancialDashboardCharts({ data, period }) {
                 
                 {/* Trend Line Chart */}
                 <div className="card">
-                    <div className="card-header">
-                        <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor }}>
-                            <i className="fas fa-chart-area" style={{ color: primaryColor, marginRight: '8px' }}></i> 
+                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <LineChart color={primaryColor} size={20} />
+                        <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor, margin: 0 }}>
                             แนวโน้มการจัดเก็บค่าธรรมเนียม
                         </h3>
                     </div>
@@ -220,9 +235,9 @@ export default function FinancialDashboardCharts({ data, period }) {
 
                 {/* Doughnut Chart - Revenue by Type */}
                 <div className="card">
-                    <div className="card-header">
-                        <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor }}>
-                            <i className="fas fa-chart-pie" style={{ color: secondaryColor, marginRight: '8px' }}></i> 
+                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <PieChart color={secondaryColor} size={20} />
+                        <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor, margin: 0 }}>
                             สัดส่วนตามประเภทใบอนุญาต
                         </h3>
                     </div>
