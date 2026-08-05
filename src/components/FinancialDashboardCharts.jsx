@@ -36,10 +36,10 @@ export default function FinancialDashboardCharts({ data, period }) {
     const licDiff = currentLic - prevLic;
     const licDiffPercent = prevLic === 0 ? (currentLic > 0 ? 100 : 0) : ((licDiff / prevLic) * 100).toFixed(1);
 
-    // Styling configurations (GovTech Trust Colors)
-    const primaryColor = '#1d4ed8'; // blue-700
-    const secondaryColor = '#3b82f6'; // blue-500
-    const accentColor = '#0f172a'; // slate-900
+    // Styling configurations (Premium Muted Colors)
+    const primaryColor = '#475569'; // slate-600
+    const secondaryColor = '#64748b'; // slate-500
+    const accentColor = '#334155'; // slate-700
     const successColor = '#059669'; // emerald-600
     const warningColor = '#d97706'; // amber-600
 
@@ -49,12 +49,12 @@ export default function FinancialDashboardCharts({ data, period }) {
         datasets: [{
             data: revenueByType.map(t => parseFloat(t.revenue)),
             backgroundColor: [
-                '#2563eb', // blue-600
-                '#3b82f6', // blue-500
-                '#60a5fa', // blue-400
-                '#0ea5e9', // sky-500
-                '#38bdf8', // sky-400
-                '#7dd3fc'  // sky-300
+                '#334155', // slate-700
+                '#475569', // slate-600
+                '#64748b', // slate-500
+                '#94a3b8', // slate-400
+                '#cbd5e1', // slate-300
+                '#e2e8f0'  // slate-200
             ],
             hoverOffset: 4,
             borderWidth: 2,
@@ -71,7 +71,8 @@ export default function FinancialDashboardCharts({ data, period }) {
                 labels: { 
                     usePointStyle: true, 
                     font: { family: 'inherit' },
-                    padding: 20
+                    padding: 20,
+                    color: '#64748b'
                 } 
             },
             tooltip: {
@@ -121,8 +122,8 @@ export default function FinancialDashboardCharts({ data, period }) {
                 backgroundColor: (context) => {
                     const ctx = context.chart.ctx;
                     const gradient = ctx.createLinearGradient(0, 0, 0, 350);
-                    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.4)'); // blue-600 stronger at top
-                    gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)'); // transparent at bottom
+                    gradient.addColorStop(0, 'rgba(71, 85, 105, 0.15)'); 
+                    gradient.addColorStop(1, 'rgba(71, 85, 105, 0.0)'); 
                     return gradient;
                 },
                 borderWidth: 3,
@@ -131,7 +132,7 @@ export default function FinancialDashboardCharts({ data, period }) {
                 pointBackgroundColor: '#ffffff',
                 pointBorderColor: primaryColor,
                 pointBorderWidth: 2,
-                pointRadius: 4,
+                pointRadius: 0,
                 pointHoverRadius: 6,
                 pointHoverBackgroundColor: primaryColor,
                 pointHoverBorderColor: '#ffffff',
@@ -162,12 +163,14 @@ export default function FinancialDashboardCharts({ data, period }) {
             y: {
                 beginAtZero: true,
                 ticks: {
-                    callback: (value) => '฿' + formatNumber(value)
+                    callback: (value) => '฿' + formatNumber(value),
+                    color: '#94a3b8'
                 },
-                grid: { color: 'rgba(226, 232, 240, 0.6)', drawBorder: false, borderDash: [5, 5] },
+                grid: { color: 'rgba(226, 232, 240, 0.4)', drawBorder: false, borderDash: [] },
                 border: { display: false }
             },
             x: {
+                ticks: { color: '#94a3b8' },
                 grid: { display: false, drawBorder: false },
                 border: { display: false }
             }
@@ -253,10 +256,12 @@ export default function FinancialDashboardCharts({ data, period }) {
             <div className="dashboard-charts-grid">
                 
                 {/* Trend Line Chart */}
-                <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff' }}>
-                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', borderBottom: 'none', padding: '0 0 20px 0' }}>
-                        <Activity color={primaryColor} size={24} style={{ flexShrink: 0, minWidth: '24px', minHeight: '24px' }} />
-                        <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor, margin: 0 }}>
+                <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', background: '#ffffff' }}>
+                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', borderBottom: 'none', padding: '0 0 24px 0' }}>
+                        <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #f1f5f9' }}>
+                            <Activity color={primaryColor} size={20} style={{ flexShrink: 0, minWidth: '20px', minHeight: '20px' }} />
+                        </div>
+                        <h3 className="card-title" style={{ fontSize: '1.05rem', color: accentColor, margin: 0, fontWeight: 600 }}>
                             แนวโน้มการจัดเก็บค่าธรรมเนียม
                         </h3>
                     </div>
@@ -272,10 +277,12 @@ export default function FinancialDashboardCharts({ data, period }) {
                 </div>
 
                 {/* Doughnut Chart - Revenue by Type */}
-                <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff' }}>
-                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', borderBottom: 'none', padding: '0 0 20px 0' }}>
-                        <FileBadge color={secondaryColor} size={24} style={{ flexShrink: 0, minWidth: '24px', minHeight: '24px' }} />
-                        <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor, margin: 0 }}>
+                <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', background: '#ffffff' }}>
+                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', borderBottom: 'none', padding: '0 0 24px 0' }}>
+                        <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #f1f5f9' }}>
+                            <FileBadge color={secondaryColor} size={20} style={{ flexShrink: 0, minWidth: '20px', minHeight: '20px' }} />
+                        </div>
+                        <h3 className="card-title" style={{ fontSize: '1.05rem', color: accentColor, margin: 0, fontWeight: 600 }}>
                             สัดส่วนตามประเภทใบอนุญาต
                         </h3>
                     </div>
