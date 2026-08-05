@@ -30,6 +30,7 @@ export default function CustomSelect({
     const dropdownRef = useRef(null);
     const searchInputRef = useRef(null);
     const searchInputId = useId();
+    const mountTime = useRef(Date.now());
 
     useEffect(() => { setMounted(true); }, []);
 
@@ -182,6 +183,11 @@ export default function CustomSelect({
         if (onChange) onChange(event);
         setIsOpen(false);
         setSearchTerm('');
+        
+        // Notify parent to exit edit mode if applicable
+        if (onBlur) {
+            setTimeout(() => onBlur(event), 0);
+        }
     };
 
     const handleToggle = (e) => {
@@ -191,6 +197,12 @@ export default function CustomSelect({
         }
         
         if (disabled) return;
+        
+        // Prevent instant close if user double-clicks to enter edit mode
+        if (autoFocus && isOpen && Date.now() - mountTime.current < 400) {
+            return;
+        }
+        
         setIsOpen(!isOpen);
         if (isOpen) setSearchTerm('');
     };
@@ -281,6 +293,10 @@ export default function CustomSelect({
                                 role="option"
                                 aria-selected={value == opt.value}
                                 className={`custom-option ${value == opt.value ? 'selected' : ''}`}
+                                onMouseDown={(e) => {
+                                    e.preventDefault(); // Prevent blur
+                                    handleSelect(opt.value, e);
+                                }}
                                 onClick={(e) => handleSelect(opt.value, e)}
                                 tabIndex={0}
                                 onKeyDown={(e) => {

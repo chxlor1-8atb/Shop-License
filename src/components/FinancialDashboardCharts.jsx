@@ -2,7 +2,7 @@
 
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Filler } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { Wallet, FileText, TrendingUp, TrendingDown, ArrowUp, ArrowDown, LineChart, PieChart } from 'lucide-react';
+import { Wallet, FileText, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Activity, FileBadge } from 'lucide-react';
 import { formatNumber, formatCurrency } from '@/utils/formatters';
 
 // Register Chart.js components
@@ -75,8 +75,17 @@ export default function FinancialDashboardCharts({ data, period }) {
                 } 
             },
             tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                titleFont: { family: 'inherit', size: 13, weight: 'normal' },
+                bodyFont: { family: 'inherit', size: 14, weight: 'bold' },
+                padding: 12,
+                cornerRadius: 8,
+                displayColors: true,
+                usePointStyle: true,
+                boxPadding: 6,
                 callbacks: {
-                    label: (context) => ' ' + context.label + ': ฿' + formatNumber(context.raw)
+                    title: (context) => context[0].label,
+                    label: (context) => ' ฿' + formatNumber(context.raw)
                 }
             }
         },
@@ -137,8 +146,15 @@ export default function FinancialDashboardCharts({ data, period }) {
         plugins: {
             legend: { display: false },
             tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                titleFont: { family: 'inherit', size: 13, weight: 'normal' },
+                bodyFont: { family: 'inherit', size: 14, weight: 'bold' },
+                padding: 12,
+                cornerRadius: 8,
+                displayColors: false,
                 callbacks: {
-                    label: (context) => ' ฿' + formatNumber(context.raw)
+                    title: (context) => 'เดือน ' + context[0].label,
+                    label: (context) => 'ยอดจัดเก็บ: ฿' + formatNumber(context.raw)
                 }
             }
         },
@@ -239,7 +255,7 @@ export default function FinancialDashboardCharts({ data, period }) {
                 {/* Trend Line Chart */}
                 <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff' }}>
                     <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', borderBottom: 'none', padding: '0 0 20px 0' }}>
-                        <LineChart color={primaryColor} size={24} style={{ flexShrink: 0, minWidth: '24px', minHeight: '24px' }} />
+                        <Activity color={primaryColor} size={24} style={{ flexShrink: 0, minWidth: '24px', minHeight: '24px' }} />
                         <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor, margin: 0 }}>
                             แนวโน้มการจัดเก็บค่าธรรมเนียม
                         </h3>
@@ -258,7 +274,7 @@ export default function FinancialDashboardCharts({ data, period }) {
                 {/* Doughnut Chart - Revenue by Type */}
                 <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff' }}>
                     <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', borderBottom: 'none', padding: '0 0 20px 0' }}>
-                        <PieChart color={secondaryColor} size={24} style={{ flexShrink: 0, minWidth: '24px', minHeight: '24px' }} />
+                        <FileBadge color={secondaryColor} size={24} style={{ flexShrink: 0, minWidth: '24px', minHeight: '24px' }} />
                         <h3 className="card-title" style={{ fontSize: '1.1rem', color: accentColor, margin: 0 }}>
                             สัดส่วนตามประเภทใบอนุญาต
                         </h3>
@@ -268,7 +284,7 @@ export default function FinancialDashboardCharts({ data, period }) {
                             <>
                                 <Doughnut data={doughnutData} options={doughnutOptions} />
                                 <div style={{
-                                    position: 'absolute', top: '50%', left: '35%', transform: 'translate(-50%, -50%)',
+                                    position: 'absolute', top: '42%', left: '50%', transform: 'translate(-50%, -50%)',
                                     textAlign: 'center', pointerEvents: 'none'
                                 }}>
                                     <span style={{ display: 'block', fontSize: '0.8rem', color: '#64748b' }}>รวมทั้งหมด</span>
