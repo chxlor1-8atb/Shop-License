@@ -43,7 +43,7 @@ export default function DashboardPage() {
             {/* Header & Quick Actions */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <div>
-                    <h1 style={{ margin: 0, fontSize: '1.75rem', color: '#0f172a', fontWeight: 'bold' }}>Dashboard ภาพรวมระบบ</h1>
+                    <h1 style={{ margin: 0, fontSize: '1.75rem', color: '#0f172a', fontWeight: 'bold' }}>ภาพรวมระบบ</h1>
                     <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>สถิติยอดจัดเก็บค่าธรรมเนียม สถานะใบอนุญาต และความเคลื่อนไหวล่าสุด</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>

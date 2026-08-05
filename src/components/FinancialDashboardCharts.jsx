@@ -36,10 +36,10 @@ export default function FinancialDashboardCharts({ data, period }) {
     const licDiff = currentLic - prevLic;
     const licDiffPercent = prevLic === 0 ? (currentLic > 0 ? 100 : 0) : ((licDiff / prevLic) * 100).toFixed(1);
 
-    // Styling configurations (Premium Muted Colors)
-    const primaryColor = '#475569'; // slate-600
-    const secondaryColor = '#64748b'; // slate-500
-    const accentColor = '#334155'; // slate-700
+    // Styling configurations (Premium Vibrant Colors)
+    const primaryColor = '#4f46e5'; // indigo-600
+    const secondaryColor = '#0ea5e9'; // sky-500
+    const accentColor = '#0f172a'; // slate-900
     const successColor = '#059669'; // emerald-600
     const warningColor = '#d97706'; // amber-600
 
@@ -49,12 +49,12 @@ export default function FinancialDashboardCharts({ data, period }) {
         datasets: [{
             data: revenueByType.map(t => parseFloat(t.revenue)),
             backgroundColor: [
-                '#334155', // slate-700
-                '#475569', // slate-600
-                '#64748b', // slate-500
-                '#94a3b8', // slate-400
-                '#cbd5e1', // slate-300
-                '#e2e8f0'  // slate-200
+                '#4f46e5', // indigo-600
+                '#0ea5e9', // sky-500
+                '#14b8a6', // teal-500
+                '#8b5cf6', // violet-500
+                '#f59e0b', // amber-500
+                '#f43f5e'  // rose-500
             ],
             hoverOffset: 4,
             borderWidth: 2,
@@ -93,6 +93,34 @@ export default function FinancialDashboardCharts({ data, period }) {
         cutout: '75%'
     };
 
+    const centerTextPlugin = {
+        id: 'centerText',
+        beforeDraw: (chart) => {
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return;
+            
+            ctx.save();
+            const total = revenueByType.reduce((sum, item) => sum + parseFloat(item.revenue), 0);
+            
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const centerX = chartArea.left + chartArea.width / 2;
+            const centerY = chartArea.top + chartArea.height / 2;
+            
+            // Draw subtitle
+            ctx.font = 'normal 13px sans-serif';
+            ctx.fillStyle = '#64748b';
+            ctx.fillText('รวมทั้งหมด', centerX, centerY - 12);
+            
+            // Draw amount
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillStyle = accentColor;
+            ctx.fillText(formatNumber(total), centerX, centerY + 12);
+            
+            ctx.restore();
+        }
+    };
+
     // Process Trend Data to fill missing dates/months
     let finalTrendLabels = [];
     let finalTrendData = [];
@@ -122,8 +150,8 @@ export default function FinancialDashboardCharts({ data, period }) {
                 backgroundColor: (context) => {
                     const ctx = context.chart.ctx;
                     const gradient = ctx.createLinearGradient(0, 0, 0, 350);
-                    gradient.addColorStop(0, 'rgba(71, 85, 105, 0.15)'); 
-                    gradient.addColorStop(1, 'rgba(71, 85, 105, 0.0)'); 
+                    gradient.addColorStop(0, 'rgba(79, 70, 229, 0.25)'); 
+                    gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)'); 
                     return gradient;
                 },
                 borderWidth: 3,
@@ -256,8 +284,8 @@ export default function FinancialDashboardCharts({ data, period }) {
             <div className="dashboard-charts-grid">
                 
                 {/* Trend Line Chart */}
-                <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', background: '#ffffff' }}>
-                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', borderBottom: 'none', padding: '0 0 24px 0' }}>
+                <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', borderBottom: 'none', padding: '0 0 24px 0' }}>
                         <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #f1f5f9' }}>
                             <Activity color={primaryColor} size={20} style={{ flexShrink: 0, minWidth: '20px', minHeight: '20px' }} />
                         </div>
@@ -277,8 +305,8 @@ export default function FinancialDashboardCharts({ data, period }) {
                 </div>
 
                 {/* Doughnut Chart - Revenue by Type */}
-                <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', background: '#ffffff' }}>
-                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', borderBottom: 'none', padding: '0 0 24px 0' }}>
+                <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', borderBottom: 'none', padding: '0 0 24px 0' }}>
                         <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #f1f5f9' }}>
                             <FileBadge color={secondaryColor} size={20} style={{ flexShrink: 0, minWidth: '20px', minHeight: '20px' }} />
                         </div>
@@ -288,18 +316,7 @@ export default function FinancialDashboardCharts({ data, period }) {
                     </div>
                     <div className="card-body" style={{ height: '350px', position: 'relative' }}>
                         {revenueByType.length > 0 ? (
-                            <>
-                                <Doughnut data={doughnutData} options={doughnutOptions} />
-                                <div style={{
-                                    position: 'absolute', top: '42%', left: '50%', transform: 'translate(-50%, -50%)',
-                                    textAlign: 'center', pointerEvents: 'none'
-                                }}>
-                                    <span style={{ display: 'block', fontSize: '0.8rem', color: '#64748b' }}>รวมทั้งหมด</span>
-                                    <span style={{ display: 'block', fontSize: '1.1rem', fontWeight: 'bold', color: accentColor }}>
-                                        {formatNumber(revenueByType.reduce((sum, item) => sum + parseFloat(item.revenue), 0))}
-                                    </span>
-                                </div>
-                            </>
+                            <Doughnut data={doughnutData} options={doughnutOptions} plugins={[centerTextPlugin]} />
                         ) : (
                             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
                                 ไม่มีข้อมูล
