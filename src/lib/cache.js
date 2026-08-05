@@ -160,3 +160,135 @@ export const getCachedExpiringCount = unstable_cache(
         tags: [CACHE_TAGS.LICENSES]
     }
 );
+
+/**
+ * Get financial stats (GovTech dashboard) with caching
+ */
+export const getCachedFinancialStats = unstable_cache(
+    async (period = 'year') => {
+        const baseCTE = `
+            WITH LicenseRevenue AS (
+                SELECT 
+                    l.id,
+                    l.issue_date,
+                    l.license_type_id,
+                    COALESCE(
+                        (SELECT CAST(NULLIF(REGEXP_REPLACE(cfv.field_value, '[^0-9.]', '', 'g'), '') AS NUMERIC)
+                         FROM custom_field_values cfv
+                         JOIN custom_fields cf ON cfv.custom_field_id = cf.id
+                         WHERE cfv.entity_id = l.id 
+                           AND cf.entity_type = 'licenses' 
+                           AND cf.field_label = 'จำนวนเงิน'
+                         LIMIT 1), 
+                    0) as revenue
+                FROM licenses l
+                WHERE l.status NOT IN ('suspended', 'revoked')
+            )
+        `;
+
+        let currentWhere = '';
+        let previousWhere = '';
+        let trendQuery = '';
+
+        if (period === 'year') {
+            currentWhere = "EXTRACT(YEAR FROM issue_date) = EXTRACT(YEAR FROM CURRENT_DATE)";
+            previousWhere = "EXTRACT(YEAR FROM issue_date) = EXTRACT(YEAR FROM CURRENT_DATE) - 1";
+            trendQuery = `
+                ${baseCTE}
+                SELECT 
+                    EXTRACT(MONTH FROM issue_date) as label,
+                    COALESCE(SUM(revenue), 0) as revenue
+                FROM LicenseRevenue
+                WHERE ${currentWhere}
+                GROUP BY EXTRACT(MONTH FROM issue_date)
+                ORDER BY label ASC
+            `;
+        } else if (period === 'month') {
+            currentWhere = "DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', CURRENT_DATE)";
+            previousWhere = "DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')";
+            trendQuery = `
+                ${baseCTE}
+                SELECT 
+                    TO_CHAR(issue_date, 'YYYY-MM-DD') as label,
+                    COALESCE(SUM(revenue), 0) as revenue
+                FROM LicenseRevenue
+                WHERE ${currentWhere}
+                GROUP BY TO_CHAR(issue_date, 'YYYY-MM-DD')
+                ORDER BY label ASC
+            `;
+        } else if (period === 'week') {
+            currentWhere = "DATE_TRUNC('week', issue_date) = DATE_TRUNC('week', CURRENT_DATE)";
+            previousWhere = "DATE_TRUNC('week', issue_date) = DATE_TRUNC('week', CURRENT_DATE - INTERVAL '1 week')";
+            trendQuery = `
+                ${baseCTE}
+                SELECT 
+                    TO_CHAR(issue_date, 'YYYY-MM-DD') as label,
+                    COALESCE(SUM(revenue), 0) as revenue
+                FROM LicenseRevenue
+                WHERE ${currentWhere}
+                GROUP BY TO_CHAR(issue_date, 'YYYY-MM-DD')
+                ORDER BY label ASC
+            `;
+        } else {
+            currentWhere = "EXTRACT(YEAR FROM issue_date) = EXTRACT(YEAR FROM CURRENT_DATE)";
+            previousWhere = "EXTRACT(YEAR FROM issue_date) = EXTRACT(YEAR FROM CURRENT_DATE) - 1";
+            trendQuery = `
+                ${baseCTE}
+                SELECT 
+                    EXTRACT(MONTH FROM issue_date) as label,
+                    COALESCE(SUM(revenue), 0) as revenue
+                FROM LicenseRevenue
+                WHERE ${currentWhere}
+                GROUP BY EXTRACT(MONTH FROM issue_date)
+                ORDER BY label ASC
+            `;
+        }
+
+        const overviewQuery = `
+            ${baseCTE}
+            SELECT 
+                (SELECT COALESCE(SUM(revenue), 0) FROM LicenseRevenue WHERE ${currentWhere}) as current_revenue,
+                (SELECT COUNT(*) FROM LicenseRevenue WHERE ${currentWhere}) as current_licenses,
+                (SELECT COALESCE(SUM(revenue), 0) FROM LicenseRevenue WHERE ${previousWhere}) as previous_revenue,
+                (SELECT COUNT(*) FROM LicenseRevenue WHERE ${previousWhere}) as previous_licenses
+        `;
+
+        const typeQuery = `
+            ${baseCTE}
+            SELECT 
+                lt.name as type_name,
+                COALESCE(SUM(lr.revenue), 0) as revenue
+            FROM LicenseRevenue lr
+            JOIN license_types lt ON lr.license_type_id = lt.id
+            WHERE ${currentWhere}
+            GROUP BY lt.name
+            ORDER BY revenue DESC
+        `;
+
+        const forecastQuery = `
+            ${baseCTE}
+            SELECT COALESCE(SUM(revenue), 0) as expected_revenue
+            FROM LicenseRevenue lr
+            JOIN licenses l ON lr.id = l.id
+            WHERE l.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + 30
+              AND l.status NOT IN ('suspended', 'revoked')
+        `;
+
+        const overviewData = await fetchAll(overviewQuery);
+        const revenueByType = await fetchAll(typeQuery);
+        const trend = await fetchAll(trendQuery);
+        const forecastData = await fetchAll(forecastQuery);
+
+        return {
+            overview: overviewData[0] || { current_revenue: 0, current_licenses: 0, previous_revenue: 0, previous_licenses: 0 },
+            revenueByType,
+            trend,
+            forecast: forecastData[0]?.expected_revenue || 0
+        };
+    },
+    ['financial-stats-v1'],
+    {
+        revalidate: CACHE_DURATION.SHORT,
+        tags: [CACHE_TAGS.DASHBOARD_STATS, CACHE_TAGS.LICENSES]
+    }
+);

@@ -8,7 +8,8 @@ import {
     getCachedDashboardStats,
     getCachedLicenseBreakdown,
     getCachedExpiringCount,
-    getWarningDays
+    getWarningDays,
+    getCachedFinancialStats
 } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,8 @@ export async function GET(request) {
                 return await getLicenseBreakdown(warningDays);
             case 'recent_activity':
                 return await getRecentActivity(session, searchParams);
+            case 'financial_summary':
+                return await getFinancialSummary(searchParams);
             default:
                 return await getStats(warningDays);
         }
@@ -119,5 +122,15 @@ async function getRecentActivity(session, searchParams) {
         LIMIT 20
     `, params);
     return NextResponse.json({ success: true, activities });
+}
+
+async function getFinancialSummary(searchParams) {
+    const period = searchParams.get('period') || 'year';
+    const stats = await getCachedFinancialStats(period);
+    
+    return NextResponse.json({
+        success: true,
+        stats
+    });
 }
 

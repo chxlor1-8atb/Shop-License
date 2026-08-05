@@ -1,104 +1,77 @@
 'use client';
 
 import { useState } from 'react';
-import { CHANGELOG, getChangeTypeBadge } from '@/constants/changelog';
-import { formatThaiDate, formatThaiDateFull } from '@/utils/formatters';
+import useSWR from 'swr';
+import FinancialDashboardCharts from '@/components/FinancialDashboardCharts';
+import { fetcher } from '@/utils'; // Wait, let's just use standard fetch or useSWR with default fetcher.
+// Actually, let's check if there's a custom hook or fetcher. I will just define a local fetcher.
 
-/**
- * DashboardPage Component
- * แสดง Patch Notes / Changelog แบบ inline - Minimal Modern Design
- */
+const defaultFetcher = (url) => fetch(url).then((res) => res.json());
+
 export default function DashboardPage() {
-    const [selectedVersion, setSelectedVersion] = useState(
-        CHANGELOG.length > 0 ? CHANGELOG[0].version : null
+    const [period, setPeriod] = useState('year');
+
+    // Fetch financial stats
+    const { data, error, isLoading } = useSWR(
+        `/api/dashboard?action=financial_summary&period=\${period}`,
+        defaultFetcher
     );
 
-    const selectedChangelog = CHANGELOG.find(c => c.version === selectedVersion) || CHANGELOG[0];
-
     return (
-        <div className="content-fade-in">
-            {/* Changelog Card - Header + Layout in one card */}
-            <div className="pn-card">
-                {/* Patch Notes Header - Inside card */}
-                <div className="pn-header">
-                    <div className="pn-header-info">
-                        <div className="pn-header-icon">
-                            <i className="fas fa-scroll"></i>
-                        </div>
-                        <div>
-                            <h2 className="pn-header-title">Changelog</h2>
-                            <p className="pn-header-desc">ประวัติการอัปเดตระบบ</p>
-                        </div>
-                    </div>
-                    <div className="pn-header-badge">
-                        <span className="pn-latest-tag">Latest</span>
-                        <span className="pn-latest-ver">v{CHANGELOG[0]?.version}</span>
-                    </div>
+        <div className="content-fade-in" style={{ padding: '20px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div>
+                    <h1 style={{ margin: 0, fontSize: '1.5rem', color: '#0f172a' }}>ภาพรวมการเงินและการให้บริการ</h1>
+                    <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>สถิติยอดจัดเก็บค่าธรรมเนียมและการต่ออายุใบอนุญาต</p>
                 </div>
-
-                {/* Main Content */}
-                <div className="pn-layout">
-                    {/* Timeline Sidebar */}
-                    <div className="pn-timeline">
-                        <div className="pn-timeline-label">เวอร์ชัน</div>
-                        <div className="pn-timeline-list">
-                            {CHANGELOG.map((log, idx) => (
-                                <button
-                                    key={log.version}
-                                    onClick={() => setSelectedVersion(log.version)}
-                                    className={`pn-timeline-item ${selectedVersion === log.version ? 'active' : ''}`}
-                                >
-                                    <div className="pn-timeline-dot"></div>
-                                    <div className="pn-timeline-content">
-                                        <span className="pn-timeline-ver">v{log.version}</span>
-                                        <span className="pn-timeline-date">{formatThaiDate(log.date)}</span>
-                                    </div>
-                                    {idx === 0 && <span className="pn-new-dot"></span>}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Detail Panel */}
-                    <div className="pn-content">
-                        {selectedChangelog && (
-                            <>
-                                {/* Version Header */}
-                                <div className="pn-content-header">
-                                    <div className="pn-content-meta">
-                                        <span className="pn-ver-pill">v{selectedChangelog.version}</span>
-                                        <span className="pn-content-date">
-                                            <i className="far fa-calendar-alt"></i>
-                                            {formatThaiDateFull(selectedChangelog.date)}
-                                        </span>
-                                    </div>
-                                    <h3 className="pn-content-title">{selectedChangelog.title}</h3>
-                                </div>
-
-                                {/* Changes */}
-                                <div className="pn-changes">
-                                    {selectedChangelog.changes.map((change, idx) => {
-                                        const badge = getChangeTypeBadge(change.type);
-                                        return (
-                                            <div
-                                                key={idx}
-                                                className="pn-change-card"
-                                                style={{ animationDelay: `${idx * 0.04}s` }}
-                                            >
-                                                <span className={`pn-change-badge pn-badge-${change.type}`}>
-                                                    <i className={badge.icon}></i>
-                                                    {badge.label}
-                                                </span>
-                                                <span className="pn-change-desc">{change.text}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </>
-                        )}
-                    </div>
+                
+                <div style={{ display: 'flex', gap: '10px', background: '#fff', padding: '5px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <button 
+                        onClick={() => setPeriod('week')}
+                        style={{ 
+                            padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                            background: period === 'week' ? '#eff6ff' : 'transparent',
+                            color: period === 'week' ? '#1d4ed8' : '#64748b',
+                            fontWeight: period === 'week' ? 'bold' : 'normal'
+                        }}
+                    >
+                        รายสัปดาห์
+                    </button>
+                    <button 
+                        onClick={() => setPeriod('month')}
+                        style={{ 
+                            padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                            background: period === 'month' ? '#eff6ff' : 'transparent',
+                            color: period === 'month' ? '#1d4ed8' : '#64748b',
+                            fontWeight: period === 'month' ? 'bold' : 'normal'
+                        }}
+                    >
+                        รายเดือน
+                    </button>
+                    <button 
+                        onClick={() => setPeriod('year')}
+                        style={{ 
+                            padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                            background: period === 'year' ? '#eff6ff' : 'transparent',
+                            color: period === 'year' ? '#1d4ed8' : '#64748b',
+                            fontWeight: period === 'year' ? 'bold' : 'normal'
+                        }}
+                    >
+                        รายปี
+                    </button>
                 </div>
             </div>
+
+            {error ? (
+                <div className="card">
+                    <div className="card-body" style={{ color: '#ef4444' }}>เกิดข้อผิดพลาดในการโหลดข้อมูล</div>
+                </div>
+            ) : (
+                <FinancialDashboardCharts 
+                    data={data?.stats || null} 
+                    period={period} 
+                />
+            )}
         </div>
     );
 }
