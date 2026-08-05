@@ -1813,6 +1813,16 @@ select option:checked {
 /* License Types Badge */
 .license-types-badge {
     display: inline-block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background: rgba(217, 119, 87, 0.08);
+    padding: 0.25rem 0.625rem;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Dashboard Charts Responsive Grid */
@@ -1826,17 +1836,6 @@ select option:checked {
     .dashboard-charts-grid {
         grid-template-columns: 2fr 1fr;
     }
-}
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    background: rgba(217, 119, 87, 0.08);
-    padding: 0.25rem 0.625rem;
-    border-radius: var(--border-radius);
-    font-weight: 500;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .badge-info {
