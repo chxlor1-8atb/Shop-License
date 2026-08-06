@@ -239,6 +239,7 @@ function ShopsPageContent() {
 
     try {
       if (isNew) {
+        // แถวใหม่: ต้องมีชื่อร้านค้า
         if (!updatedRow.shop_name || updatedRow.shop_name.trim() === "") {
           showError("กรุณาระบุชื่อร้านค้า");
           return;
@@ -282,6 +283,12 @@ function ShopsPageContent() {
           fetchShops();
         }
       } else {
+        // แถวที่มีอยู่แล้ว: ถ้าชื่อร้านว่าง ให้ข้ามเงียบๆ
+        // (ผู้ใช้อาจแค่ click เข้าช่องอื่น ไม่ได้ตั้งใจแก้ชื่อร้าน)
+        if (!updatedRow.shop_name || updatedRow.shop_name.trim() === "") {
+          return;
+        }
+
         const payload = {
           id: updatedRow.id,
           ...standardData,
@@ -320,6 +327,7 @@ function ShopsPageContent() {
       fetchShops();
     }
   };
+
 
   const handleRowDelete = async (rowId) => {
     if (rowId.toString().startsWith("id_")) return;
