@@ -305,17 +305,17 @@ function ShopsPageContent() {
 
         if (data.success) {
           showSuccess("อัปเดตร้านค้าเรียบร้อย");
-          notifyDataChange("shops-sync");
           
-          // Invalidate SWR cache to update other components immediately
-          mutate(() => true, undefined, { revalidate: true });
+          // อัปเดต local state โดยตรงจาก API response
+          // ไม่เรียก fetchShops ทันที เพราะจะ override ค่าที่เพิ่งบันทึกไปด้วย cache เก่า
+          const savedShop = data.shop
+            ? { ...data.shop, ...(data.shop.custom_fields || {}) }
+            : { ...updatedRow, ...standardData, ...customValues };
+          
+          setShops(prev => prev.map(s => s.id === updatedRow.id ? savedShop : s));
+          
+          // Invalidate dropdown เท่านั้น (ไม่ revalidate ทุก SWR key เพราะทำให้ fetchShops ยิงใหม่)
           mutate('/api/shops/dropdown');
-          
-          if (data.shop) {
-             setShops(prev => prev.map(s => s.id === updatedRow.id ? data.shop : s));
-          } else {
-             setShops(prev => prev.map(s => s.id === updatedRow.id ? updatedRow : s));
-          }
         } else {
           showError(data.message || "ไม่สามารถอัปเดตร้านค้าได้");
           fetchShops(); 

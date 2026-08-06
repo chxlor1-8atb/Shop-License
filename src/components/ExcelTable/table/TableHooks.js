@@ -186,8 +186,25 @@ export function useExcelTable({
       return;
     }
 
-    // ใช้ initialRows โดยตรงเพื่อรักษาข้อมูลทั้งหมด
-    setRows(initialRows);
+    // Merge: ถ้า row ถูก modify เมื่อกี้ (recentlyModifiedRef) ให้ prefer local value
+    // ป้องกัน server data stale ทับค่าที่เพิ่งบันทึก
+    if (recentlyModifiedRef.current.size > 0) {
+      setRows(currentRows => {
+        const merged = initialRows.map(serverRow => {
+          if (recentlyModifiedRef.current.has(serverRow.id)) {
+            // ใช้ local row แทน server row เพราะเพิ่งถูก modify
+            const localRow = currentRows.find(r => r.id === serverRow.id);
+            return localRow || serverRow;
+          }
+          return serverRow;
+        });
+        rowsRef.current = merged;
+        return merged;
+      });
+    } else {
+      // ไม่มี recently modified rows → sync ตาม server ปกติ
+      setRows(initialRows);
+    }
     prevInitialRowsRef.current = initialRows;
     return;
 
@@ -207,10 +224,10 @@ export function useExcelTable({
   // Helper to mark a row as recently modified
   const markRowModified = (rowId) => {
     recentlyModifiedRef.current.add(rowId);
-    // Clear the mark after 2 seconds
+    // Clear the mark after 3 seconds (เพิ่มเป็น 3s เพื่อให้มีเวลาเพียงพอหลัง save + server response)
     setTimeout(() => {
       recentlyModifiedRef.current.delete(rowId);
-    }, 2000);
+    }, 3000);
   };
 
   // Helper to set pending save status
@@ -223,13 +240,15 @@ export function useExcelTable({
       const pendingData = pendingInitialRowsRef.current;
       pendingInitialRowsRef.current = null;
 
-      // Small delay to ensure state is stable
+      // ขยาย delay เป็น 1500ms เพื่อให้ setShops local state propagate ก่อน
+      // แล้วค่อย sync ข้อมูลจาก server (ซึ่งตอนนี้ควรมีค่าที่ถูก save แล้ว)
       setTimeout(() => {
         if (!isEditingRef.current && !pendingSaveRef.current) {
+          recentlyModifiedRef.current.clear(); // ล้าง recently modified ก่อน sync
           performSync(pendingData);
           prevInitialRowsRef.current = pendingData;
         }
-      }, 50);
+      }, 1500);
     }
   };
 
