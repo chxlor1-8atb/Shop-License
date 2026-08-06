@@ -285,7 +285,7 @@ export const getCachedFinancialStats = unstable_cache(
         const trend = await fetchAll(trendQuery);
         const forecastData = await fetchAll(forecastQuery);
         
-        const availableYearsQuery = `SELECT DISTINCT EXTRACT(YEAR FROM issue_date) as year FROM licenses WHERE issue_date IS NOT NULL ORDER BY year DESC`;
+        const availableYearsQuery = `SELECT DISTINCT EXTRACT(YEAR FROM issue_date) as year FROM licenses WHERE issue_date IS NOT NULL AND EXTRACT(YEAR FROM issue_date) > 2010 ORDER BY year DESC`;
         const availableYearsData = await fetchAll(availableYearsQuery);
         let availableYears = availableYearsData.map(r => parseInt(r.year) + 543);
         const currentThaiYear = new Date().getFullYear() + 543;

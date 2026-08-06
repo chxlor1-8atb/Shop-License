@@ -68,7 +68,16 @@ export function useExcelTable({
   onCellBlur,
 } = {}) {
   const [columns, setColumns] = useState(initialColumns);
-  const [rows, setRows] = useState(initialRows);
+  const [rows, setRowsState] = useState(initialRows);
+  const rowsRef = useRef(initialRows);
+
+  const setRows = useCallback((updater) => {
+    setRowsState((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      rowsRef.current = next;
+      return next;
+    });
+  }, []);
   const [editingCell, setEditingCell] = useState(null); // { rowId, colId }
   const [editingHeader, setEditingHeader] = useState(null); // colId
   const [contextMenu, setContextMenu] = useState(null); // { x, y, type, rowId?, colId? }
@@ -233,10 +242,17 @@ export function useExcelTable({
   const updateCell = useCallback((rowId, colId, value) => {
     // Mark row as modified to prevent sync override
     markRowModified(rowId);
+    
+    // Synchronously update the ref so getRows() has immediate access to the new value
+    // This fixes race conditions where onBlur fires before React flushes the state update
+    if (rowsRef.current) {
+      rowsRef.current = rowsRef.current.map((row) => (row.id === rowId ? { ...row, [colId]: value } : row));
+    }
+    
     setRows((prev) =>
       prev.map((row) => (row.id === rowId ? { ...row, [colId]: value } : row))
     );
-  }, []);
+  }, [setRows]);
 
   const handleCellKeyDown = useCallback(
     (e, rowId, colId) => {
@@ -418,7 +434,7 @@ export function useExcelTable({
   }, []);
 
   // Helper to get current rows (for save operations)
-  const getRows = useCallback(() => rows, [rows]);
+  const getRows = useCallback(() => rowsRef.current, []);
 
   return {
     columns,
