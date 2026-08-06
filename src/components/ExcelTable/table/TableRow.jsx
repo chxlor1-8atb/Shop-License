@@ -50,23 +50,6 @@ export const TableRow = memo(function TableRow({
         const isEditing =
           editingCell?.rowId === row.id && editingCell?.colId === col.id;
 
-        // Debug logging สำหรับการแสดงผลคอลัมน์ (เฉพาะแถวแรกและแถวใหม่)
-        if (row.id === 'row1' && (col.id === 'license_type_id' || col.id === 'license_number' || col.id === 'notes')) {
-          console.log(`🔍 Cell Debug - Row: ${row.id}, Col: ${col.id} (${col.name}), Value:`, row[col.id]);
-        }
-
-        // Debug logging พิเศษสำหรับฟิลด์ที่มีปัญหา (เฉพาะแถวแรก)
-        if (row.id === 'row1' && (col.id === 'license_type_id' || col.id === 'license_number' || col.id === 'notes')) {
-          console.log(`🚨 Problem Field Check:`, {
-            isEditing,
-            isReadOnly: col.readOnly,
-            canEdit: !col.readOnly,
-            columnType: col.type,
-            currentValue: row[col.id],
-            willShowInput: isEditing && !col.readOnly
-          });
-        }
-
         return (
           <td
             key={col.id}
@@ -74,32 +57,9 @@ export const TableRow = memo(function TableRow({
             style={{ width: col.width }}
             data-type={col.type}
             onContextMenu={(e) => {
-          // Debug logging สำหรับการคลิกขวา
-          if (col.id.startsWith('cf_')) {
-            console.log(`🔍 Custom Field Right Click:`, {
-              rowId: row.id,
-              columnId: col.id,
-              columnName: col.name,
-              currentValue: row[col.id],
-              isEditable: !col.readOnly
-            });
-          }
           onContextMenu(e, "cell", row.id, col.id);
         }}
         onDoubleClick={() => {
-          // Debug logging สำหรับการดับเบิลคลิก (เฉพาะฟิลด์ที่มีปัญหาและแถวแรก)
-          if (row.id === 'row1' && (col.id === 'license_type_id' || col.id === 'license_number' || col.id === 'notes')) {
-            console.log(`🚨 Problem Field Double Click:`, {
-              rowId: row.id,
-              columnId: col.id,
-              columnName: col.name,
-              currentValue: row[col.id],
-              isEditable: !col.readOnly,
-              willStartEditing: !col.readOnly,
-              columnType: col.type,
-              columnOptions: col.options
-            });
-          }
           onCellClick(row.id, col.id);
         }}
           >
@@ -117,26 +77,10 @@ export const TableRow = memo(function TableRow({
                 <DatePicker
                   value={row[col.id] || ""}
                   onChange={(e) => {
-                    // Debug logging สำหรับการแก้ไขวันที่
-                    console.log(`🗓️ Date Field Change:`, {
-                      rowId: row.id,
-                      columnId: col.id,
-                      columnName: col.name,
-                      oldValue: row[col.id],
-                      newValue: e.target.value,
-                      hasValue: !!e.target.value,
-                      isEmpty: e.target.value === ''
-                    });
                     onCellChange(row.id, col.id, e.target.value);
                   }}
                   autoFocus={true}
                   onBlur={() => {
-                    console.log(`🗓️ Date Field Blur:`, {
-                      rowId: row.id,
-                      columnId: col.id,
-                      columnName: col.name,
-                      currentValue: row[col.id]
-                    });
                     onCellBlur(row.id, col.id);
                   }}
                   className="cell-input-custom"
@@ -151,37 +95,9 @@ export const TableRow = memo(function TableRow({
                   className="cell-input"
                   value={row[col.id] || ""}
                   onChange={(e) => {
-                    // Debug logging สำหรับการแก้ไข fields
-                    if (col.id.startsWith('cf_') || col.id === 'notes') {
-                      console.log(`🔧 Field Input Change:`, {
-                        rowId: row.id,
-                        columnId: col.id,
-                        columnName: col.name,
-                        oldValue: row[col.id],
-                        newValue: e.target.value,
-                        fieldType: col.type,
-                        allRowKeys: Object.keys(row),
-                        hasShopId: 'shop_id' in row,
-                        hasLicenseTypeId: 'license_type_id' in row,
-                        hasLicenseNumber: 'license_number' in row,
-                        hasNotes: 'notes' in row,
-                        isEditing: true,
-                        isNotesField: col.id === 'notes',
-                        isCustomField: col.id.startsWith('cf_')
-                      });
-                    }
                     onCellChange(row.id, col.id, e.target.value);
                   }}
                   onBlur={() => {
-                    // Debug logging สำหรับการ blur custom fields
-                    if (col.id.startsWith('cf_')) {
-                      console.log(`🔧 Custom Field Input Blur:`, {
-                        rowId: row.id,
-                        columnId: col.id,
-                        columnName: col.name,
-                        currentValue: row[col.id]
-                      });
-                    }
                     onCellBlur(row.id, col.id);
                   }}
                   onKeyDown={(e) => onCellKeyDown(e, row.id, col.id)}
