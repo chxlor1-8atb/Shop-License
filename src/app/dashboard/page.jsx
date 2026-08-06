@@ -74,7 +74,7 @@ export default function DashboardPage() {
                         {period === 'year' && (
                             <CustomSelect 
                                 value={selectedYear}
-                                onChange={(val) => setSelectedYear(val)}
+                                onChange={(e) => setSelectedYear(e.target.value)}
                                 options={data?.stats?.availableYears ? 
                                     data.stats.availableYears.map(year => ({ value: year, label: `ปี ${year}` })) : 
                                     [{ value: selectedYear, label: `ปี ${selectedYear}` }]
@@ -104,6 +104,7 @@ export default function DashboardPage() {
                     <FinancialDashboardCharts 
                         data={data?.stats || null} 
                         period={period} 
+                        systemStats={statsData?.stats || null}
                     />
                 )}
             </div>

@@ -252,7 +252,11 @@ export const getCachedFinancialStats = unstable_cache(
                 (SELECT COALESCE(SUM(revenue), 0) FROM LicenseRevenue WHERE ${currentWhere}) as current_revenue,
                 (SELECT COUNT(*) FROM LicenseRevenue WHERE ${currentWhere}) as current_licenses,
                 (SELECT COALESCE(SUM(revenue), 0) FROM LicenseRevenue WHERE ${previousWhere}) as previous_revenue,
-                (SELECT COUNT(*) FROM LicenseRevenue WHERE ${previousWhere}) as previous_licenses
+                (SELECT COUNT(*) FROM LicenseRevenue WHERE ${previousWhere}) as previous_licenses,
+                (SELECT COALESCE(SUM(revenue), 0) FROM LicenseRevenue WHERE EXTRACT(YEAR FROM issue_date) = ${targetYear}) as yearly_revenue,
+                (SELECT COALESCE(SUM(revenue), 0) FROM LicenseRevenue WHERE DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', CURRENT_DATE)) as monthly_revenue,
+                (SELECT COUNT(*) FROM LicenseRevenue WHERE EXTRACT(YEAR FROM issue_date) = ${targetYear}) as yearly_licenses,
+                (SELECT COUNT(*) FROM LicenseRevenue WHERE DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', CURRENT_DATE)) as monthly_licenses
         `;
 
         const typeQuery = `

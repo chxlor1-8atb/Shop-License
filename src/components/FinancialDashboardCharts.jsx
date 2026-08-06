@@ -2,7 +2,7 @@
 
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Filler } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { Wallet, FileText, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Activity, FileBadge } from 'lucide-react';
+import { Wallet, FileText, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Activity, FileBadge, AlertTriangle } from 'lucide-react';
 import { formatNumber, formatCurrency } from '@/utils/formatters';
 
 // Register Chart.js components
@@ -11,7 +11,7 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 // Use system fonts
 ChartJS.defaults.font.family = 'var(--font-noto-thai), var(--font-inter), sans-serif';
 
-export default function FinancialDashboardCharts({ data, period }) {
+export default function FinancialDashboardCharts({ data, period, systemStats }) {
     if (!data || !data.overview) {
         return (
             <div className="card" style={{ minHeight: '350px' }}>
@@ -229,53 +229,57 @@ export default function FinancialDashboardCharts({ data, period }) {
             {/* 1. Overview Summary Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                 
-                {/* Revenue Card */}
+                {/* Yearly Revenue Card */}
                 <div className="card summary-card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>ยอดจัดเก็บค่าธรรมเนียม</p>
+                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>ยอดจัดเก็บรวม (รายปี)</p>
                             <h2 style={{ margin: '10px 0 0 0', fontSize: '2rem', color: accentColor }}>
-                                ฿{formatNumber(currentRev)}
+                                ฿{formatNumber(parseFloat(overview.yearly_revenue || 0))}
                             </h2>
                         </div>
                         <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', padding: '14px', borderRadius: '12px', color: primaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.1)' }}>
                             <Wallet size={24} />
                         </div>
                     </div>
-                    {renderDiff(revDiff, revDiffPercent, 'บาท')}
+                    <div style={{ marginTop: '10px', fontSize: '0.85rem', color: '#64748b' }}>
+                        นับตั้งแต่ต้นปีถึงปัจจุบัน
+                    </div>
                 </div>
 
-                {/* Licenses Card */}
+                {/* Monthly Revenue Card */}
                 <div className="card summary-card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>สถิติการต่ออายุ/ออกใบอนุญาต</p>
+                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>ยอดจัดเก็บรวม (รายเดือน)</p>
                             <h2 style={{ margin: '10px 0 0 0', fontSize: '2rem', color: accentColor }}>
-                                {formatNumber(currentLic)} <span style={{ fontSize: '1rem', color: '#64748b' }}>รายการ</span>
+                                ฿{formatNumber(parseFloat(overview.monthly_revenue || 0))}
                             </h2>
                         </div>
                         <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', padding: '14px', borderRadius: '12px', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(22, 163, 74, 0.1)' }}>
-                            <FileText size={24} />
-                        </div>
-                    </div>
-                    {renderDiff(licDiff, licDiffPercent, 'รายการ')}
-                </div>
-
-                {/* Forecast Card */}
-                <div className="card summary-card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>คาดการณ์รายได้ (30 วันข้างหน้า)</p>
-                            <h2 style={{ margin: '10px 0 0 0', fontSize: '2rem', color: accentColor }}>
-                                ฿{formatNumber(parseFloat(forecast))}
-                            </h2>
-                        </div>
-                        <div style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)', padding: '14px', borderRadius: '12px', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(217, 119, 6, 0.1)' }}>
-                            <TrendingUp size={24} />
+                            <Activity size={24} />
                         </div>
                     </div>
                     <div style={{ marginTop: '10px', fontSize: '0.85rem', color: '#64748b' }}>
-                        ประเมินจากใบอนุญาตที่กำลังจะหมดอายุ
+                        นับตั้งแต่ต้นเดือนถึงปัจจุบัน
+                    </div>
+                </div>
+
+                {/* Renewed Licenses Card */}
+                <div className="card summary-card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>จำนวนใบอนุญาตที่ออก/ต่ออายุ</p>
+                            <h2 style={{ margin: '10px 0 0 0', fontSize: '2rem', color: accentColor }}>
+                                {formatNumber(parseInt(overview.yearly_licenses || 0))} <span style={{ fontSize: '1rem', color: '#64748b' }}>รายการ</span>
+                            </h2>
+                        </div>
+                        <div style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)', padding: '14px', borderRadius: '12px', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(217, 119, 6, 0.1)' }}>
+                            <FileText size={24} />
+                        </div>
+                    </div>
+                    <div style={{ marginTop: '10px', fontSize: '0.85rem', color: '#64748b' }}>
+                        รวมทั้งปีปัจจุบัน
                     </div>
                 </div>
             </div>
