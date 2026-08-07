@@ -310,6 +310,11 @@ export const getCachedFinancialStats = unstable_cache(
             availableMonths = [new Date().getMonth() + 1];
         }
 
+        // Query available dates for the DatePicker
+        const availableDatesQuery = `SELECT DISTINCT TO_CHAR(issue_date, 'YYYY-MM-DD') as date FROM licenses WHERE issue_date IS NOT NULL`;
+        const availableDatesData = await fetchAll(availableDatesQuery);
+        let availableDates = availableDatesData.map(r => r.date);
+
         // Sort descending
         availableYears.sort((a, b) => b - a);
         
@@ -320,10 +325,11 @@ export const getCachedFinancialStats = unstable_cache(
             forecast: forecastData[0]?.expected_revenue || 0,
             availableYears,
             availableMonths,
+            availableDates,
             selectedYear: selectedYear || currentThaiYear
         };
     },
-    ['financial-stats-v2'],
+    ['financial-stats-v3'],
     {
         revalidate: CACHE_DURATION.SHORT,
         tags: [CACHE_TAGS.DASHBOARD_STATS, CACHE_TAGS.LICENSES]

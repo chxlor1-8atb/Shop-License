@@ -97,6 +97,7 @@ export default function DashboardPage() {
                                         value={selectedWeekDate}
                                         onChange={(e) => setSelectedWeekDate(e.target.value)}
                                         placeholder="เลือกสัปดาห์ (วันที่)"
+                                        availableDates={data?.stats ? data.stats.availableDates : null}
                                     />
                                 </div>
                             )}

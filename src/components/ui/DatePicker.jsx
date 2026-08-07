@@ -26,7 +26,8 @@ export default function DatePicker({
     className = '',
     onBlur,
     autoFocus = false,
-    id
+    id,
+    availableDates = null // Array of 'YYYY-MM-DD' strings
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(value ? new Date(value) : new Date());
@@ -204,16 +205,38 @@ export default function DatePicker({
                 new Date().getMonth() === month &&
                 new Date().getFullYear() === year;
 
+            const yearStr = year;
+            const monthStr = String(month + 1).padStart(2, '0');
+            const dayStr = String(day).padStart(2, '0');
+            const dateStr = `${yearStr}-${monthStr}-${dayStr}`;
+            
+            const isAvailable = availableDates === null ? true : availableDates.includes(dateStr);
+            const showDot = availableDates !== null && availableDates.includes(dateStr);
+
             days.push(
                 <div
                     key={day}
-                    className={`datepicker-day ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
+                    className={`datepicker-day ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''} ${!isAvailable ? 'disabled-day' : ''}`}
                     onClick={(e) => {
                         e.stopPropagation(); // Prevent bubbling causing issues
-                        handleSelectDate(day);
+                        if (isAvailable) {
+                            handleSelectDate(day);
+                        }
                     }}
+                    style={{ position: 'relative', opacity: !isAvailable ? 0.3 : 1, cursor: !isAvailable ? 'not-allowed' : 'pointer' }}
                 >
                     {day}
+                    {showDot && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            width: '6px',
+                            height: '6px',
+                            backgroundColor: '#ef4444',
+                            borderRadius: '50%'
+                        }} title="มีข้อมูล"></div>
+                    )}
                 </div>
             );
         }
