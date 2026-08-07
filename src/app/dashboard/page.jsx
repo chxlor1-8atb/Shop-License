@@ -43,19 +43,13 @@ export default function DashboardPage() {
 
     return (
         <div className="content-fade-in" style={{ padding: '20px 0' }}>
-            {/* Header & Quick Actions */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <div>
-                    <h1 style={{ margin: 0, fontSize: '1.75rem', color: '#0f172a', fontWeight: 'bold' }}>ภาพรวมระบบ</h1>
-                    <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>สถิติยอดจัดเก็บค่าธรรมเนียม สถานะใบอนุญาต และความเคลื่อนไหวล่าสุด</p>
-                </div>
-
-            </div>
-
             {/* 2. Financial Dashboard Charts Section */}
             <div className="card" style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', background: '#ffffff', marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>สถิติยอดจัดเก็บค่าธรรมเนียม</h2>
+                    <div>
+                        <h1 style={{ margin: 0, fontSize: '1.75rem', color: '#0f172a', fontWeight: 'bold' }}>ภาพรวมระบบ</h1>
+                        <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>สถิติยอดจัดเก็บค่าธรรมเนียม สถานะใบอนุญาต และความเคลื่อนไหวล่าสุด</p>
+                    </div>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                             {period === 'year' && (
