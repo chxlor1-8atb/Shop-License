@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import FinancialDashboardCharts from '@/components/FinancialDashboardCharts';
 import { ActionableExpiringList, RecentActivityLog } from '@/components/DashboardWidgets';
@@ -23,6 +23,27 @@ export default function DashboardPage() {
         `/api/dashboard?action=financial_summary&period=${period}&year=${selectedYear}&month=${selectedMonth}&weekDate=${selectedWeekDate}`,
         defaultFetcher
     );
+
+    // Auto-update selections if they have no data
+    useEffect(() => {
+        if (data?.stats) {
+            // Update selectedYear if current doesn't have data
+            if (data.stats.availableYears && !data.stats.availableYears.includes(selectedYear) && data.stats.availableYears.length > 0) {
+                setSelectedYear(Math.max(...data.stats.availableYears));
+            }
+
+            // Update selectedMonth if current doesn't have data
+            if (data.stats.availableMonths && !data.stats.availableMonths.includes(selectedMonth) && data.stats.availableMonths.length > 0) {
+                setSelectedMonth(Math.max(...data.stats.availableMonths));
+            }
+            
+            // Update selectedWeekDate if current doesn't have data
+            if (data.stats.availableDates && !data.stats.availableDates.includes(selectedWeekDate) && data.stats.availableDates.length > 0) {
+                const sortedDates = [...data.stats.availableDates].sort().reverse();
+                setSelectedWeekDate(sortedDates[0]);
+            }
+        }
+    }, [data?.stats, selectedYear, selectedMonth, selectedWeekDate]);
 
     // Fetch overall system stats
     const { data: statsData } = useSWR('/api/dashboard?action=stats', defaultFetcher);
