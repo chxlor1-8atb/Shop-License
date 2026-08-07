@@ -136,11 +136,14 @@ export default function FinancialDashboardCharts({ data, period, systemStats }) 
             }
         });
     } else {
+        const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
         finalTrendLabels = trend.map(t => {
             if (!t.label) return '';
             const parts = t.label.split('-');
             if (parts.length === 3) {
-                return `${parts[2]}/${parts[1]}`;
+                const day = parseInt(parts[2], 10);
+                const monthIdx = parseInt(parts[1], 10) - 1;
+                return `${day} ${thaiMonths[monthIdx]}`;
             }
             return t.label;
         });
