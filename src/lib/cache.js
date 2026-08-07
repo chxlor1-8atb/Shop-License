@@ -165,7 +165,7 @@ export const getCachedExpiringCount = unstable_cache(
  * Get financial stats (GovTech dashboard) with caching
  */
 export const getCachedFinancialStats = unstable_cache(
-    async (period = 'year', selectedYear = null) => {
+    async (period = 'year', selectedYear = null, selectedMonth = null, selectedWeekDate = null) => {
         const baseCTE = `
             WITH LicenseRevenue AS (
                 SELECT 
@@ -191,6 +191,8 @@ export const getCachedFinancialStats = unstable_cache(
         let trendQuery = '';
         
         const targetYear = selectedYear ? parseInt(selectedYear) - 543 : new Date().getFullYear();
+        const targetMonth = selectedMonth ? parseInt(selectedMonth) : new Date().getMonth() + 1;
+        const targetWeekDate = selectedWeekDate || new Date().toISOString().split('T')[0];
 
         if (period === 'year') {
             currentWhere = `EXTRACT(YEAR FROM issue_date) = ${targetYear}`;
@@ -206,8 +208,10 @@ export const getCachedFinancialStats = unstable_cache(
                 ORDER BY label ASC
             `;
         } else if (period === 'month') {
-            currentWhere = "DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', CURRENT_DATE)";
-            previousWhere = "DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')";
+            const paddedMonth = targetMonth.toString().padStart(2, '0');
+            const targetDateStr = `${targetYear}-${paddedMonth}-01`;
+            currentWhere = `DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', TO_DATE('${targetDateStr}', 'YYYY-MM-DD'))`;
+            previousWhere = `DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', TO_DATE('${targetDateStr}', 'YYYY-MM-DD') - INTERVAL '1 month')`;
             trendQuery = `
                 ${baseCTE}
                 SELECT 
@@ -219,8 +223,8 @@ export const getCachedFinancialStats = unstable_cache(
                 ORDER BY label ASC
             `;
         } else if (period === 'week') {
-            currentWhere = "DATE_TRUNC('week', issue_date) = DATE_TRUNC('week', CURRENT_DATE)";
-            previousWhere = "DATE_TRUNC('week', issue_date) = DATE_TRUNC('week', CURRENT_DATE - INTERVAL '1 week')";
+            currentWhere = `DATE_TRUNC('week', issue_date) = DATE_TRUNC('week', TO_DATE('${targetWeekDate}', 'YYYY-MM-DD'))`;
+            previousWhere = `DATE_TRUNC('week', issue_date) = DATE_TRUNC('week', TO_DATE('${targetWeekDate}', 'YYYY-MM-DD') - INTERVAL '1 week')`;
             trendQuery = `
                 ${baseCTE}
                 SELECT 
@@ -246,6 +250,9 @@ export const getCachedFinancialStats = unstable_cache(
             `;
         }
 
+        const paddedMonthOverview = targetMonth.toString().padStart(2, '0');
+        const targetDateStrOverview = `${targetYear}-${paddedMonthOverview}-01`;
+
         const overviewQuery = `
             ${baseCTE}
             SELECT 
@@ -254,9 +261,9 @@ export const getCachedFinancialStats = unstable_cache(
                 (SELECT COALESCE(SUM(revenue), 0) FROM LicenseRevenue WHERE ${previousWhere}) as previous_revenue,
                 (SELECT COUNT(*) FROM LicenseRevenue WHERE ${previousWhere}) as previous_licenses,
                 (SELECT COALESCE(SUM(revenue), 0) FROM LicenseRevenue WHERE EXTRACT(YEAR FROM issue_date) = ${targetYear}) as yearly_revenue,
-                (SELECT COALESCE(SUM(revenue), 0) FROM LicenseRevenue WHERE DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', CURRENT_DATE)) as monthly_revenue,
+                (SELECT COALESCE(SUM(revenue), 0) FROM LicenseRevenue WHERE DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', TO_DATE('${targetDateStrOverview}', 'YYYY-MM-DD'))) as monthly_revenue,
                 (SELECT COUNT(*) FROM LicenseRevenue WHERE EXTRACT(YEAR FROM issue_date) = ${targetYear}) as yearly_licenses,
-                (SELECT COUNT(*) FROM LicenseRevenue WHERE DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', CURRENT_DATE)) as monthly_licenses
+                (SELECT COUNT(*) FROM LicenseRevenue WHERE DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', TO_DATE('${targetDateStrOverview}', 'YYYY-MM-DD'))) as monthly_licenses
         `;
 
         const typeQuery = `

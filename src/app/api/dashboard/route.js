@@ -126,7 +126,9 @@ async function getRecentActivity(session, searchParams) {
 async function getFinancialSummary(searchParams) {
     const period = searchParams.get('period') || 'year';
     const year = searchParams.get('year') || null;
-    const stats = await getCachedFinancialStats(period, year);
+    const month = searchParams.get('month') || null;
+    const weekDate = searchParams.get('weekDate') || null;
+    const stats = await getCachedFinancialStats(period, year, month, weekDate);
     
     return NextResponse.json({
         success: true,

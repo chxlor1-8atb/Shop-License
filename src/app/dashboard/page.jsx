@@ -14,10 +14,12 @@ export default function DashboardPage() {
     const router = useRouter();
     const [period, setPeriod] = useState('year');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear() + 543);
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedWeekDate, setSelectedWeekDate] = useState(new Date().toISOString().split('T')[0]);
 
     // Fetch financial stats
     const { data, error, isLoading } = useSWR(
-        `/api/dashboard?action=financial_summary&period=${period}&year=${selectedYear}`,
+        `/api/dashboard?action=financial_summary&period=${period}&year=${selectedYear}&month=${selectedMonth}&weekDate=${selectedWeekDate}`,
         defaultFetcher
     );
 
@@ -71,17 +73,55 @@ export default function DashboardPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>สถิติยอดจัดเก็บค่าธรรมเนียม</h2>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        {period === 'year' && (
-                            <CustomSelect 
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(e.target.value)}
-                                options={data?.stats?.availableYears ? 
-                                    data.stats.availableYears.map(year => ({ value: year, label: `ปี ${year}` })) : 
-                                    [{ value: selectedYear, label: `ปี ${selectedYear}` }]
-                                }
-                                style={{ width: '120px' }}
-                            />
-                        )}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            {period === 'year' && (
+                                <CustomSelect 
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(e.target.value)}
+                                    options={data?.stats?.availableYears ? 
+                                        data.stats.availableYears.map(year => ({ value: year, label: `ปี ${year}` })) : 
+                                        [{ value: selectedYear, label: `ปี ${selectedYear}` }]
+                                    }
+                                    style={{ width: '120px' }}
+                                />
+                            )}
+                            
+                            {period === 'month' && (
+                                <>
+                                    <CustomSelect 
+                                        value={selectedMonth}
+                                        onChange={(e) => setSelectedMonth(e.target.value)}
+                                        options={[
+                                            { value: 1, label: 'มกราคม' }, { value: 2, label: 'กุมภาพันธ์' },
+                                            { value: 3, label: 'มีนาคม' }, { value: 4, label: 'เมษายน' },
+                                            { value: 5, label: 'พฤษภาคม' }, { value: 6, label: 'มิถุนายน' },
+                                            { value: 7, label: 'กรกฎาคม' }, { value: 8, label: 'สิงหาคม' },
+                                            { value: 9, label: 'กันยายน' }, { value: 10, label: 'ตุลาคม' },
+                                            { value: 11, label: 'พฤศจิกายน' }, { value: 12, label: 'ธันวาคม' }
+                                        ]}
+                                        style={{ width: '140px' }}
+                                    />
+                                    <CustomSelect 
+                                        value={selectedYear}
+                                        onChange={(e) => setSelectedYear(e.target.value)}
+                                        options={data?.stats?.availableYears ? 
+                                            data.stats.availableYears.map(year => ({ value: year, label: `ปี ${year}` })) : 
+                                            [{ value: selectedYear, label: `ปี ${selectedYear}` }]
+                                        }
+                                        style={{ width: '120px' }}
+                                    />
+                                </>
+                            )}
+
+                            {period === 'week' && (
+                                <input 
+                                    type="date"
+                                    value={selectedWeekDate}
+                                    onChange={(e) => setSelectedWeekDate(e.target.value)}
+                                    style={{ padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontFamily: 'inherit', color: '#334155' }}
+                                />
+                            )}
+                        </div>
 
                         <div style={{ 
                             display: 'flex', 
