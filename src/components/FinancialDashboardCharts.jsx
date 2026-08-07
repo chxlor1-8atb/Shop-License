@@ -315,9 +315,11 @@ export default function FinancialDashboardCharts({ data, period, systemStats }) 
                             แนวโน้มการจัดเก็บค่าธรรมเนียม
                         </h3>
                     </div>
-                    <div className="card-body" style={{ height: '350px' }}>
+                    <div className="card-body" style={{ height: '350px', position: 'relative', overflowX: 'auto', overflowY: 'hidden' }}>
                         {trend.length > 0 ? (
-                            <Line data={trendData} options={trendOptions} />
+                            <div style={{ position: 'relative', height: '100%', minWidth: trend.length > 15 ? '800px' : '100%' }}>
+                                <Line data={trendData} options={trendOptions} />
+                            </div>
                         ) : (
                             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
                                 ไม่มีข้อมูลในช่วงเวลานี้
