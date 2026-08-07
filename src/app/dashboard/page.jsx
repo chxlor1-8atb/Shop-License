@@ -115,7 +115,7 @@ export default function DashboardPage() {
                             )}
 
                             {period === 'week' && (
-                                <div style={{ width: '160px' }}>
+                                <div style={{ width: '190px' }}>
                                     <DatePicker 
                                         value={selectedWeekDate}
                                         onChange={(e) => setSelectedWeekDate(e.target.value)}
