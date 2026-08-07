@@ -136,7 +136,14 @@ export default function FinancialDashboardCharts({ data, period, systemStats }) 
             }
         });
     } else {
-        finalTrendLabels = trend.map(t => t.label);
+        finalTrendLabels = trend.map(t => {
+            if (!t.label) return '';
+            const parts = t.label.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}`;
+            }
+            return t.label;
+        });
         finalTrendData = trend.map(t => parseFloat(t.revenue));
     }
     
@@ -198,7 +205,12 @@ export default function FinancialDashboardCharts({ data, period, systemStats }) 
                 border: { display: false }
             },
             x: {
-                ticks: { color: '#94a3b8' },
+                ticks: { 
+                    color: '#94a3b8',
+                    maxTicksLimit: 12,
+                    maxRotation: 0,
+                    minRotation: 0
+                },
                 grid: { display: false, drawBorder: false },
                 border: { display: false }
             }
