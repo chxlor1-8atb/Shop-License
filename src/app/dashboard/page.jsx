@@ -49,24 +49,7 @@ export default function DashboardPage() {
                     <h1 style={{ margin: 0, fontSize: '1.75rem', color: '#0f172a', fontWeight: 'bold' }}>ภาพรวมระบบ</h1>
                     <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>สถิติยอดจัดเก็บค่าธรรมเนียม สถานะใบอนุญาต และความเคลื่อนไหวล่าสุด</p>
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <button 
-                        onClick={() => router.push('/dashboard/export')}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#475569', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', transition: 'all 0.2s', fontFamily: 'inherit' }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#0f172a'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.color = '#475569'; }}
-                    >
-                        <Download size={18} /> ออกรายงาน (Export)
-                    </button>
-                    <button 
-                        onClick={() => router.push('/dashboard/shops')}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#1d4ed8', border: 'none', borderRadius: '8px', color: '#ffffff', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 10px rgba(29, 78, 216, 0.2)', transition: 'all 0.2s', fontFamily: 'inherit' }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = '#1e40af'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = '#1d4ed8'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                    >
-                        <Plus size={18} /> เพิ่มร้านค้า/ใบอนุญาต
-                    </button>
-                </div>
+
             </div>
 
             {/* 2. Financial Dashboard Charts Section */}
