@@ -200,7 +200,7 @@ export async function DELETE(request) {
         }
 
         // First: delete all associated values from custom_field_values
-        await executeQuery('DELETE FROM custom_field_values WHERE custom_field_id = $1', [id]);
+        await executeQuery('DELETE FROM custom_field_values WHERE field_id = $1', [id]);
 
         // Then: delete the field definition itself
         await executeQuery('DELETE FROM custom_fields WHERE id = $1', [id]);

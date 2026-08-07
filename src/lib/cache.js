@@ -173,9 +173,9 @@ export const getCachedFinancialStats = unstable_cache(
                     l.issue_date,
                     l.license_type_id,
                     COALESCE(
-                        (SELECT CAST(NULLIF(REGEXP_REPLACE(cfv.field_value, '[^0-9.]', '', 'g'), '') AS NUMERIC)
+                        (SELECT CAST(NULLIF(REGEXP_REPLACE(cfv.value, '[^0-9.]', '', 'g'), '') AS NUMERIC)
                          FROM custom_field_values cfv
-                         JOIN custom_fields cf ON cfv.custom_field_id = cf.id
+                         JOIN custom_fields cf ON cfv.field_id = cf.id
                          WHERE cfv.entity_id = l.id 
                            AND cf.entity_type = 'licenses' 
                            AND cf.field_label = 'จำนวนเงิน'

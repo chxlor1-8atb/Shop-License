@@ -140,10 +140,10 @@ export async function GET() {
                             if (value) {
                                 // Insert custom field value with entity_type
                                 await executeQuery(
-                                    `INSERT INTO custom_field_values (custom_field_id, entity_id, entity_type, field_value, updated_at)
-                                     VALUES ($1, $2, $3, $4, NOW())
-                                     ON CONFLICT (custom_field_id, entity_id) 
-                                     DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at`,
+                                    `INSERT INTO custom_field_values (field_id, entity_id, value, updated_at)
+                                     VALUES ($1, $2, $3, NOW())
+                                     ON CONFLICT (field_id, entity_id) 
+                                     DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at`,
                                     [field.id, licenseId, 'licenses', value]
                                 );
                                 customFieldsFilledCount++;

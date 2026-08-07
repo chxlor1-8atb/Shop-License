@@ -179,8 +179,9 @@ export async function GET(request) {
                     l.expiry_date::text ILIKE $${paramIndex} OR
                     EXISTS (
                         SELECT 1 FROM custom_field_values cfv2
-                        WHERE cfv2.entity_id = l.id 
-                        AND cfv2.field_value ILIKE $${paramIndex}
+                    JOIN custom_fields cf2 ON cfv2.field_id = cf2.id
+                    WHERE cfv2.entity_id = l.id AND cf2.entity_type = 'licenses'
+                    AND cfv2.value ILIKE $${paramIndex}
                     )
                 )`);
                 params.push(`%${search}%`);
@@ -239,14 +240,14 @@ export async function GET(request) {
                     END AS status,
                     l.notes,
                     COALESCE(
-                        json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
+                        json_object_agg(cf.field_name, cfv.value) FILTER (WHERE cf.field_name IS NOT NULL),
                         '{}'::json
                     ) as custom_fields
                 FROM licenses l
                 LEFT JOIN shops s ON l.shop_id = s.id
                 LEFT JOIN license_types lt ON l.license_type_id = lt.id
                 LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
-                LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
+                LEFT JOIN custom_fields cf ON cfv.field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
                 ${whereSQL}
                 GROUP BY l.id, l.license_number, s.shop_name, s.owner_name, lt.name, l.issue_date, l.expiry_date, l.status, l.notes
                 ORDER BY l.expiry_date ASC NULLS LAST, LOWER(l.license_number) ASC, LOWER(s.shop_name) ASC
@@ -324,12 +325,12 @@ export async function GET(request) {
                     s.created_at,
                     (SELECT COUNT(*) FROM licenses WHERE shop_id = s.id) as license_count,
                     COALESCE(
-                        json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
+                        json_object_agg(cf.field_name, cfv.value) FILTER (WHERE cf.field_name IS NOT NULL),
                         '{}'::json
                     ) as custom_fields
                 FROM shops s
                 LEFT JOIN custom_field_values cfv ON cfv.entity_id = s.id AND cfv.entity_type = 'shops'
-                LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'shops' AND cf.is_active = true
+                LEFT JOIN custom_fields cf ON cfv.field_id = cf.id AND cf.entity_type = 'shops' AND cf.is_active = true
                 ${shopWhereSQL}
                 GROUP BY s.id, s.shop_name, s.owner_name, s.phone, s.address, s.notes, s.created_at
                 ORDER BY LOWER(s.shop_name) ASC

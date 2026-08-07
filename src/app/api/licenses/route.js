@@ -60,8 +60,9 @@ export async function GET(request) {
                 l.expiry_date::text ILIKE $${paramIndex} OR
                 EXISTS (
                     SELECT 1 FROM custom_field_values cfv2
-                    WHERE cfv2.entity_id = l.id 
-                    AND cfv2.field_value ILIKE $${paramIndex}
+                    JOIN custom_fields cf2 ON cfv2.field_id = cf2.id
+                    WHERE cfv2.entity_id = l.id AND cf2.entity_type = 'licenses'
+                    AND cfv2.value ILIKE $${paramIndex}
                 )
             )`);
             params.push(`%${search}%`);
@@ -127,14 +128,14 @@ export async function GET(request) {
                    END AS status,
                    l.status AS original_status,
                    COALESCE(
-                       json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
+                       json_object_agg(cf.field_name, cfv.value) FILTER (WHERE cf.field_name IS NOT NULL),
                        '{}'::json
                    ) as custom_fields
             FROM licenses l
             LEFT JOIN shops s ON l.shop_id = s.id
             LEFT JOIN license_types lt ON l.license_type_id = lt.id
-            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
-            LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
+            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id
+            LEFT JOIN custom_fields cf ON cfv.field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
             ${whereSQL}
             GROUP BY l.id, s.shop_name, s.owner_name, lt.name
             ORDER BY l.id DESC
@@ -213,11 +214,11 @@ export async function POST(request) {
                 const fieldId = fieldMap[fieldName];
                 if (fieldId && value !== undefined && value !== null) {
                     await executeQuery(`
-                        INSERT INTO custom_field_values (custom_field_id, entity_id, entity_type, field_value, updated_at)
-                        VALUES ($1, $2, $3, $4, NOW())
-                        ON CONFLICT (custom_field_id, entity_id) 
-                        DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
-                    `, [fieldId, licenseId, 'licenses', value?.toString() || '']);
+                        INSERT INTO custom_field_values (field_id, entity_id, value, updated_at)
+                        VALUES ($1, $2, $3, NOW())
+                        ON CONFLICT (field_id, entity_id) 
+                        DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at
+                    `, [fieldId, licenseId, value?.toString() || '']);
                 }
             }
         }
@@ -246,14 +247,14 @@ export async function POST(request) {
                    END AS status,
                    l.status AS original_status,
                    COALESCE(
-                       json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
+                       json_object_agg(cf.field_name, cfv.value) FILTER (WHERE cf.field_name IS NOT NULL),
                        '{}'::json
                    ) as custom_fields
             FROM licenses l
             LEFT JOIN shops s ON l.shop_id = s.id
             LEFT JOIN license_types lt ON l.license_type_id = lt.id
-            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
-            LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
+            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id
+            LEFT JOIN custom_fields cf ON cfv.field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
             WHERE l.id = $1
             GROUP BY l.id, s.shop_name, s.owner_name, lt.name
         `, [licenseId]);
@@ -320,15 +321,15 @@ export async function PUT(request) {
                 if (value !== undefined && value !== null && value !== '') {
                     // Insert or update the value
                     await executeQuery(`
-                        INSERT INTO custom_field_values (custom_field_id, entity_id, entity_type, field_value, updated_at)
-                        VALUES ($1, $2, $3, $4, NOW())
-                        ON CONFLICT (custom_field_id, entity_id) 
-                        DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
-                    `, [fieldId, id, 'licenses', value?.toString() || '']);
+                        INSERT INTO custom_field_values (field_id, entity_id, value, updated_at)
+                        VALUES ($1, $2, $3, NOW())
+                        ON CONFLICT (field_id, entity_id) 
+                        DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at
+                    `, [fieldId, id, value?.toString() || '']);
                 } else {
                     // Delete the value if it's empty/null
                     await executeQuery(
-                        'DELETE FROM custom_field_values WHERE custom_field_id = $1 AND entity_id = $2',
+                        'DELETE FROM custom_field_values WHERE field_id = $1 AND entity_id = $2',
                         [fieldId, id]
                     );
                 }
@@ -359,14 +360,14 @@ export async function PUT(request) {
                    END AS status,
                    l.status AS original_status,
                    COALESCE(
-                       json_object_agg(cf.field_name, cfv.field_value) FILTER (WHERE cf.field_name IS NOT NULL),
+                       json_object_agg(cf.field_name, cfv.value) FILTER (WHERE cf.field_name IS NOT NULL),
                        '{}'::json
                    ) as custom_fields
             FROM licenses l
             LEFT JOIN shops s ON l.shop_id = s.id
             LEFT JOIN license_types lt ON l.license_type_id = lt.id
-            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id AND cfv.entity_type = 'licenses'
-            LEFT JOIN custom_fields cf ON cfv.custom_field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
+            LEFT JOIN custom_field_values cfv ON cfv.entity_id = l.id
+            LEFT JOIN custom_fields cf ON cfv.field_id = cf.id AND cf.entity_type = 'licenses' AND cf.is_active = true
             WHERE l.id = $1
             GROUP BY l.id, s.shop_name, s.owner_name, lt.name
         `, [id]);
@@ -394,7 +395,7 @@ export async function DELETE(request) {
         const license = await fetchOne('SELECT license_number FROM licenses WHERE id = $1', [id]);
 
         // Delete custom field values first (to prevent orphans)
-        const deleteCustomFieldsResult = await executeQuery('DELETE FROM custom_field_values WHERE entity_type = $1 AND entity_id = $2', ['licenses', id]);
+        const deleteCustomFieldsResult = await executeQuery('DELETE FROM custom_field_values WHERE entity_id = $1', [id]);
 
         await executeQuery('DELETE FROM licenses WHERE id = $1', [id]);
 

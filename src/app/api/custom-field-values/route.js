@@ -35,7 +35,7 @@ export async function GET(request) {
                 cf.id as field_id,
                 cf.field_name
             FROM custom_field_values cfv
-            JOIN custom_fields cf ON cfv.custom_field_id = cf.id
+            JOIN custom_fields cf ON cfv.field_id = cf.id
             WHERE cf.entity_type = $1 AND cf.is_active = true
         `;
         const params = [entityType];
@@ -134,12 +134,12 @@ export async function POST(request) {
 
             // Use INSERT ... ON CONFLICT for upsert
             const query = `
-                INSERT INTO custom_field_values(custom_field_id, entity_id, entity_type, field_value, updated_at)
-                VALUES($1, $2, $3, $4, NOW())
-                ON CONFLICT(custom_field_id, entity_id) 
-                DO UPDATE SET field_value = EXCLUDED.field_value, updated_at = EXCLUDED.updated_at
+                INSERT INTO custom_field_values(field_id, entity_id, value, updated_at)
+                VALUES($1, $2, $3, NOW())
+                ON CONFLICT(field_id, entity_id) 
+                DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at
             `;
-            const params = [fieldId, entity_id, entity_type, value?.toString() || ''];
+            const params = [fieldId, entity_id, value?.toString() || ''];
 
             console.log('Executing query:', query);
             console.log('Query params:', params);
@@ -199,7 +199,7 @@ export async function DELETE(request) {
         await executeQuery(`
             DELETE FROM custom_field_values 
             WHERE entity_id = $1 
-            AND custom_field_id IN(SELECT id FROM custom_fields WHERE entity_type = $2)
+            AND field_id IN(SELECT id FROM custom_fields WHERE entity_type = $2)
             `, [entityId, entityType]);
 
         return NextResponse.json({ success: true, message: 'ลบ Custom Field Values สำเร็จ' });
