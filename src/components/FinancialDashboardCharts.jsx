@@ -9,7 +9,7 @@ import { formatNumber, formatCurrency } from '@/utils/formatters';
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Filler);
 
 // Use system fonts
-ChartJS.defaults.font.family = 'var(--font-noto-thai), var(--font-inter), sans-serif';
+ChartJS.defaults.font.family = "'Noto Sans Thai', 'Inter', sans-serif";
 
 export default function FinancialDashboardCharts({ data, period, systemStats }) {
     if (!data || !data.overview) {
@@ -70,15 +70,15 @@ export default function FinancialDashboardCharts({ data, period, systemStats }) 
                 position: 'bottom', 
                 labels: { 
                     usePointStyle: true, 
-                    font: { family: 'inherit', size: 14 },
+                    font: { family: "'Noto Sans Thai', 'Inter', sans-serif", size: 14 },
                     padding: 16,
                     color: '#64748b'
                 } 
             },
             tooltip: {
                 backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                titleFont: { family: 'inherit', size: 13, weight: 'normal' },
-                bodyFont: { family: 'inherit', size: 14, weight: 'bold' },
+                titleFont: { family: "'Noto Sans Thai', 'Inter', sans-serif", size: 13, weight: 'normal' },
+                bodyFont: { family: "'Noto Sans Thai', 'Inter', sans-serif", size: 14, weight: 'bold' },
                 padding: 12,
                 cornerRadius: 8,
                 displayColors: true,
@@ -186,8 +186,8 @@ export default function FinancialDashboardCharts({ data, period, systemStats }) 
             legend: { display: false },
             tooltip: {
                 backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                titleFont: { family: 'inherit', size: 13, weight: 'normal' },
-                bodyFont: { family: 'inherit', size: 14, weight: 'bold' },
+                titleFont: { family: "'Noto Sans Thai', 'Inter', sans-serif", size: 13, weight: 'normal' },
+                bodyFont: { family: "'Noto Sans Thai', 'Inter', sans-serif", size: 14, weight: 'bold' },
                 padding: 12,
                 cornerRadius: 8,
                 displayColors: false,
