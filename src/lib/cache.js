@@ -292,7 +292,7 @@ export const getCachedFinancialStats = unstable_cache(
         const trend = await fetchAll(trendQuery);
         const forecastData = await fetchAll(forecastQuery);
         
-        const availableYearsQuery = `SELECT DISTINCT EXTRACT(YEAR FROM issue_date) as year FROM licenses WHERE issue_date IS NOT NULL AND EXTRACT(YEAR FROM issue_date) > 2010 ORDER BY year DESC`;
+        const availableYearsQuery = `SELECT DISTINCT EXTRACT(YEAR FROM issue_date) as year FROM licenses WHERE issue_date IS NOT NULL AND status NOT IN ('suspended', 'revoked') AND EXTRACT(YEAR FROM issue_date) > 2010 ORDER BY year DESC`;
         const availableYearsData = await fetchAll(availableYearsQuery);
         let availableYears = availableYearsData.map(r => parseInt(r.year) + 543);
         const currentThaiYear = new Date().getFullYear() + 543;
@@ -301,7 +301,7 @@ export const getCachedFinancialStats = unstable_cache(
         }
         
         // Query available months for the selected target year
-        const availableMonthsQuery = `SELECT DISTINCT EXTRACT(MONTH FROM issue_date) as month FROM licenses WHERE issue_date IS NOT NULL AND EXTRACT(YEAR FROM issue_date) = ${targetYear} ORDER BY month ASC`;
+        const availableMonthsQuery = `SELECT DISTINCT EXTRACT(MONTH FROM issue_date) as month FROM licenses WHERE issue_date IS NOT NULL AND status NOT IN ('suspended', 'revoked') AND EXTRACT(YEAR FROM issue_date) = ${targetYear} ORDER BY month ASC`;
         const availableMonthsData = await fetchAll(availableMonthsQuery);
         let availableMonths = availableMonthsData.map(r => parseInt(r.month));
         
@@ -311,7 +311,7 @@ export const getCachedFinancialStats = unstable_cache(
         }
 
         // Query available dates for the DatePicker
-        const availableDatesQuery = `SELECT DISTINCT TO_CHAR(issue_date, 'YYYY-MM-DD') as date FROM licenses WHERE issue_date IS NOT NULL`;
+        const availableDatesQuery = `SELECT DISTINCT TO_CHAR(issue_date, 'YYYY-MM-DD') as date FROM licenses WHERE issue_date IS NOT NULL AND status NOT IN ('suspended', 'revoked')`;
         const availableDatesData = await fetchAll(availableDatesQuery);
         let availableDates = availableDatesData.map(r => r.date);
 
@@ -329,7 +329,7 @@ export const getCachedFinancialStats = unstable_cache(
             selectedYear: selectedYear || currentThaiYear
         };
     },
-    ['financial-stats-v3'],
+    ['financial-stats-v4'],
     {
         revalidate: CACHE_DURATION.SHORT,
         tags: [CACHE_TAGS.DASHBOARD_STATS, CACHE_TAGS.LICENSES]
