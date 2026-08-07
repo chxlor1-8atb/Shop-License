@@ -164,6 +164,7 @@ export default function UsersPage() {
         setUsers((prev) =>
           prev.map((u) => (u.id === updatedRow.id ? { ...u, ...updatedRow } : u))
         );
+        showSuccess("บันทึกข้อมูลสำเร็จ");
       } else {
         throw new Error(data.message);
       }
