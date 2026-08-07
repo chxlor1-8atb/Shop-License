@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import FinancialDashboardCharts from '@/components/FinancialDashboardCharts';
 import { ActionableExpiringList, RecentActivityLog } from '@/components/DashboardWidgets';
 import CustomSelect from '@/components/ui/CustomSelect';
+import DatePicker from '@/components/ui/DatePicker';
 import { Plus, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -114,12 +115,13 @@ export default function DashboardPage() {
                             )}
 
                             {period === 'week' && (
-                                <input 
-                                    type="date"
-                                    value={selectedWeekDate}
-                                    onChange={(e) => setSelectedWeekDate(e.target.value)}
-                                    style={{ padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontFamily: 'inherit', color: '#334155' }}
-                                />
+                                <div style={{ width: '160px' }}>
+                                    <DatePicker 
+                                        value={selectedWeekDate}
+                                        onChange={(e) => setSelectedWeekDate(e.target.value)}
+                                        placeholder="เลือกสัปดาห์ (วันที่)"
+                                    />
+                                </div>
                             )}
                         </div>
 
