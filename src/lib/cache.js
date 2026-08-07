@@ -310,25 +310,16 @@ export const getCachedFinancialStats = unstable_cache(
             availableMonths = [new Date().getMonth() + 1];
         }
 
-        const data = overviewData[0] || {};
+        // Sort descending
+        availableYears.sort((a, b) => b - a);
         
         return {
-            revenue: parseFloat(data.current_revenue) || 0,
-            revenueDiff: (parseFloat(data.current_revenue) || 0) - (parseFloat(data.previous_revenue) || 0),
-            revenuePercent: calculatePercentChange(data.previous_revenue, data.current_revenue),
-            
-            licenses: parseInt(data.current_licenses) || 0,
-            licensesDiff: (parseInt(data.current_licenses) || 0) - (parseInt(data.previous_licenses) || 0),
-            licensesPercent: calculatePercentChange(data.previous_licenses, data.current_licenses),
-            
-            yearlyRevenue: parseFloat(data.yearly_revenue) || 0,
-            yearlyLicenses: parseInt(data.yearly_licenses) || 0,
-            
-            revenueByType: revenueByType || [],
-            trend: trend || [],
-            expectedRevenue: parseFloat(forecastData[0]?.expected_revenue) || 0,
-            availableYears: availableYears,
-            availableMonths: availableMonths,
+            overview: overviewData[0] || { current_revenue: 0, current_licenses: 0, previous_revenue: 0, previous_licenses: 0, yearly_revenue: 0, yearly_licenses: 0 },
+            revenueByType,
+            trend,
+            forecast: forecastData[0]?.expected_revenue || 0,
+            availableYears,
+            availableMonths,
             selectedYear: selectedYear || currentThaiYear
         };
     },
