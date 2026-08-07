@@ -323,7 +323,7 @@ export const getCachedFinancialStats = unstable_cache(
             selectedYear: selectedYear || currentThaiYear
         };
     },
-    ['financial-stats-v1'],
+    ['financial-stats-v2'],
     {
         revalidate: CACHE_DURATION.SHORT,
         tags: [CACHE_TAGS.DASHBOARD_STATS, CACHE_TAGS.LICENSES]
