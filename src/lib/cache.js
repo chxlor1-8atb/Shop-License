@@ -300,15 +300,35 @@ export const getCachedFinancialStats = unstable_cache(
             availableYears.unshift(currentThaiYear);
         }
         
-        // Sort descending
-        availableYears.sort((a, b) => b - a);
+        // Query available months for the selected target year
+        const availableMonthsQuery = `SELECT DISTINCT EXTRACT(MONTH FROM issue_date) as month FROM licenses WHERE issue_date IS NOT NULL AND EXTRACT(YEAR FROM issue_date) = ${targetYear} ORDER BY month ASC`;
+        const availableMonthsData = await fetchAll(availableMonthsQuery);
+        let availableMonths = availableMonthsData.map(r => parseInt(r.month));
+        
+        // If no data, at least include current month
+        if (availableMonths.length === 0) {
+            availableMonths = [new Date().getMonth() + 1];
+        }
 
+        const data = overviewData[0] || {};
+        
         return {
-            overview: overviewData[0] || { current_revenue: 0, current_licenses: 0, previous_revenue: 0, previous_licenses: 0 },
-            revenueByType,
-            trend,
-            forecast: forecastData[0]?.expected_revenue || 0,
-            availableYears,
+            revenue: parseFloat(data.current_revenue) || 0,
+            revenueDiff: (parseFloat(data.current_revenue) || 0) - (parseFloat(data.previous_revenue) || 0),
+            revenuePercent: calculatePercentChange(data.previous_revenue, data.current_revenue),
+            
+            licenses: parseInt(data.current_licenses) || 0,
+            licensesDiff: (parseInt(data.current_licenses) || 0) - (parseInt(data.previous_licenses) || 0),
+            licensesPercent: calculatePercentChange(data.previous_licenses, data.current_licenses),
+            
+            yearlyRevenue: parseFloat(data.yearly_revenue) || 0,
+            yearlyLicenses: parseInt(data.yearly_licenses) || 0,
+            
+            revenueByType: revenueByType || [],
+            trend: trend || [],
+            expectedRevenue: parseFloat(forecastData[0]?.expected_revenue) || 0,
+            availableYears: availableYears,
+            availableMonths: availableMonths,
             selectedYear: selectedYear || currentThaiYear
         };
     },

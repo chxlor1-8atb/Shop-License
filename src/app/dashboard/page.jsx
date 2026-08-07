@@ -76,7 +76,7 @@ export default function DashboardPage() {
                                             { value: 7, label: 'กรกฎาคม' }, { value: 8, label: 'สิงหาคม' },
                                             { value: 9, label: 'กันยายน' }, { value: 10, label: 'ตุลาคม' },
                                             { value: 11, label: 'พฤศจิกายน' }, { value: 12, label: 'ธันวาคม' }
-                                        ]}
+                                        ].filter(m => data?.stats?.availableMonths ? data.stats.availableMonths.includes(m.value) || m.value === selectedMonth : true)}
                                         style={{ width: '140px' }}
                                     />
                                     <CustomSelect 
